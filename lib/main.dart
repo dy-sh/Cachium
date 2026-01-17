@@ -7,7 +7,7 @@ void main() {
 
   runApp(
     const ProviderScope(
-      child: FinanceManagerApp(),
+      child: CachiumApp(),
     ),
   );
 }

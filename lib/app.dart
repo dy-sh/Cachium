@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 import 'core/constants/app_colors.dart';
 import 'navigation/app_router.dart';
 
-class FinanceManagerApp extends StatelessWidget {
-  const FinanceManagerApp({super.key});
+class CachiumApp extends StatelessWidget {
+  const CachiumApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +20,7 @@ class FinanceManagerApp extends StatelessWidget {
     );
 
     return MaterialApp.router(
-      title: 'Finance Manager',
+      title: 'Cachium',
       debugShowCheckedModeBanner: false,
       routerConfig: appRouter,
       theme: ThemeData(

@@ -1,4 +1,4 @@
-# finance_manager
+# Cachium
 
 A new Flutter project.
 

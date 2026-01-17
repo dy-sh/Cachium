@@ -40,7 +40,7 @@ class HomeScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Finance Manager',
+                        'Cachium',
                         style: AppTypography.h2,
                       ),
                     ],
