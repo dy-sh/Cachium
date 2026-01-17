@@ -1,0 +1,212 @@
+import '../../features/accounts/data/models/account.dart';
+import '../../features/transactions/data/models/transaction.dart';
+
+class DemoData {
+  static final List<Account> accounts = [
+    Account(
+      id: 'acc_1',
+      name: 'Chase Checking',
+      type: AccountType.bank,
+      balance: 5420.50,
+      createdAt: DateTime.now().subtract(const Duration(days: 365)),
+    ),
+    Account(
+      id: 'acc_2',
+      name: 'Visa Platinum',
+      type: AccountType.creditCard,
+      balance: -1250.00,
+      createdAt: DateTime.now().subtract(const Duration(days: 300)),
+    ),
+    Account(
+      id: 'acc_3',
+      name: 'Cash',
+      type: AccountType.cash,
+      balance: 340.00,
+      createdAt: DateTime.now().subtract(const Duration(days: 200)),
+    ),
+    Account(
+      id: 'acc_4',
+      name: 'Emergency Fund',
+      type: AccountType.savings,
+      balance: 12500.00,
+      createdAt: DateTime.now().subtract(const Duration(days: 180)),
+    ),
+    Account(
+      id: 'acc_5',
+      name: 'Fidelity 401k',
+      type: AccountType.investment,
+      balance: 45230.75,
+      createdAt: DateTime.now().subtract(const Duration(days: 150)),
+    ),
+    Account(
+      id: 'acc_6',
+      name: 'PayPal',
+      type: AccountType.wallet,
+      balance: 850.25,
+      createdAt: DateTime.now().subtract(const Duration(days: 100)),
+    ),
+  ];
+
+  static List<Transaction> get transactions {
+    final now = DateTime.now();
+    return [
+      // Today
+      Transaction(
+        id: 'tx_1',
+        amount: 85.50,
+        type: TransactionType.expense,
+        categoryId: 'food',
+        accountId: 'acc_2',
+        date: now,
+        note: 'Grocery shopping at Whole Foods',
+        createdAt: now,
+      ),
+      Transaction(
+        id: 'tx_2',
+        amount: 12.00,
+        type: TransactionType.expense,
+        categoryId: 'transport',
+        accountId: 'acc_3',
+        date: now,
+        note: 'Uber to office',
+        createdAt: now,
+      ),
+      // Yesterday
+      Transaction(
+        id: 'tx_3',
+        amount: 3500.00,
+        type: TransactionType.income,
+        categoryId: 'salary',
+        accountId: 'acc_1',
+        date: now.subtract(const Duration(days: 1)),
+        note: 'Monthly salary',
+        createdAt: now.subtract(const Duration(days: 1)),
+      ),
+      Transaction(
+        id: 'tx_4',
+        amount: 45.00,
+        type: TransactionType.expense,
+        categoryId: 'entertainment',
+        accountId: 'acc_2',
+        date: now.subtract(const Duration(days: 1)),
+        note: 'Netflix + Spotify subscription',
+        createdAt: now.subtract(const Duration(days: 1)),
+      ),
+      Transaction(
+        id: 'tx_5',
+        amount: 28.50,
+        type: TransactionType.expense,
+        categoryId: 'food',
+        accountId: 'acc_3',
+        date: now.subtract(const Duration(days: 1)),
+        note: 'Lunch with colleagues',
+        createdAt: now.subtract(const Duration(days: 1)),
+      ),
+      // 2 days ago
+      Transaction(
+        id: 'tx_6',
+        amount: 150.00,
+        type: TransactionType.expense,
+        categoryId: 'shopping',
+        accountId: 'acc_2',
+        date: now.subtract(const Duration(days: 2)),
+        note: 'New running shoes',
+        createdAt: now.subtract(const Duration(days: 2)),
+      ),
+      Transaction(
+        id: 'tx_7',
+        amount: 250.00,
+        type: TransactionType.income,
+        categoryId: 'freelance',
+        accountId: 'acc_6',
+        date: now.subtract(const Duration(days: 2)),
+        note: 'Logo design project',
+        createdAt: now.subtract(const Duration(days: 2)),
+      ),
+      // 3 days ago
+      Transaction(
+        id: 'tx_8',
+        amount: 95.00,
+        type: TransactionType.expense,
+        categoryId: 'bills',
+        accountId: 'acc_1',
+        date: now.subtract(const Duration(days: 3)),
+        note: 'Electric bill',
+        createdAt: now.subtract(const Duration(days: 3)),
+      ),
+      Transaction(
+        id: 'tx_9',
+        amount: 35.00,
+        type: TransactionType.expense,
+        categoryId: 'health',
+        accountId: 'acc_2',
+        date: now.subtract(const Duration(days: 3)),
+        note: 'Gym membership',
+        createdAt: now.subtract(const Duration(days: 3)),
+      ),
+      // 5 days ago
+      Transaction(
+        id: 'tx_10',
+        amount: 500.00,
+        type: TransactionType.expense,
+        categoryId: 'travel',
+        accountId: 'acc_2',
+        date: now.subtract(const Duration(days: 5)),
+        note: 'Flight tickets to NYC',
+        createdAt: now.subtract(const Duration(days: 5)),
+      ),
+      Transaction(
+        id: 'tx_11',
+        amount: 75.00,
+        type: TransactionType.income,
+        categoryId: 'gift_income',
+        accountId: 'acc_3',
+        date: now.subtract(const Duration(days: 5)),
+        note: 'Birthday gift from grandma',
+        createdAt: now.subtract(const Duration(days: 5)),
+      ),
+      // 7 days ago
+      Transaction(
+        id: 'tx_12',
+        amount: 200.00,
+        type: TransactionType.expense,
+        categoryId: 'education',
+        accountId: 'acc_1',
+        date: now.subtract(const Duration(days: 7)),
+        note: 'Online course subscription',
+        createdAt: now.subtract(const Duration(days: 7)),
+      ),
+      Transaction(
+        id: 'tx_13',
+        amount: 42.00,
+        type: TransactionType.expense,
+        categoryId: 'food',
+        accountId: 'acc_2',
+        date: now.subtract(const Duration(days: 7)),
+        note: 'Dinner at Italian restaurant',
+        createdAt: now.subtract(const Duration(days: 7)),
+      ),
+      // 10 days ago
+      Transaction(
+        id: 'tx_14',
+        amount: 1200.00,
+        type: TransactionType.income,
+        categoryId: 'investment_income',
+        accountId: 'acc_5',
+        date: now.subtract(const Duration(days: 10)),
+        note: 'Dividend payment',
+        createdAt: now.subtract(const Duration(days: 10)),
+      ),
+      Transaction(
+        id: 'tx_15',
+        amount: 180.00,
+        type: TransactionType.expense,
+        categoryId: 'bills',
+        accountId: 'acc_1',
+        date: now.subtract(const Duration(days: 10)),
+        note: 'Internet + Phone bill',
+        createdAt: now.subtract(const Duration(days: 10)),
+      ),
+    ];
+  }
+}

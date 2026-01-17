@@ -1,0 +1,116 @@
+import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
+
+enum AccountType {
+  bank,
+  creditCard,
+  cash,
+  savings,
+  investment,
+  wallet,
+}
+
+extension AccountTypeExtension on AccountType {
+  String get displayName {
+    switch (this) {
+      case AccountType.bank:
+        return 'Bank';
+      case AccountType.creditCard:
+        return 'Credit Card';
+      case AccountType.cash:
+        return 'Cash';
+      case AccountType.savings:
+        return 'Savings';
+      case AccountType.investment:
+        return 'Investment';
+      case AccountType.wallet:
+        return 'Wallet';
+    }
+  }
+
+  Color get color {
+    switch (this) {
+      case AccountType.bank:
+        return AppColors.accountBank;
+      case AccountType.creditCard:
+        return AppColors.accountCreditCard;
+      case AccountType.cash:
+        return AppColors.accountCash;
+      case AccountType.savings:
+        return AppColors.accountSavings;
+      case AccountType.investment:
+        return AppColors.accountInvestment;
+      case AccountType.wallet:
+        return AppColors.accountWallet;
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case AccountType.bank:
+        return Icons.account_balance;
+      case AccountType.creditCard:
+        return Icons.credit_card;
+      case AccountType.cash:
+        return Icons.payments;
+      case AccountType.savings:
+        return Icons.savings;
+      case AccountType.investment:
+        return Icons.trending_up;
+      case AccountType.wallet:
+        return Icons.account_balance_wallet;
+    }
+  }
+}
+
+class Account {
+  final String id;
+  final String name;
+  final AccountType type;
+  final double balance;
+  final Color? customColor;
+  final IconData? customIcon;
+  final DateTime createdAt;
+
+  const Account({
+    required this.id,
+    required this.name,
+    required this.type,
+    required this.balance,
+    this.customColor,
+    this.customIcon,
+    required this.createdAt,
+  });
+
+  Color get color => customColor ?? type.color;
+  IconData get icon => customIcon ?? type.icon;
+
+  Account copyWith({
+    String? id,
+    String? name,
+    AccountType? type,
+    double? balance,
+    Color? customColor,
+    IconData? customIcon,
+    DateTime? createdAt,
+  }) {
+    return Account(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      type: type ?? this.type,
+      balance: balance ?? this.balance,
+      customColor: customColor ?? this.customColor,
+      customIcon: customIcon ?? this.customIcon,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Account && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
+}
