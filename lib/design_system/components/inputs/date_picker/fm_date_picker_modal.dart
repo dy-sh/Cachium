@@ -520,7 +520,7 @@ class _FMDatePickerModalState extends ConsumerState<FMDatePickerModal> {
 }
 
 /// Icon button used in the date picker header.
-class _DatePickerIconButton extends StatefulWidget {
+class _DatePickerIconButton extends ConsumerStatefulWidget {
   final IconData icon;
   final VoidCallback onTap;
   final bool isActive;
@@ -534,14 +534,21 @@ class _DatePickerIconButton extends StatefulWidget {
   });
 
   @override
-  State<_DatePickerIconButton> createState() => _DatePickerIconButtonState();
+  ConsumerState<_DatePickerIconButton> createState() => _DatePickerIconButtonState();
 }
 
-class _DatePickerIconButtonState extends State<_DatePickerIconButton> {
+class _DatePickerIconButtonState extends ConsumerState<_DatePickerIconButton> {
   bool _isPressed = false;
 
   @override
   Widget build(BuildContext context) {
+    final animationsEnabled = ref.watch(settingsProvider).formAnimationsEnabled;
+    final backgroundColor = widget.isActive
+        ? widget.accentColor
+        : _isPressed
+            ? AppColors.surfaceLight
+            : AppColors.background;
+
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
       onTapUp: (_) {
@@ -549,31 +556,42 @@ class _DatePickerIconButtonState extends State<_DatePickerIconButton> {
         widget.onTap();
       },
       onTapCancel: () => setState(() => _isPressed = false),
-      child: AnimatedContainer(
-        duration: AppAnimations.fast,
-        width: AppSpacing.calendarHeaderButtonSize,
-        height: AppSpacing.calendarHeaderButtonSize,
-        decoration: BoxDecoration(
-          color: widget.isActive
-              ? widget.accentColor
-              : _isPressed
-                  ? AppColors.surfaceLight
-                  : AppColors.background,
-          borderRadius: AppRadius.smAll,
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Icon(
-          widget.icon,
-          size: 18,
-          color: widget.isActive ? AppColors.background : AppColors.textSecondary,
-        ),
-      ),
+      child: animationsEnabled
+          ? AnimatedContainer(
+              duration: AppAnimations.fast,
+              width: AppSpacing.calendarHeaderButtonSize,
+              height: AppSpacing.calendarHeaderButtonSize,
+              decoration: BoxDecoration(
+                color: backgroundColor,
+                borderRadius: AppRadius.smAll,
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Icon(
+                widget.icon,
+                size: 18,
+                color: widget.isActive ? AppColors.background : AppColors.textSecondary,
+              ),
+            )
+          : Container(
+              width: AppSpacing.calendarHeaderButtonSize,
+              height: AppSpacing.calendarHeaderButtonSize,
+              decoration: BoxDecoration(
+                color: backgroundColor,
+                borderRadius: AppRadius.smAll,
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Icon(
+                widget.icon,
+                size: 18,
+                color: widget.isActive ? AppColors.background : AppColors.textSecondary,
+              ),
+            ),
     );
   }
 }
 
 /// Navigation button for calendar month navigation.
-class _DatePickerNavigationButton extends StatefulWidget {
+class _DatePickerNavigationButton extends ConsumerStatefulWidget {
   final IconData icon;
   final VoidCallback onTap;
 
@@ -583,14 +601,17 @@ class _DatePickerNavigationButton extends StatefulWidget {
   });
 
   @override
-  State<_DatePickerNavigationButton> createState() => _DatePickerNavigationButtonState();
+  ConsumerState<_DatePickerNavigationButton> createState() => _DatePickerNavigationButtonState();
 }
 
-class _DatePickerNavigationButtonState extends State<_DatePickerNavigationButton> {
+class _DatePickerNavigationButtonState extends ConsumerState<_DatePickerNavigationButton> {
   bool _isPressed = false;
 
   @override
   Widget build(BuildContext context) {
+    final animationsEnabled = ref.watch(settingsProvider).formAnimationsEnabled;
+    final backgroundColor = _isPressed ? AppColors.surfaceLight : AppColors.background;
+
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
       onTapUp: (_) {
@@ -598,21 +619,36 @@ class _DatePickerNavigationButtonState extends State<_DatePickerNavigationButton
         widget.onTap();
       },
       onTapCancel: () => setState(() => _isPressed = false),
-      child: AnimatedContainer(
-        duration: AppAnimations.fast,
-        width: AppSpacing.calendarHeaderButtonSize,
-        height: AppSpacing.calendarHeaderButtonSize,
-        decoration: BoxDecoration(
-          color: _isPressed ? AppColors.surfaceLight : AppColors.background,
-          borderRadius: AppRadius.smAll,
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Icon(
-          widget.icon,
-          size: 18,
-          color: AppColors.textSecondary,
-        ),
-      ),
+      child: animationsEnabled
+          ? AnimatedContainer(
+              duration: AppAnimations.fast,
+              width: AppSpacing.calendarHeaderButtonSize,
+              height: AppSpacing.calendarHeaderButtonSize,
+              decoration: BoxDecoration(
+                color: backgroundColor,
+                borderRadius: AppRadius.smAll,
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Icon(
+                widget.icon,
+                size: 18,
+                color: AppColors.textSecondary,
+              ),
+            )
+          : Container(
+              width: AppSpacing.calendarHeaderButtonSize,
+              height: AppSpacing.calendarHeaderButtonSize,
+              decoration: BoxDecoration(
+                color: backgroundColor,
+                borderRadius: AppRadius.smAll,
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Icon(
+                widget.icon,
+                size: 18,
+                color: AppColors.textSecondary,
+              ),
+            ),
     );
   }
 }

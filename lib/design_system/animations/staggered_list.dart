@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../features/settings/presentation/providers/settings_provider.dart';
 
-class StaggeredListItem extends StatefulWidget {
+class StaggeredListItem extends ConsumerStatefulWidget {
   final int index;
   final Widget child;
   final Duration delay;
@@ -15,10 +17,10 @@ class StaggeredListItem extends StatefulWidget {
   });
 
   @override
-  State<StaggeredListItem> createState() => _StaggeredListItemState();
+  ConsumerState<StaggeredListItem> createState() => _StaggeredListItemState();
 }
 
-class _StaggeredListItemState extends State<StaggeredListItem>
+class _StaggeredListItemState extends ConsumerState<StaggeredListItem>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
@@ -42,12 +44,21 @@ class _StaggeredListItemState extends State<StaggeredListItem>
     ).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeOut),
     );
+  }
 
-    Future.delayed(widget.delay * widget.index, () {
-      if (mounted) {
-        _controller.forward();
-      }
-    });
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final animationsEnabled = ref.read(settingsProvider).formAnimationsEnabled;
+    if (animationsEnabled) {
+      Future.delayed(widget.delay * widget.index, () {
+        if (mounted) {
+          _controller.forward();
+        }
+      });
+    } else {
+      _controller.value = 1.0;
+    }
   }
 
   @override
@@ -58,6 +69,12 @@ class _StaggeredListItemState extends State<StaggeredListItem>
 
   @override
   Widget build(BuildContext context) {
+    final animationsEnabled = ref.watch(settingsProvider).formAnimationsEnabled;
+
+    if (!animationsEnabled) {
+      return widget.child;
+    }
+
     return FadeTransition(
       opacity: _fadeAnimation,
       child: SlideTransition(

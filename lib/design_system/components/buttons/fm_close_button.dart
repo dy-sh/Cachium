@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
+import '../../../features/settings/presentation/providers/settings_provider.dart';
 
 /// A standardized close button used in form screens and modals.
-class FMCloseButton extends StatelessWidget {
+class FMCloseButton extends ConsumerWidget {
   final VoidCallback onTap;
   final IconData icon;
   final Color? iconColor;
   final Color? backgroundColor;
   final double size;
+  final bool useAccentColor;
 
   const FMCloseButton({
     super.key,
@@ -18,6 +21,7 @@ class FMCloseButton extends StatelessWidget {
     this.iconColor,
     this.backgroundColor,
     this.size = AppSpacing.closeButtonSize,
+    this.useAccentColor = false,
   });
 
   /// Factory constructor for a close button that navigates back.
@@ -28,19 +32,24 @@ class FMCloseButton extends StatelessWidget {
     );
   }
 
-  /// Factory constructor for a plus/add button.
+  /// Factory constructor for a plus/add button that uses accent color.
   factory FMCloseButton.add({
     required VoidCallback onTap,
   }) {
     return FMCloseButton(
       onTap: onTap,
       icon: LucideIcons.plus,
-      iconColor: AppColors.textPrimary,
+      useAccentColor: true,
     );
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accentColor = ref.watch(accentColorProvider);
+    final effectiveIconColor = useAccentColor
+        ? accentColor
+        : (iconColor ?? AppColors.textSecondary);
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -53,7 +62,7 @@ class FMCloseButton extends StatelessWidget {
         ),
         child: Icon(
           icon,
-          color: iconColor ?? AppColors.textSecondary,
+          color: effectiveIconColor,
           size: 20,
         ),
       ),

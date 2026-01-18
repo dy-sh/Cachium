@@ -45,9 +45,9 @@ class AccountsScreen extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: AppColors.border),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       LucideIcons.plus,
-                      color: AppColors.textPrimary,
+                      color: ref.watch(accentColorProvider),
                       size: 20,
                     ),
                   ),

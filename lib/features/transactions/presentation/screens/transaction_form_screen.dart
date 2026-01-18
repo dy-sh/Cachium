@@ -144,7 +144,6 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                   ),
                   child: FMPrimaryButton(
                     label: 'Save Transaction',
-                    backgroundColor: AppColors.accentPrimary,
                     onPressed: formState.isValid
                         ? () {
                             // Save last used account

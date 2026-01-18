@@ -34,41 +34,41 @@ class AppColors {
     Color(0xFFFF69B4), // Pink
   ];
 
-  // Account type colors - Bright (enhanced +10% brightness)
-  static const Color accountBankBright = Color(0xFF1ADEFF);
-  static const Color accountCreditCardBright = Color(0xFFFF7575);
-  static const Color accountCashBright = Color(0xFF8AFF7A);
-  static const Color accountSavingsBright = Color(0xFFFFDD4D);
-  static const Color accountInvestmentBright = Color(0xFFC098FF);
-  static const Color accountWalletBright = Color(0xFFFF9D1A);
+  // Account type colors - Bright (maximum saturation/brightness)
+  static const Color accountBankBright = Color(0xFF00FFFF);    // Pure cyan
+  static const Color accountCreditCardBright = Color(0xFFFF4444);  // Bright red
+  static const Color accountCashBright = Color(0xFF00FF66);    // Bright green
+  static const Color accountSavingsBright = Color(0xFFFFEE00);  // Bright yellow
+  static const Color accountInvestmentBright = Color(0xFFCC66FF);  // Bright purple
+  static const Color accountWalletBright = Color(0xFFFF8800);  // Bright orange
 
-  // Account type colors - Dim (muted versions)
-  static const Color accountBankDim = Color(0xFF0D6F80);
-  static const Color accountCreditCardDim = Color(0xFF803B3B);
-  static const Color accountCashDim = Color(0xFF457F3D);
-  static const Color accountSavingsDim = Color(0xFF806F27);
-  static const Color accountInvestmentDim = Color(0xFF604C80);
-  static const Color accountWalletDim = Color(0xFF804F0D);
+  // Account type colors - Dim (current default, balanced visibility)
+  static const Color accountBankDim = Color(0xFF1ADEFF);
+  static const Color accountCreditCardDim = Color(0xFFFF7575);
+  static const Color accountCashDim = Color(0xFF8AFF7A);
+  static const Color accountSavingsDim = Color(0xFFFFDD4D);
+  static const Color accountInvestmentDim = Color(0xFFC098FF);
+  static const Color accountWalletDim = Color(0xFFFF9D1A);
 
-  // Legacy accessors (use bright by default)
-  static const Color accountBank = accountBankBright;
-  static const Color accountCreditCard = accountCreditCardBright;
-  static const Color accountCash = accountCashBright;
-  static const Color accountSavings = accountSavingsBright;
-  static const Color accountInvestment = accountInvestmentBright;
-  static const Color accountWallet = accountWalletBright;
+  // Legacy accessors (use dim by default)
+  static const Color accountBank = accountBankDim;
+  static const Color accountCreditCard = accountCreditCardDim;
+  static const Color accountCash = accountCashDim;
+  static const Color accountSavings = accountSavingsDim;
+  static const Color accountInvestment = accountInvestmentDim;
+  static const Color accountWallet = accountWalletDim;
 
-  // Semantic colors - Bright
-  static const Color incomeBright = Color(0xFF00FF88);
-  static const Color expenseBright = Color(0xFFFF6B6B);
+  // Semantic colors - Bright (maximum saturation)
+  static const Color incomeBright = Color(0xFF00FF66);  // Pure bright green
+  static const Color expenseBright = Color(0xFFFF4444);  // Pure bright red
 
-  // Semantic colors - Dim
-  static const Color incomeDim = Color(0xFF00804A);
-  static const Color expenseDim = Color(0xFF803636);
+  // Semantic colors - Dim (current default, balanced visibility)
+  static const Color incomeDim = Color(0xFF00FF88);
+  static const Color expenseDim = Color(0xFFFF6B6B);
 
-  // Legacy semantic colors (bright by default)
-  static const Color income = incomeBright;
-  static const Color expense = expenseBright;
+  // Legacy semantic colors (dim by default)
+  static const Color income = incomeDim;
+  static const Color expense = expenseDim;
 
   // Navigation colors
   static const Color navActive = Color(0xFFFFFFFF);

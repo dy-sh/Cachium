@@ -9,6 +9,7 @@ import '../../../../design_system/components/buttons/fm_icon_button.dart';
 import '../../../../design_system/components/chips/fm_toggle_chip.dart';
 import '../../../categories/data/models/category.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
+import '../providers/settings_provider.dart';
 import '../widgets/category_form_modal.dart';
 
 class CategoryManagementScreen extends ConsumerStatefulWidget {
@@ -188,60 +189,98 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
   }
 
   void _showAddModal() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.9,
-        maxChildSize: 0.95,
-        minChildSize: 0.5,
-        builder: (context, scrollController) => CategoryFormModal(
-          type: _selectedType,
-          onSave: (name, icon, color) {
-            final category = Category(
-              id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
-              name: name,
-              icon: icon,
-              color: color,
-              type: _selectedType,
-              isCustom: true,
-            );
-            ref.read(categoriesProvider.notifier).addCategory(category);
-            Navigator.pop(context);
-          },
-        ),
+    final animationsEnabled = ref.read(settingsProvider).formAnimationsEnabled;
+    final modalContent = DraggableScrollableSheet(
+      initialChildSize: 0.9,
+      maxChildSize: 0.95,
+      minChildSize: 0.5,
+      builder: (context, scrollController) => CategoryFormModal(
+        type: _selectedType,
+        onSave: (name, icon, color) {
+          final category = Category(
+            id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
+            name: name,
+            icon: icon,
+            color: color,
+            type: _selectedType,
+            isCustom: true,
+          );
+          ref.read(categoriesProvider.notifier).addCategory(category);
+          Navigator.pop(context);
+        },
       ),
     );
+
+    if (!animationsEnabled) {
+      showGeneralDialog(
+        context: context,
+        barrierDismissible: true,
+        barrierLabel: 'Dismiss',
+        barrierColor: Colors.black54,
+        transitionDuration: Duration.zero,
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return Align(
+            alignment: Alignment.bottomCenter,
+            child: Material(color: Colors.transparent, child: modalContent),
+          );
+        },
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => modalContent,
+      );
+    }
   }
 
   void _showEditModal(Category category) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.9,
-        maxChildSize: 0.95,
-        minChildSize: 0.5,
-        builder: (context, scrollController) => CategoryFormModal(
-          category: category,
-          type: category.type,
-          onSave: (name, icon, color) {
-            final updated = category.copyWith(
-              name: name,
-              icon: icon,
-              color: color,
-            );
-            ref.read(categoriesProvider.notifier).updateCategory(updated);
-            Navigator.pop(context);
-          },
-          onDelete: () {
-            ref.read(categoriesProvider.notifier).deleteCategory(category.id);
-            Navigator.pop(context);
-          },
-        ),
+    final animationsEnabled = ref.read(settingsProvider).formAnimationsEnabled;
+    final modalContent = DraggableScrollableSheet(
+      initialChildSize: 0.9,
+      maxChildSize: 0.95,
+      minChildSize: 0.5,
+      builder: (context, scrollController) => CategoryFormModal(
+        category: category,
+        type: category.type,
+        onSave: (name, icon, color) {
+          final updated = category.copyWith(
+            name: name,
+            icon: icon,
+            color: color,
+          );
+          ref.read(categoriesProvider.notifier).updateCategory(updated);
+          Navigator.pop(context);
+        },
+        onDelete: () {
+          ref.read(categoriesProvider.notifier).deleteCategory(category.id);
+          Navigator.pop(context);
+        },
       ),
     );
+
+    if (!animationsEnabled) {
+      showGeneralDialog(
+        context: context,
+        barrierDismissible: true,
+        barrierLabel: 'Dismiss',
+        barrierColor: Colors.black54,
+        transitionDuration: Duration.zero,
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return Align(
+            alignment: Alignment.bottomCenter,
+            child: Material(color: Colors.transparent, child: modalContent),
+          );
+        },
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => modalContent,
+      );
+    }
   }
 }

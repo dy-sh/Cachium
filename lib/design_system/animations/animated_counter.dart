@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/utils/currency_formatter.dart';
+import '../../features/settings/presentation/providers/settings_provider.dart';
 
-class AnimatedCounter extends StatefulWidget {
+class AnimatedCounter extends ConsumerStatefulWidget {
   final double value;
   final TextStyle? style;
   final Duration duration;
   final String? prefix;
   final String? suffix;
-  final bool animate;
 
   const AnimatedCounter({
     super.key,
@@ -16,14 +17,13 @@ class AnimatedCounter extends StatefulWidget {
     this.duration = const Duration(milliseconds: 500),
     this.prefix,
     this.suffix,
-    this.animate = true,
   });
 
   @override
-  State<AnimatedCounter> createState() => _AnimatedCounterState();
+  ConsumerState<AnimatedCounter> createState() => _AnimatedCounterState();
 }
 
-class _AnimatedCounterState extends State<AnimatedCounter>
+class _AnimatedCounterState extends ConsumerState<AnimatedCounter>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
@@ -33,27 +33,40 @@ class _AnimatedCounterState extends State<AnimatedCounter>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: widget.animate ? widget.duration : Duration.zero,
+      duration: widget.duration,
       vsync: this,
     );
     _animation = Tween<double>(begin: 0, end: widget.value).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
     );
-    _controller.forward();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final animationsEnabled = ref.read(settingsProvider).balanceCountersEnabled;
+    if (animationsEnabled) {
+      _controller.forward();
+    } else {
+      _controller.value = 1.0;
+    }
   }
 
   @override
   void didUpdateWidget(AnimatedCounter oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.value != widget.value) {
+      final animationsEnabled = ref.read(settingsProvider).balanceCountersEnabled;
       _previousValue = _animation.value;
-      _controller.duration = widget.animate ? widget.duration : Duration.zero;
       _animation = Tween<double>(begin: _previousValue, end: widget.value).animate(
         CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
       );
-      _controller
-        ..reset()
-        ..forward();
+      _controller.reset();
+      if (animationsEnabled) {
+        _controller.forward();
+      } else {
+        _controller.value = 1.0;
+      }
     }
   }
 
@@ -65,7 +78,9 @@ class _AnimatedCounterState extends State<AnimatedCounter>
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.animate) {
+    final animationsEnabled = ref.watch(settingsProvider).balanceCountersEnabled;
+
+    if (!animationsEnabled) {
       final formattedValue = CurrencyFormatter.format(widget.value);
       return Text(
         '${widget.prefix ?? ''}$formattedValue${widget.suffix ?? ''}',

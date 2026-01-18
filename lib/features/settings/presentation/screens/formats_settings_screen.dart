@@ -165,43 +165,89 @@ class FormatsSettingsScreen extends ConsumerWidget {
   }
 
   void _showDateFormatPicker(BuildContext context, WidgetRef ref, AppSettings settings) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => _OptionPickerSheet(
-        title: 'Date Format',
-        options: DateFormatOption.values.map((f) => f.label).toList(),
-        selectedIndex: DateFormatOption.values.indexOf(settings.dateFormat),
-        onSelected: (index) {
-          ref.read(settingsProvider.notifier).setDateFormat(DateFormatOption.values[index]);
-          Navigator.pop(context);
-        },
-      ),
+    final animationsEnabled = ref.read(settingsProvider).formAnimationsEnabled;
+    final modalContent = _OptionPickerSheet(
+      title: 'Date Format',
+      options: DateFormatOption.values.map((f) => f.label).toList(),
+      selectedIndex: DateFormatOption.values.indexOf(settings.dateFormat),
+      onSelected: (index) {
+        ref.read(settingsProvider.notifier).setDateFormat(DateFormatOption.values[index]);
+        Navigator.pop(context);
+      },
     );
+
+    if (!animationsEnabled) {
+      showGeneralDialog(
+        context: context,
+        barrierDismissible: true,
+        barrierLabel: 'Dismiss',
+        barrierColor: Colors.black54,
+        transitionDuration: Duration.zero,
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return Align(
+            alignment: Alignment.bottomCenter,
+            child: Material(
+              color: AppColors.surface,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              child: modalContent,
+            ),
+          );
+        },
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: AppColors.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (context) => modalContent,
+      );
+    }
   }
 
   void _showCurrencyPicker(BuildContext context, WidgetRef ref, AppSettings settings) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.surface,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => _CurrencyPickerSheet(
-        settings: settings,
-        onSelected: (symbol, customValue) {
-          ref.read(settingsProvider.notifier).setCurrencySymbol(symbol);
-          if (symbol == CurrencySymbol.custom && customValue != null) {
-            ref.read(settingsProvider.notifier).setCustomCurrencySymbol(customValue);
-          }
-          Navigator.pop(context);
-        },
-      ),
+    final animationsEnabled = ref.read(settingsProvider).formAnimationsEnabled;
+    final modalContent = _CurrencyPickerSheet(
+      settings: settings,
+      onSelected: (symbol, customValue) {
+        ref.read(settingsProvider.notifier).setCurrencySymbol(symbol);
+        if (symbol == CurrencySymbol.custom && customValue != null) {
+          ref.read(settingsProvider.notifier).setCustomCurrencySymbol(customValue);
+        }
+        Navigator.pop(context);
+      },
     );
+
+    if (!animationsEnabled) {
+      showGeneralDialog(
+        context: context,
+        barrierDismissible: true,
+        barrierLabel: 'Dismiss',
+        barrierColor: Colors.black54,
+        transitionDuration: Duration.zero,
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return Align(
+            alignment: Alignment.bottomCenter,
+            child: Material(
+              color: AppColors.surface,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              child: modalContent,
+            ),
+          );
+        },
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: AppColors.surface,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (context) => modalContent,
+      );
+    }
   }
 }
 

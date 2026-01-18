@@ -7,10 +7,15 @@ class PageTransitions {
 
   /// Fullscreen slide from right to left (for transaction/account forms)
   /// Duration: 350ms with easeOutCubic curve
-  static CustomTransitionPage<void> buildSlideLeftTransition(
+  /// If [animationsEnabled] is false, returns NoTransitionPage
+  static Page<void> buildSlideLeftTransition(
     GoRouterState state,
-    Widget child,
-  ) {
+    Widget child, {
+    bool animationsEnabled = true,
+  }) {
+    if (!animationsEnabled) {
+      return NoTransitionPage(key: state.pageKey, child: child);
+    }
     return CustomTransitionPage(
       key: state.pageKey,
       child: child,
@@ -34,10 +39,15 @@ class PageTransitions {
 
   /// Modal slide from bottom to top (for modal dialogs)
   /// Duration: 300ms with easeOutCubic curve
-  static CustomTransitionPage<void> buildSlideUpTransition(
+  /// If [animationsEnabled] is false, returns NoTransitionPage
+  static Page<void> buildSlideUpTransition(
     GoRouterState state,
-    Widget child,
-  ) {
+    Widget child, {
+    bool animationsEnabled = true,
+  }) {
+    if (!animationsEnabled) {
+      return NoTransitionPage(key: state.pageKey, child: child);
+    }
     return CustomTransitionPage(
       key: state.pageKey,
       child: child,

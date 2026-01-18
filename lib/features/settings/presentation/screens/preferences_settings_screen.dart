@@ -99,22 +99,45 @@ class PreferencesSettingsScreen extends ConsumerWidget {
   }
 
   void _showStartScreenPicker(BuildContext context, WidgetRef ref, AppSettings settings) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => _OptionPickerSheet(
-        title: 'Start Screen',
-        options: const ['Home', 'Transactions', 'Accounts'],
-        selectedIndex: StartScreen.values.indexOf(settings.startScreen),
-        onSelected: (index) {
-          ref.read(settingsProvider.notifier).setStartScreen(StartScreen.values[index]);
-          Navigator.pop(context);
-        },
-      ),
+    final animationsEnabled = ref.read(settingsProvider).formAnimationsEnabled;
+    final modalContent = _OptionPickerSheet(
+      title: 'Start Screen',
+      options: const ['Home', 'Transactions', 'Accounts'],
+      selectedIndex: StartScreen.values.indexOf(settings.startScreen),
+      onSelected: (index) {
+        ref.read(settingsProvider.notifier).setStartScreen(StartScreen.values[index]);
+        Navigator.pop(context);
+      },
     );
+
+    if (!animationsEnabled) {
+      showGeneralDialog(
+        context: context,
+        barrierDismissible: true,
+        barrierLabel: 'Dismiss',
+        barrierColor: Colors.black54,
+        transitionDuration: Duration.zero,
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return Align(
+            alignment: Alignment.bottomCenter,
+            child: Material(
+              color: AppColors.surface,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              child: modalContent,
+            ),
+          );
+        },
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: AppColors.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (context) => modalContent,
+      );
+    }
   }
 }
 

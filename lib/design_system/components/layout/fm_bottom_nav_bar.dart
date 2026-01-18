@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/animations/haptic_helper.dart';
 import '../../../core/constants/app_animations.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../features/settings/presentation/providers/settings_provider.dart';
 
 class FMBottomNavItem {
   final IconData icon;
@@ -20,7 +22,7 @@ class FMBottomNavItem {
   });
 }
 
-class FMBottomNavBar extends StatefulWidget {
+class FMBottomNavBar extends ConsumerStatefulWidget {
   final int currentIndex;
   final ValueChanged<int>? onTap;
   final List<FMBottomNavItem> items;
@@ -56,12 +58,14 @@ class FMBottomNavBar extends StatefulWidget {
       ];
 
   @override
-  State<FMBottomNavBar> createState() => _FMBottomNavBarState();
+  ConsumerState<FMBottomNavBar> createState() => _FMBottomNavBarState();
 }
 
-class _FMBottomNavBarState extends State<FMBottomNavBar> {
+class _FMBottomNavBarState extends ConsumerState<FMBottomNavBar> {
   @override
   Widget build(BuildContext context) {
+    final accentColor = ref.watch(accentColorProvider);
+
     return Container(
       height: AppSpacing.bottomNavHeight + MediaQuery.of(context).padding.bottom,
       padding: EdgeInsets.only(
@@ -85,6 +89,7 @@ class _FMBottomNavBarState extends State<FMBottomNavBar> {
           return _NavItem(
             item: item,
             isSelected: isSelected,
+            accentColor: accentColor,
             onTap: () => widget.onTap?.call(index),
           );
         }),
@@ -93,22 +98,24 @@ class _FMBottomNavBarState extends State<FMBottomNavBar> {
   }
 }
 
-class _NavItem extends StatefulWidget {
+class _NavItem extends ConsumerStatefulWidget {
   final FMBottomNavItem item;
   final bool isSelected;
+  final Color accentColor;
   final VoidCallback onTap;
 
   const _NavItem({
     required this.item,
     required this.isSelected,
+    required this.accentColor,
     required this.onTap,
   });
 
   @override
-  State<_NavItem> createState() => _NavItemState();
+  ConsumerState<_NavItem> createState() => _NavItemState();
 }
 
-class _NavItemState extends State<_NavItem> with TickerProviderStateMixin {
+class _NavItemState extends ConsumerState<_NavItem> with TickerProviderStateMixin {
   late AnimationController _scaleController;
   late AnimationController _bounceController;
   late Animation<double> _scaleAnimation;
@@ -146,12 +153,18 @@ class _NavItemState extends State<_NavItem> with TickerProviderStateMixin {
   }
 
   void _handleTapDown(TapDownDetails details) {
-    _scaleController.forward();
+    final animationsEnabled = ref.read(settingsProvider).tabTransitionsEnabled;
+    if (animationsEnabled) {
+      _scaleController.forward();
+    }
   }
 
   void _handleTapUp(TapUpDetails details) {
-    _scaleController.reverse();
-    _bounceController.forward(from: 0);
+    final animationsEnabled = ref.read(settingsProvider).tabTransitionsEnabled;
+    if (animationsEnabled) {
+      _scaleController.reverse();
+      _bounceController.forward(from: 0);
+    }
     HapticHelper.lightImpact();
   }
 
@@ -161,8 +174,79 @@ class _NavItemState extends State<_NavItem> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.isSelected ? AppColors.navActive : AppColors.navInactive;
+    final animationsEnabled = ref.watch(settingsProvider).tabTransitionsEnabled;
+    final color = widget.isSelected ? widget.accentColor : AppColors.navInactive;
     final hasBadge = widget.item.badgeCount != null && widget.item.badgeCount! > 0;
+
+    if (!animationsEnabled) {
+      return GestureDetector(
+        onTap: () {
+          HapticHelper.lightImpact();
+          widget.onTap();
+        },
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 64),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(
+                    widget.isSelected ? widget.item.activeIcon : widget.item.icon,
+                    color: color,
+                    size: 24,
+                  ),
+                  if (hasBadge)
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.expense,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Text(
+                          widget.item.badgeCount! > 9 ? '9+' : '${widget.item.badgeCount}',
+                          style: AppTypography.navLabel.copyWith(
+                            color: AppColors.textPrimary,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              SizedBox(
+                height: 12,
+                child: Opacity(
+                  opacity: widget.isSelected ? 1.0 : 0.0,
+                  child: Text(
+                    widget.item.label,
+                    style: AppTypography.navLabel.copyWith(
+                      color: color,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 10,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return GestureDetector(
       onTap: widget.onTap,
