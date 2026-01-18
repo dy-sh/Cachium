@@ -58,55 +58,9 @@ class FMBottomNavBar extends StatefulWidget {
   State<FMBottomNavBar> createState() => _FMBottomNavBarState();
 }
 
-class _FMBottomNavBarState extends State<FMBottomNavBar>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _indicatorController;
-  late Animation<double> _indicatorAnimation;
-  int _previousIndex = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _previousIndex = widget.currentIndex;
-    _indicatorController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _indicatorAnimation = Tween<double>(
-      begin: _previousIndex.toDouble(),
-      end: widget.currentIndex.toDouble(),
-    ).animate(CurvedAnimation(
-      parent: _indicatorController,
-      curve: Curves.easeOutCubic,
-    ));
-  }
-
-  @override
-  void didUpdateWidget(FMBottomNavBar oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.currentIndex != widget.currentIndex) {
-      _previousIndex = oldWidget.currentIndex;
-      _indicatorAnimation = Tween<double>(
-        begin: _previousIndex.toDouble(),
-        end: widget.currentIndex.toDouble(),
-      ).animate(CurvedAnimation(
-        parent: _indicatorController,
-        curve: Curves.easeOutCubic,
-      ));
-      _indicatorController.forward(from: 0);
-    }
-  }
-
-  @override
-  void dispose() {
-    _indicatorController.dispose();
-    super.dispose();
-  }
-
+class _FMBottomNavBarState extends State<FMBottomNavBar> {
   @override
   Widget build(BuildContext context) {
-    final itemWidth = MediaQuery.of(context).size.width / widget.items.length;
-
     return Container(
       height: AppSpacing.bottomNavHeight + MediaQuery.of(context).padding.bottom,
       padding: EdgeInsets.only(
@@ -121,38 +75,18 @@ class _FMBottomNavBarState extends State<FMBottomNavBar>
           ),
         ),
       ),
-      child: Stack(
-        children: [
-          // Sliding indicator line at top
-          AnimatedBuilder(
-            animation: _indicatorAnimation,
-            builder: (context, child) {
-              return Positioned(
-                top: 0,
-                left: itemWidth * _indicatorAnimation.value,
-                child: Container(
-                  width: itemWidth,
-                  height: 2,
-                  color: AppColors.accentPrimary,
-                ),
-              );
-            },
-          ),
-          // Navigation items
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(widget.items.length, (index) {
-              final item = widget.items[index];
-              final isSelected = index == widget.currentIndex;
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: List.generate(widget.items.length, (index) {
+          final item = widget.items[index];
+          final isSelected = index == widget.currentIndex;
 
-              return _NavItem(
-                item: item,
-                isSelected: isSelected,
-                onTap: () => widget.onTap?.call(index),
-              );
-            }),
-          ),
-        ],
+          return _NavItem(
+            item: item,
+            isSelected: isSelected,
+            onTap: () => widget.onTap?.call(index),
+          );
+        }),
       ),
     );
   }
@@ -249,6 +183,7 @@ class _NavItemState extends State<_NavItem> with TickerProviderStateMixin {
                   Stack(
                     clipBehavior: Clip.none,
                     children: [
+                      // Icon only - no background
                       Transform.scale(
                         scale: _bounceAnimation.value,
                         child: AnimatedSwitcher(
@@ -263,8 +198,8 @@ class _NavItemState extends State<_NavItem> with TickerProviderStateMixin {
                       ),
                       if (hasBadge)
                         Positioned(
-                          right: -8,
-                          top: -4,
+                          right: 0,
+                          top: 0,
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                             decoration: BoxDecoration(
