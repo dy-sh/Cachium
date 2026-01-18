@@ -35,7 +35,7 @@ class TotalBalanceCard extends ConsumerWidget {
           AnimatedCounter(
             value: totalBalance,
             style: AppTypography.moneyLarge.copyWith(
-              fontSize: 32,
+              fontSize: 26,
               color: AppColors.textPrimary.withOpacity(0.85),
             ),
           ),

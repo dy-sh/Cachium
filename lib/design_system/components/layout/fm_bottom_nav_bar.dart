@@ -164,19 +164,20 @@ class _NavItemState extends State<_NavItem> with SingleTickerProviderStateMixin 
                     ),
                   ),
                   const SizedBox(height: 4),
-                  AnimatedSize(
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeInOut,
-                    child: widget.isSelected
-                        ? Text(
-                            widget.item.label,
-                            style: AppTypography.navLabel.copyWith(
-                              color: color,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            textAlign: TextAlign.center,
-                          )
-                        : const SizedBox.shrink(),
+                  SizedBox(
+                    height: 14,
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 200),
+                      opacity: widget.isSelected ? 1.0 : 0.0,
+                      child: Text(
+                        widget.item.label,
+                        style: AppTypography.navLabel.copyWith(
+                          color: color,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   ),
                 ],
               ),

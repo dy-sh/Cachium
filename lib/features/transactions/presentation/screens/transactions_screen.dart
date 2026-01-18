@@ -176,7 +176,7 @@ class _TransactionGroupWidget extends ConsumerWidget {
               Text(
                 _formatNetAmount(group.netAmount),
                 style: AppTypography.labelSmall.copyWith(
-                  color: (group.netAmount >= 0 ? AppColors.income : AppColors.expense).withOpacity(0.5),
+                  color: AppColors.textTertiary,
                   fontSize: 12,
                 ),
               ),
