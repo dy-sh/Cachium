@@ -436,7 +436,7 @@ class _DateSelector extends StatelessWidget {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
-    final weekStart = today.subtract(Duration(days: today.weekday - 1));
+    final monthStart = DateTime(now.year, now.month, 1);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -459,17 +459,15 @@ class _DateSelector extends StatelessWidget {
               onTap: () => onChanged(yesterday),
             ),
             _QuickDateChip(
-              label: 'This Week',
-              isSelected: date.isAfter(weekStart.subtract(const Duration(days: 1))) &&
-                  date.isBefore(today.add(const Duration(days: 1))),
-              onTap: () => onChanged(weekStart),
+              label: 'Start of Month',
+              isSelected: _isSameDay(date, monthStart),
+              onTap: () => onChanged(monthStart),
             ),
             _QuickDateChip(
               label: 'Custom',
               isSelected: !_isSameDay(date, today) &&
                   !_isSameDay(date, yesterday) &&
-                  !(date.isAfter(weekStart.subtract(const Duration(days: 1))) &&
-                      date.isBefore(today.add(const Duration(days: 1)))),
+                  !_isSameDay(date, monthStart),
               onTap: () async {
                 final picked = await showDatePicker(
                   context: context,
