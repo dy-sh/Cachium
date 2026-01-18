@@ -223,9 +223,9 @@ class _NavItemState extends State<_NavItem> with TickerProviderStateMixin {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   SizedBox(
-                    height: 14,
+                    height: 12,
                     child: AnimatedOpacity(
                       duration: const Duration(milliseconds: 200),
                       opacity: widget.isSelected ? 1.0 : 0.0,
@@ -234,6 +234,7 @@ class _NavItemState extends State<_NavItem> with TickerProviderStateMixin {
                         style: AppTypography.navLabel.copyWith(
                           color: color,
                           fontWeight: FontWeight.w600,
+                          fontSize: 10,
                         ),
                         textAlign: TextAlign.center,
                       ),

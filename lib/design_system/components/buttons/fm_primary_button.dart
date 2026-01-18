@@ -4,6 +4,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
+import '../feedback/fm_loading_indicator.dart';
 
 class FMPrimaryButton extends StatefulWidget {
   final String label;
@@ -98,13 +99,9 @@ class _FMPrimaryButtonState extends State<FMPrimaryButton>
                 ),
                 child: Center(
                   child: widget.isLoading
-                      ? SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(txtColor),
-                          ),
+                      ? FMLoadingDots(
+                          color: txtColor,
+                          size: 24,
                         )
                       : Row(
                           mainAxisSize: MainAxisSize.min,

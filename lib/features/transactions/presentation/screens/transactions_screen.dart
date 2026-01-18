@@ -8,6 +8,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
+import '../../../../design_system/animations/staggered_list.dart';
 import '../../../../design_system/components/chips/fm_toggle_chip.dart';
 import '../../../../navigation/app_router.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
@@ -142,7 +143,10 @@ class TransactionsScreen extends ConsumerWidget {
                     ),
                     itemCount: groups.length,
                     itemBuilder: (context, index) {
-                      return _TransactionGroupWidget(group: groups[index]);
+                      return StaggeredListItem(
+                        index: index,
+                        child: _TransactionGroupWidget(group: groups[index]),
+                      );
                     },
                   ),
           ),

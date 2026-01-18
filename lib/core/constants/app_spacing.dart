@@ -18,11 +18,15 @@ class AppSpacing {
   static const double screenPadding = 14.0;
   static const double sectionGap = 20.0;
   static const double itemGap = 10.0;
-  static const double chipGap = 8.0;
+  static const double chipGap = 6.0;
+
+  // Compact chip padding for tighter layouts
+  static const double chipPaddingHorizontalCompact = 10.0;
+  static const double chipPaddingVerticalCompact = 6.0;
 
   // Navigation
-  static const double bottomNavHeight = 64.0;
-  static const double bottomNavPadding = 8.0;
+  static const double bottomNavHeight = 52.0;
+  static const double bottomNavPadding = 4.0;
 
   // Input
   static const double inputPadding = 10.0;

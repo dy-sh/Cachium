@@ -92,6 +92,15 @@ class _FMChipState extends State<FMChip> with SingleTickerProviderStateMixin {
                   color: borderColor,
                   width: widget.isSelected ? 1.5 : 1,
                 ),
+                boxShadow: widget.isSelected
+                    ? [
+                        BoxShadow(
+                          color: selectedColor.withOpacity(0.3),
+                          blurRadius: 10,
+                          spreadRadius: 0,
+                        ),
+                      ]
+                    : null,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,

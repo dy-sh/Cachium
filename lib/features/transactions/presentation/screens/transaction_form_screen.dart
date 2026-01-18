@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../../../../core/animations/haptic_helper.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -11,6 +12,7 @@ import '../../../../core/utils/date_formatter.dart';
 import '../../../../design_system/components/buttons/fm_primary_button.dart';
 import '../../../../design_system/components/chips/fm_toggle_chip.dart';
 import '../../../../design_system/components/inputs/fm_amount_input.dart';
+import '../../../../design_system/components/inputs/fm_date_picker.dart';
 import '../../../../design_system/components/inputs/fm_text_field.dart';
 import '../../../accounts/data/models/account.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
@@ -242,7 +244,10 @@ class _CategorySelectorState extends State<_CategorySelector> {
               final isSelected = category.id == widget.selectedId;
 
               return GestureDetector(
-                onTap: () => widget.onChanged(category.id),
+                onTap: () {
+                  HapticHelper.lightImpact();
+                  widget.onChanged(category.id);
+                },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   padding: const EdgeInsets.symmetric(
@@ -258,6 +263,15 @@ class _CategorySelectorState extends State<_CategorySelector> {
                       color: isSelected ? category.color : AppColors.border,
                       width: isSelected ? 2 : 1,
                     ),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: category.color.withOpacity(0.3),
+                              blurRadius: 10,
+                              spreadRadius: 0,
+                            ),
+                          ]
+                        : null,
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -345,7 +359,10 @@ class _AccountSelectorState extends State<_AccountSelector> {
               final isSelected = account.id == widget.selectedId;
 
               return GestureDetector(
-                onTap: () => widget.onChanged(account.id),
+                onTap: () {
+                  HapticHelper.lightImpact();
+                  widget.onChanged(account.id);
+                },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   padding: const EdgeInsets.symmetric(
@@ -361,6 +378,15 @@ class _AccountSelectorState extends State<_AccountSelector> {
                       color: isSelected ? account.color : AppColors.border,
                       width: isSelected ? 2 : 1,
                     ),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: account.color.withOpacity(0.3),
+                              blurRadius: 10,
+                              spreadRadius: 0,
+                            ),
+                          ]
+                        : null,
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -431,6 +457,30 @@ class _DateSelector extends StatelessWidget {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
+  bool _isQuickDate(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final monthStart = DateTime(now.year, now.month, 1);
+
+    return _isSameDay(date, today) ||
+        _isSameDay(date, yesterday) ||
+        _isSameDay(date, monthStart);
+  }
+
+  Future<void> _showCustomDatePicker(BuildContext context) async {
+    HapticHelper.lightImpact();
+    final picked = await showFMDatePicker(
+      context: context,
+      initialDate: date,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null) {
+      onChanged(picked);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
@@ -451,73 +501,66 @@ class _DateSelector extends StatelessWidget {
             _QuickDateChip(
               label: 'Today',
               isSelected: _isSameDay(date, today),
-              onTap: () => onChanged(today),
+              onTap: () {
+                HapticHelper.lightImpact();
+                onChanged(today);
+              },
             ),
             _QuickDateChip(
               label: 'Yesterday',
               isSelected: _isSameDay(date, yesterday),
-              onTap: () => onChanged(yesterday),
+              onTap: () {
+                HapticHelper.lightImpact();
+                onChanged(yesterday);
+              },
             ),
             _QuickDateChip(
               label: 'Start of Month',
               isSelected: _isSameDay(date, monthStart),
-              onTap: () => onChanged(monthStart),
+              onTap: () {
+                HapticHelper.lightImpact();
+                onChanged(monthStart);
+              },
             ),
             _QuickDateChip(
               label: 'Custom',
-              isSelected: !_isSameDay(date, today) &&
-                  !_isSameDay(date, yesterday) &&
-                  !_isSameDay(date, monthStart),
-              onTap: () async {
-                final picked = await showDatePicker(
-                  context: context,
-                  initialDate: date,
-                  firstDate: DateTime(2020),
-                  lastDate: DateTime.now().add(const Duration(days: 365)),
-                  builder: (context, child) {
-                    return Theme(
-                      data: Theme.of(context).copyWith(
-                        colorScheme: const ColorScheme.dark(
-                          primary: AppColors.accentPrimary,
-                          onPrimary: AppColors.background,
-                          surface: AppColors.surface,
-                          onSurface: AppColors.textPrimary,
-                        ),
-                        dialogBackgroundColor: AppColors.surface,
-                      ),
-                      child: child!,
-                    );
-                  },
-                );
-                if (picked != null) {
-                  onChanged(picked);
-                }
-              },
+              isSelected: !_isQuickDate(date),
+              onTap: () => _showCustomDatePicker(context),
             ),
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
-        // Selected date display
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: AppRadius.mdAll,
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Row(
-            children: [
-              const Icon(
-                LucideIcons.calendar,
-                color: AppColors.textSecondary,
-                size: 20,
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Text(
-                DateFormatter.formatFull(date),
-                style: AppTypography.bodyMedium,
-              ),
-            ],
+        // Selected date display (tappable to open date picker)
+        GestureDetector(
+          onTap: () => _showCustomDatePicker(context),
+          child: Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: AppRadius.mdAll,
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  LucideIcons.calendar,
+                  color: AppColors.textSecondary,
+                  size: 20,
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Text(
+                    DateFormatter.formatFull(date),
+                    style: AppTypography.bodyMedium,
+                  ),
+                ),
+                const Icon(
+                  LucideIcons.chevronRight,
+                  color: AppColors.textTertiary,
+                  size: 18,
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -553,6 +596,15 @@ class _QuickDateChip extends StatelessWidget {
             color: isSelected ? AppColors.accentPrimary : AppColors.border,
             width: isSelected ? 2 : 1,
           ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.accentPrimary.withOpacity(0.3),
+                    blurRadius: 10,
+                    spreadRadius: 0,
+                  ),
+                ]
+              : null,
         ),
         child: Text(
           label,

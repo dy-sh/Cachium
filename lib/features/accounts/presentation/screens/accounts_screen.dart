@@ -8,6 +8,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../design_system/animations/animated_counter.dart';
+import '../../../../design_system/animations/staggered_list.dart';
 import '../../../../navigation/app_router.dart';
 import '../../data/models/account.dart';
 import '../providers/accounts_provider.dart';
@@ -92,15 +93,23 @@ class AccountsScreen extends ConsumerWidget {
                 right: AppSpacing.screenPadding,
                 bottom: AppSpacing.bottomNavHeight + AppSpacing.lg,
               ),
-              children: AccountType.values.map((type) {
-                final accounts = accountsByType[type] ?? [];
-                if (accounts.isEmpty) return const SizedBox.shrink();
+              children: () {
+                int sectionIndex = 0;
+                return AccountType.values.map((type) {
+                  final accounts = accountsByType[type] ?? [];
+                  if (accounts.isEmpty) return const SizedBox.shrink();
 
-                return _AccountTypeSection(
-                  type: type,
-                  accounts: accounts,
-                );
-              }).toList(),
+                  final currentIndex = sectionIndex;
+                  sectionIndex++;
+                  return StaggeredListItem(
+                    index: currentIndex,
+                    child: _AccountTypeSection(
+                      type: type,
+                      accounts: accounts,
+                    ),
+                  );
+                }).toList();
+              }(),
             ),
           ),
         ],
