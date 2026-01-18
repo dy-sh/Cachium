@@ -21,25 +21,27 @@ Future<DateTime?> showFMDatePicker({
   final animationsEnabled = container.read(settingsProvider).formAnimationsEnabled;
 
   if (!animationsEnabled) {
-    return showGeneralDialog<DateTime>(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: 'Dismiss',
-      barrierColor: Colors.black54,
-      transitionDuration: Duration.zero,
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return Align(
-          alignment: Alignment.bottomCenter,
-          child: Material(
-            color: Colors.transparent,
-            child: FMDatePickerModal(
-              initialDate: initialDate,
-              firstDate: firstDate ?? DateTime(2000),
-              lastDate: lastDate ?? DateTime.now().add(const Duration(days: 365)),
+    return Navigator.of(context).push<DateTime>(
+      PageRouteBuilder<DateTime>(
+        opaque: false,
+        barrierDismissible: true,
+        barrierColor: Colors.black54,
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return Align(
+            alignment: Alignment.bottomCenter,
+            child: Material(
+              color: Colors.transparent,
+              child: FMDatePickerModal(
+                initialDate: initialDate,
+                firstDate: firstDate ?? DateTime(2000),
+                lastDate: lastDate ?? DateTime.now().add(const Duration(days: 365)),
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 

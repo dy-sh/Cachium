@@ -25,13 +25,26 @@ class AppColors {
   // Accent color options for settings
   static const List<Color> accentOptions = [
     Color(0xFFFFFFFF), // White (default)
+    // Blues
     Color(0xFF00D4FF), // Cyan
+    Color(0xFF4DA6FF), // Sky Blue
+    Color(0xFF6B8CFF), // Cornflower Blue
+    Color(0xFF3366FF), // Royal Blue
+    Color(0xFF1E90FF), // Dodger Blue
+    Color(0xFF00BFFF), // Deep Sky Blue
+    // Other colors
     Color(0xFF00FF88), // Green
+    Color(0xFF7CFF7C), // Light Green
     Color(0xFFFF6B6B), // Red
+    Color(0xFFFF8585), // Salmon
     Color(0xFFFFDD4D), // Yellow
+    Color(0xFFFFE066), // Light Gold
     Color(0xFFC098FF), // Purple
+    Color(0xFFB388FF), // Light Purple
     Color(0xFFFF9D1A), // Orange
+    Color(0xFFFFAD33), // Light Orange
     Color(0xFFFF69B4), // Pink
+    Color(0xFFFF85C8), // Light Pink
   ];
 
   // Account type colors - Bright (maximum saturation/brightness)

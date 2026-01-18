@@ -177,22 +177,24 @@ class FormatsSettingsScreen extends ConsumerWidget {
     );
 
     if (!animationsEnabled) {
-      showGeneralDialog(
-        context: context,
-        barrierDismissible: true,
-        barrierLabel: 'Dismiss',
-        barrierColor: Colors.black54,
-        transitionDuration: Duration.zero,
-        pageBuilder: (context, animation, secondaryAnimation) {
-          return Align(
-            alignment: Alignment.bottomCenter,
-            child: Material(
-              color: AppColors.surface,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-              child: modalContent,
-            ),
-          );
-        },
+      Navigator.of(context).push(
+        PageRouteBuilder(
+          opaque: false,
+          barrierDismissible: true,
+          barrierColor: Colors.black54,
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+          pageBuilder: (context, animation, secondaryAnimation) {
+            return Align(
+              alignment: Alignment.bottomCenter,
+              child: Material(
+                color: AppColors.surface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                child: modalContent,
+              ),
+            );
+          },
+        ),
       );
     } else {
       showModalBottomSheet(
@@ -220,22 +222,24 @@ class FormatsSettingsScreen extends ConsumerWidget {
     );
 
     if (!animationsEnabled) {
-      showGeneralDialog(
-        context: context,
-        barrierDismissible: true,
-        barrierLabel: 'Dismiss',
-        barrierColor: Colors.black54,
-        transitionDuration: Duration.zero,
-        pageBuilder: (context, animation, secondaryAnimation) {
-          return Align(
-            alignment: Alignment.bottomCenter,
-            child: Material(
-              color: AppColors.surface,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-              child: modalContent,
-            ),
-          );
-        },
+      Navigator.of(context).push(
+        PageRouteBuilder(
+          opaque: false,
+          barrierDismissible: true,
+          barrierColor: Colors.black54,
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+          pageBuilder: (context, animation, secondaryAnimation) {
+            return Align(
+              alignment: Alignment.bottomCenter,
+              child: Material(
+                color: AppColors.surface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                child: modalContent,
+              ),
+            );
+          },
+        ),
       );
     } else {
       showModalBottomSheet(

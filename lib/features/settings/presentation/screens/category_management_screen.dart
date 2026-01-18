@@ -212,18 +212,20 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
     );
 
     if (!animationsEnabled) {
-      showGeneralDialog(
-        context: context,
-        barrierDismissible: true,
-        barrierLabel: 'Dismiss',
-        barrierColor: Colors.black54,
-        transitionDuration: Duration.zero,
-        pageBuilder: (context, animation, secondaryAnimation) {
-          return Align(
-            alignment: Alignment.bottomCenter,
-            child: Material(color: Colors.transparent, child: modalContent),
-          );
-        },
+      Navigator.of(context).push(
+        PageRouteBuilder(
+          opaque: false,
+          barrierDismissible: true,
+          barrierColor: Colors.black54,
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+          pageBuilder: (context, animation, secondaryAnimation) {
+            return Align(
+              alignment: Alignment.bottomCenter,
+              child: Material(color: Colors.transparent, child: modalContent),
+            );
+          },
+        ),
       );
     } else {
       showModalBottomSheet(
@@ -261,18 +263,20 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
     );
 
     if (!animationsEnabled) {
-      showGeneralDialog(
-        context: context,
-        barrierDismissible: true,
-        barrierLabel: 'Dismiss',
-        barrierColor: Colors.black54,
-        transitionDuration: Duration.zero,
-        pageBuilder: (context, animation, secondaryAnimation) {
-          return Align(
-            alignment: Alignment.bottomCenter,
-            child: Material(color: Colors.transparent, child: modalContent),
-          );
-        },
+      Navigator.of(context).push(
+        PageRouteBuilder(
+          opaque: false,
+          barrierDismissible: true,
+          barrierColor: Colors.black54,
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+          pageBuilder: (context, animation, secondaryAnimation) {
+            return Align(
+              alignment: Alignment.bottomCenter,
+              child: Material(color: Colors.transparent, child: modalContent),
+            );
+          },
+        ),
       );
     } else {
       showModalBottomSheet(
