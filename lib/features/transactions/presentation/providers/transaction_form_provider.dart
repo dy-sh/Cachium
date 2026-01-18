@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/transaction.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 
 class TransactionFormState {
   final TransactionType type;
@@ -43,7 +44,11 @@ class TransactionFormState {
 class TransactionFormNotifier extends Notifier<TransactionFormState> {
   @override
   TransactionFormState build() {
-    return TransactionFormState(date: DateTime.now());
+    final lastUsedAccountId = ref.read(lastUsedAccountIdProvider);
+    return TransactionFormState(
+      date: DateTime.now(),
+      accountId: lastUsedAccountId,
+    );
   }
 
   void setType(TransactionType type) {

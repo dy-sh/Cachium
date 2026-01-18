@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/constants/app_colors.dart';
 import 'navigation/app_router.dart';
 
-class CachiumApp extends StatelessWidget {
+class CachiumApp extends ConsumerWidget {
   const CachiumApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(appRouterProvider);
+
     // Set system UI overlay style for dark theme
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
@@ -22,7 +25,7 @@ class CachiumApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'Cachium',
       debugShowCheckedModeBanner: false,
-      routerConfig: appRouter,
+      routerConfig: router,
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: AppColors.background,

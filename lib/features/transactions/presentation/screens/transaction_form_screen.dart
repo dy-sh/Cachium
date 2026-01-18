@@ -12,6 +12,7 @@ import '../../../../design_system/components/inputs/fm_amount_input.dart';
 import '../../../../design_system/components/inputs/fm_text_field.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/transaction.dart';
 import '../providers/transaction_form_provider.dart';
 import '../providers/transactions_provider.dart';
@@ -146,6 +147,9 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                     backgroundColor: AppColors.accentPrimary,
                     onPressed: formState.isValid
                         ? () {
+                            // Save last used account
+                            ref.read(settingsProvider.notifier).setLastUsedAccountId(formState.accountId);
+
                             ref.read(transactionsProvider.notifier).addTransaction(
                                   amount: formState.amount,
                                   type: formState.type,

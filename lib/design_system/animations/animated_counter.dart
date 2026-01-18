@@ -7,6 +7,7 @@ class AnimatedCounter extends StatefulWidget {
   final Duration duration;
   final String? prefix;
   final String? suffix;
+  final bool animate;
 
   const AnimatedCounter({
     super.key,
@@ -15,6 +16,7 @@ class AnimatedCounter extends StatefulWidget {
     this.duration = const Duration(milliseconds: 500),
     this.prefix,
     this.suffix,
+    this.animate = true,
   });
 
   @override
@@ -31,7 +33,7 @@ class _AnimatedCounterState extends State<AnimatedCounter>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: widget.duration,
+      duration: widget.animate ? widget.duration : Duration.zero,
       vsync: this,
     );
     _animation = Tween<double>(begin: 0, end: widget.value).animate(
@@ -45,6 +47,7 @@ class _AnimatedCounterState extends State<AnimatedCounter>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.value != widget.value) {
       _previousValue = _animation.value;
+      _controller.duration = widget.animate ? widget.duration : Duration.zero;
       _animation = Tween<double>(begin: _previousValue, end: widget.value).animate(
         CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
       );
@@ -62,6 +65,14 @@ class _AnimatedCounterState extends State<AnimatedCounter>
 
   @override
   Widget build(BuildContext context) {
+    if (!widget.animate) {
+      final formattedValue = CurrencyFormatter.format(widget.value);
+      return Text(
+        '${widget.prefix ?? ''}$formattedValue${widget.suffix ?? ''}',
+        style: widget.style,
+      );
+    }
+
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {

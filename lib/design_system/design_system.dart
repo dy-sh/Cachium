@@ -28,6 +28,7 @@ export 'components/feedback/fm_loading_indicator.dart';
 // Inputs
 export 'components/inputs/fm_amount_input.dart';
 export 'components/inputs/fm_date_picker.dart';
+export 'components/inputs/fm_switch.dart';
 export 'components/inputs/fm_text_field.dart';
 
 // Layout

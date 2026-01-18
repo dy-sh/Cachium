@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+import '../../features/settings/data/models/app_settings.dart';
 
 class DateFormatter {
   DateFormatter._();
@@ -8,6 +9,14 @@ class DateFormatter {
   static final DateFormat _dayFormat = DateFormat('EEEE');
   static final DateFormat _timeFormat = DateFormat('h:mm a');
   static final DateFormat _monthYearFormat = DateFormat('MMMM yyyy');
+
+  // Cached format instances for date format options
+  static final Map<DateFormatOption, DateFormat> _dateFormats = {
+    DateFormatOption.mmddyyyy: DateFormat('M/d/yyyy'),
+    DateFormatOption.ddmmyyyy: DateFormat('d/M/yyyy'),
+    DateFormatOption.ddmmyyyyDot: DateFormat('d.M.yyyy'),
+    DateFormatOption.yyyymmdd: DateFormat('yyyy-MM-dd'),
+  };
 
   static String formatFull(DateTime date) {
     return _fullFormat.format(date);
@@ -23,6 +32,11 @@ class DateFormatter {
 
   static String formatMonthYear(DateTime date) {
     return _monthYearFormat.format(date);
+  }
+
+  /// Format date according to user's selected format
+  static String formatWithOption(DateTime date, DateFormatOption option) {
+    return _dateFormats[option]!.format(date);
   }
 
   static String formatRelative(DateTime date) {

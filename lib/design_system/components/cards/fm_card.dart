@@ -9,6 +9,7 @@ class FMCard extends StatefulWidget {
   final Widget child;
   final bool isSelected;
   final Color? borderColor;
+  final Color? selectedBorderColor;
   final VoidCallback? onTap;
   final EdgeInsets? padding;
   final double? width;
@@ -19,6 +20,7 @@ class FMCard extends StatefulWidget {
     required this.child,
     this.isSelected = false,
     this.borderColor,
+    this.selectedBorderColor,
     this.onTap,
     this.padding,
     this.width,
@@ -40,7 +42,7 @@ class _FMCardState extends State<FMCard>
   @override
   Widget build(BuildContext context) {
     final borderColor = widget.isSelected
-        ? (widget.borderColor ?? AppColors.borderSelected)
+        ? (widget.selectedBorderColor ?? widget.borderColor ?? AppColors.borderSelected)
         : widget.borderColor ?? AppColors.border;
 
     return GestureDetector(
