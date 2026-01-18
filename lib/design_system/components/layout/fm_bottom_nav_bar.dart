@@ -148,8 +148,9 @@ class _NavItemState extends State<_NavItem> with SingleTickerProviderStateMixin 
         builder: (context, child) {
           return Transform.scale(
             scale: _scaleAnimation.value,
-            child: SizedBox(
-              width: 64,
+            child: Container(
+              constraints: const BoxConstraints(minWidth: 64),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -163,12 +164,19 @@ class _NavItemState extends State<_NavItem> with SingleTickerProviderStateMixin 
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    widget.item.label,
-                    style: AppTypography.navLabel.copyWith(
-                      color: color,
-                      fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
-                    ),
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    child: widget.isSelected
+                        ? Text(
+                            widget.item.label,
+                            style: AppTypography.navLabel.copyWith(
+                              color: color,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            textAlign: TextAlign.center,
+                          )
+                        : const SizedBox.shrink(),
                   ),
                 ],
               ),

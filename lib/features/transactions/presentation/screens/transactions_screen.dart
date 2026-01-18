@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
@@ -8,6 +9,7 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../design_system/components/chips/fm_toggle_chip.dart';
+import '../../../../navigation/app_router.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../data/models/transaction.dart';
@@ -28,7 +30,29 @@ class TransactionsScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.lg),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-            child: Text('Transactions', style: AppTypography.h2),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Transactions', style: AppTypography.h2),
+                GestureDetector(
+                  onTap: () => context.push(AppRoutes.transactionForm),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: const Icon(
+                      LucideIcons.plus,
+                      color: AppColors.textPrimary,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: AppSpacing.lg),
 
@@ -151,8 +175,9 @@ class _TransactionGroupWidget extends ConsumerWidget {
               ),
               Text(
                 _formatNetAmount(group.netAmount),
-                style: AppTypography.moneyTiny.copyWith(
-                  color: group.netAmount >= 0 ? AppColors.income : AppColors.expense,
+                style: AppTypography.labelSmall.copyWith(
+                  color: (group.netAmount >= 0 ? AppColors.income : AppColors.expense).withOpacity(0.5),
+                  fontSize: 12,
                 ),
               ),
             ],

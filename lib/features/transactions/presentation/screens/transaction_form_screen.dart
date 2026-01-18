@@ -165,6 +165,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
               ),
               child: FMPrimaryButton(
                 label: 'Save Transaction',
+                backgroundColor: AppColors.textPrimary.withOpacity(0.8),
                 onPressed: formState.isValid
                     ? () {
                         ref.read(transactionsProvider.notifier).addTransaction(

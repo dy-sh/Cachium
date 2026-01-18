@@ -34,7 +34,10 @@ class TotalBalanceCard extends ConsumerWidget {
           const SizedBox(height: AppSpacing.sm),
           AnimatedCounter(
             value: totalBalance,
-            style: AppTypography.moneyLarge,
+            style: AppTypography.moneyLarge.copyWith(
+              fontSize: 32,
+              color: AppColors.textPrimary.withOpacity(0.85),
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           Row(

@@ -25,30 +25,30 @@ final appRouter = GoRouter(
       routes: [
         GoRoute(
           path: AppRoutes.home,
-          pageBuilder: (context, state) => _buildFadeTransition(
-            state,
-            const HomeScreen(),
+          pageBuilder: (context, state) => NoTransitionPage(
+            key: state.pageKey,
+            child: const HomeScreen(),
           ),
         ),
         GoRoute(
           path: AppRoutes.transactions,
-          pageBuilder: (context, state) => _buildFadeTransition(
-            state,
-            const TransactionsScreen(),
+          pageBuilder: (context, state) => NoTransitionPage(
+            key: state.pageKey,
+            child: const TransactionsScreen(),
           ),
         ),
         GoRoute(
           path: AppRoutes.accounts,
-          pageBuilder: (context, state) => _buildFadeTransition(
-            state,
-            const AccountsScreen(),
+          pageBuilder: (context, state) => NoTransitionPage(
+            key: state.pageKey,
+            child: const AccountsScreen(),
           ),
         ),
         GoRoute(
           path: AppRoutes.settings,
-          pageBuilder: (context, state) => _buildFadeTransition(
-            state,
-            const SettingsScreen(),
+          pageBuilder: (context, state) => NoTransitionPage(
+            key: state.pageKey,
+            child: const SettingsScreen(),
           ),
         ),
       ],
@@ -69,34 +69,6 @@ final appRouter = GoRouter(
     ),
   ],
 );
-
-CustomTransitionPage<void> _buildFadeTransition(
-  GoRouterState state,
-  Widget child,
-) {
-  return CustomTransitionPage(
-    key: state.pageKey,
-    child: child,
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      return FadeTransition(
-        opacity: CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOut,
-        ),
-        child: ScaleTransition(
-          scale: Tween<double>(begin: 0.98, end: 1.0).animate(
-            CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeOut,
-            ),
-          ),
-          child: child,
-        ),
-      );
-    },
-    transitionDuration: const Duration(milliseconds: 200),
-  );
-}
 
 CustomTransitionPage<void> _buildSlideUpTransition(
   GoRouterState state,
