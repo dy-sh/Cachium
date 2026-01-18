@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_animations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../features/settings/presentation/providers/settings_provider.dart';
 import '../../../mixins/tap_scale_mixin.dart';
 
 /// A single day cell in the calendar grid.
-class FMDayCell extends StatefulWidget {
+class FMDayCell extends ConsumerStatefulWidget {
   final int day;
   final bool isSelected;
   final bool isToday;
@@ -23,10 +25,10 @@ class FMDayCell extends StatefulWidget {
   });
 
   @override
-  State<FMDayCell> createState() => _FMDayCellState();
+  ConsumerState<FMDayCell> createState() => _FMDayCellState();
 }
 
-class _FMDayCellState extends State<FMDayCell>
+class _FMDayCellState extends ConsumerState<FMDayCell>
     with SingleTickerProviderStateMixin, TapScaleMixin {
   @override
   double get tapScale => AppAnimations.tapScaleLarge;
@@ -36,12 +38,13 @@ class _FMDayCellState extends State<FMDayCell>
 
   @override
   Widget build(BuildContext context) {
+    final accentColor = ref.watch(accentColorProvider);
     final textColor = widget.isDisabled
         ? AppColors.textTertiary.withOpacity(0.5)
         : widget.isSelected
             ? AppColors.background
             : widget.isToday
-                ? AppColors.accentPrimary
+                ? accentColor
                 : AppColors.textPrimary;
 
     return GestureDetector(
@@ -59,19 +62,19 @@ class _FMDayCellState extends State<FMDayCell>
           width: AppSpacing.calendarDayCellSize,
           height: AppSpacing.calendarDayCellSize,
           decoration: BoxDecoration(
-            color: widget.isSelected ? AppColors.accentPrimary : Colors.transparent,
+            color: widget.isSelected ? accentColor : Colors.transparent,
             shape: BoxShape.circle,
             boxShadow: widget.isSelected
                 ? [
                     BoxShadow(
-                      color: AppColors.accentPrimary.withOpacity(0.4),
+                      color: accentColor.withOpacity(0.4),
                       blurRadius: 12,
                       spreadRadius: 0,
                     ),
                   ]
                 : null,
             border: widget.isToday && !widget.isSelected
-                ? Border.all(color: AppColors.accentPrimary, width: 1)
+                ? Border.all(color: accentColor, width: 1)
                 : null,
           ),
           child: Center(

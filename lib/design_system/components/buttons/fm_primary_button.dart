@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/animations/haptic_helper.dart';
 import '../../../core/constants/app_animations.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../features/settings/presentation/providers/settings_provider.dart';
 import '../../mixins/tap_scale_mixin.dart';
 import '../feedback/fm_loading_indicator.dart';
 
-class FMPrimaryButton extends StatefulWidget {
+class FMPrimaryButton extends ConsumerStatefulWidget {
   final String label;
   final VoidCallback? onPressed;
   final bool isLoading;
@@ -16,6 +18,7 @@ class FMPrimaryButton extends StatefulWidget {
   final Color? backgroundColor;
   final Color? textColor;
   final IconData? icon;
+  final bool useAccentColor;
 
   const FMPrimaryButton({
     super.key,
@@ -26,13 +29,14 @@ class FMPrimaryButton extends StatefulWidget {
     this.backgroundColor,
     this.textColor,
     this.icon,
+    this.useAccentColor = true,
   });
 
   @override
-  State<FMPrimaryButton> createState() => _FMPrimaryButtonState();
+  ConsumerState<FMPrimaryButton> createState() => _FMPrimaryButtonState();
 }
 
-class _FMPrimaryButtonState extends State<FMPrimaryButton>
+class _FMPrimaryButtonState extends ConsumerState<FMPrimaryButton>
     with SingleTickerProviderStateMixin, TapScaleMixin {
   @override
   double get tapScale => AppAnimations.tapScaleDefault;
@@ -49,8 +53,9 @@ class _FMPrimaryButtonState extends State<FMPrimaryButton>
 
   @override
   Widget build(BuildContext context) {
+    final accentColor = ref.watch(accentColorProvider);
     final isDisabled = widget.onPressed == null || widget.isLoading;
-    final bgColor = widget.backgroundColor ?? AppColors.textPrimary;
+    final bgColor = widget.backgroundColor ?? (widget.useAccentColor ? accentColor : AppColors.textPrimary);
     final txtColor = widget.textColor ?? AppColors.background;
 
     return GestureDetector(

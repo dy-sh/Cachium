@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_animations.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../features/settings/presentation/providers/settings_provider.dart';
 import '../../mixins/tap_scale_mixin.dart';
 
-class FMChip extends StatefulWidget {
+class FMChip extends ConsumerStatefulWidget {
   final String label;
   final bool isSelected;
   final VoidCallback? onTap;
@@ -25,10 +27,10 @@ class FMChip extends StatefulWidget {
   });
 
   @override
-  State<FMChip> createState() => _FMChipState();
+  ConsumerState<FMChip> createState() => _FMChipState();
 }
 
-class _FMChipState extends State<FMChip>
+class _FMChipState extends ConsumerState<FMChip>
     with SingleTickerProviderStateMixin, TapScaleMixin {
   @override
   double get tapScale => AppAnimations.tapScaleSmall;
@@ -38,7 +40,8 @@ class _FMChipState extends State<FMChip>
 
   @override
   Widget build(BuildContext context) {
-    final selectedColor = widget.selectedColor ?? AppColors.textPrimary;
+    final accentColor = ref.watch(accentColorProvider);
+    final selectedColor = widget.selectedColor ?? accentColor;
     final borderColor = widget.isSelected ? selectedColor : AppColors.border;
 
     return GestureDetector(

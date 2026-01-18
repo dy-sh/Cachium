@@ -5,7 +5,12 @@ import '../features/accounts/presentation/screens/account_form_screen.dart';
 import '../features/accounts/presentation/screens/accounts_screen.dart';
 import '../features/home/presentation/screens/home_screen.dart';
 import '../features/settings/presentation/providers/settings_provider.dart';
+import '../features/settings/presentation/screens/about_settings_screen.dart';
+import '../features/settings/presentation/screens/appearance_settings_screen.dart';
 import '../features/settings/presentation/screens/category_management_screen.dart';
+import '../features/settings/presentation/screens/coming_soon_settings_screen.dart';
+import '../features/settings/presentation/screens/formats_settings_screen.dart';
+import '../features/settings/presentation/screens/preferences_settings_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/transactions/presentation/screens/transaction_form_screen.dart';
 import '../features/transactions/presentation/screens/transactions_screen.dart';
@@ -17,6 +22,11 @@ class AppRoutes {
   static const accounts = '/accounts';
   static const settings = '/settings';
   static const categoryManagement = '/settings/categories';
+  static const appearanceSettings = '/settings/appearance';
+  static const formatsSettings = '/settings/formats';
+  static const preferencesSettings = '/settings/preferences';
+  static const comingSoonSettings = '/settings/coming-soon';
+  static const aboutSettings = '/settings/about';
   static const transactionForm = '/transaction/new';
   static const accountForm = '/account/new';
 }
@@ -79,6 +89,41 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
           state,
           const CategoryManagementScreen(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.appearanceSettings,
+        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
+          state,
+          const AppearanceSettingsScreen(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.formatsSettings,
+        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
+          state,
+          const FormatsSettingsScreen(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.preferencesSettings,
+        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
+          state,
+          const PreferencesSettingsScreen(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.comingSoonSettings,
+        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
+          state,
+          const ComingSoonSettingsScreen(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.aboutSettings,
+        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
+          state,
+          const AboutSettingsScreen(),
         ),
       ),
     ],

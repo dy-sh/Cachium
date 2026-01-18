@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_animations.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../features/settings/presentation/providers/settings_provider.dart';
 
-class FMToggleChip extends StatelessWidget {
+class FMToggleChip extends ConsumerWidget {
   final List<String> options;
   final int selectedIndex;
   final ValueChanged<int>? onChanged;
@@ -20,7 +22,9 @@ class FMToggleChip extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accentColor = ref.watch(accentColorProvider);
+
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -34,7 +38,7 @@ class FMToggleChip extends StatelessWidget {
           final isSelected = index == selectedIndex;
           final color = colors != null && colors!.length > index
               ? colors![index]
-              : AppColors.textPrimary;
+              : accentColor;
 
           return GestureDetector(
             onTap: () => onChanged?.call(index),

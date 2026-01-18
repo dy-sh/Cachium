@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../settings/data/models/app_settings.dart';
 
 enum AccountType {
   bank,
@@ -84,6 +85,12 @@ class Account {
 
   Color get color => customColor ?? type.color;
   IconData get icon => customIcon ?? type.icon;
+
+  /// Returns the account color with the specified intensity.
+  /// If the account has a custom color, it returns that color unchanged.
+  Color getColorWithIntensity(ColorIntensity intensity) {
+    return customColor ?? AppColors.getAccountColor(type.name, intensity);
+  }
 
   Account copyWith({
     String? id,

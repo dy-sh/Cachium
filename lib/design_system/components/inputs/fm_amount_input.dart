@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../features/settings/presentation/providers/settings_provider.dart';
 
-class FMAmountInput extends StatefulWidget {
+class FMAmountInput extends ConsumerStatefulWidget {
   final double? initialValue;
   final ValueChanged<double>? onChanged;
   final String transactionType;
@@ -20,10 +22,10 @@ class FMAmountInput extends StatefulWidget {
   });
 
   @override
-  State<FMAmountInput> createState() => _FMAmountInputState();
+  ConsumerState<FMAmountInput> createState() => _FMAmountInputState();
 }
 
-class _FMAmountInputState extends State<FMAmountInput> {
+class _FMAmountInputState extends ConsumerState<FMAmountInput> {
   late TextEditingController _controller;
   late FocusNode _focusNode;
   bool _isFocused = false;
@@ -51,18 +53,14 @@ class _FMAmountInputState extends State<FMAmountInput> {
     });
   }
 
-  Color get _prefixColor {
-    return widget.transactionType == 'income'
-        ? AppColors.income
-        : AppColors.expense;
-  }
-
   String get _prefix {
     return widget.transactionType == 'income' ? '+' : '-';
   }
 
   @override
   Widget build(BuildContext context) {
+    final intensity = ref.watch(colorIntensityProvider);
+    final prefixColor = AppColors.getTransactionColor(widget.transactionType, intensity);
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       padding: const EdgeInsets.symmetric(
@@ -73,7 +71,7 @@ class _FMAmountInputState extends State<FMAmountInput> {
         color: AppColors.surface,
         borderRadius: AppRadius.lgAll,
         border: Border.all(
-          color: _isFocused ? _prefixColor : AppColors.border,
+          color: _isFocused ? prefixColor : AppColors.border,
           width: _isFocused ? 1.5 : 1,
         ),
       ),
@@ -82,7 +80,7 @@ class _FMAmountInputState extends State<FMAmountInput> {
         children: [
           Text(
             _prefix,
-            style: AppTypography.moneyLarge.copyWith(color: _prefixColor),
+            style: AppTypography.moneyLarge.copyWith(color: prefixColor),
           ),
           Text(
             '\$',
@@ -105,7 +103,7 @@ class _FMAmountInputState extends State<FMAmountInput> {
                 widget.onChanged?.call(amount);
               },
               style: AppTypography.moneyLarge,
-              cursorColor: _prefixColor,
+              cursorColor: prefixColor,
               decoration: InputDecoration(
                 hintText: '0.00',
                 hintStyle: AppTypography.moneyLarge.copyWith(

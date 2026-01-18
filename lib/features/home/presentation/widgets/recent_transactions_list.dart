@@ -7,6 +7,7 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 
@@ -57,8 +58,9 @@ class _TransactionItem extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final category = ref.watch(categoryByIdProvider(transaction.categoryId));
     final account = ref.watch(accountByIdProvider(transaction.accountId));
+    final intensity = ref.watch(colorIntensityProvider);
     final isIncome = transaction.type == TransactionType.income;
-    final color = isIncome ? AppColors.income : AppColors.expense;
+    final color = AppColors.getTransactionColor(isIncome ? 'income' : 'expense', intensity);
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),

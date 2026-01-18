@@ -6,6 +6,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/animations/animated_counter.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 
 class TotalBalanceCard extends ConsumerWidget {
   const TotalBalanceCard({super.key});
@@ -13,6 +14,9 @@ class TotalBalanceCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final totalBalance = ref.watch(totalBalanceProvider);
+    final intensity = ref.watch(colorIntensityProvider);
+    final incomeColor = AppColors.getTransactionColor('income', intensity);
+    final expenseColor = AppColors.getTransactionColor('expense', intensity);
 
     return Container(
       width: double.infinity,
@@ -45,13 +49,13 @@ class TotalBalanceCard extends ConsumerWidget {
               _BalanceIndicator(
                 label: 'Assets',
                 value: _getAssets(ref),
-                color: AppColors.income,
+                color: incomeColor,
               ),
               const SizedBox(width: AppSpacing.lg),
               _BalanceIndicator(
                 label: 'Liabilities',
                 value: _getLiabilities(ref),
-                color: AppColors.expense,
+                color: expenseColor,
               ),
             ],
           ),

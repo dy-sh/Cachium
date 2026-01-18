@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_animations.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../features/settings/presentation/providers/settings_provider.dart';
 
-class FMSwitch extends StatelessWidget {
+class FMSwitch extends ConsumerWidget {
   final bool value;
   final ValueChanged<bool>? onChanged;
   final Color? activeColor;
@@ -15,9 +17,10 @@ class FMSwitch extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accentColor = ref.watch(accentColorProvider);
     final trackColor = value
-        ? (activeColor ?? AppColors.textPrimary)
+        ? (activeColor ?? accentColor)
         : AppColors.surface;
     final thumbColor = value
         ? AppColors.background

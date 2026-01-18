@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/animations/haptic_helper.dart';
 import '../../../../core/constants/app_animations.dart';
@@ -7,11 +8,12 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../features/settings/presentation/providers/settings_provider.dart';
 import 'fm_calendar_grid.dart';
 import 'fm_month_year_picker.dart';
 
 /// The main date picker modal widget.
-class FMDatePickerModal extends StatefulWidget {
+class FMDatePickerModal extends ConsumerStatefulWidget {
   final DateTime initialDate;
   final DateTime firstDate;
   final DateTime lastDate;
@@ -24,10 +26,10 @@ class FMDatePickerModal extends StatefulWidget {
   });
 
   @override
-  State<FMDatePickerModal> createState() => _FMDatePickerModalState();
+  ConsumerState<FMDatePickerModal> createState() => _FMDatePickerModalState();
 }
 
-class _FMDatePickerModalState extends State<FMDatePickerModal> {
+class _FMDatePickerModalState extends ConsumerState<FMDatePickerModal> {
   late DateTime _selectedDate;
   late DateTime _displayedMonth;
   late TextEditingController _textController;
@@ -225,6 +227,8 @@ class _FMDatePickerModalState extends State<FMDatePickerModal> {
 
   @override
   Widget build(BuildContext context) {
+    final accentColor = ref.watch(accentColorProvider);
+
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.surface,
@@ -239,10 +243,10 @@ class _FMDatePickerModalState extends State<FMDatePickerModal> {
             children: [
               _buildHandle(),
               const SizedBox(height: AppSpacing.lg),
-              _buildHeader(),
+              _buildHeader(accentColor),
               const SizedBox(height: AppSpacing.lg),
               if (_showTextInput) ...[
-                _buildTextInput(),
+                _buildTextInput(accentColor),
                 const SizedBox(height: AppSpacing.lg),
               ],
               if (_showMonthYearPicker)
@@ -253,9 +257,9 @@ class _FMDatePickerModalState extends State<FMDatePickerModal> {
                   onMonthYearSelected: _selectMonthYear,
                 )
               else
-                _buildCalendar(),
+                _buildCalendar(accentColor),
               const SizedBox(height: AppSpacing.lg),
-              _buildConfirmButton(),
+              _buildConfirmButton(accentColor),
             ],
           ),
         ),
@@ -274,7 +278,7 @@ class _FMDatePickerModalState extends State<FMDatePickerModal> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(Color accentColor) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -282,6 +286,7 @@ class _FMDatePickerModalState extends State<FMDatePickerModal> {
         if (_showMonthYearPicker)
           _DatePickerIconButton(
             icon: LucideIcons.x,
+            accentColor: accentColor,
             onTap: () {
               setState(() => _showMonthYearPicker = false);
               HapticHelper.lightImpact();
@@ -315,6 +320,7 @@ class _FMDatePickerModalState extends State<FMDatePickerModal> {
               _DatePickerIconButton(
                 icon: LucideIcons.keyboard,
                 isActive: _showTextInput,
+                accentColor: accentColor,
                 onTap: () {
                   setState(() {
                     _showTextInput = !_showTextInput;
@@ -326,6 +332,7 @@ class _FMDatePickerModalState extends State<FMDatePickerModal> {
               const SizedBox(width: AppSpacing.sm),
               _DatePickerIconButton(
                 icon: LucideIcons.x,
+                accentColor: accentColor,
                 onTap: () => Navigator.pop(context),
               ),
             ],
@@ -334,7 +341,7 @@ class _FMDatePickerModalState extends State<FMDatePickerModal> {
     );
   }
 
-  Widget _buildTextInput() {
+  Widget _buildTextInput(Color accentColor) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -367,7 +374,7 @@ class _FMDatePickerModalState extends State<FMDatePickerModal> {
                 onPressed: _onTextSubmitted,
               ),
             ),
-            cursorColor: AppColors.accentPrimary,
+            cursorColor: accentColor,
           ),
         ),
         if (_textError != null) ...[
@@ -381,10 +388,10 @@ class _FMDatePickerModalState extends State<FMDatePickerModal> {
     );
   }
 
-  Widget _buildCalendar() {
+  Widget _buildCalendar(Color accentColor) {
     return Column(
       children: [
-        _buildCalendarHeader(),
+        _buildCalendarHeader(accentColor),
         const SizedBox(height: AppSpacing.md),
         const FMWeekDayLabels(),
         const SizedBox(height: AppSpacing.sm),
@@ -393,7 +400,7 @@ class _FMDatePickerModalState extends State<FMDatePickerModal> {
     );
   }
 
-  Widget _buildCalendarHeader() {
+  Widget _buildCalendarHeader(Color accentColor) {
     const monthNames = [
       'January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December'
@@ -420,10 +427,10 @@ class _FMDatePickerModalState extends State<FMDatePickerModal> {
               vertical: AppSpacing.sm,
             ),
             decoration: BoxDecoration(
-              color: _showMonthYearPicker ? AppColors.accentPrimary : AppColors.background,
+              color: _showMonthYearPicker ? accentColor : AppColors.background,
               borderRadius: AppRadius.smAll,
               border: Border.all(
-                color: _showMonthYearPicker ? AppColors.accentPrimary : AppColors.border,
+                color: _showMonthYearPicker ? accentColor : AppColors.border,
               ),
             ),
             child: Row(
@@ -482,7 +489,7 @@ class _FMDatePickerModalState extends State<FMDatePickerModal> {
     );
   }
 
-  Widget _buildConfirmButton() {
+  Widget _buildConfirmButton(Color accentColor) {
     return SizedBox(
       width: double.infinity,
       child: GestureDetector(
@@ -497,7 +504,7 @@ class _FMDatePickerModalState extends State<FMDatePickerModal> {
         child: Container(
           height: AppSpacing.buttonHeight,
           decoration: BoxDecoration(
-            color: AppColors.accentPrimary,
+            color: accentColor,
             borderRadius: AppRadius.button,
           ),
           child: Center(
@@ -517,10 +524,12 @@ class _DatePickerIconButton extends StatefulWidget {
   final IconData icon;
   final VoidCallback onTap;
   final bool isActive;
+  final Color accentColor;
 
   const _DatePickerIconButton({
     required this.icon,
     required this.onTap,
+    required this.accentColor,
     this.isActive = false,
   });
 
@@ -546,7 +555,7 @@ class _DatePickerIconButtonState extends State<_DatePickerIconButton> {
         height: AppSpacing.calendarHeaderButtonSize,
         decoration: BoxDecoration(
           color: widget.isActive
-              ? AppColors.accentPrimary
+              ? widget.accentColor
               : _isPressed
                   ? AppColors.surfaceLight
                   : AppColors.background,

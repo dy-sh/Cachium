@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../features/settings/presentation/providers/settings_provider.dart';
 
-class FMTextField extends StatefulWidget {
+class FMTextField extends ConsumerStatefulWidget {
   final String? label;
   final String? hint;
   final String? initialValue;
@@ -43,10 +45,10 @@ class FMTextField extends StatefulWidget {
   });
 
   @override
-  State<FMTextField> createState() => _FMTextFieldState();
+  ConsumerState<FMTextField> createState() => _FMTextFieldState();
 }
 
-class _FMTextFieldState extends State<FMTextField>
+class _FMTextFieldState extends ConsumerState<FMTextField>
     with SingleTickerProviderStateMixin {
   late TextEditingController _controller;
   late FocusNode _focusNode;
@@ -119,6 +121,7 @@ class _FMTextFieldState extends State<FMTextField>
 
   @override
   Widget build(BuildContext context) {
+    final accentColor = ref.watch(accentColorProvider);
     final hasError = widget.errorText != null;
     final showClear = widget.showClearButton &&
         _controller.text.isNotEmpty &&
@@ -150,7 +153,7 @@ class _FMTextFieldState extends State<FMTextField>
                   border: Border.all(
                     color: hasError
                         ? AppColors.expense
-                        : (_isFocused ? AppColors.accentPrimary : AppColors.border),
+                        : (_isFocused ? accentColor : AppColors.border),
                     width: _isFocused || hasError ? 2 : 1,
                   ),
                 ),
@@ -173,7 +176,7 @@ class _FMTextFieldState extends State<FMTextField>
                         maxLines: widget.maxLines,
                         autofocus: widget.autofocus,
                         style: AppTypography.input,
-                        cursorColor: AppColors.accentPrimary,
+                        cursorColor: accentColor,
                         decoration: InputDecoration(
                           hintText: widget.hint,
                           hintStyle: AppTypography.inputHint,

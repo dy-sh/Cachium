@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_animations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../features/settings/presentation/providers/settings_provider.dart';
 
 /// Month and year selection picker used in the date picker modal.
-class FMMonthYearPicker extends StatelessWidget {
+class FMMonthYearPicker extends ConsumerWidget {
   final DateTime displayedMonth;
   final DateTime firstDate;
   final DateTime lastDate;
@@ -21,7 +23,9 @@ class FMMonthYearPicker extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accentColor = ref.watch(accentColorProvider);
+
     return SizedBox(
       height: 300,
       child: Row(
@@ -29,6 +33,7 @@ class FMMonthYearPicker extends StatelessWidget {
           Expanded(
             child: _MonthList(
               displayedMonth: displayedMonth,
+              accentColor: accentColor,
               onMonthSelected: (month) => onMonthYearSelected(displayedMonth.year, month),
             ),
           ),
@@ -38,6 +43,7 @@ class FMMonthYearPicker extends StatelessWidget {
               displayedMonth: displayedMonth,
               firstDate: firstDate,
               lastDate: lastDate,
+              accentColor: accentColor,
               onYearSelected: (year) => onMonthYearSelected(year, displayedMonth.month),
             ),
           ),
@@ -49,10 +55,12 @@ class FMMonthYearPicker extends StatelessWidget {
 
 class _MonthList extends StatelessWidget {
   final DateTime displayedMonth;
+  final Color accentColor;
   final ValueChanged<int> onMonthSelected;
 
   const _MonthList({
     required this.displayedMonth,
+    required this.accentColor,
     required this.onMonthSelected,
   });
 
@@ -79,7 +87,7 @@ class _MonthList extends StatelessWidget {
               vertical: AppSpacing.sm,
             ),
             decoration: BoxDecoration(
-              color: isSelected ? AppColors.accentPrimary : Colors.transparent,
+              color: isSelected ? accentColor : Colors.transparent,
               borderRadius: AppRadius.smAll,
             ),
             child: Center(
@@ -102,12 +110,14 @@ class _YearList extends StatefulWidget {
   final DateTime displayedMonth;
   final DateTime firstDate;
   final DateTime lastDate;
+  final Color accentColor;
   final ValueChanged<int> onYearSelected;
 
   const _YearList({
     required this.displayedMonth,
     required this.firstDate,
     required this.lastDate,
+    required this.accentColor,
     required this.onYearSelected,
   });
 
@@ -164,7 +174,7 @@ class _YearListState extends State<_YearList> {
               vertical: AppSpacing.sm,
             ),
             decoration: BoxDecoration(
-              color: isSelected ? AppColors.accentPrimary : Colors.transparent,
+              color: isSelected ? widget.accentColor : Colors.transparent,
               borderRadius: AppRadius.smAll,
             ),
             child: Center(

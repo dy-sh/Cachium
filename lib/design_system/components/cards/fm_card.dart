@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_animations.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
+import '../../../features/settings/presentation/providers/settings_provider.dart';
 import '../../mixins/tap_scale_mixin.dart';
 
-class FMCard extends StatefulWidget {
+class FMCard extends ConsumerStatefulWidget {
   final Widget child;
   final bool isSelected;
   final Color? borderColor;
@@ -28,10 +30,10 @@ class FMCard extends StatefulWidget {
   });
 
   @override
-  State<FMCard> createState() => _FMCardState();
+  ConsumerState<FMCard> createState() => _FMCardState();
 }
 
-class _FMCardState extends State<FMCard>
+class _FMCardState extends ConsumerState<FMCard>
     with SingleTickerProviderStateMixin, TapScaleMixin {
   @override
   double get tapScale => AppAnimations.tapScaleCard;
@@ -41,8 +43,9 @@ class _FMCardState extends State<FMCard>
 
   @override
   Widget build(BuildContext context) {
+    final accentColor = ref.watch(accentColorProvider);
     final borderColor = widget.isSelected
-        ? (widget.selectedBorderColor ?? widget.borderColor ?? AppColors.borderSelected)
+        ? (widget.selectedBorderColor ?? widget.borderColor ?? accentColor)
         : widget.borderColor ?? AppColors.border;
 
     return GestureDetector(

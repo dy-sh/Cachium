@@ -13,6 +13,7 @@ import '../../../../design_system/components/chips/fm_toggle_chip.dart';
 import '../../../../navigation/app_router.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/transaction.dart';
 import '../providers/transactions_provider.dart';
 
@@ -97,17 +98,22 @@ class TransactionsScreen extends ConsumerWidget {
           // Filter toggle
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-            child: FMToggleChip(
-              options: const ['All', 'Income', 'Expense'],
-              selectedIndex: filter.index,
-              colors: const [
-                AppColors.textPrimary,
-                AppColors.income,
-                AppColors.expense,
-              ],
-              onChanged: (index) {
-                ref.read(transactionFilterProvider.notifier).state =
-                    TransactionFilter.values[index];
+            child: Builder(
+              builder: (context) {
+                final intensity = ref.watch(colorIntensityProvider);
+                return FMToggleChip(
+                  options: const ['All', 'Income', 'Expense'],
+                  selectedIndex: filter.index,
+                  colors: [
+                    AppColors.textPrimary,
+                    AppColors.getTransactionColor('income', intensity),
+                    AppColors.getTransactionColor('expense', intensity),
+                  ],
+                  onChanged: (index) {
+                    ref.read(transactionFilterProvider.notifier).state =
+                        TransactionFilter.values[index];
+                  },
+                );
               },
             ),
           ),
@@ -210,8 +216,9 @@ class _TransactionItem extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final category = ref.watch(categoryByIdProvider(transaction.categoryId));
     final account = ref.watch(accountByIdProvider(transaction.accountId));
+    final intensity = ref.watch(colorIntensityProvider);
     final isIncome = transaction.type == TransactionType.income;
-    final color = isIncome ? AppColors.income : AppColors.expense;
+    final color = AppColors.getTransactionColor(isIncome ? 'income' : 'expense', intensity);
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),

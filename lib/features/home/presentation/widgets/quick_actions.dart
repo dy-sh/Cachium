@@ -9,6 +9,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/mixins/tap_scale_mixin.dart';
 import '../../../../navigation/app_router.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../../transactions/presentation/providers/transaction_form_provider.dart';
 
@@ -17,13 +18,17 @@ class QuickActions extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final intensity = ref.watch(colorIntensityProvider);
+    final incomeColor = AppColors.getTransactionColor('income', intensity);
+    final expenseColor = AppColors.getTransactionColor('expense', intensity);
+
     return Row(
       children: [
         Expanded(
           child: _QuickActionButton(
             label: 'Income',
             icon: LucideIcons.plus,
-            color: AppColors.income,
+            color: incomeColor,
             onTap: () {
               ref.read(transactionFormProvider.notifier).reset();
               ref.read(transactionFormProvider.notifier).setType(TransactionType.income);
@@ -36,7 +41,7 @@ class QuickActions extends ConsumerWidget {
           child: _QuickActionButton(
             label: 'Expense',
             icon: LucideIcons.minus,
-            color: AppColors.expense,
+            color: expenseColor,
             onTap: () {
               ref.read(transactionFormProvider.notifier).reset();
               ref.read(transactionFormProvider.notifier).setType(TransactionType.expense);

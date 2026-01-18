@@ -10,6 +10,8 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../../../design_system/animations/animated_counter.dart';
 import '../../../../design_system/animations/staggered_list.dart';
 import '../../../../navigation/app_router.dart';
+import '../../../settings/data/models/app_settings.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/account.dart';
 import '../providers/accounts_provider.dart';
 
@@ -20,6 +22,7 @@ class AccountsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final totalBalance = ref.watch(totalBalanceProvider);
     final accountsByType = ref.watch(accountsByTypeProvider);
+    final intensity = ref.watch(colorIntensityProvider);
 
     return SafeArea(
       child: Column(
@@ -106,6 +109,7 @@ class AccountsScreen extends ConsumerWidget {
                     child: _AccountTypeSection(
                       type: type,
                       accounts: accounts,
+                      intensity: intensity,
                     ),
                   );
                 }).toList();
@@ -121,10 +125,12 @@ class AccountsScreen extends ConsumerWidget {
 class _AccountTypeSection extends StatelessWidget {
   final AccountType type;
   final List<Account> accounts;
+  final ColorIntensity intensity;
 
   const _AccountTypeSection({
     required this.type,
     required this.accounts,
+    required this.intensity,
   });
 
   @override
@@ -141,7 +147,7 @@ class _AccountTypeSection extends StatelessWidget {
             ),
           ),
         ),
-        ...accounts.map((account) => _AccountCard(account: account)),
+        ...accounts.map((account) => _AccountCard(account: account, intensity: intensity)),
         const SizedBox(height: AppSpacing.lg),
       ],
     );
@@ -150,11 +156,18 @@ class _AccountTypeSection extends StatelessWidget {
 
 class _AccountCard extends StatelessWidget {
   final Account account;
+  final ColorIntensity intensity;
 
-  const _AccountCard({required this.account});
+  const _AccountCard({
+    required this.account,
+    required this.intensity,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final accountColor = account.getColorWithIntensity(intensity);
+    final expenseColor = AppColors.getTransactionColor('expense', intensity);
+
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       padding: const EdgeInsets.all(AppSpacing.sm),
@@ -162,7 +175,7 @@ class _AccountCard extends StatelessWidget {
         color: AppColors.surface,
         borderRadius: AppRadius.mdAll,
         border: Border.all(
-          color: account.color.withOpacity(0.5),
+          color: accountColor.withOpacity(0.5),
           width: 1,
         ),
       ),
@@ -172,12 +185,12 @@ class _AccountCard extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: account.color.withOpacity(0.15),
+              color: accountColor.withOpacity(0.15),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               account.icon,
-              color: account.color,
+              color: accountColor,
               size: 20,
             ),
           ),
@@ -203,7 +216,7 @@ class _AccountCard extends StatelessWidget {
           Text(
             CurrencyFormatter.format(account.balance),
             style: AppTypography.moneySmall.copyWith(
-              color: account.balance >= 0 ? AppColors.textPrimary : AppColors.expense,
+              color: account.balance >= 0 ? AppColors.textPrimary : expenseColor,
             ),
           ),
         ],
