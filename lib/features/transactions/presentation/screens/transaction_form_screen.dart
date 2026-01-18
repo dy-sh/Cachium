@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -156,29 +157,44 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
               ),
             ),
 
-            // Save button
-            Padding(
-              padding: EdgeInsets.only(
-                left: AppSpacing.screenPadding,
-                right: AppSpacing.screenPadding,
-                bottom: MediaQuery.of(context).padding.bottom + AppSpacing.md,
-              ),
-              child: FMPrimaryButton(
-                label: 'Save Transaction',
-                backgroundColor: AppColors.textPrimary.withOpacity(0.8),
-                onPressed: formState.isValid
-                    ? () {
-                        ref.read(transactionsProvider.notifier).addTransaction(
-                              amount: formState.amount,
-                              type: formState.type,
-                              categoryId: formState.categoryId!,
-                              accountId: formState.accountId!,
-                              date: formState.date,
-                              note: formState.note,
-                            );
-                        context.pop();
-                      }
-                    : null,
+            // Sticky save button with blur background
+            ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.background.withOpacity(0.8),
+                    border: Border(
+                      top: BorderSide(
+                        color: AppColors.border.withOpacity(0.5),
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  padding: EdgeInsets.only(
+                    left: AppSpacing.screenPadding,
+                    right: AppSpacing.screenPadding,
+                    top: AppSpacing.md,
+                    bottom: MediaQuery.of(context).padding.bottom + AppSpacing.md,
+                  ),
+                  child: FMPrimaryButton(
+                    label: 'Save Transaction',
+                    backgroundColor: AppColors.accentPrimary,
+                    onPressed: formState.isValid
+                        ? () {
+                            ref.read(transactionsProvider.notifier).addTransaction(
+                                  amount: formState.amount,
+                                  type: formState.type,
+                                  categoryId: formState.categoryId!,
+                                  accountId: formState.accountId!,
+                                  date: formState.date,
+                                  note: formState.note,
+                                );
+                            context.pop();
+                          }
+                        : null,
+                  ),
+                ),
               ),
             ),
           ],
@@ -188,7 +204,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   }
 }
 
-class _CategorySelector extends StatelessWidget {
+class _CategorySelector extends StatefulWidget {
   final List<Category> categories;
   final String? selectedId;
   final ValueChanged<String> onChanged;
@@ -200,62 +216,90 @@ class _CategorySelector extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 40,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: categories.length,
-        separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.chipGap),
-        itemBuilder: (context, index) {
-          final category = categories[index];
-          final isSelected = category.id == selectedId;
+  State<_CategorySelector> createState() => _CategorySelectorState();
+}
 
-          return GestureDetector(
-            onTap: () => onChanged(category.id),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm,
-              ),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? category.color.withOpacity(0.15)
-                    : AppColors.surface,
-                borderRadius: AppRadius.smAll,
-                border: Border.all(
-                  color: isSelected ? category.color : AppColors.border,
-                  width: isSelected ? 1.5 : 1,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    category.icon,
-                    size: 16,
-                    color: isSelected ? category.color : AppColors.textSecondary,
+class _CategorySelectorState extends State<_CategorySelector> {
+  bool _showAll = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasMore = widget.categories.length > 9;
+    final displayCategories = _showAll || !hasMore
+        ? widget.categories
+        : widget.categories.take(9).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AnimatedSize(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          child: Wrap(
+            spacing: AppSpacing.chipGap,
+            runSpacing: AppSpacing.chipGap,
+            children: displayCategories.map((category) {
+              final isSelected = category.id == widget.selectedId;
+
+              return GestureDetector(
+                onTap: () => widget.onChanged(category.id),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
                   ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    category.name,
-                    style: AppTypography.labelMedium.copyWith(
-                      color: isSelected ? category.color : AppColors.textPrimary,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppColors.selectionGlow
+                        : AppColors.surface,
+                    borderRadius: AppRadius.smAll,
+                    border: Border.all(
+                      color: isSelected ? category.color : AppColors.border,
+                      width: isSelected ? 2 : 1,
                     ),
                   ),
-                ],
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        category.icon,
+                        size: 16,
+                        color: isSelected ? category.color : AppColors.textSecondary,
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      Text(
+                        category.name,
+                        style: AppTypography.labelMedium.copyWith(
+                          color: isSelected ? category.color : AppColors.textPrimary,
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        if (hasMore) ...[
+          const SizedBox(height: AppSpacing.sm),
+          GestureDetector(
+            onTap: () => setState(() => _showAll = !_showAll),
+            child: Text(
+              _showAll ? 'Show Less' : 'Show All',
+              style: AppTypography.labelSmall.copyWith(
+                color: AppColors.accentPrimary,
               ),
             ),
-          );
-        },
-      ),
+          ),
+        ],
+      ],
     );
   }
 }
 
-class _AccountSelector extends StatelessWidget {
+class _AccountSelector extends StatefulWidget {
   final List<Account> accounts;
   final String? selectedId;
   final ValueChanged<String> onChanged;
@@ -267,57 +311,109 @@ class _AccountSelector extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 40,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: accounts.length,
-        separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.chipGap),
-        itemBuilder: (context, index) {
-          final account = accounts[index];
-          final isSelected = account.id == selectedId;
+  State<_AccountSelector> createState() => _AccountSelectorState();
+}
 
-          return GestureDetector(
-            onTap: () => onChanged(account.id),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm,
-              ),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? account.color.withOpacity(0.15)
-                    : AppColors.surface,
-                borderRadius: AppRadius.smAll,
-                border: Border.all(
-                  color: isSelected ? account.color : AppColors.border,
-                  width: isSelected ? 1.5 : 1,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    account.icon,
-                    size: 16,
-                    color: isSelected ? account.color : AppColors.textSecondary,
+class _AccountSelectorState extends State<_AccountSelector> {
+  bool _showAll = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasMore = widget.accounts.length > 6;
+    final displayAccounts = _showAll || !hasMore
+        ? widget.accounts
+        : widget.accounts.take(6).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AnimatedSize(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          child: GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 3.5,
+              crossAxisSpacing: AppSpacing.chipGap,
+              mainAxisSpacing: AppSpacing.chipGap,
+            ),
+            itemCount: displayAccounts.length,
+            itemBuilder: (context, index) {
+              final account = displayAccounts[index];
+              final isSelected = account.id == widget.selectedId;
+
+              return GestureDetector(
+                onTap: () => widget.onChanged(account.id),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xs,
                   ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    account.name,
-                    style: AppTypography.labelMedium.copyWith(
-                      color: isSelected ? account.color : AppColors.textPrimary,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppColors.selectionGlow
+                        : AppColors.surface,
+                    borderRadius: AppRadius.smAll,
+                    border: Border.all(
+                      color: isSelected ? account.color : AppColors.border,
+                      width: isSelected ? 2 : 1,
                     ),
                   ),
-                ],
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        account.icon,
+                        size: 14,
+                        color: isSelected ? account.color : AppColors.textSecondary,
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              account.name,
+                              style: AppTypography.labelSmall.copyWith(
+                                color: isSelected ? account.color : AppColors.textPrimary,
+                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              '\$${account.balance.toStringAsFixed(0)}',
+                              style: AppTypography.labelSmall.copyWith(
+                                color: AppColors.textSecondary,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        if (hasMore) ...[
+          const SizedBox(height: AppSpacing.sm),
+          GestureDetector(
+            onTap: () => setState(() => _showAll = !_showAll),
+            child: Text(
+              _showAll ? 'Show Less' : 'Show All',
+              style: AppTypography.labelSmall.copyWith(
+                color: AppColors.accentPrimary,
               ),
             ),
-          );
-        },
-      ),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -331,69 +427,143 @@ class _DateSelector extends StatelessWidget {
     required this.onChanged,
   });
 
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final weekStart = today.subtract(Duration(days: today.weekday - 1));
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Date', style: AppTypography.labelMedium),
         const SizedBox(height: AppSpacing.sm),
-        GestureDetector(
-          onTap: () async {
-            final picked = await showDatePicker(
-              context: context,
-              initialDate: date,
-              firstDate: DateTime(2020),
-              lastDate: DateTime.now().add(const Duration(days: 365)),
-              builder: (context, child) {
-                return Theme(
-                  data: Theme.of(context).copyWith(
-                    colorScheme: const ColorScheme.dark(
-                      primary: AppColors.textPrimary,
-                      onPrimary: AppColors.background,
-                      surface: AppColors.surface,
-                      onSurface: AppColors.textPrimary,
-                    ),
-                    dialogBackgroundColor: AppColors.surface,
-                  ),
-                  child: child!,
+        // Quick date chips
+        Wrap(
+          spacing: AppSpacing.chipGap,
+          runSpacing: AppSpacing.chipGap,
+          children: [
+            _QuickDateChip(
+              label: 'Today',
+              isSelected: _isSameDay(date, today),
+              onTap: () => onChanged(today),
+            ),
+            _QuickDateChip(
+              label: 'Yesterday',
+              isSelected: _isSameDay(date, yesterday),
+              onTap: () => onChanged(yesterday),
+            ),
+            _QuickDateChip(
+              label: 'This Week',
+              isSelected: date.isAfter(weekStart.subtract(const Duration(days: 1))) &&
+                  date.isBefore(today.add(const Duration(days: 1))),
+              onTap: () => onChanged(weekStart),
+            ),
+            _QuickDateChip(
+              label: 'Custom',
+              isSelected: !_isSameDay(date, today) &&
+                  !_isSameDay(date, yesterday) &&
+                  !(date.isAfter(weekStart.subtract(const Duration(days: 1))) &&
+                      date.isBefore(today.add(const Duration(days: 1)))),
+              onTap: () async {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: date,
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime.now().add(const Duration(days: 365)),
+                  builder: (context, child) {
+                    return Theme(
+                      data: Theme.of(context).copyWith(
+                        colorScheme: const ColorScheme.dark(
+                          primary: AppColors.accentPrimary,
+                          onPrimary: AppColors.background,
+                          surface: AppColors.surface,
+                          onSurface: AppColors.textPrimary,
+                        ),
+                        dialogBackgroundColor: AppColors.surface,
+                      ),
+                      child: child!,
+                    );
+                  },
                 );
+                if (picked != null) {
+                  onChanged(picked);
+                }
               },
-            );
-            if (picked != null) {
-              onChanged(picked);
-            }
-          },
-          child: Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: AppRadius.mdAll,
-              border: Border.all(color: AppColors.border),
             ),
-            child: Row(
-              children: [
-                const Icon(
-                  LucideIcons.calendar,
-                  color: AppColors.textSecondary,
-                  size: 20,
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Text(
-                  DateFormatter.formatFull(date),
-                  style: AppTypography.bodyMedium,
-                ),
-                const Spacer(),
-                const Icon(
-                  LucideIcons.chevronRight,
-                  color: AppColors.textTertiary,
-                  size: 20,
-                ),
-              ],
-            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        // Selected date display
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: AppRadius.mdAll,
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            children: [
+              const Icon(
+                LucideIcons.calendar,
+                color: AppColors.textSecondary,
+                size: 20,
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Text(
+                DateFormatter.formatFull(date),
+                style: AppTypography.bodyMedium,
+              ),
+            ],
           ),
         ),
       ],
+    );
+  }
+}
+
+class _QuickDateChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _QuickDateChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.selectionGlow : AppColors.surface,
+          borderRadius: AppRadius.smAll,
+          border: Border.all(
+            color: isSelected ? AppColors.accentPrimary : AppColors.border,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: AppTypography.labelMedium.copyWith(
+            color: isSelected ? AppColors.accentPrimary : AppColors.textPrimary,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          ),
+        ),
+      ),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
@@ -19,6 +20,8 @@ class FMTextField extends StatefulWidget {
   final Widget? suffix;
   final bool autofocus;
   final FocusNode? focusNode;
+  final String? errorText;
+  final bool showClearButton;
 
   const FMTextField({
     super.key,
@@ -35,16 +38,22 @@ class FMTextField extends StatefulWidget {
     this.suffix,
     this.autofocus = false,
     this.focusNode,
+    this.errorText,
+    this.showClearButton = true,
   });
 
   @override
   State<FMTextField> createState() => _FMTextFieldState();
 }
 
-class _FMTextFieldState extends State<FMTextField> {
+class _FMTextFieldState extends State<FMTextField>
+    with SingleTickerProviderStateMixin {
   late TextEditingController _controller;
   late FocusNode _focusNode;
+  late AnimationController _shakeController;
+  late Animation<double> _shakeAnimation;
   bool _isFocused = false;
+  String? _previousErrorText;
 
   @override
   void initState() {
@@ -52,6 +61,29 @@ class _FMTextFieldState extends State<FMTextField> {
     _controller = widget.controller ?? TextEditingController(text: widget.initialValue);
     _focusNode = widget.focusNode ?? FocusNode();
     _focusNode.addListener(_handleFocusChange);
+    _controller.addListener(_handleTextChange);
+    _previousErrorText = widget.errorText;
+
+    // Shake animation controller for errors
+    _shakeController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _shakeAnimation = Tween<double>(begin: 0, end: 10).animate(
+      CurvedAnimation(parent: _shakeController, curve: Curves.elasticIn),
+    );
+  }
+
+  @override
+  void didUpdateWidget(FMTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Trigger shake animation when error appears
+    if (widget.errorText != null &&
+        widget.errorText != _previousErrorText &&
+        _previousErrorText == null) {
+      _triggerShake();
+    }
+    _previousErrorText = widget.errorText;
   }
 
   @override
@@ -62,6 +94,7 @@ class _FMTextFieldState extends State<FMTextField> {
     if (widget.focusNode == null) {
       _focusNode.dispose();
     }
+    _shakeController.dispose();
     super.dispose();
   }
 
@@ -71,70 +104,126 @@ class _FMTextFieldState extends State<FMTextField> {
     });
   }
 
+  void _handleTextChange() {
+    setState(() {});
+  }
+
+  void _triggerShake() {
+    _shakeController.forward(from: 0).then((_) => _shakeController.reverse());
+  }
+
+  void _clearText() {
+    _controller.clear();
+    widget.onChanged?.call('');
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (widget.label != null) ...[
-          Text(
-            widget.label!,
-            style: AppTypography.labelMedium,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-        ],
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: AppRadius.input,
-            border: Border.all(
-              color: _isFocused ? AppColors.borderSelected : AppColors.border,
-              width: _isFocused ? 1.5 : 1,
-            ),
-          ),
-          child: Row(
+    final hasError = widget.errorText != null;
+    final showClear = widget.showClearButton &&
+        _controller.text.isNotEmpty &&
+        !widget.obscureText;
+
+    return AnimatedBuilder(
+      animation: _shakeAnimation,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(_shakeAnimation.value * (hasError ? 1 : 0), 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              if (widget.prefix != null) ...[
-                Padding(
-                  padding: const EdgeInsets.only(left: AppSpacing.inputPadding),
-                  child: widget.prefix,
-                ),
-              ],
-              Expanded(
-                child: TextField(
-                  controller: _controller,
-                  focusNode: _focusNode,
-                  onChanged: widget.onChanged,
-                  keyboardType: widget.keyboardType,
-                  inputFormatters: widget.inputFormatters,
-                  obscureText: widget.obscureText,
-                  maxLines: widget.maxLines,
-                  autofocus: widget.autofocus,
-                  style: AppTypography.input,
-                  cursorColor: AppColors.textPrimary,
-                  decoration: InputDecoration(
-                    hintText: widget.hint,
-                    hintStyle: AppTypography.inputHint,
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: widget.prefix != null ? AppSpacing.sm : AppSpacing.inputPadding,
-                      vertical: AppSpacing.inputPadding,
-                    ),
+              if (widget.label != null) ...[
+                Text(
+                  widget.label!,
+                  style: AppTypography.labelMedium.copyWith(
+                    color: hasError ? AppColors.expense : AppColors.textPrimary,
                   ),
                 ),
+                const SizedBox(height: AppSpacing.sm),
+              ],
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: AppRadius.input,
+                  border: Border.all(
+                    color: hasError
+                        ? AppColors.expense
+                        : (_isFocused ? AppColors.accentPrimary : AppColors.border),
+                    width: _isFocused || hasError ? 2 : 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    if (widget.prefix != null) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(left: AppSpacing.inputPadding),
+                        child: widget.prefix,
+                      ),
+                    ],
+                    Expanded(
+                      child: TextField(
+                        controller: _controller,
+                        focusNode: _focusNode,
+                        onChanged: widget.onChanged,
+                        keyboardType: widget.keyboardType,
+                        inputFormatters: widget.inputFormatters,
+                        obscureText: widget.obscureText,
+                        maxLines: widget.maxLines,
+                        autofocus: widget.autofocus,
+                        style: AppTypography.input,
+                        cursorColor: AppColors.accentPrimary,
+                        decoration: InputDecoration(
+                          hintText: widget.hint,
+                          hintStyle: AppTypography.inputHint,
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: widget.prefix != null ? AppSpacing.sm : AppSpacing.inputPadding,
+                            vertical: AppSpacing.inputPadding,
+                          ),
+                        ),
+                      ),
+                    ),
+                    AnimatedOpacity(
+                      opacity: showClear ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 200),
+                      child: showClear
+                          ? GestureDetector(
+                              onTap: _clearText,
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                                child: Icon(
+                                  LucideIcons.x,
+                                  size: 16,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            )
+                          : const SizedBox(width: 0),
+                    ),
+                    if (widget.suffix != null) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(right: AppSpacing.inputPadding),
+                        child: widget.suffix,
+                      ),
+                    ],
+                  ],
+                ),
               ),
-              if (widget.suffix != null) ...[
-                Padding(
-                  padding: const EdgeInsets.only(right: AppSpacing.inputPadding),
-                  child: widget.suffix,
+              if (hasError) ...[
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  widget.errorText!,
+                  style: AppTypography.labelSmall.copyWith(
+                    color: AppColors.expense,
+                  ),
                 ),
               ],
             ],
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 }

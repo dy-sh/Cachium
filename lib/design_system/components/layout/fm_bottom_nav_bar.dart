@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../../../core/animations/haptic_helper.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
@@ -8,15 +9,17 @@ class FMBottomNavItem {
   final IconData icon;
   final IconData activeIcon;
   final String label;
+  final int? badgeCount;
 
   const FMBottomNavItem({
     required this.icon,
     required this.activeIcon,
     required this.label,
+    this.badgeCount,
   });
 }
 
-class FMBottomNavBar extends StatelessWidget {
+class FMBottomNavBar extends StatefulWidget {
   final int currentIndex;
   final ValueChanged<int>? onTap;
   final List<FMBottomNavItem> items;
@@ -52,7 +55,58 @@ class FMBottomNavBar extends StatelessWidget {
       ];
 
   @override
+  State<FMBottomNavBar> createState() => _FMBottomNavBarState();
+}
+
+class _FMBottomNavBarState extends State<FMBottomNavBar>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _indicatorController;
+  late Animation<double> _indicatorAnimation;
+  int _previousIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _previousIndex = widget.currentIndex;
+    _indicatorController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _indicatorAnimation = Tween<double>(
+      begin: _previousIndex.toDouble(),
+      end: widget.currentIndex.toDouble(),
+    ).animate(CurvedAnimation(
+      parent: _indicatorController,
+      curve: Curves.easeOutCubic,
+    ));
+  }
+
+  @override
+  void didUpdateWidget(FMBottomNavBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.currentIndex != widget.currentIndex) {
+      _previousIndex = oldWidget.currentIndex;
+      _indicatorAnimation = Tween<double>(
+        begin: _previousIndex.toDouble(),
+        end: widget.currentIndex.toDouble(),
+      ).animate(CurvedAnimation(
+        parent: _indicatorController,
+        curve: Curves.easeOutCubic,
+      ));
+      _indicatorController.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _indicatorController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final itemWidth = MediaQuery.of(context).size.width / widget.items.length;
+
     return Container(
       height: AppSpacing.bottomNavHeight + MediaQuery.of(context).padding.bottom,
       padding: EdgeInsets.only(
@@ -67,18 +121,38 @@ class FMBottomNavBar extends StatelessWidget {
           ),
         ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: List.generate(items.length, (index) {
-          final item = items[index];
-          final isSelected = index == currentIndex;
+      child: Stack(
+        children: [
+          // Sliding indicator line at top
+          AnimatedBuilder(
+            animation: _indicatorAnimation,
+            builder: (context, child) {
+              return Positioned(
+                top: 0,
+                left: itemWidth * _indicatorAnimation.value,
+                child: Container(
+                  width: itemWidth,
+                  height: 2,
+                  color: AppColors.accentPrimary,
+                ),
+              );
+            },
+          ),
+          // Navigation items
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: List.generate(widget.items.length, (index) {
+              final item = widget.items[index];
+              final isSelected = index == widget.currentIndex;
 
-          return _NavItem(
-            item: item,
-            isSelected: isSelected,
-            onTap: () => onTap?.call(index),
-          );
-        }),
+              return _NavItem(
+                item: item,
+                isSelected: isSelected,
+                onTap: () => widget.onTap?.call(index),
+              );
+            }),
+          ),
+        ],
       ),
     );
   }
@@ -99,43 +173,61 @@ class _NavItem extends StatefulWidget {
   State<_NavItem> createState() => _NavItemState();
 }
 
-class _NavItemState extends State<_NavItem> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+class _NavItemState extends State<_NavItem> with TickerProviderStateMixin {
+  late AnimationController _scaleController;
+  late AnimationController _bounceController;
   late Animation<double> _scaleAnimation;
+  late Animation<double> _bounceAnimation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+    _scaleController = AnimationController(
       duration: const Duration(milliseconds: 100),
       vsync: this,
     );
     _scaleAnimation = Tween<double>(begin: 1.0, end: 0.9).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+      CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut),
     );
+
+    _bounceController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+    _bounceAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.1), weight: 50),
+      TweenSequenceItem(tween: Tween(begin: 1.1, end: 1.0), weight: 50),
+    ]).animate(CurvedAnimation(
+      parent: _bounceController,
+      curve: Curves.easeInOut,
+    ));
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _scaleController.dispose();
+    _bounceController.dispose();
     super.dispose();
   }
 
   void _handleTapDown(TapDownDetails details) {
-    _controller.forward();
+    _scaleController.forward();
   }
 
   void _handleTapUp(TapUpDetails details) {
-    _controller.reverse();
+    _scaleController.reverse();
+    _bounceController.forward(from: 0);
+    HapticHelper.lightImpact();
   }
 
   void _handleTapCancel() {
-    _controller.reverse();
+    _scaleController.reverse();
   }
 
   @override
   Widget build(BuildContext context) {
     final color = widget.isSelected ? AppColors.navActive : AppColors.navInactive;
+    final hasBadge = widget.item.badgeCount != null && widget.item.badgeCount! > 0;
 
     return GestureDetector(
       onTap: widget.onTap,
@@ -144,7 +236,7 @@ class _NavItemState extends State<_NavItem> with SingleTickerProviderStateMixin 
       onTapCancel: _handleTapCancel,
       behavior: HitTestBehavior.opaque,
       child: AnimatedBuilder(
-        animation: _scaleAnimation,
+        animation: Listenable.merge([_scaleAnimation, _bounceAnimation]),
         builder: (context, child) {
           return Transform.scale(
             scale: _scaleAnimation.value,
@@ -154,14 +246,47 @@ class _NavItemState extends State<_NavItem> with SingleTickerProviderStateMixin 
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    child: Icon(
-                      widget.isSelected ? widget.item.activeIcon : widget.item.icon,
-                      key: ValueKey(widget.isSelected),
-                      color: color,
-                      size: 24,
-                    ),
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Transform.scale(
+                        scale: _bounceAnimation.value,
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 200),
+                          child: Icon(
+                            widget.isSelected ? widget.item.activeIcon : widget.item.icon,
+                            key: ValueKey(widget.isSelected),
+                            color: color,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                      if (hasBadge)
+                        Positioned(
+                          right: -8,
+                          top: -4,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.expense,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 16,
+                              minHeight: 16,
+                            ),
+                            child: Text(
+                              widget.item.badgeCount! > 9 ? '9+' : '${widget.item.badgeCount}',
+                              style: AppTypography.navLabel.copyWith(
+                                color: AppColors.textPrimary,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 4),
                   SizedBox(

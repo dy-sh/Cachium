@@ -13,11 +13,11 @@ class AppSpacing {
   static const double xxl = 24.0; // 6 units
   static const double xxxl = 32.0; // 8 units
 
-  // Component-specific spacing
-  static const double cardPadding = 12.0;
-  static const double screenPadding = 16.0;
-  static const double sectionGap = 24.0;
-  static const double itemGap = 12.0;
+  // Component-specific spacing (reduced by 10-15% for compact layout)
+  static const double cardPadding = 10.0;
+  static const double screenPadding = 14.0;
+  static const double sectionGap = 20.0;
+  static const double itemGap = 10.0;
   static const double chipGap = 8.0;
 
   // Navigation
@@ -25,15 +25,15 @@ class AppSpacing {
   static const double bottomNavPadding = 8.0;
 
   // Input
-  static const double inputPadding = 12.0;
+  static const double inputPadding = 10.0;
   static const double inputHeight = 48.0;
 
   // Button
   static const double buttonHeight = 48.0;
-  static const double buttonPadding = 16.0;
+  static const double buttonPadding = 14.0;
   static const double iconButtonSize = 40.0;
 
-  // List items
-  static const double listItemHeight = 64.0;
-  static const double listItemPadding = 12.0;
+  // List items (reduced for compact layout)
+  static const double listItemHeight = 58.0;
+  static const double listItemPadding = 10.0;
 }

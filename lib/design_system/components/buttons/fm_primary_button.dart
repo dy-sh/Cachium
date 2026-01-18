@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/animations/haptic_helper.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
@@ -54,6 +55,7 @@ class _FMPrimaryButtonState extends State<FMPrimaryButton>
   void _handleTapDown(TapDownDetails details) {
     if (widget.onPressed != null && !widget.isLoading) {
       _controller.forward();
+      HapticHelper.lightImpact();
     }
   }
 

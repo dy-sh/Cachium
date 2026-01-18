@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../core/animations/page_transitions.dart';
 import '../features/accounts/presentation/screens/account_form_screen.dart';
 import '../features/accounts/presentation/screens/accounts_screen.dart';
 import '../features/home/presentation/screens/home_screen.dart';
@@ -55,42 +55,17 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.transactionForm,
-      pageBuilder: (context, state) => _buildSlideUpTransition(
+      pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
         state,
         const TransactionFormScreen(),
       ),
     ),
     GoRoute(
       path: AppRoutes.accountForm,
-      pageBuilder: (context, state) => _buildSlideUpTransition(
+      pageBuilder: (context, state) => PageTransitions.buildSlideUpTransition(
         state,
         const AccountFormScreen(),
       ),
     ),
   ],
 );
-
-CustomTransitionPage<void> _buildSlideUpTransition(
-  GoRouterState state,
-  Widget child,
-) {
-  return CustomTransitionPage(
-    key: state.pageKey,
-    child: child,
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      return SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(0, 1),
-          end: Offset.zero,
-        ).animate(
-          CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeOutCubic,
-          ),
-        ),
-        child: child,
-      );
-    },
-    transitionDuration: const Duration(milliseconds: 300),
-  );
-}
