@@ -40,4 +40,14 @@ class AppSpacing {
   // List items (reduced for compact layout)
   static const double listItemHeight = 58.0;
   static const double listItemPadding = 10.0;
+
+  // Calendar
+  static const double calendarDayCellSize = 40.0;
+  static const double calendarRowSpacing = 4.0;
+  static const double calendarGridHeight = 264.0; // 6 rows * (40px + 4px)
+  static const double calendarHeaderButtonSize = 36.0;
+  static const int calendarGridCellCount = 42; // 6 rows * 7 days
+
+  // Close/Action buttons
+  static const double closeButtonSize = 40.0;
 }

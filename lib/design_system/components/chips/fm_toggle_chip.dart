@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_animations.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
@@ -38,7 +39,7 @@ class FMToggleChip extends StatelessWidget {
           return GestureDetector(
             onTap: () => onChanged?.call(index),
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
+              duration: AppAnimations.normal,
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.md,
                 vertical: AppSpacing.sm,

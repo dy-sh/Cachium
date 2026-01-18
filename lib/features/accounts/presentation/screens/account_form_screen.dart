@@ -1,68 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import '../../../../core/constants/app_animations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/buttons/fm_primary_button.dart';
+import '../../../../design_system/components/layout/fm_form_header.dart';
 import '../../../../design_system/components/inputs/fm_text_field.dart';
 import '../../data/models/account.dart';
+import '../providers/account_form_provider.dart';
 import '../providers/accounts_provider.dart';
 
-class AccountFormScreen extends ConsumerStatefulWidget {
+class AccountFormScreen extends ConsumerWidget {
   const AccountFormScreen({super.key});
 
   @override
-  ConsumerState<AccountFormScreen> createState() => _AccountFormScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final formState = ref.watch(accountFormProvider);
 
-class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
-  AccountType? _selectedType;
-  String _name = '';
-  double _initialBalance = 0;
-
-  bool get _isValid => _selectedType != null && _name.isNotEmpty;
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.screenPadding),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => context.pop(),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: const Icon(
-                        LucideIcons.x,
-                        color: AppColors.textSecondary,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Text(
-                      'New Account',
-                      style: AppTypography.h3,
-                    ),
-                  ),
-                ],
-              ),
+            FMFormHeader(
+              title: 'New Account',
+              onClose: () => context.pop(),
             ),
 
             Expanded(
@@ -71,29 +36,26 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Account type selection
                     Text('Account Type', style: AppTypography.labelMedium),
                     const SizedBox(height: AppSpacing.md),
                     _AccountTypeGrid(
-                      selectedType: _selectedType,
+                      selectedType: formState.type,
                       onChanged: (type) {
-                        setState(() => _selectedType = type);
+                        ref.read(accountFormProvider.notifier).setType(type);
                       },
                     ),
                     const SizedBox(height: AppSpacing.xxl),
 
-                    // Name input
                     FMTextField(
                       label: 'Account Name',
                       hint: 'Enter account name...',
                       autofocus: false,
                       onChanged: (value) {
-                        setState(() => _name = value);
+                        ref.read(accountFormProvider.notifier).setName(value);
                       },
                     ),
                     const SizedBox(height: AppSpacing.xxl),
 
-                    // Initial balance
                     FMTextField(
                       label: 'Initial Balance',
                       hint: '0.00',
@@ -108,9 +70,9 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                         ),
                       ),
                       onChanged: (value) {
-                        setState(() {
-                          _initialBalance = double.tryParse(value) ?? 0;
-                        });
+                        ref.read(accountFormProvider.notifier).setInitialBalance(
+                              double.tryParse(value) ?? 0,
+                            );
                       },
                     ),
                     const SizedBox(height: AppSpacing.xxxl),
@@ -119,7 +81,6 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
               ),
             ),
 
-            // Save button
             Padding(
               padding: EdgeInsets.only(
                 left: AppSpacing.screenPadding,
@@ -128,13 +89,14 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
               ),
               child: FMPrimaryButton(
                 label: 'Create Account',
-                onPressed: _isValid
+                onPressed: formState.isValid
                     ? () {
                         ref.read(accountsProvider.notifier).addAccount(
-                              name: _name,
-                              type: _selectedType!,
-                              initialBalance: _initialBalance,
+                              name: formState.name,
+                              type: formState.type!,
+                              initialBalance: formState.initialBalance,
                             );
+                        ref.read(accountFormProvider.notifier).reset();
                         context.pop();
                       }
                     : null,
@@ -170,7 +132,7 @@ class _AccountTypeGrid extends StatelessWidget {
         return GestureDetector(
           onTap: () => onChanged(type),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: AppAnimations.normal,
             decoration: BoxDecoration(
               color: isSelected
                   ? type.color.withOpacity(0.15)

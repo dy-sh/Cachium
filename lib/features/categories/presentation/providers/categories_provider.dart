@@ -1,31 +1,21 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/providers/crud_notifier.dart';
 import '../../data/models/category.dart';
 
-class CategoriesNotifier extends Notifier<List<Category>> {
+class CategoriesNotifier extends CrudNotifier<Category> {
+  @override
+  String getId(Category item) => item.id;
+
   @override
   List<Category> build() {
     return DefaultCategories.all;
   }
 
-  void addCategory(Category category) {
-    state = [...state, category];
-  }
+  void addCategory(Category category) => add(category);
 
-  void updateCategory(Category category) {
-    state = state.map((c) => c.id == category.id ? category : c).toList();
-  }
+  void updateCategory(Category category) => update(category);
 
-  void deleteCategory(String id) {
-    state = state.where((c) => c.id != id).toList();
-  }
-
-  Category? getById(String id) {
-    try {
-      return state.firstWhere((c) => c.id == id);
-    } catch (_) {
-      return null;
-    }
-  }
+  void deleteCategory(String id) => delete(id);
 }
 
 final categoriesProvider = NotifierProvider<CategoriesNotifier, List<Category>>(() {

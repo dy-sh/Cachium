@@ -1,10 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+import '../../../../core/providers/crud_notifier.dart';
 import '../../../../data/demo/demo_data.dart';
 import '../../data/models/account.dart';
 
-class AccountsNotifier extends Notifier<List<Account>> {
+class AccountsNotifier extends CrudNotifier<Account> {
   final _uuid = const Uuid();
+
+  @override
+  String getId(Account item) => item.id;
 
   @override
   List<Account> build() {
@@ -23,16 +27,12 @@ class AccountsNotifier extends Notifier<List<Account>> {
       balance: initialBalance,
       createdAt: DateTime.now(),
     );
-    state = [...state, account];
+    add(account);
   }
 
-  void updateAccount(Account account) {
-    state = state.map((a) => a.id == account.id ? account : a).toList();
-  }
+  void updateAccount(Account account) => update(account);
 
-  void deleteAccount(String id) {
-    state = state.where((a) => a.id != id).toList();
-  }
+  void deleteAccount(String id) => delete(id);
 
   void updateBalance(String accountId, double amount) {
     state = state.map((a) {
@@ -41,14 +41,6 @@ class AccountsNotifier extends Notifier<List<Account>> {
       }
       return a;
     }).toList();
-  }
-
-  Account? getById(String id) {
-    try {
-      return state.firstWhere((a) => a.id == id);
-    } catch (_) {
-      return null;
-    }
   }
 }
 

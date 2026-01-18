@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../design_system/components/buttons/fm_close_button.dart';
 import '../../../../design_system/animations/staggered_list.dart';
 import '../../../../navigation/app_router.dart';
 import '../widgets/account_preview_list.dart';
@@ -45,22 +45,8 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                GestureDetector(
+                FMCloseButton.add(
                   onTap: () => context.push(AppRoutes.transactionForm),
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: const Icon(
-                      LucideIcons.plus,
-                      color: AppColors.textPrimary,
-                      size: 20,
-                    ),
-                  ),
                 ),
               ],
             ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/animations/haptic_helper.dart';
+import '../../../core/constants/app_animations.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
@@ -117,15 +118,15 @@ class _NavItemState extends State<_NavItem> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _scaleController = AnimationController(
-      duration: const Duration(milliseconds: 100),
+      duration: AppAnimations.fast,
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.9).animate(
-      CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut),
+    _scaleAnimation = Tween<double>(begin: 1.0, end: AppAnimations.tapScaleLarge).animate(
+      CurvedAnimation(parent: _scaleController, curve: AppAnimations.defaultCurve),
     );
 
     _bounceController = AnimationController(
-      duration: const Duration(milliseconds: 400),
+      duration: AppAnimations.pageTransition,
       vsync: this,
     );
     _bounceAnimation = TweenSequence<double>([
@@ -133,7 +134,7 @@ class _NavItemState extends State<_NavItem> with TickerProviderStateMixin {
       TweenSequenceItem(tween: Tween(begin: 1.1, end: 1.0), weight: 50),
     ]).animate(CurvedAnimation(
       parent: _bounceController,
-      curve: Curves.easeInOut,
+      curve: AppAnimations.defaultCurve,
     ));
   }
 
@@ -183,11 +184,10 @@ class _NavItemState extends State<_NavItem> with TickerProviderStateMixin {
                   Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      // Icon only - no background
                       Transform.scale(
                         scale: _bounceAnimation.value,
                         child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 200),
+                          duration: AppAnimations.normal,
                           child: Icon(
                             widget.isSelected ? widget.item.activeIcon : widget.item.icon,
                             key: ValueKey(widget.isSelected),
@@ -227,7 +227,7 @@ class _NavItemState extends State<_NavItem> with TickerProviderStateMixin {
                   SizedBox(
                     height: 12,
                     child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 200),
+                      duration: AppAnimations.normal,
                       opacity: widget.isSelected ? 1.0 : 0.0,
                       child: Text(
                         widget.item.label,
