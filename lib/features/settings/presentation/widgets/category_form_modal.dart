@@ -6,7 +6,6 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/buttons/fm_primary_button.dart';
-import '../../../../design_system/components/inputs/fm_text_field.dart';
 import '../../../../design_system/components/layout/fm_form_header.dart';
 import '../../../categories/data/models/category.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
@@ -36,23 +35,50 @@ class CategoryFormModal extends ConsumerStatefulWidget {
 
 class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
   late TextEditingController _nameController;
+  late FocusNode _nameFocusNode;
   late IconData _selectedIcon;
   late int _selectedColorIndex;
   String? _selectedParentId;
+  bool _isEditingName = false;
+  String _previousName = '';
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.category?.name ?? '');
+    _nameFocusNode = FocusNode();
     _selectedIcon = widget.category?.icon ?? LucideIcons.tag;
     _selectedColorIndex = widget.category?.colorIndex ?? 0;
     _selectedParentId = widget.category?.parentId;
+
+    // Start in edit mode if new category
+    if (widget.category == null) {
+      _isEditingName = true;
+    }
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _nameFocusNode.dispose();
     super.dispose();
+  }
+
+  void _startEditingName() {
+    _previousName = _nameController.text;
+    setState(() => _isEditingName = true);
+    _nameFocusNode.requestFocus();
+  }
+
+  void _applyName() {
+    setState(() => _isEditingName = false);
+    _nameFocusNode.unfocus();
+  }
+
+  void _cancelEditingName() {
+    _nameController.text = _previousName;
+    setState(() => _isEditingName = false);
+    _nameFocusNode.unfocus();
   }
 
   bool get _isValid => _nameController.text.trim().isNotEmpty;
@@ -100,7 +126,7 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Preview with name
+                    // Preview with edit/preview mode for name
                     Row(
                       children: [
                         Container(
@@ -119,30 +145,74 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
                         ),
                         const SizedBox(width: AppSpacing.md),
                         Expanded(
-                          child: Text(
-                            categoryName.isEmpty ? 'Category Name' : categoryName,
-                            style: AppTypography.h2.copyWith(
-                              color: categoryName.isEmpty
-                                  ? AppColors.textTertiary
-                                  : selectedColor,
+                          child: _isEditingName
+                              ? TextField(
+                                  controller: _nameController,
+                                  focusNode: _nameFocusNode,
+                                  autofocus: widget.category == null,
+                                  onChanged: (_) => setState(() {}),
+                                  onSubmitted: (_) => _applyName(),
+                                  style: AppTypography.h2.copyWith(
+                                    color: categoryName.isEmpty
+                                        ? AppColors.textTertiary
+                                        : selectedColor,
+                                  ),
+                                  decoration: InputDecoration(
+                                    hintText: 'Category name',
+                                    hintStyle: AppTypography.h2.copyWith(
+                                      color: AppColors.textTertiary,
+                                    ),
+                                    border: InputBorder.none,
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                )
+                              : GestureDetector(
+                                  onTap: _startEditingName,
+                                  child: Text(
+                                    categoryName.isEmpty ? 'Tap to name' : categoryName,
+                                    style: AppTypography.h2.copyWith(
+                                      color: categoryName.isEmpty
+                                          ? AppColors.textTertiary
+                                          : selectedColor,
+                                    ),
+                                  ),
+                                ),
+                        ),
+                        if (_isEditingName)
+                          GestureDetector(
+                            onTap: categoryName.isNotEmpty ? _applyName : _cancelEditingName,
+                            child: Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: categoryName.isNotEmpty
+                                    ? selectedColor.withOpacity(0.15)
+                                    : AppColors.surfaceLight,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                categoryName.isNotEmpty ? LucideIcons.check : LucideIcons.x,
+                                size: 16,
+                                color: categoryName.isNotEmpty ? selectedColor : AppColors.textTertiary,
+                              ),
+                            ),
+                          )
+                        else
+                          GestureDetector(
+                            onTap: _startEditingName,
+                            child: Icon(
+                              LucideIcons.pencil,
+                              size: 18,
+                              color: AppColors.textTertiary,
                             ),
                           ),
-                        ),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.xxl),
 
                     // Parent category selector
                     _buildParentSelector(intensity),
-                    const SizedBox(height: AppSpacing.xl),
-
-                    // Name input
-                    FMTextField(
-                      label: 'Name',
-                      hint: 'Category name',
-                      controller: _nameController,
-                      onChanged: (_) => setState(() {}),
-                    ),
                     const SizedBox(height: AppSpacing.xxl),
 
                     // Color picker
