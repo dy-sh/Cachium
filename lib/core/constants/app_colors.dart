@@ -43,24 +43,24 @@ class AppColors {
   static const Color lightPink = Color(0xFFC98BB5);
 
   // Bright versions (vivid)
-  static const Color cyanBright = Color(0xFF00D4FF);
-  static const Color skyBlueBright = Color(0xFF3399FF);
-  static const Color cornflowerBright = Color(0xFF5577FF);
-  static const Color royalBlueBright = Color(0xFF3366FF);
-  static const Color dodgerBlueBright = Color(0xFF1E90FF);
-  static const Color deepSkyBlueBright = Color(0xFF00BFFF);
-  static const Color greenBright = Color(0xFF00FF88);
-  static const Color lightGreenBright = Color(0xFF7CFF7C);
-  static const Color redBright = Color(0xFFFF3333);
-  static const Color salmonBright = Color(0xFFFF6666);
-  static const Color yellowBright = Color(0xFFFFDD33);
-  static const Color lightGoldBright = Color(0xFFFFE04D);
-  static const Color purpleBright = Color(0xFFAA66FF);
-  static const Color lightPurpleBright = Color(0xFF9D5CFF);
-  static const Color orangeBright = Color(0xFFFF9D1A);
-  static const Color lightOrangeBright = Color(0xFFFFAD33);
-  static const Color pinkBright = Color(0xFFFF4DB8);
-  static const Color lightPinkBright = Color(0xFFFF66CC);
+  static const Color cyanBright = Color(0xFF33CCEE);
+  static const Color skyBlueBright = Color(0xFF5599EE);
+  static const Color cornflowerBright = Color(0xFF6688EE);
+  static const Color royalBlueBright = Color(0xFF5577EE);
+  static const Color dodgerBlueBright = Color(0xFF4499EE);
+  static const Color deepSkyBlueBright = Color(0xFF33BBDD);
+  static const Color greenBright = Color(0xFF33DD99);
+  static const Color lightGreenBright = Color(0xFF88DD88);
+  static const Color redBright = Color(0xFFEE5555);
+  static const Color salmonBright = Color(0xFFEE7777);
+  static const Color yellowBright = Color(0xFFEECC55);
+  static const Color lightGoldBright = Color(0xFFEEDD66);
+  static const Color purpleBright = Color(0xFFAA77DD);
+  static const Color lightPurpleBright = Color(0xFF9977DD);
+  static const Color orangeBright = Color(0xFFDD9955);
+  static const Color lightOrangeBright = Color(0xFFDDAA66);
+  static const Color pinkBright = Color(0xFFDD66BB);
+  static const Color lightPinkBright = Color(0xFFDD77CC);
 
   // Pastel versions (soft, light, calming)
   static const Color cyanPastel = Color(0xFFA8E6F0);
