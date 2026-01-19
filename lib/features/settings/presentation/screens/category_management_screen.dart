@@ -35,7 +35,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
   Timer? _scrollTimer;
 
   static const _scrollAreaHeight = 80.0;
-  static const _scrollSpeed = 5.0;
+  static const _scrollSpeed = 25.0;
 
   @override
   void dispose() {
@@ -72,12 +72,14 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
 
     if (localPosition.dy < _scrollAreaHeight) {
       // Near or above top of list - scroll up
-      final intensity = (1 - (localPosition.dy / _scrollAreaHeight)).clamp(0.0, 1.0);
+      final linear = (1 - (localPosition.dy / _scrollAreaHeight)).clamp(0.0, 1.0);
+      final intensity = linear * linear * linear; // Cubic easing
       final offset = _scrollController.offset - (_scrollSpeed * intensity);
       _scrollController.jumpTo(offset.clamp(0.0, _scrollController.position.maxScrollExtent));
     } else if (localPosition.dy > listHeight - _scrollAreaHeight) {
       // Near or below bottom of list - scroll down
-      final intensity = (1 - ((listHeight - localPosition.dy) / _scrollAreaHeight)).clamp(0.0, 1.0);
+      final linear = (1 - ((listHeight - localPosition.dy) / _scrollAreaHeight)).clamp(0.0, 1.0);
+      final intensity = linear * linear * linear; // Cubic easing
       final offset = _scrollController.offset + (_scrollSpeed * intensity);
       _scrollController.jumpTo(offset.clamp(0.0, _scrollController.position.maxScrollExtent));
     }
