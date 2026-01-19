@@ -321,6 +321,47 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
             Navigator.pop(context);
             await _handleDelete(category);
           },
+          onAddChild: () {
+            Navigator.pop(context);
+            _showAddChildModal(category);
+          },
+        ),
+      ),
+    );
+  }
+
+  void _showAddChildModal(Category parentCategory) {
+    setState(() {
+      _expandedIds.add(parentCategory.id);
+    });
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CategoryFormModal(
+          type: parentCategory.type,
+          initialParentId: parentCategory.id,
+          onSave: (name, icon, colorIndex, parentId) {
+            final categories = ref.read(categoriesProvider);
+            final effectiveParentId = parentId ?? parentCategory.id;
+            final siblings = categories
+                .where((c) => c.parentId == effectiveParentId && c.type == parentCategory.type)
+                .toList();
+            final sortOrder = siblings.isEmpty
+                ? 0
+                : siblings.map((c) => c.sortOrder).reduce((a, b) => a > b ? a : b) + 1;
+
+            final category = Category(
+              id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
+              name: name,
+              icon: icon,
+              colorIndex: colorIndex,
+              type: parentCategory.type,
+              isCustom: true,
+              parentId: effectiveParentId,
+              sortOrder: sortOrder,
+            );
+            ref.read(categoriesProvider.notifier).addCategory(category);
+            Navigator.pop(context);
+          },
         ),
       ),
     );

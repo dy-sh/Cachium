@@ -18,15 +18,19 @@ import 'parent_category_picker.dart';
 class CategoryFormModal extends ConsumerStatefulWidget {
   final Category? category;
   final CategoryType type;
+  final String? initialParentId;
   final void Function(String name, IconData icon, int colorIndex, String? parentId) onSave;
   final VoidCallback? onDelete;
+  final VoidCallback? onAddChild;
 
   const CategoryFormModal({
     super.key,
     this.category,
     required this.type,
+    this.initialParentId,
     required this.onSave,
     this.onDelete,
+    this.onAddChild,
   });
 
   @override
@@ -49,7 +53,7 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
     _nameFocusNode = FocusNode();
     _selectedIcon = widget.category?.icon ?? LucideIcons.tag;
     _selectedColorIndex = widget.category?.colorIndex ?? 0;
-    _selectedParentId = widget.category?.parentId;
+    _selectedParentId = widget.category?.parentId ?? widget.initialParentId;
 
     // Start in edit mode if new category
     if (widget.category == null) {
@@ -83,6 +87,14 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
 
   bool get _isValid => _nameController.text.trim().isNotEmpty;
 
+  bool get _hasChanges {
+    if (widget.category == null) return true;
+    return _nameController.text.trim() != widget.category!.name ||
+        _selectedIcon != widget.category!.icon ||
+        _selectedColorIndex != widget.category!.colorIndex ||
+        _selectedParentId != widget.category!.parentId;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.category != null;
@@ -90,6 +102,10 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
     final categoryColors = AppColors.getCategoryColors(intensity);
     final selectedColor = categoryColors[_selectedColorIndex.clamp(0, categoryColors.length - 1)];
     final categoryName = _nameController.text.trim();
+
+    final isDuplicateName = categoryName.isNotEmpty && ref.watch(
+      categoryNameExistsProvider((name: categoryName, excludeId: widget.category?.id)),
+    );
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -209,6 +225,16 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
                           ),
                       ],
                     ),
+                    if (isDuplicateName)
+                      Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.sm),
+                        child: Text(
+                          'Category with this name already exists',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.expense,
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: AppSpacing.xxl),
 
                     // Parent category selector
@@ -268,19 +294,48 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
                     top: AppSpacing.md,
                     bottom: MediaQuery.of(context).padding.bottom + AppSpacing.md,
                   ),
-                  child: FMPrimaryButton(
-                    label: isEditing ? 'Save Changes' : 'Create Category',
-                    onPressed: _isValid
-                        ? () {
-                            widget.onSave(
-                              _nameController.text.trim(),
-                              _selectedIcon,
-                              _selectedColorIndex,
-                              _selectedParentId,
-                            );
-                          }
-                        : null,
-                  ),
+                  child: isEditing && !_hasChanges && widget.onAddChild != null
+                      ? GestureDetector(
+                          onTap: widget.onAddChild,
+                          child: Container(
+                            height: AppSpacing.buttonHeight,
+                            decoration: BoxDecoration(
+                              color: Colors.transparent,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  LucideIcons.plus,
+                                  size: 18,
+                                  color: AppColors.textSecondary,
+                                ),
+                                const SizedBox(width: AppSpacing.sm),
+                                Text(
+                                  'Add Subcategory',
+                                  style: AppTypography.bodyMedium.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : FMPrimaryButton(
+                          label: isEditing ? 'Save Changes' : 'Create Category',
+                          onPressed: _isValid && !isDuplicateName
+                              ? () {
+                                  widget.onSave(
+                                    _nameController.text.trim(),
+                                    _selectedIcon,
+                                    _selectedColorIndex,
+                                    _selectedParentId,
+                                  );
+                                }
+                              : null,
+                        ),
                 ),
               ),
             ),

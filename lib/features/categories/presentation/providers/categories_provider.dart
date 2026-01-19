@@ -156,3 +156,13 @@ final categoryAncestorsProvider = Provider.family<List<Category>, String>((ref, 
     return [];
   }
 });
+
+/// Checks if a category name already exists (case-insensitive).
+/// Returns true if duplicate exists, excluding the category with excludeId.
+final categoryNameExistsProvider = Provider.family<bool, ({String name, String? excludeId})>((ref, params) {
+  final categories = ref.watch(categoriesProvider);
+  final nameLower = params.name.trim().toLowerCase();
+  return categories.any((c) =>
+    c.name.toLowerCase() == nameLower && c.id != params.excludeId
+  );
+});
