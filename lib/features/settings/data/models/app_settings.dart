@@ -67,7 +67,7 @@ class AppSettings {
   final String? lastUsedAccountId;
 
   const AppSettings({
-    this.colorIntensity = ColorIntensity.dim,
+    this.colorIntensity = ColorIntensity.bright,
     this.accentColor = const Color(0xFFFFFFFF),
     this.tabTransitionsEnabled = true,
     this.formAnimationsEnabled = true,
