@@ -16,7 +16,7 @@ enum ColorIntensity {
   dim,
   pastel,
   neon,
-  earth,
+  vintage,
 }
 
 enum StartScreen {

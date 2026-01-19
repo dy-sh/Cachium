@@ -22,25 +22,25 @@ class AppColors {
   static const Color accentPrimary = Color(0xFFFFFFFF);
   static const Color selectionGlow = Color(0x33FFFFFF); // 20% opacity white
 
-  // Base color palette (dim - muted and darker)
-  static const Color cyan = Color(0xFF0086A2);
-  static const Color skyBlue = Color(0xFF3169A2);
-  static const Color cornflower = Color(0xFF4459A2);
-  static const Color royalBlue = Color(0xFF2041A2);
-  static const Color dodgerBlue = Color(0xFF135CA2);
-  static const Color deepSkyBlue = Color(0xFF007AA2);
-  static const Color green = Color(0xFF00A257);
-  static const Color lightGreen = Color(0xFF4FA24F);
-  static const Color red = Color(0xFFA24444);
-  static const Color salmon = Color(0xFFA25454);
-  static const Color yellow = Color(0xFFA28D31);
-  static const Color lightGold = Color(0xFFA28E41);
-  static const Color purple = Color(0xFF7A61A2);
-  static const Color lightPurple = Color(0xFF7257A2);
-  static const Color orange = Color(0xFFA26311);
-  static const Color lightOrange = Color(0xFFA26E20);
-  static const Color pink = Color(0xFFA24272);
-  static const Color lightPink = Color(0xFFA25480);
+  // Base color palette (dim - softer, muted but visible)
+  static const Color cyan = Color(0xFF5BBCD9);
+  static const Color skyBlue = Color(0xFF7BA3C9);
+  static const Color cornflower = Color(0xFF8B9DC9);
+  static const Color royalBlue = Color(0xFF6B8BC9);
+  static const Color dodgerBlue = Color(0xFF5B9BC9);
+  static const Color deepSkyBlue = Color(0xFF5BB5C9);
+  static const Color green = Color(0xFF5BC98B);
+  static const Color lightGreen = Color(0xFF8BC98B);
+  static const Color red = Color(0xFFC97B7B);
+  static const Color salmon = Color(0xFFC98B8B);
+  static const Color yellow = Color(0xFFC9B95B);
+  static const Color lightGold = Color(0xFFC9C07B);
+  static const Color purple = Color(0xFFA68BC9);
+  static const Color lightPurple = Color(0xFF9B7BC9);
+  static const Color orange = Color(0xFFC9955B);
+  static const Color lightOrange = Color(0xFFC9A06B);
+  static const Color pink = Color(0xFFC97BA6);
+  static const Color lightPink = Color(0xFFC98BB5);
 
   // Bright versions (vivid)
   static const Color cyanBright = Color(0xFF00D4FF);
@@ -102,25 +102,25 @@ class AppColors {
   static const Color pinkNeon = Color(0xFFFF1493);
   static const Color lightPinkNeon = Color(0xFFFF69B4);
 
-  // Earth versions (natural, warm-toned)
-  static const Color cyanEarth = Color(0xFF5B8A8A);
-  static const Color skyBlueEarth = Color(0xFF5F7A8A);
-  static const Color cornflowerEarth = Color(0xFF6B7A8A);
-  static const Color royalBlueEarth = Color(0xFF4A6A8A);
-  static const Color dodgerBlueEarth = Color(0xFF4A7A8A);
-  static const Color deepSkyBlueEarth = Color(0xFF4A8A8A);
-  static const Color greenEarth = Color(0xFF6B8E6B);
-  static const Color lightGreenEarth = Color(0xFF8B9E6B);
-  static const Color redEarth = Color(0xFF8E6B6B);
-  static const Color salmonEarth = Color(0xFF9E7B7B);
-  static const Color yellowEarth = Color(0xFF9E946B);
-  static const Color lightGoldEarth = Color(0xFFA89E6B);
-  static const Color purpleEarth = Color(0xFF7B6B8E);
-  static const Color lightPurpleEarth = Color(0xFF8B7B9E);
-  static const Color orangeEarth = Color(0xFF9E7B5B);
-  static const Color lightOrangeEarth = Color(0xFFA88B6B);
-  static const Color pinkEarth = Color(0xFF8E6B7B);
-  static const Color lightPinkEarth = Color(0xFF9E7B8B);
+  // Vintage versions (retro, warm, nostalgic)
+  static const Color cyanVintage = Color(0xFF45B5AA);
+  static const Color skyBlueVintage = Color(0xFF6B9AC4);
+  static const Color cornflowerVintage = Color(0xFF8884C4);
+  static const Color royalBlueVintage = Color(0xFF5B6FAF);
+  static const Color dodgerBlueVintage = Color(0xFF5890B5);
+  static const Color deepSkyBlueVintage = Color(0xFF4AA8A8);
+  static const Color greenVintage = Color(0xFF7CB472);
+  static const Color lightGreenVintage = Color(0xFF9CB46B);
+  static const Color redVintage = Color(0xFFCF6B6B);
+  static const Color salmonVintage = Color(0xFFE8927C);
+  static const Color yellowVintage = Color(0xFFD4A84B);
+  static const Color lightGoldVintage = Color(0xFFE8C55D);
+  static const Color purpleVintage = Color(0xFF9678B4);
+  static const Color lightPurpleVintage = Color(0xFFAA8DC4);
+  static const Color orangeVintage = Color(0xFFD98545);
+  static const Color lightOrangeVintage = Color(0xFFE89F5C);
+  static const Color pinkVintage = Color(0xFFD4789B);
+  static const Color lightPinkVintage = Color(0xFFE895B0);
 
   // Accent color options - Dim (the preferred set)
   static const List<Color> accentOptionsDim = [
@@ -154,12 +154,12 @@ class AppColors {
     purpleNeon, lightPurpleNeon, orangeNeon, lightOrangeNeon, pinkNeon, lightPinkNeon,
   ];
 
-  // Accent color options - Earth (natural, warm)
-  static const List<Color> accentOptionsEarth = [
+  // Accent color options - Vintage (retro, warm)
+  static const List<Color> accentOptionsVintage = [
     Color(0xFFFFFFFF), // White (default)
-    cyanEarth, skyBlueEarth, cornflowerEarth, royalBlueEarth, dodgerBlueEarth, deepSkyBlueEarth,
-    greenEarth, lightGreenEarth, redEarth, salmonEarth, yellowEarth, lightGoldEarth,
-    purpleEarth, lightPurpleEarth, orangeEarth, lightOrangeEarth, pinkEarth, lightPinkEarth,
+    cyanVintage, skyBlueVintage, cornflowerVintage, royalBlueVintage, dodgerBlueVintage, deepSkyBlueVintage,
+    greenVintage, lightGreenVintage, redVintage, salmonVintage, yellowVintage, lightGoldVintage,
+    purpleVintage, lightPurpleVintage, orangeVintage, lightOrangeVintage, pinkVintage, lightPinkVintage,
   ];
 
   // Legacy accessor
@@ -176,8 +176,8 @@ class AppColors {
         return accentOptionsPastel;
       case ColorIntensity.neon:
         return accentOptionsNeon;
-      case ColorIntensity.earth:
-        return accentOptionsEarth;
+      case ColorIntensity.vintage:
+        return accentOptionsVintage;
     }
   }
 
@@ -216,12 +216,12 @@ class AppColors {
   static const Color accountInvestmentNeon = purpleNeon;
   static const Color accountWalletNeon = orangeNeon;
 
-  static const Color accountBankEarth = cyanEarth;
-  static const Color accountCreditCardEarth = redEarth;
-  static const Color accountCashEarth = greenEarth;
-  static const Color accountSavingsEarth = yellowEarth;
-  static const Color accountInvestmentEarth = purpleEarth;
-  static const Color accountWalletEarth = orangeEarth;
+  static const Color accountBankVintage = cyanVintage;
+  static const Color accountCreditCardVintage = redVintage;
+  static const Color accountCashVintage = greenVintage;
+  static const Color accountSavingsVintage = yellowVintage;
+  static const Color accountInvestmentVintage = purpleVintage;
+  static const Color accountWalletVintage = orangeVintage;
 
   // Legacy accessors (use dim by default)
   static const Color accountBank = accountBankDim;
@@ -240,8 +240,8 @@ class AppColors {
   static const Color expensePastel = redPastel;
   static const Color incomeNeon = greenNeon;
   static const Color expenseNeon = redNeon;
-  static const Color incomeEarth = greenEarth;
-  static const Color expenseEarth = redEarth;
+  static const Color incomeVintage = greenVintage;
+  static const Color expenseVintage = redVintage;
 
   // Legacy semantic colors (dim by default)
   static const Color income = incomeDim;
@@ -275,10 +275,10 @@ class AppColors {
     yellowNeon, purpleNeon, lightPurpleNeon, orangeNeon, pinkNeon, lightPinkNeon,
   ];
 
-  // Category colors - earth (natural, warm)
-  static const List<Color> categoryColorsEarth = [
-    cyanEarth, skyBlueEarth, greenEarth, lightGreenEarth, redEarth, salmonEarth,
-    yellowEarth, purpleEarth, lightPurpleEarth, orangeEarth, pinkEarth, lightPinkEarth,
+  // Category colors - vintage (retro, warm)
+  static const List<Color> categoryColorsVintage = [
+    cyanVintage, skyBlueVintage, greenVintage, lightGreenVintage, redVintage, salmonVintage,
+    yellowVintage, purpleVintage, lightPurpleVintage, orangeVintage, pinkVintage, lightPinkVintage,
   ];
 
   // Legacy accessor
@@ -295,8 +295,8 @@ class AppColors {
         return categoryColorsPastel;
       case ColorIntensity.neon:
         return categoryColorsNeon;
-      case ColorIntensity.earth:
-        return categoryColorsEarth;
+      case ColorIntensity.vintage:
+        return categoryColorsVintage;
     }
   }
 
@@ -304,23 +304,23 @@ class AppColors {
   static Color getAccountColor(String type, [ColorIntensity intensity = ColorIntensity.bright]) {
     switch (type) {
       case 'bank':
-        return _getColorForIntensity(accountBankDim, accountBankBright, accountBankPastel, accountBankNeon, accountBankEarth, intensity);
+        return _getColorForIntensity(accountBankDim, accountBankBright, accountBankPastel, accountBankNeon, accountBankVintage, intensity);
       case 'creditCard':
-        return _getColorForIntensity(accountCreditCardDim, accountCreditCardBright, accountCreditCardPastel, accountCreditCardNeon, accountCreditCardEarth, intensity);
+        return _getColorForIntensity(accountCreditCardDim, accountCreditCardBright, accountCreditCardPastel, accountCreditCardNeon, accountCreditCardVintage, intensity);
       case 'cash':
-        return _getColorForIntensity(accountCashDim, accountCashBright, accountCashPastel, accountCashNeon, accountCashEarth, intensity);
+        return _getColorForIntensity(accountCashDim, accountCashBright, accountCashPastel, accountCashNeon, accountCashVintage, intensity);
       case 'savings':
-        return _getColorForIntensity(accountSavingsDim, accountSavingsBright, accountSavingsPastel, accountSavingsNeon, accountSavingsEarth, intensity);
+        return _getColorForIntensity(accountSavingsDim, accountSavingsBright, accountSavingsPastel, accountSavingsNeon, accountSavingsVintage, intensity);
       case 'investment':
-        return _getColorForIntensity(accountInvestmentDim, accountInvestmentBright, accountInvestmentPastel, accountInvestmentNeon, accountInvestmentEarth, intensity);
+        return _getColorForIntensity(accountInvestmentDim, accountInvestmentBright, accountInvestmentPastel, accountInvestmentNeon, accountInvestmentVintage, intensity);
       case 'wallet':
-        return _getColorForIntensity(accountWalletDim, accountWalletBright, accountWalletPastel, accountWalletNeon, accountWalletEarth, intensity);
+        return _getColorForIntensity(accountWalletDim, accountWalletBright, accountWalletPastel, accountWalletNeon, accountWalletVintage, intensity);
       default:
-        return _getColorForIntensity(accountBankDim, accountBankBright, accountBankPastel, accountBankNeon, accountBankEarth, intensity);
+        return _getColorForIntensity(accountBankDim, accountBankBright, accountBankPastel, accountBankNeon, accountBankVintage, intensity);
     }
   }
 
-  static Color _getColorForIntensity(Color dim, Color bright, Color pastel, Color neon, Color earth, ColorIntensity intensity) {
+  static Color _getColorForIntensity(Color dim, Color bright, Color pastel, Color neon, Color vintage, ColorIntensity intensity) {
     switch (intensity) {
       case ColorIntensity.bright:
         return bright;
@@ -330,8 +330,8 @@ class AppColors {
         return pastel;
       case ColorIntensity.neon:
         return neon;
-      case ColorIntensity.earth:
-        return earth;
+      case ColorIntensity.vintage:
+        return vintage;
     }
   }
 
@@ -339,9 +339,9 @@ class AppColors {
   static Color getTransactionColor(String type, [ColorIntensity intensity = ColorIntensity.bright]) {
     switch (type) {
       case 'income':
-        return _getColorForIntensity(incomeDim, incomeBright, incomePastel, incomeNeon, incomeEarth, intensity);
+        return _getColorForIntensity(incomeDim, incomeBright, incomePastel, incomeNeon, incomeVintage, intensity);
       case 'expense':
-        return _getColorForIntensity(expenseDim, expenseBright, expensePastel, expenseNeon, expenseEarth, intensity);
+        return _getColorForIntensity(expenseDim, expenseBright, expensePastel, expenseNeon, expenseVintage, intensity);
       default:
         return textPrimary;
     }
@@ -357,9 +357,9 @@ class AppColors {
       case ColorIntensity.pastel:
         return 0.25;
       case ColorIntensity.dim:
-        return 0.15;
-      case ColorIntensity.earth:
         return 0.20;
+      case ColorIntensity.vintage:
+        return 0.25;
     }
   }
 
@@ -370,10 +370,10 @@ class AppColors {
       case ColorIntensity.neon:
         return 1.0;
       case ColorIntensity.pastel:
+      case ColorIntensity.vintage:
         return 0.8;
       case ColorIntensity.dim:
-      case ColorIntensity.earth:
-        return 0.5;
+        return 0.6;
     }
   }
 

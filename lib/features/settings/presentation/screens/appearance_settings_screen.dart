@@ -131,10 +131,10 @@ class AppearanceSettingsScreen extends ConsumerWidget {
   Widget _buildPaletteSelector(WidgetRef ref, AppSettings settings) {
     final palettes = [
       (ColorIntensity.bright, 'Bright', 'Vivid, saturated colors'),
-      (ColorIntensity.dim, 'Dim', 'Muted, subtle colors'),
-      (ColorIntensity.pastel, 'Pastel', 'Soft, light, calming'),
+      (ColorIntensity.dim, 'Dim', 'Soft, muted tones'),
+      (ColorIntensity.pastel, 'Pastel', 'Light, calming colors'),
       (ColorIntensity.neon, 'Neon', 'Electric, ultra-vibrant'),
-      (ColorIntensity.earth, 'Earth', 'Natural, warm tones'),
+      (ColorIntensity.vintage, 'Vintage', 'Retro, warm, nostalgic'),
     ];
 
     return Column(
