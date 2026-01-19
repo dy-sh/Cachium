@@ -123,17 +123,22 @@ class _CategoryItemDropTargetState extends State<CategoryItemDropTarget> {
   DropZone _currentZone = DropZone.none;
   final GlobalKey _key = GlobalKey();
 
+  // Estimated height of the dragged feedback widget
+  static const _feedbackHeight = 72.0;
+
   DropZone _getZoneFromPosition(Offset globalPosition) {
     final box = _key.currentContext?.findRenderObject() as RenderBox?;
     if (box == null) return DropZone.none;
 
-    final localPosition = box.globalToLocal(globalPosition);
+    // Calculate center of the dragged item (offset is top-left of feedback)
+    final dragCenterGlobal = globalPosition + const Offset(0, _feedbackHeight / 2);
+    final localPosition = box.globalToLocal(dragCenterGlobal);
     final height = box.size.height;
 
-    // Top 25% → insert before, Middle 50% → make child, Bottom 25% → insert after
-    if (localPosition.dy < height * 0.25) {
+    // Top 20% → insert before, Middle 60% → make child, Bottom 20% → insert after
+    if (localPosition.dy < height * 0.20) {
       return DropZone.top;
-    } else if (localPosition.dy > height * 0.75) {
+    } else if (localPosition.dy > height * 0.80) {
       return DropZone.bottom;
     } else {
       return DropZone.center;
