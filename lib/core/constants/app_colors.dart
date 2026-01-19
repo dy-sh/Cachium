@@ -367,6 +367,7 @@ class AppColors {
   static double getBorderOpacity(ColorIntensity intensity) {
     switch (intensity) {
       case ColorIntensity.bright:
+        return 0.5;
       case ColorIntensity.neon:
         return 1.0;
       case ColorIntensity.pastel:
