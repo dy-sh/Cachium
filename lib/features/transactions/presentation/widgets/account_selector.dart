@@ -111,15 +111,6 @@ class _AccountCard extends StatelessWidget {
             color: isSelected ? account.color : AppColors.border,
             width: isSelected ? 2 : 1,
           ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: account.color.withOpacity(0.3),
-                    blurRadius: 10,
-                    spreadRadius: 0,
-                  ),
-                ]
-              : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

@@ -112,15 +112,6 @@ class _CategoryChip extends StatelessWidget {
             color: isSelected ? categoryColor : AppColors.border,
             width: isSelected ? 2 : 1,
           ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: categoryColor.withOpacity(0.3),
-                    blurRadius: 10,
-                    spreadRadius: 0,
-                  ),
-                ]
-              : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

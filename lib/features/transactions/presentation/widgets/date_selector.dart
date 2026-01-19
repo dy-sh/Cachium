@@ -157,15 +157,6 @@ class _QuickDateChip extends StatelessWidget {
             color: isSelected ? AppColors.accentPrimary : AppColors.border,
             width: isSelected ? 2 : 1,
           ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: AppColors.accentPrimary.withOpacity(0.3),
-                    blurRadius: 10,
-                    spreadRadius: 0,
-                  ),
-                ]
-              : null,
         ),
         child: Text(
           label,

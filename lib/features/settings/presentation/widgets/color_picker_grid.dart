@@ -40,15 +40,6 @@ class ColorPickerGrid extends StatelessWidget {
                 color: isSelected ? AppColors.textPrimary : Colors.transparent,
                 width: 2,
               ),
-              boxShadow: isSelected
-                  ? [
-                      BoxShadow(
-                        color: color.withOpacity(0.4),
-                        blurRadius: 8,
-                        spreadRadius: 0,
-                      ),
-                    ]
-                  : null,
             ),
             child: isSelected
                 ? Icon(
