@@ -62,25 +62,69 @@ class AccountsScreen extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(AppSpacing.md),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
-                color: AppColors.surface,
                 borderRadius: AppRadius.lgAll,
-                border: Border.all(color: AppColors.border),
+                border: Border.all(
+                  color: AppColors.border,
+                  width: 1,
+                ),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.surfaceLight.withOpacity(0.5),
+                    AppColors.surface.withOpacity(0.3),
+                  ],
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Total Balance',
-                    style: AppTypography.labelMedium.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
+                  // Header with label
+                  Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: totalBalance >= 0
+                              ? AppColors.getTransactionColor('income', intensity)
+                              : AppColors.getTransactionColor('expense', intensity),
+                          boxShadow: [
+                            BoxShadow(
+                              color: (totalBalance >= 0
+                                      ? AppColors.getTransactionColor('income', intensity)
+                                      : AppColors.getTransactionColor('expense', intensity))
+                                  .withOpacity(0.5),
+                              blurRadius: 8,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(
+                        'TOTAL BALANCE',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: AppColors.textTertiary,
+                          letterSpacing: 1.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: AppSpacing.xs),
+                  const SizedBox(height: AppSpacing.md),
+                  // Main balance amount
                   AnimatedCounter(
                     value: totalBalance,
-                    style: AppTypography.moneyLarge,
+                    style: AppTypography.moneyLarge.copyWith(
+                      fontSize: 38,
+                      fontWeight: FontWeight.w400,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -0.5,
+                    ),
                   ),
                 ],
               ),
