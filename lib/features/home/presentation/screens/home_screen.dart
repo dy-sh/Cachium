@@ -60,29 +60,9 @@ class HomeScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Total Balance Card
-                  StaggeredListItem(
-                    index: 0,
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-                      child: TotalBalanceCard(),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
-
-                  // Quick Actions
-                  StaggeredListItem(
-                    index: 1,
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-                      child: QuickActions(),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
-
                   // Accounts Preview
                   StaggeredListItem(
-                    index: 2,
+                    index: 0,
                     child: Column(
                       children: [
                         Padding(
@@ -106,6 +86,26 @@ class HomeScreen extends ConsumerWidget {
                         const SizedBox(height: AppSpacing.md),
                         const AccountPreviewList(),
                       ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xxl),
+
+                  // Total Balance Card
+                  StaggeredListItem(
+                    index: 1,
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+                      child: TotalBalanceCard(),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xxl),
+
+                  // Quick Actions
+                  StaggeredListItem(
+                    index: 2,
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+                      child: QuickActions(),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xxl),

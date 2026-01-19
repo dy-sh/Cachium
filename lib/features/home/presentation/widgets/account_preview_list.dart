@@ -19,12 +19,12 @@ class AccountPreviewList extends ConsumerWidget {
     final intensity = ref.watch(colorIntensityProvider);
 
     return SizedBox(
-      height: 100,
+      height: 72,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
         itemCount: accounts.length,
-        separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.md),
+        separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.sm),
         itemBuilder: (context, index) {
           return _AccountPreviewCard(account: accounts[index], intensity: intensity);
         },
@@ -46,54 +46,115 @@ class _AccountPreviewCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final accountColor = account.getColorWithIntensity(intensity);
     final expenseColor = AppColors.getTransactionColor('expense', intensity);
-
-    final borderOpacity = AppColors.getBorderOpacity(intensity);
     final bgOpacity = AppColors.getBgOpacity(intensity);
+    final cardStyle = ref.watch(accountCardStyleProvider);
+
+    // Opacity multipliers based on card style
+    final gradientStart = cardStyle == AccountCardStyle.bright ? 0.6 : 0.35;
+    final gradientEnd = cardStyle == AccountCardStyle.bright ? 0.3 : 0.15;
+    final circleOpacity = cardStyle == AccountCardStyle.bright ? 0.3 : 0.15;
+    final shadowOpacity = cardStyle == AccountCardStyle.bright ? 0.15 : 0.08;
+    final shadowBlur = cardStyle == AccountCardStyle.bright ? 12.0 : 8.0;
+    final shadowOffset = cardStyle == AccountCardStyle.bright ? 4.0 : 2.0;
 
     return Container(
-      width: 160,
-      padding: const EdgeInsets.all(AppSpacing.md),
+      width: 180,
+      clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.mdAll,
-        border: Border.all(color: accountColor.withOpacity(borderOpacity)),
+        borderRadius: AppRadius.lgAll,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            accountColor.withOpacity(bgOpacity * gradientStart),
+            accountColor.withOpacity(bgOpacity * gradientEnd),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: accountColor.withOpacity(shadowOpacity),
+            blurRadius: shadowBlur,
+            offset: Offset(0, shadowOffset),
+          ),
+        ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Stack(
         children: [
-          Row(
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: accountColor.withOpacity(bgOpacity),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Icon(
-                  account.icon,
-                  color: accountColor,
-                  size: 14,
-                ),
+          // Decorative circle
+          Positioned(
+            top: -20,
+            right: -20,
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: accountColor.withOpacity(bgOpacity * circleOpacity),
               ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Text(
-                  account.name,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
+            ),
+          ),
+          // Content
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: accountColor.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(7),
+                      ),
+                      child: Icon(
+                        account.icon,
+                        color: AppColors.background,
+                        size: 14,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            account.name,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                              height: 1.2,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            account.type.displayName,
+                            style: AppTypography.labelSmall.copyWith(
+                              color: AppColors.textSecondary.withOpacity(0.7),
+                              height: 1.2,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                Text(
+                  CurrencyFormatter.format(account.balance),
+                  style: AppTypography.moneySmall.copyWith(
+                    color: account.balance >= 0 ? AppColors.textPrimary : expenseColor,
+                    fontWeight: FontWeight.w700,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
-          ),
-          Text(
-            CurrencyFormatter.format(account.balance),
-            style: AppTypography.moneySmall.copyWith(
-              color: account.balance >= 0 ? AppColors.textPrimary : expenseColor,
+              ],
             ),
           ),
         ],

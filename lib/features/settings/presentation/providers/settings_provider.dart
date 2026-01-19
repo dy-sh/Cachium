@@ -17,6 +17,10 @@ class SettingsNotifier extends Notifier<AppSettings> {
     state = state.copyWith(accentColorIndex: index);
   }
 
+  void setAccountCardStyle(AccountCardStyle style) {
+    state = state.copyWith(accountCardStyle: style);
+  }
+
   void setTabTransitionsEnabled(bool enabled) {
     state = state.copyWith(tabTransitionsEnabled: enabled);
   }
@@ -71,6 +75,10 @@ final colorIntensityProvider = Provider<ColorIntensity>((ref) {
 
 final accentColorProvider = Provider<Color>((ref) {
   return ref.watch(settingsProvider.select((s) => s.accentColor));
+});
+
+final accountCardStyleProvider = Provider<AccountCardStyle>((ref) {
+  return ref.watch(settingsProvider.select((s) => s.accountCardStyle));
 });
 
 final dateFormatProvider = Provider<DateFormatOption>((ref) {

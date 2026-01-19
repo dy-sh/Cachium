@@ -68,6 +68,7 @@ class AppearanceSettingsScreen extends ConsumerWidget {
                     children: [
                       _buildColorIntensityTile(context, ref, settings),
                       _buildAccentColorTile(context, ref, settings),
+                      _buildAccountCardStyleTile(context, ref, settings),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.xxl),
@@ -239,4 +240,156 @@ class AppearanceSettingsScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildAccountCardStyleTile(BuildContext context, WidgetRef ref, AppSettings settings) {
+    final styles = [
+      (AccountCardStyle.dim, 'Dim'),
+      (AccountCardStyle.bright, 'Bright'),
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.md,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Account Cards', style: AppTypography.bodyMedium),
+          const SizedBox(height: 2),
+          Text(
+            'Background style for account cards',
+            style: AppTypography.bodySmall.copyWith(color: AppColors.textTertiary),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: styles.map((style) {
+              final (cardStyle, name) = style;
+              final isSelected = settings.accountCardStyle == cardStyle;
+
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    ref.read(settingsProvider.notifier).setAccountCardStyle(cardStyle);
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    margin: EdgeInsets.only(right: cardStyle == AccountCardStyle.dim ? AppSpacing.sm : 0),
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: isSelected ? AppColors.surface : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected ? AppColors.textPrimary : AppColors.border,
+                        width: isSelected ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        _buildCardPreview(settings.colorIntensity, cardStyle),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          name,
+                          style: AppTypography.labelMedium.copyWith(
+                            color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCardPreview(ColorIntensity intensity, AccountCardStyle cardStyle) {
+    final previewColor = AppColors.getAccountColor('bank', intensity);
+    final bgOpacity = AppColors.getBgOpacity(intensity);
+
+    final gradientStart = cardStyle == AccountCardStyle.bright ? 0.6 : 0.35;
+    final gradientEnd = cardStyle == AccountCardStyle.bright ? 0.3 : 0.15;
+    final circleOpacity = cardStyle == AccountCardStyle.bright ? 0.3 : 0.15;
+
+    return Container(
+      height: 48,
+      clipBehavior: Clip.hardEdge,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            previewColor.withOpacity(bgOpacity * gradientStart),
+            previewColor.withOpacity(bgOpacity * gradientEnd),
+          ],
+        ),
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            top: -12,
+            right: -12,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: previewColor.withOpacity(bgOpacity * circleOpacity),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            child: Row(
+              children: [
+                Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: previewColor.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: Icon(
+                    LucideIcons.landmark,
+                    color: AppColors.background,
+                    size: 10,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        height: 6,
+                        width: 50,
+                        decoration: BoxDecoration(
+                          color: AppColors.textPrimary.withOpacity(0.6),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        height: 4,
+                        width: 30,
+                        decoration: BoxDecoration(
+                          color: AppColors.textSecondary.withOpacity(0.4),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

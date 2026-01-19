@@ -37,6 +37,11 @@ enum FirstDayOfWeek {
   const FirstDayOfWeek(this.value);
 }
 
+enum AccountCardStyle {
+  dim,
+  bright;
+}
+
 enum CurrencySymbol {
   usd('\$', 'USD'),
   eur('\u20AC', 'EUR'),
@@ -52,6 +57,7 @@ class AppSettings {
   // Appearance
   final ColorIntensity colorIntensity;
   final int accentColorIndex;
+  final AccountCardStyle accountCardStyle;
   final bool tabTransitionsEnabled;
   final bool formAnimationsEnabled;
   final bool balanceCountersEnabled;
@@ -70,6 +76,7 @@ class AppSettings {
   const AppSettings({
     this.colorIntensity = ColorIntensity.prism,
     this.accentColorIndex = 0,
+    this.accountCardStyle = AccountCardStyle.dim,
     this.tabTransitionsEnabled = true,
     this.formAnimationsEnabled = true,
     this.balanceCountersEnabled = true,
@@ -96,6 +103,7 @@ class AppSettings {
   AppSettings copyWith({
     ColorIntensity? colorIntensity,
     int? accentColorIndex,
+    AccountCardStyle? accountCardStyle,
     bool? tabTransitionsEnabled,
     bool? formAnimationsEnabled,
     bool? balanceCountersEnabled,
@@ -110,6 +118,7 @@ class AppSettings {
     return AppSettings(
       colorIntensity: colorIntensity ?? this.colorIntensity,
       accentColorIndex: accentColorIndex ?? this.accentColorIndex,
+      accountCardStyle: accountCardStyle ?? this.accountCardStyle,
       tabTransitionsEnabled: tabTransitionsEnabled ?? this.tabTransitionsEnabled,
       formAnimationsEnabled: formAnimationsEnabled ?? this.formAnimationsEnabled,
       balanceCountersEnabled: balanceCountersEnabled ?? this.balanceCountersEnabled,
