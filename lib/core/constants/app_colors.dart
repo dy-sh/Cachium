@@ -251,34 +251,39 @@ class AppColors {
   static const Color navActive = Color(0xFFFFFFFF);
   static const Color navInactive = Color(0xFF5A5A5A);
 
-  // Category colors - dim (base palette)
+  // Category colors - dim (base palette) - 18 colors matching accent options
   static const List<Color> categoryColorsZen = [
-    cyan, skyBlue, green, lightGreen, red, salmon,
-    yellow, purple, lightPurple, orange, pink, lightPink,
+    cyan, skyBlue, cornflower, royalBlue, dodgerBlue, deepSkyBlue,
+    green, lightGreen, red, salmon, yellow, lightGold,
+    purple, lightPurple, orange, lightOrange, pink, lightPink,
   ];
 
   // Category colors - bright (more saturated)
   static const List<Color> categoryColorsPrism = [
-    cyanPrism, skyBluePrism, greenPrism, lightGreenPrism, redPrism, salmonPrism,
-    yellowPrism, purplePrism, lightPurplePrism, orangePrism, pinkPrism, lightPinkPrism,
+    cyanPrism, skyBluePrism, cornflowerPrism, royalBluePrism, dodgerBluePrism, deepSkyBluePrism,
+    greenPrism, lightGreenPrism, redPrism, salmonPrism, yellowPrism, lightGoldPrism,
+    purplePrism, lightPurplePrism, orangePrism, lightOrangePrism, pinkPrism, lightPinkPrism,
   ];
 
   // Category colors - pastel (soft, light)
   static const List<Color> categoryColorsPastel = [
-    cyanPastel, skyBluePastel, greenPastel, lightGreenPastel, redPastel, salmonPastel,
-    yellowPastel, purplePastel, lightPurplePastel, orangePastel, pinkPastel, lightPinkPastel,
+    cyanPastel, skyBluePastel, cornflowerPastel, royalBluePastel, dodgerBluePastel, deepSkyBluePastel,
+    greenPastel, lightGreenPastel, redPastel, salmonPastel, yellowPastel, lightGoldPastel,
+    purplePastel, lightPurplePastel, orangePastel, lightOrangePastel, pinkPastel, lightPinkPastel,
   ];
 
   // Category colors - neon (ultra-saturated)
   static const List<Color> categoryColorsNeon = [
-    cyanNeon, skyBlueNeon, greenNeon, lightGreenNeon, redNeon, salmonNeon,
-    yellowNeon, purpleNeon, lightPurpleNeon, orangeNeon, pinkNeon, lightPinkNeon,
+    cyanNeon, skyBlueNeon, cornflowerNeon, royalBlueNeon, dodgerBlueNeon, deepSkyBlueNeon,
+    greenNeon, lightGreenNeon, redNeon, salmonNeon, yellowNeon, lightGoldNeon,
+    purpleNeon, lightPurpleNeon, orangeNeon, lightOrangeNeon, pinkNeon, lightPinkNeon,
   ];
 
   // Category colors - vintage (retro, warm)
   static const List<Color> categoryColorsVintage = [
-    cyanVintage, skyBlueVintage, greenVintage, lightGreenVintage, redVintage, salmonVintage,
-    yellowVintage, purpleVintage, lightPurpleVintage, orangeVintage, pinkVintage, lightPinkVintage,
+    cyanVintage, skyBlueVintage, cornflowerVintage, royalBlueVintage, dodgerBlueVintage, deepSkyBlueVintage,
+    greenVintage, lightGreenVintage, redVintage, salmonVintage, yellowVintage, lightGoldVintage,
+    purpleVintage, lightPurpleVintage, orangeVintage, lightOrangeVintage, pinkVintage, lightPinkVintage,
   ];
 
   // Legacy accessor

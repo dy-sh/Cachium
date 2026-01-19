@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +7,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/buttons/fm_icon_button.dart';
+import '../../../../design_system/components/buttons/fm_primary_button.dart';
 import '../../../../design_system/components/chips/fm_toggle_chip.dart';
 import '../../../categories/data/models/category.dart';
 import '../../../categories/data/models/category_tree_node.dart';
@@ -59,6 +61,23 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
                       Expanded(
                         child: Text('Categories', style: AppTypography.h2),
                       ),
+                      GestureDetector(
+                        onTap: () => _showAddModal(),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Icon(
+                            LucideIcons.plus,
+                            color: ref.watch(accentColorProvider),
+                            size: 20,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.xl),
@@ -76,7 +95,17 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
                       },
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.xl),
+                  const SizedBox(height: AppSpacing.md),
+                  // Reorder hint
+                  Center(
+                    child: Text(
+                      'Hold and drag to reorder',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
                 ],
               ),
             ),
@@ -84,18 +113,48 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
             // Categories tree
             Expanded(
               child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-                itemCount: treeNodes.length + 2, // +1 for root drop zone, +1 for add button
+                padding: const EdgeInsets.only(
+                  left: AppSpacing.screenPadding,
+                  right: AppSpacing.screenPadding,
+                  bottom: AppSpacing.xl,
+                ),
+                itemCount: treeNodes.length + 1, // +1 for root drop zone
                 itemBuilder: (context, index) {
                   if (index == 0) {
                     return _buildRootDropZone(intensity);
                   }
-                  if (index == treeNodes.length + 1) {
-                    return _buildAddCategoryTile();
-                  }
                   final node = treeNodes[index - 1];
                   return _buildTreeItem(node, intensity);
                 },
+              ),
+            ),
+
+            // Sticky bottom button
+            ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.background.withOpacity(0.8),
+                    border: Border(
+                      top: BorderSide(
+                        color: AppColors.border.withOpacity(0.5),
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  padding: EdgeInsets.only(
+                    left: AppSpacing.screenPadding,
+                    right: AppSpacing.screenPadding,
+                    top: AppSpacing.md,
+                    bottom: MediaQuery.of(context).padding.bottom + AppSpacing.md,
+                  ),
+                  child: FMPrimaryButton(
+                    label: 'Add Category',
+                    icon: LucideIcons.plus,
+                    onPressed: () => _showAddModal(),
+                  ),
+                ),
               ),
             ),
           ],
@@ -187,151 +246,62 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
     return true;
   }
 
-  Widget _buildAddCategoryTile() {
-    return GestureDetector(
-      onTap: () => _showAddModal(),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: AppSpacing.xxl),
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppColors.border,
-            style: BorderStyle.solid,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              LucideIcons.plus,
-              size: 18,
-              color: AppColors.textSecondary,
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Text(
-              'Add Category',
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   void _showAddModal() {
-    final animationsEnabled = ref.read(settingsProvider).formAnimationsEnabled;
-    final modalContent = DraggableScrollableSheet(
-      initialChildSize: 0.9,
-      maxChildSize: 0.95,
-      minChildSize: 0.5,
-      builder: (context, scrollController) => CategoryFormModal(
-        type: _selectedType,
-        onSave: (name, icon, colorIndex, parentId) {
-          final categories = ref.read(categoriesProvider);
-          final siblings = categories
-              .where((c) => c.parentId == parentId && c.type == _selectedType)
-              .toList();
-          final sortOrder = siblings.isEmpty
-              ? 0
-              : siblings.map((c) => c.sortOrder).reduce((a, b) => a > b ? a : b) + 1;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CategoryFormModal(
+          type: _selectedType,
+          onSave: (name, icon, colorIndex, parentId) {
+            final categories = ref.read(categoriesProvider);
+            final siblings = categories
+                .where((c) => c.parentId == parentId && c.type == _selectedType)
+                .toList();
+            final sortOrder = siblings.isEmpty
+                ? 0
+                : siblings.map((c) => c.sortOrder).reduce((a, b) => a > b ? a : b) + 1;
 
-          final category = Category(
-            id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
-            name: name,
-            icon: icon,
-            colorIndex: colorIndex,
-            type: _selectedType,
-            isCustom: true,
-            parentId: parentId,
-            sortOrder: sortOrder,
-          );
-          ref.read(categoriesProvider.notifier).addCategory(category);
-          Navigator.pop(context);
-        },
-      ),
-    );
-
-    if (!animationsEnabled) {
-      Navigator.of(context).push(
-        PageRouteBuilder(
-          opaque: false,
-          barrierDismissible: true,
-          barrierColor: Colors.black54,
-          transitionDuration: Duration.zero,
-          reverseTransitionDuration: Duration.zero,
-          pageBuilder: (context, animation, secondaryAnimation) {
-            return Align(
-              alignment: Alignment.bottomCenter,
-              child: Material(color: Colors.transparent, child: modalContent),
+            final category = Category(
+              id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
+              name: name,
+              icon: icon,
+              colorIndex: colorIndex,
+              type: _selectedType,
+              isCustom: true,
+              parentId: parentId,
+              sortOrder: sortOrder,
             );
+            ref.read(categoriesProvider.notifier).addCategory(category);
+            Navigator.pop(context);
           },
         ),
-      );
-    } else {
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (context) => modalContent,
-      );
-    }
+      ),
+    );
   }
 
   void _showEditModal(Category category) {
-    final animationsEnabled = ref.read(settingsProvider).formAnimationsEnabled;
-    final modalContent = DraggableScrollableSheet(
-      initialChildSize: 0.9,
-      maxChildSize: 0.95,
-      minChildSize: 0.5,
-      builder: (context, scrollController) => CategoryFormModal(
-        category: category,
-        type: category.type,
-        onSave: (name, icon, colorIndex, parentId) {
-          final updated = category.copyWith(
-            name: name,
-            icon: icon,
-            colorIndex: colorIndex,
-            parentId: parentId,
-            clearParentId: parentId == null,
-          );
-          ref.read(categoriesProvider.notifier).updateCategory(updated);
-          Navigator.pop(context);
-        },
-        onDelete: () async {
-          Navigator.pop(context);
-          await _handleDelete(category);
-        },
-      ),
-    );
-
-    if (!animationsEnabled) {
-      Navigator.of(context).push(
-        PageRouteBuilder(
-          opaque: false,
-          barrierDismissible: true,
-          barrierColor: Colors.black54,
-          transitionDuration: Duration.zero,
-          reverseTransitionDuration: Duration.zero,
-          pageBuilder: (context, animation, secondaryAnimation) {
-            return Align(
-              alignment: Alignment.bottomCenter,
-              child: Material(color: Colors.transparent, child: modalContent),
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CategoryFormModal(
+          category: category,
+          type: category.type,
+          onSave: (name, icon, colorIndex, parentId) {
+            final updated = category.copyWith(
+              name: name,
+              icon: icon,
+              colorIndex: colorIndex,
+              parentId: parentId,
+              clearParentId: parentId == null,
             );
+            ref.read(categoriesProvider.notifier).updateCategory(updated);
+            Navigator.pop(context);
+          },
+          onDelete: () async {
+            Navigator.pop(context);
+            await _handleDelete(category);
           },
         ),
-      );
-    } else {
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (context) => modalContent,
-      );
-    }
+      ),
+    );
   }
 
   Future<void> _handleDelete(Category category) async {
