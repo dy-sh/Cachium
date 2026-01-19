@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/animations/haptic_helper.dart';
 import '../../../../core/constants/app_animations.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -6,9 +7,11 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../accounts/data/models/account.dart';
+import '../../../settings/data/models/app_settings.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 
 /// A widget for selecting an account from a grid.
-class AccountSelector extends StatefulWidget {
+class AccountSelector extends ConsumerStatefulWidget {
   final List<Account> accounts;
   final String? selectedId;
   final ValueChanged<String> onChanged;
@@ -23,14 +26,15 @@ class AccountSelector extends StatefulWidget {
   });
 
   @override
-  State<AccountSelector> createState() => _AccountSelectorState();
+  ConsumerState<AccountSelector> createState() => _AccountSelectorState();
 }
 
-class _AccountSelectorState extends State<AccountSelector> {
+class _AccountSelectorState extends ConsumerState<AccountSelector> {
   bool _showAll = false;
 
   @override
   Widget build(BuildContext context) {
+    final intensity = ref.watch(colorIntensityProvider);
     final hasMore = widget.accounts.length > widget.initialVisibleCount;
     final displayAccounts = _showAll || !hasMore
         ? widget.accounts
@@ -47,7 +51,7 @@ class _AccountSelectorState extends State<AccountSelector> {
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 3.5,
+              childAspectRatio: 3.2,
               crossAxisSpacing: AppSpacing.chipGap,
               mainAxisSpacing: AppSpacing.chipGap,
             ),
@@ -58,6 +62,7 @@ class _AccountSelectorState extends State<AccountSelector> {
               return _AccountCard(
                 account: account,
                 isSelected: isSelected,
+                intensity: intensity,
                 onTap: () {
                   HapticHelper.lightImpact();
                   widget.onChanged(account.id);
@@ -86,16 +91,21 @@ class _AccountSelectorState extends State<AccountSelector> {
 class _AccountCard extends StatelessWidget {
   final Account account;
   final bool isSelected;
+  final ColorIntensity intensity;
   final VoidCallback onTap;
 
   const _AccountCard({
     required this.account,
     required this.isSelected,
+    required this.intensity,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final accountColor = account.getColorWithIntensity(intensity);
+    final bgOpacity = AppColors.getBgOpacity(intensity);
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -105,20 +115,41 @@ class _AccountCard extends StatelessWidget {
           vertical: AppSpacing.xs,
         ),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.selectionGlow : AppColors.surface,
           borderRadius: AppRadius.smAll,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isSelected
+                ? [
+                    accountColor.withOpacity(bgOpacity * 0.4),
+                    accountColor.withOpacity(bgOpacity * 0.2),
+                  ]
+                : [
+                    AppColors.surface,
+                    AppColors.surface,
+                  ],
+          ),
           border: Border.all(
-            color: isSelected ? account.color : AppColors.border,
-            width: isSelected ? 2 : 1,
+            color: isSelected ? accountColor : AppColors.border,
+            width: isSelected ? 1.5 : 1,
           ),
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              account.icon,
-              size: 14,
-              color: isSelected ? account.color : AppColors.textSecondary,
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? accountColor.withOpacity(0.9)
+                    : accountColor.withOpacity(0.6),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(
+                account.icon,
+                size: 12,
+                color: AppColors.background,
+              ),
             ),
             const SizedBox(width: AppSpacing.xs),
             Expanded(
@@ -129,7 +160,7 @@ class _AccountCard extends StatelessWidget {
                   Text(
                     account.name,
                     style: AppTypography.labelSmall.copyWith(
-                      color: isSelected ? account.color : AppColors.textPrimary,
+                      color: isSelected ? accountColor : AppColors.textPrimary,
                       fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -137,7 +168,7 @@ class _AccountCard extends StatelessWidget {
                   Text(
                     '\$${account.balance.toStringAsFixed(0)}',
                     style: AppTypography.labelSmall.copyWith(
-                      color: AppColors.textSecondary,
+                      color: AppColors.textSecondary.withOpacity(0.7),
                       fontSize: 10,
                     ),
                   ),
