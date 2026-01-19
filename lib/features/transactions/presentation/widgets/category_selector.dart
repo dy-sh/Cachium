@@ -46,10 +46,18 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
         AnimatedSize(
           duration: AppAnimations.slow,
           curve: AppAnimations.defaultCurve,
-          child: Wrap(
-            spacing: AppSpacing.chipGap,
-            runSpacing: AppSpacing.chipGap,
-            children: displayCategories.map((category) {
+          child: GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              childAspectRatio: 2.4,
+              crossAxisSpacing: AppSpacing.chipGap,
+              mainAxisSpacing: AppSpacing.chipGap,
+            ),
+            itemCount: displayCategories.length,
+            itemBuilder: (context, index) {
+              final category = displayCategories[index];
               final isSelected = category.id == widget.selectedId;
               return _CategoryChip(
                 category: category,
@@ -60,7 +68,7 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
                   widget.onChanged(category.id);
                 },
               );
-            }).toList(),
+            },
           ),
         ),
         if (hasMore) ...[
@@ -96,37 +104,60 @@ class _CategoryChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final categoryColor = category.getColor(intensity);
+    final bgOpacity = AppColors.getBgOpacity(intensity);
 
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: AppAnimations.normal,
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
         ),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.selectionGlow : AppColors.surface,
           borderRadius: AppRadius.smAll,
+          gradient: isSelected
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    categoryColor.withOpacity(bgOpacity * 0.4),
+                    categoryColor.withOpacity(bgOpacity * 0.2),
+                  ],
+                )
+              : null,
+          color: isSelected ? null : AppColors.surface,
           border: Border.all(
             color: isSelected ? categoryColor : AppColors.border,
-            width: isSelected ? 2 : 1,
+            width: isSelected ? 1.5 : 1,
           ),
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              category.icon,
-              size: 16,
-              color: isSelected ? categoryColor : AppColors.textSecondary,
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? categoryColor.withOpacity(0.9)
+                    : AppColors.surfaceLight,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(
+                category.icon,
+                size: 12,
+                color: isSelected ? AppColors.background : AppColors.textSecondary,
+              ),
             ),
             const SizedBox(width: AppSpacing.xs),
-            Text(
-              category.name,
-              style: AppTypography.labelMedium.copyWith(
-                color: isSelected ? categoryColor : AppColors.textPrimary,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            Expanded(
+              child: Text(
+                category.name,
+                style: AppTypography.labelSmall.copyWith(
+                  color: isSelected ? categoryColor : AppColors.textPrimary,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
