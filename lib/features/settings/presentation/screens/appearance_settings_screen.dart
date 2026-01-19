@@ -143,6 +143,8 @@ class AppearanceSettingsScreen extends ConsumerWidget {
   }
 
   Widget _buildAccentColorTile(BuildContext context, WidgetRef ref, AppSettings settings) {
+    final accentOptions = AppColors.getAccentOptions(settings.colorIntensity);
+
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
@@ -159,7 +161,7 @@ class AppearanceSettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           ColorPickerGrid(
-            colors: AppColors.accentOptions,
+            colors: accentOptions,
             selectedColor: settings.accentColor,
             onColorSelected: (color) {
               ref.read(settingsProvider.notifier).setAccentColor(color);

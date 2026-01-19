@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../data/models/app_settings.dart';
+import '../providers/settings_provider.dart';
 
-class SettingsTile extends StatelessWidget {
+class SettingsTile extends ConsumerWidget {
   final String title;
   final String? description;
   final String? value;
@@ -27,7 +30,11 @@ class SettingsTile extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final intensity = ref.watch(colorIntensityProvider);
+    final isBright = intensity == ColorIntensity.bright;
+    final bgOpacity = isBright ? 0.35 : 0.15;
+
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -43,7 +50,7 @@ class SettingsTile extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: (iconColor ?? AppColors.textSecondary).withOpacity(0.15),
+                  color: (iconColor ?? AppColors.textSecondary).withOpacity(bgOpacity),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(

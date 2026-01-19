@@ -47,13 +47,17 @@ class _AccountPreviewCard extends ConsumerWidget {
     final accountColor = account.getColorWithIntensity(intensity);
     final expenseColor = AppColors.getTransactionColor('expense', intensity);
 
+    final isBright = intensity == ColorIntensity.bright;
+    final borderOpacity = isBright ? 1.0 : 0.5;
+    final bgOpacity = isBright ? 0.35 : 0.15;
+
     return Container(
       width: 160,
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppRadius.mdAll,
-        border: Border.all(color: accountColor.withOpacity(0.5)),
+        border: Border.all(color: accountColor.withOpacity(borderOpacity)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,7 +69,7 @@ class _AccountPreviewCard extends ConsumerWidget {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: accountColor.withOpacity(0.15),
+                  color: accountColor.withOpacity(bgOpacity),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Icon(

@@ -22,8 +22,33 @@ class AppColors {
   static const Color accentPrimary = Color(0xFFFFFFFF);
   static const Color selectionGlow = Color(0x33FFFFFF); // 20% opacity white
 
-  // Accent color options for settings
-  static const List<Color> accentOptions = [
+  // Accent color options - Bright (vivid, fully saturated)
+  static const List<Color> accentOptionsBright = [
+    Color(0xFFFFFFFF), // White (default)
+    // Blues
+    Color(0xFF00E5FF), // Electric Cyan
+    Color(0xFF40C4FF), // Vivid Sky Blue
+    Color(0xFF536DFE), // Vivid Cornflower
+    Color(0xFF2979FF), // Vivid Royal Blue
+    Color(0xFF00B0FF), // Vivid Dodger Blue
+    Color(0xFF18FFFF), // Bright Cyan
+    // Other colors
+    Color(0xFF00E676), // Vivid Green
+    Color(0xFF69F0AE), // Bright Light Green
+    Color(0xFFFF1744), // Vivid Red
+    Color(0xFFFF5252), // Bright Salmon
+    Color(0xFFFFEA00), // Electric Yellow
+    Color(0xFFFFFF00), // Bright Gold
+    Color(0xFFD500F9), // Electric Purple
+    Color(0xFFE040FB), // Bright Purple
+    Color(0xFFFF6D00), // Vivid Orange
+    Color(0xFFFF9100), // Bright Orange
+    Color(0xFFFF4081), // Vivid Pink
+    Color(0xFFFF80AB), // Bright Pink
+  ];
+
+  // Accent color options - Dim (softer, less saturated)
+  static const List<Color> accentOptionsDim = [
     Color(0xFFFFFFFF), // White (default)
     // Blues
     Color(0xFF00D4FF), // Cyan
@@ -47,13 +72,27 @@ class AppColors {
     Color(0xFFFF85C8), // Light Pink
   ];
 
-  // Account type colors - Bright (maximum saturation/brightness)
-  static const Color accountBankBright = Color(0xFF00FFFF);    // Pure cyan
-  static const Color accountCreditCardBright = Color(0xFFFF4444);  // Bright red
-  static const Color accountCashBright = Color(0xFF00FF66);    // Bright green
-  static const Color accountSavingsBright = Color(0xFFFFEE00);  // Bright yellow
-  static const Color accountInvestmentBright = Color(0xFFCC66FF);  // Bright purple
-  static const Color accountWalletBright = Color(0xFFFF8800);  // Bright orange
+  // Legacy accessor (use bright by default)
+  static const List<Color> accentOptions = accentOptionsBright;
+
+  // Get accent options based on intensity
+  static List<Color> getAccentOptions(ColorIntensity intensity) {
+    return intensity == ColorIntensity.bright ? accentOptionsBright : accentOptionsDim;
+  }
+
+  // Get specific accent color by index with intensity
+  static Color getAccentColor(int index, ColorIntensity intensity) {
+    final options = getAccentOptions(intensity);
+    return options[index.clamp(0, options.length - 1)];
+  }
+
+  // Account type colors - Bright (vivid, fully saturated)
+  static const Color accountBankBright = Color(0xFF00E5FF);    // Electric cyan
+  static const Color accountCreditCardBright = Color(0xFFFF1744);  // Vivid red
+  static const Color accountCashBright = Color(0xFF00E676);    // Vivid green
+  static const Color accountSavingsBright = Color(0xFFFFEA00);  // Electric yellow
+  static const Color accountInvestmentBright = Color(0xFFD500F9);  // Electric purple
+  static const Color accountWalletBright = Color(0xFFFF6D00);  // Vivid orange
 
   // Account type colors - Dim (current default, balanced visibility)
   static const Color accountBankDim = Color(0xFF1ADEFF);
@@ -71,9 +110,9 @@ class AppColors {
   static const Color accountInvestment = accountInvestmentDim;
   static const Color accountWallet = accountWalletDim;
 
-  // Semantic colors - Bright (maximum saturation)
-  static const Color incomeBright = Color(0xFF00FF66);  // Pure bright green
-  static const Color expenseBright = Color(0xFFFF4444);  // Pure bright red
+  // Semantic colors - Bright (vivid, fully saturated)
+  static const Color incomeBright = Color(0xFF00E676);  // Vivid green
+  static const Color expenseBright = Color(0xFFFF1744);  // Vivid red
 
   // Semantic colors - Dim (current default, balanced visibility)
   static const Color incomeDim = Color(0xFF00FF88);

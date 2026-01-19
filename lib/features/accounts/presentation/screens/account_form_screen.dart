@@ -9,6 +9,8 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/buttons/fm_primary_button.dart';
 import '../../../../design_system/components/layout/fm_form_header.dart';
 import '../../../../design_system/components/inputs/fm_text_field.dart';
+import '../../../settings/data/models/app_settings.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/account.dart';
 import '../providers/account_form_provider.dart';
 import '../providers/accounts_provider.dart';
@@ -109,7 +111,7 @@ class AccountFormScreen extends ConsumerWidget {
   }
 }
 
-class _AccountTypeGrid extends StatelessWidget {
+class _AccountTypeGrid extends ConsumerWidget {
   final AccountType? selectedType;
   final ValueChanged<AccountType> onChanged;
 
@@ -119,7 +121,11 @@ class _AccountTypeGrid extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final intensity = ref.watch(colorIntensityProvider);
+    final isBright = intensity == ColorIntensity.bright;
+    final bgOpacity = isBright ? 0.35 : 0.15;
+
     return GridView.count(
       crossAxisCount: 3,
       shrinkWrap: true,
@@ -129,17 +135,18 @@ class _AccountTypeGrid extends StatelessWidget {
       childAspectRatio: 1.1,
       children: AccountType.values.map((type) {
         final isSelected = type == selectedType;
+        final typeColor = AppColors.getAccountColor(type.name, intensity);
         return GestureDetector(
           onTap: () => onChanged(type),
           child: AnimatedContainer(
             duration: AppAnimations.normal,
             decoration: BoxDecoration(
               color: isSelected
-                  ? type.color.withOpacity(0.15)
+                  ? typeColor.withOpacity(bgOpacity)
                   : AppColors.surface,
               borderRadius: AppRadius.mdAll,
               border: Border.all(
-                color: isSelected ? type.color : AppColors.border,
+                color: isSelected ? typeColor : AppColors.border,
                 width: isSelected ? 1.5 : 1,
               ),
             ),
@@ -148,14 +155,14 @@ class _AccountTypeGrid extends StatelessWidget {
               children: [
                 Icon(
                   type.icon,
-                  color: isSelected ? type.color : AppColors.textSecondary,
+                  color: isSelected ? typeColor : AppColors.textSecondary,
                   size: 28,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   type.displayName,
                   style: AppTypography.labelSmall.copyWith(
-                    color: isSelected ? type.color : AppColors.textSecondary,
+                    color: isSelected ? typeColor : AppColors.textSecondary,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   ),
                   textAlign: TextAlign.center,

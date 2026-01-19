@@ -7,6 +7,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/animations/staggered_list.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
+import '../providers/settings_provider.dart';
 import '../widgets/settings_section.dart';
 import '../widgets/settings_tile.dart';
 
@@ -17,6 +18,7 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final categories = ref.watch(categoriesProvider);
     final customCategoryCount = categories.where((c) => c.isCustom).length;
+    final intensity = ref.watch(colorIntensityProvider);
 
     return SafeArea(
       child: CustomScrollView(
@@ -50,7 +52,7 @@ class SettingsScreen extends ConsumerWidget {
                             ? '$customCategoryCount custom ${customCategoryCount == 1 ? 'category' : 'categories'}'
                             : 'Manage transaction categories',
                         icon: LucideIcons.tags,
-                        iconColor: AppColors.accentOptions[1], // Cyan
+                        iconColor: AppColors.getAccentColor(1, intensity), // Cyan
                         onTap: () => context.push('/settings/categories'),
                       ),
                     ],
@@ -68,21 +70,21 @@ class SettingsScreen extends ConsumerWidget {
                         title: 'Appearance',
                         description: 'Colors, intensity, animations',
                         icon: LucideIcons.palette,
-                        iconColor: AppColors.accentOptions[13], // Purple
+                        iconColor: AppColors.getAccentColor(13, intensity), // Purple
                         onTap: () => context.push('/settings/appearance'),
                       ),
                       SettingsTile(
                         title: 'Formats',
                         description: 'Date, currency, calendar',
                         icon: LucideIcons.calendar,
-                        iconColor: AppColors.accentOptions[11], // Yellow
+                        iconColor: AppColors.getAccentColor(11, intensity), // Yellow
                         onTap: () => context.push('/settings/formats'),
                       ),
                       SettingsTile(
                         title: 'Preferences',
                         description: 'Haptics, start screen',
                         icon: LucideIcons.settings,
-                        iconColor: AppColors.accentOptions[7], // Green
+                        iconColor: AppColors.getAccentColor(7, intensity), // Green
                         onTap: () => context.push('/settings/preferences'),
                       ),
                     ],
@@ -100,14 +102,14 @@ class SettingsScreen extends ConsumerWidget {
                         title: 'Coming Soon',
                         description: 'Feature roadmap',
                         icon: LucideIcons.sparkles,
-                        iconColor: AppColors.accentOptions[15], // Orange
+                        iconColor: AppColors.getAccentColor(15, intensity), // Orange
                         onTap: () => context.push('/settings/coming-soon'),
                       ),
                       SettingsTile(
                         title: 'About',
                         description: 'App version',
                         icon: LucideIcons.info,
-                        iconColor: AppColors.accentOptions[0], // White
+                        iconColor: AppColors.getAccentColor(0, intensity), // White
                         onTap: () => context.push('/settings/about'),
                       ),
                     ],
