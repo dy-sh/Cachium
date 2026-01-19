@@ -307,7 +307,8 @@ class AppearanceSettingsScreen extends ConsumerWidget {
   }
 
   Widget _buildCardPreview(ColorIntensity intensity, AccountCardStyle cardStyle) {
-    final previewColor = AppColors.getAccountColor('bank', intensity);
+    final categoryColors = AppColors.getCategoryColors(intensity);
+    final previewColor = categoryColors[9]; // orange/light brown
     final bgOpacity = AppColors.getBgOpacity(intensity);
 
     final gradientStart = cardStyle == AccountCardStyle.bright ? 0.6 : 0.35;
