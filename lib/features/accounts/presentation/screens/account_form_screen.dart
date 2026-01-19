@@ -9,7 +9,6 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/buttons/fm_primary_button.dart';
 import '../../../../design_system/components/layout/fm_form_header.dart';
 import '../../../../design_system/components/inputs/fm_text_field.dart';
-import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/account.dart';
 import '../providers/account_form_provider.dart';
@@ -123,8 +122,7 @@ class _AccountTypeGrid extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final intensity = ref.watch(colorIntensityProvider);
-    final isBright = intensity == ColorIntensity.bright;
-    final bgOpacity = isBright ? 0.35 : 0.15;
+    final bgOpacity = AppColors.getBgOpacity(intensity);
 
     return GridView.count(
       crossAxisCount: 3,

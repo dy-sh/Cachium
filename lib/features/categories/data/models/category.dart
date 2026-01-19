@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../settings/data/models/app_settings.dart';
 
 enum CategoryType {
   income,
@@ -10,7 +12,7 @@ class Category {
   final String id;
   final String name;
   final IconData icon;
-  final Color color;
+  final int colorIndex;
   final CategoryType type;
   final bool isCustom;
 
@@ -18,16 +20,22 @@ class Category {
     required this.id,
     required this.name,
     required this.icon,
-    required this.color,
+    required this.colorIndex,
     required this.type,
     this.isCustom = false,
   });
+
+  /// Returns the color for this category based on the current palette.
+  Color getColor(ColorIntensity palette) {
+    final colors = AppColors.getCategoryColors(palette);
+    return colors[colorIndex.clamp(0, colors.length - 1)];
+  }
 
   Category copyWith({
     String? id,
     String? name,
     IconData? icon,
-    Color? color,
+    int? colorIndex,
     CategoryType? type,
     bool? isCustom,
   }) {
@@ -35,7 +43,7 @@ class Category {
       id: id ?? this.id,
       name: name ?? this.name,
       icon: icon ?? this.icon,
-      color: color ?? this.color,
+      colorIndex: colorIndex ?? this.colorIndex,
       type: type ?? this.type,
       isCustom: isCustom ?? this.isCustom,
     );
@@ -52,40 +60,41 @@ class Category {
 }
 
 class DefaultCategories {
+  // Color indices map to: [cyan, skyBlue, green, lightGreen, red, salmon, yellow, purple, lightPurple, orange, pink, lightPink]
   static const List<Category> income = [
     Category(
       id: 'salary',
       name: 'Salary',
       icon: LucideIcons.briefcase,
-      color: Color(0xFF00E676),
+      colorIndex: 2, // green
       type: CategoryType.income,
     ),
     Category(
       id: 'freelance',
       name: 'Freelance',
       icon: LucideIcons.laptop,
-      color: Color(0xFF00BCD4),
+      colorIndex: 0, // cyan
       type: CategoryType.income,
     ),
     Category(
       id: 'investment_income',
       name: 'Investment',
       icon: LucideIcons.trendingUp,
-      color: Color(0xFF7C4DFF),
+      colorIndex: 7, // purple
       type: CategoryType.income,
     ),
     Category(
       id: 'gift_income',
       name: 'Gift',
       icon: LucideIcons.gift,
-      color: Color(0xFFFF4081),
+      colorIndex: 10, // pink
       type: CategoryType.income,
     ),
     Category(
       id: 'other_income',
       name: 'Other',
       icon: LucideIcons.plus,
-      color: Color(0xFF8A8A8A),
+      colorIndex: 1, // skyBlue
       type: CategoryType.income,
     ),
   ];
@@ -95,63 +104,63 @@ class DefaultCategories {
       id: 'food',
       name: 'Food',
       icon: LucideIcons.utensils,
-      color: Color(0xFFFF7043),
+      colorIndex: 9, // orange
       type: CategoryType.expense,
     ),
     Category(
       id: 'transport',
       name: 'Transport',
       icon: LucideIcons.car,
-      color: Color(0xFF42A5F5),
+      colorIndex: 1, // skyBlue
       type: CategoryType.expense,
     ),
     Category(
       id: 'shopping',
       name: 'Shopping',
       icon: LucideIcons.shoppingBag,
-      color: Color(0xFFEC407A),
+      colorIndex: 10, // pink
       type: CategoryType.expense,
     ),
     Category(
       id: 'entertainment',
       name: 'Entertainment',
       icon: LucideIcons.gamepad2,
-      color: Color(0xFFAB47BC),
+      colorIndex: 7, // purple
       type: CategoryType.expense,
     ),
     Category(
       id: 'bills',
       name: 'Bills',
       icon: LucideIcons.receipt,
-      color: Color(0xFFFFCA28),
+      colorIndex: 6, // yellow
       type: CategoryType.expense,
     ),
     Category(
       id: 'health',
       name: 'Health',
       icon: LucideIcons.heartPulse,
-      color: Color(0xFFEF5350),
+      colorIndex: 4, // red
       type: CategoryType.expense,
     ),
     Category(
       id: 'education',
       name: 'Education',
       icon: LucideIcons.graduationCap,
-      color: Color(0xFF5C6BC0),
+      colorIndex: 8, // lightPurple
       type: CategoryType.expense,
     ),
     Category(
       id: 'travel',
       name: 'Travel',
       icon: LucideIcons.plane,
-      color: Color(0xFF26A69A),
+      colorIndex: 0, // cyan
       type: CategoryType.expense,
     ),
     Category(
       id: 'other_expense',
       name: 'Other',
       icon: LucideIcons.moreHorizontal,
-      color: Color(0xFF8A8A8A),
+      colorIndex: 5, // salmon
       type: CategoryType.expense,
     ),
   ];

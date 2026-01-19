@@ -13,7 +13,6 @@ import '../../../../design_system/components/chips/fm_toggle_chip.dart';
 import '../../../../navigation/app_router.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
-import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/transaction.dart';
 import '../providers/transactions_provider.dart';
@@ -220,8 +219,8 @@ class _TransactionItem extends ConsumerWidget {
     final intensity = ref.watch(colorIntensityProvider);
     final isIncome = transaction.type == TransactionType.income;
     final color = AppColors.getTransactionColor(isIncome ? 'income' : 'expense', intensity);
-    final isBright = intensity == ColorIntensity.bright;
-    final bgOpacity = isBright ? 0.35 : 0.15;
+    final bgOpacity = AppColors.getBgOpacity(intensity);
+    final categoryColor = category?.getColor(intensity) ?? AppColors.textSecondary;
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -237,12 +236,12 @@ class _TransactionItem extends ConsumerWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: (category?.color ?? AppColors.textSecondary).withOpacity(bgOpacity),
+              color: categoryColor.withOpacity(bgOpacity),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               category?.icon ?? Icons.circle,
-              color: category?.color ?? AppColors.textSecondary,
+              color: categoryColor,
               size: 20,
             ),
           ),

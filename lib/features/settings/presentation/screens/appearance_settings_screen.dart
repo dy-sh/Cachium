@@ -112,33 +112,97 @@ class AppearanceSettingsScreen extends ConsumerWidget {
         horizontal: AppSpacing.md,
         vertical: AppSpacing.md,
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          Text('Color Palette', style: AppTypography.bodyMedium),
+          const SizedBox(height: 2),
+          Text(
+            'Choose the color style for the app',
+            style: AppTypography.bodySmall.copyWith(color: AppColors.textTertiary),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _buildPaletteSelector(ref, settings),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPaletteSelector(WidgetRef ref, AppSettings settings) {
+    final palettes = [
+      (ColorIntensity.bright, 'Bright', 'Vivid, saturated colors'),
+      (ColorIntensity.dim, 'Dim', 'Muted, subtle colors'),
+      (ColorIntensity.pastel, 'Pastel', 'Soft, light, calming'),
+      (ColorIntensity.neon, 'Neon', 'Electric, ultra-vibrant'),
+      (ColorIntensity.earth, 'Earth', 'Natural, warm tones'),
+    ];
+
+    return Column(
+      children: palettes.map((palette) {
+        final (intensity, name, description) = palette;
+        final isSelected = settings.colorIntensity == intensity;
+        final previewColors = AppColors.getCategoryColors(intensity).take(6).toList();
+
+        return GestureDetector(
+          onTap: () {
+            ref.read(settingsProvider.notifier).setColorIntensity(intensity);
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: isSelected ? AppColors.surface : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isSelected ? AppColors.textPrimary : AppColors.border,
+                width: isSelected ? 1.5 : 1,
+              ),
+            ),
+            child: Row(
               children: [
-                Text('Color Intensity', style: AppTypography.bodyMedium),
-                const SizedBox(height: 2),
-                Text(
-                  'Vibrant or muted colors throughout the app',
-                  style: AppTypography.bodySmall.copyWith(color: AppColors.textTertiary),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: AppTypography.labelLarge.copyWith(
+                          color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        description,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                // Color swatches preview
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: previewColors.map((color) {
+                    return Container(
+                      width: 16,
+                      height: 16,
+                      margin: const EdgeInsets.only(left: 4),
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    );
+                  }).toList(),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: AppSpacing.sm),
-          _buildSegmentedControl(
-            options: ['Bright', 'Dim'],
-            selectedIndex: settings.colorIntensity == ColorIntensity.bright ? 0 : 1,
-            onChanged: (index) {
-              ref.read(settingsProvider.notifier).setColorIntensity(
-                    index == 0 ? ColorIntensity.bright : ColorIntensity.dim,
-                  );
-            },
-          ),
-        ],
-      ),
+        );
+      }).toList(),
     );
   }
 
@@ -172,42 +236,4 @@ class AppearanceSettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSegmentedControl({
-    required List<String> options,
-    required int selectedIndex,
-    required ValueChanged<int> onChanged,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(2),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: List.generate(options.length, (index) {
-          final isSelected = index == selectedIndex;
-          return GestureDetector(
-            onTap: () => onChanged(index),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.surface : Colors.transparent,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                options[index],
-                style: AppTypography.labelSmall.copyWith(
-                  color: isSelected ? AppColors.textPrimary : AppColors.textTertiary,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                ),
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
 }

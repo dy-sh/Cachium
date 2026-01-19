@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -6,13 +7,14 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/buttons/fm_primary_button.dart';
 import '../../../../design_system/components/inputs/fm_text_field.dart';
 import '../../../categories/data/models/category.dart';
+import '../providers/settings_provider.dart';
 import 'color_picker_grid.dart';
 import 'icon_picker_grid.dart';
 
-class CategoryFormModal extends StatefulWidget {
+class CategoryFormModal extends ConsumerStatefulWidget {
   final Category? category;
   final CategoryType type;
-  final void Function(String name, IconData icon, Color color) onSave;
+  final void Function(String name, IconData icon, int colorIndex) onSave;
   final VoidCallback? onDelete;
 
   const CategoryFormModal({
@@ -24,20 +26,20 @@ class CategoryFormModal extends StatefulWidget {
   });
 
   @override
-  State<CategoryFormModal> createState() => _CategoryFormModalState();
+  ConsumerState<CategoryFormModal> createState() => _CategoryFormModalState();
 }
 
-class _CategoryFormModalState extends State<CategoryFormModal> {
+class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
   late TextEditingController _nameController;
   late IconData _selectedIcon;
-  late Color _selectedColor;
+  late int _selectedColorIndex;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.category?.name ?? '');
     _selectedIcon = widget.category?.icon ?? LucideIcons.tag;
-    _selectedColor = widget.category?.color ?? AppColors.categoryColors.first;
+    _selectedColorIndex = widget.category?.colorIndex ?? 0;
   }
 
   @override
@@ -52,6 +54,9 @@ class _CategoryFormModalState extends State<CategoryFormModal> {
   Widget build(BuildContext context) {
     final isEditing = widget.category != null;
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+    final intensity = ref.watch(colorIntensityProvider);
+    final categoryColors = AppColors.getCategoryColors(intensity);
+    final selectedColor = categoryColors[_selectedColorIndex.clamp(0, categoryColors.length - 1)];
 
     return Container(
       decoration: const BoxDecoration(
@@ -126,14 +131,14 @@ class _CategoryFormModalState extends State<CategoryFormModal> {
                       width: 64,
                       height: 64,
                       decoration: BoxDecoration(
-                        color: _selectedColor.withOpacity(0.15),
+                        color: selectedColor.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: _selectedColor, width: 1.5),
+                        border: Border.all(color: selectedColor, width: 1.5),
                       ),
                       child: Icon(
                         _selectedIcon,
                         size: 28,
-                        color: _selectedColor,
+                        color: selectedColor,
                       ),
                     ),
                   ),
@@ -152,12 +157,15 @@ class _CategoryFormModalState extends State<CategoryFormModal> {
                   Text('Color', style: AppTypography.labelMedium),
                   const SizedBox(height: AppSpacing.sm),
                   ColorPickerGrid(
-                    colors: AppColors.categoryColors,
-                    selectedColor: _selectedColor,
+                    colors: categoryColors,
+                    selectedColor: selectedColor,
                     crossAxisCount: 6,
                     itemSize: 40,
                     onColorSelected: (color) {
-                      setState(() => _selectedColor = color);
+                      final index = categoryColors.indexOf(color);
+                      if (index != -1) {
+                        setState(() => _selectedColorIndex = index);
+                      }
                     },
                   ),
                   const SizedBox(height: AppSpacing.xxl),
@@ -167,7 +175,7 @@ class _CategoryFormModalState extends State<CategoryFormModal> {
                   const SizedBox(height: AppSpacing.sm),
                   IconPickerGrid(
                     selectedIcon: _selectedIcon,
-                    selectedColor: _selectedColor,
+                    selectedColor: selectedColor,
                     onIconSelected: (icon) {
                       setState(() => _selectedIcon = icon);
                     },
@@ -182,7 +190,7 @@ class _CategoryFormModalState extends State<CategoryFormModal> {
                             widget.onSave(
                               _nameController.text.trim(),
                               _selectedIcon,
-                              _selectedColor,
+                              _selectedColorIndex,
                             );
                           }
                         : null,

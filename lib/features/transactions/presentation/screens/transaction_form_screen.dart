@@ -34,6 +34,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     final incomeCategories = ref.watch(incomeCategoriesProvider);
     final expenseCategories = ref.watch(expenseCategoriesProvider);
     final accounts = ref.watch(accountsProvider);
+    final intensity = ref.watch(colorIntensityProvider);
 
     final categories = formState.type == TransactionType.income
         ? incomeCategories
@@ -61,7 +62,10 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                       child: FMToggleChip(
                         options: const ['Expense', 'Income'],
                         selectedIndex: isIncome ? 1 : 0,
-                        colors: const [AppColors.expense, AppColors.income],
+                        colors: [
+                          AppColors.getTransactionColor('expense', intensity),
+                          AppColors.getTransactionColor('income', intensity),
+                        ],
                         onChanged: (index) {
                           ref.read(transactionFormProvider.notifier).setType(
                                 index == 1 ? TransactionType.income : TransactionType.expense,

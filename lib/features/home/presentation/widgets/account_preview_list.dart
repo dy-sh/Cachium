@@ -47,9 +47,8 @@ class _AccountPreviewCard extends ConsumerWidget {
     final accountColor = account.getColorWithIntensity(intensity);
     final expenseColor = AppColors.getTransactionColor('expense', intensity);
 
-    final isBright = intensity == ColorIntensity.bright;
-    final borderOpacity = isBright ? 1.0 : 0.5;
-    final bgOpacity = isBright ? 0.35 : 0.15;
+    final borderOpacity = AppColors.getBorderOpacity(intensity);
+    final bgOpacity = AppColors.getBgOpacity(intensity);
 
     return Container(
       width: 160,

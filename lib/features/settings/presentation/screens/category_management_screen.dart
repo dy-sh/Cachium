@@ -9,6 +9,7 @@ import '../../../../design_system/components/buttons/fm_icon_button.dart';
 import '../../../../design_system/components/chips/fm_toggle_chip.dart';
 import '../../../categories/data/models/category.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
+import '../../data/models/app_settings.dart';
 import '../providers/settings_provider.dart';
 import '../widgets/category_form_modal.dart';
 
@@ -28,6 +29,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
   @override
   Widget build(BuildContext context) {
     final categories = ref.watch(categoriesProvider);
+    final intensity = ref.watch(colorIntensityProvider);
     final filteredCategories = categories
         .where((c) => c.type == _selectedType)
         .toList();
@@ -63,7 +65,10 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
                     child: FMToggleChip(
                       options: const ['Income', 'Expense'],
                       selectedIndex: _selectedTypeIndex,
-                      colors: const [AppColors.income, AppColors.expense],
+                      colors: [
+                        AppColors.getTransactionColor('income', intensity),
+                        AppColors.getTransactionColor('expense', intensity),
+                      ],
                       onChanged: (index) {
                         setState(() => _selectedTypeIndex = index);
                       },
@@ -83,7 +88,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
                   if (index == filteredCategories.length) {
                     return _buildAddCategoryTile();
                   }
-                  return _buildCategoryTile(filteredCategories[index]);
+                  return _buildCategoryTile(filteredCategories[index], intensity);
                 },
               ),
             ),
@@ -93,7 +98,10 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
     );
   }
 
-  Widget _buildCategoryTile(Category category) {
+  Widget _buildCategoryTile(Category category, ColorIntensity intensity) {
+    final bgOpacity = AppColors.getBgOpacity(intensity);
+    final categoryColor = category.getColor(intensity);
+
     return GestureDetector(
       onTap: category.isCustom ? () => _showEditModal(category) : null,
       behavior: HitTestBehavior.opaque,
@@ -111,13 +119,13 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: category.color.withOpacity(0.15),
+                color: categoryColor.withOpacity(bgOpacity),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 category.icon,
                 size: 20,
-                color: category.color,
+                color: categoryColor,
               ),
             ),
             const SizedBox(width: AppSpacing.md),
@@ -196,12 +204,12 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
       minChildSize: 0.5,
       builder: (context, scrollController) => CategoryFormModal(
         type: _selectedType,
-        onSave: (name, icon, color) {
+        onSave: (name, icon, colorIndex) {
           final category = Category(
             id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
             name: name,
             icon: icon,
-            color: color,
+            colorIndex: colorIndex,
             type: _selectedType,
             isCustom: true,
           );
@@ -246,11 +254,11 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
       builder: (context, scrollController) => CategoryFormModal(
         category: category,
         type: category.type,
-        onSave: (name, icon, color) {
+        onSave: (name, icon, colorIndex) {
           final updated = category.copyWith(
             name: name,
             icon: icon,
-            color: color,
+            colorIndex: colorIndex,
           );
           ref.read(categoriesProvider.notifier).updateCategory(updated);
           Navigator.pop(context);

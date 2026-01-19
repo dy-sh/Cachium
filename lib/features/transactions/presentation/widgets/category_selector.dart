@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/animations/haptic_helper.dart';
 import '../../../../core/constants/app_animations.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -6,9 +7,11 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../categories/data/models/category.dart';
+import '../../../settings/data/models/app_settings.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 
 /// A widget for selecting a category from a list.
-class CategorySelector extends StatefulWidget {
+class CategorySelector extends ConsumerStatefulWidget {
   final List<Category> categories;
   final String? selectedId;
   final ValueChanged<String> onChanged;
@@ -23,14 +26,15 @@ class CategorySelector extends StatefulWidget {
   });
 
   @override
-  State<CategorySelector> createState() => _CategorySelectorState();
+  ConsumerState<CategorySelector> createState() => _CategorySelectorState();
 }
 
-class _CategorySelectorState extends State<CategorySelector> {
+class _CategorySelectorState extends ConsumerState<CategorySelector> {
   bool _showAll = false;
 
   @override
   Widget build(BuildContext context) {
+    final intensity = ref.watch(colorIntensityProvider);
     final hasMore = widget.categories.length > widget.initialVisibleCount;
     final displayCategories = _showAll || !hasMore
         ? widget.categories
@@ -50,6 +54,7 @@ class _CategorySelectorState extends State<CategorySelector> {
               return _CategoryChip(
                 category: category,
                 isSelected: isSelected,
+                intensity: intensity,
                 onTap: () {
                   HapticHelper.lightImpact();
                   widget.onChanged(category.id);
@@ -78,16 +83,20 @@ class _CategorySelectorState extends State<CategorySelector> {
 class _CategoryChip extends StatelessWidget {
   final Category category;
   final bool isSelected;
+  final ColorIntensity intensity;
   final VoidCallback onTap;
 
   const _CategoryChip({
     required this.category,
     required this.isSelected,
+    required this.intensity,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final categoryColor = category.getColor(intensity);
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -100,13 +109,13 @@ class _CategoryChip extends StatelessWidget {
           color: isSelected ? AppColors.selectionGlow : AppColors.surface,
           borderRadius: AppRadius.smAll,
           border: Border.all(
-            color: isSelected ? category.color : AppColors.border,
+            color: isSelected ? categoryColor : AppColors.border,
             width: isSelected ? 2 : 1,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: category.color.withOpacity(0.3),
+                    color: categoryColor.withOpacity(0.3),
                     blurRadius: 10,
                     spreadRadius: 0,
                   ),
@@ -119,13 +128,13 @@ class _CategoryChip extends StatelessWidget {
             Icon(
               category.icon,
               size: 16,
-              color: isSelected ? category.color : AppColors.textSecondary,
+              color: isSelected ? categoryColor : AppColors.textSecondary,
             ),
             const SizedBox(width: AppSpacing.xs),
             Text(
               category.name,
               style: AppTypography.labelMedium.copyWith(
-                color: isSelected ? category.color : AppColors.textPrimary,
+                color: isSelected ? categoryColor : AppColors.textPrimary,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               ),
             ),
