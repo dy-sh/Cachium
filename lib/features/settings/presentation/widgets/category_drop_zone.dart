@@ -58,13 +58,13 @@ class _CategoryDropZoneState extends State<CategoryDropZone> {
           ),
           decoration: BoxDecoration(
             color: _isHovering
-                ? AppColors.accentPrimary.withOpacity(0.1)
+                ? AppColors.accentPrimary.withValues(alpha: 0.1)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: _isHovering
                   ? AppColors.accentPrimary
-                  : AppColors.border.withOpacity(0.5),
+                  : AppColors.border.withValues(alpha: 0.5),
               width: _isHovering ? 2 : 1,
               style: _isHovering ? BorderStyle.solid : BorderStyle.none,
             ),
@@ -89,18 +89,30 @@ class _CategoryDropZoneState extends State<CategoryDropZone> {
   }
 }
 
+enum DropZone { none, top, center, bottom }
+
 class CategoryItemDropTarget extends StatefulWidget {
   final Widget child;
   final CategoryTreeNode targetNode;
-  final bool Function(CategoryTreeNode dragged, CategoryTreeNode target) canAccept;
-  final void Function(CategoryTreeNode dragged, CategoryTreeNode target) onAccept;
+  final bool Function(CategoryTreeNode dragged, CategoryTreeNode target) canAcceptAsChild;
+  final bool Function(CategoryTreeNode dragged, CategoryTreeNode target) canAcceptBefore;
+  final bool Function(CategoryTreeNode dragged, CategoryTreeNode target) canAcceptAfter;
+  final void Function(CategoryTreeNode dragged, CategoryTreeNode target) onAcceptAsChild;
+  final void Function(CategoryTreeNode dragged, CategoryTreeNode target) onAcceptBefore;
+  final void Function(CategoryTreeNode dragged, CategoryTreeNode target) onAcceptAfter;
+  final Color? highlightColor;
 
   const CategoryItemDropTarget({
     super.key,
     required this.child,
     required this.targetNode,
-    required this.canAccept,
-    required this.onAccept,
+    required this.canAcceptAsChild,
+    required this.canAcceptBefore,
+    required this.canAcceptAfter,
+    required this.onAcceptAsChild,
+    required this.onAcceptBefore,
+    required this.onAcceptAfter,
+    this.highlightColor,
   });
 
   @override
@@ -108,43 +120,157 @@ class CategoryItemDropTarget extends StatefulWidget {
 }
 
 class _CategoryItemDropTargetState extends State<CategoryItemDropTarget> {
-  bool _isHovering = false;
+  DropZone _currentZone = DropZone.none;
+  final GlobalKey _key = GlobalKey();
+
+  DropZone _getZoneFromPosition(Offset globalPosition) {
+    final box = _key.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null) return DropZone.none;
+
+    final localPosition = box.globalToLocal(globalPosition);
+    final height = box.size.height;
+
+    // Top 25% → insert before, Middle 50% → make child, Bottom 25% → insert after
+    if (localPosition.dy < height * 0.25) {
+      return DropZone.top;
+    } else if (localPosition.dy > height * 0.75) {
+      return DropZone.bottom;
+    } else {
+      return DropZone.center;
+    }
+  }
+
+  bool _canAcceptForZone(DropZone zone, CategoryTreeNode dragged) {
+    switch (zone) {
+      case DropZone.top:
+        return widget.canAcceptBefore(dragged, widget.targetNode);
+      case DropZone.center:
+        return widget.canAcceptAsChild(dragged, widget.targetNode);
+      case DropZone.bottom:
+        return widget.canAcceptAfter(dragged, widget.targetNode);
+      case DropZone.none:
+        return false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final color = widget.highlightColor ?? AppColors.accentPrimary;
+
     return DragTarget<CategoryTreeNode>(
       onWillAcceptWithDetails: (details) {
-        final canAccept = widget.canAccept(details.data, widget.targetNode);
-        if (canAccept && !_isHovering) {
-          setState(() => _isHovering = true);
+        final zone = _getZoneFromPosition(details.offset);
+        final canAccept = _canAcceptForZone(zone, details.data);
+
+        if (canAccept && _currentZone != zone) {
+          setState(() => _currentZone = zone);
+        } else if (!canAccept && _currentZone != DropZone.none) {
+          setState(() => _currentZone = DropZone.none);
         }
+
         return canAccept;
       },
       onAcceptWithDetails: (details) {
-        setState(() => _isHovering = false);
-        widget.onAccept(details.data, widget.targetNode);
+        final zone = _currentZone;
+        setState(() => _currentZone = DropZone.none);
+
+        switch (zone) {
+          case DropZone.top:
+            widget.onAcceptBefore(details.data, widget.targetNode);
+            break;
+          case DropZone.center:
+            widget.onAcceptAsChild(details.data, widget.targetNode);
+            break;
+          case DropZone.bottom:
+            widget.onAcceptAfter(details.data, widget.targetNode);
+            break;
+          case DropZone.none:
+            break;
+        }
       },
       onLeave: (_) {
-        setState(() => _isHovering = false);
+        setState(() => _currentZone = DropZone.none);
+      },
+      onMove: (details) {
+        final zone = _getZoneFromPosition(details.offset);
+        final canAccept = _canAcceptForZone(zone, details.data);
+        final newZone = canAccept ? zone : DropZone.none;
+
+        if (_currentZone != newZone) {
+          setState(() => _currentZone = newZone);
+        }
       },
       builder: (context, candidateData, rejectedData) {
-        if (_isHovering) {
-          return Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.accentPrimary.withOpacity(0.3),
-                  blurRadius: 8,
-                  spreadRadius: 0,
-                ),
-              ],
+        final isTopZone = _currentZone == DropZone.top;
+        final isCenterZone = _currentZone == DropZone.center;
+        final isBottomZone = _currentZone == DropZone.bottom;
+
+        return Column(
+          key: _key,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Top insertion indicator
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 100),
+              height: isTopZone ? 4 : 0,
+              margin: EdgeInsets.only(bottom: isTopZone ? 4 : 0),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(2),
+                boxShadow: isTopZone
+                    ? [
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.6),
+                          blurRadius: 8,
+                          spreadRadius: 1,
+                        ),
+                      ]
+                    : null,
+              ),
             ),
-            child: widget.child,
-          );
-        }
-        return widget.child;
+            // The actual item
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 100),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: isCenterZone
+                    ? Border.all(color: color, width: 2)
+                    : null,
+                boxShadow: isCenterZone
+                    ? [
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.4),
+                          blurRadius: 12,
+                          spreadRadius: 2,
+                        ),
+                      ]
+                    : null,
+              ),
+              child: widget.child,
+            ),
+            // Bottom insertion indicator
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 100),
+              height: isBottomZone ? 4 : 0,
+              margin: EdgeInsets.only(top: isBottomZone ? 4 : 0),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(2),
+                boxShadow: isBottomZone
+                    ? [
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.6),
+                          blurRadius: 8,
+                          spreadRadius: 1,
+                        ),
+                      ]
+                    : null,
+              ),
+            ),
+          ],
+        );
       },
     );
   }
 }
+

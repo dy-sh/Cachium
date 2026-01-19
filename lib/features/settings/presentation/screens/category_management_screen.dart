@@ -33,6 +33,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
   final GlobalKey _listKey = GlobalKey();
   Offset? _lastDragPosition;
   Timer? _scrollTimer;
+  CategoryTreeNode? _draggedNode;
 
   static const _scrollAreaHeight = 80.0;
   static const _scrollSpeed = 25.0;
@@ -44,7 +45,8 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
     super.dispose();
   }
 
-  void _startDrag() {
+  void _startDrag(CategoryTreeNode node) {
+    _draggedNode = node;
     _scrollTimer?.cancel();
     _scrollTimer = Timer.periodic(const Duration(milliseconds: 16), (_) {
       _performAutoScroll();
@@ -52,6 +54,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
   }
 
   void _endDrag() {
+    _draggedNode = null;
     _scrollTimer?.cancel();
     _scrollTimer = null;
     _lastDragPosition = null;
@@ -242,9 +245,13 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
       return const SizedBox.shrink();
     }
 
+    final categoryColor = _draggedNode?.category.getColor(intensity) ??
+                          node.category.getColor(intensity);
+
     return CategoryItemDropTarget(
       targetNode: node,
-      canAccept: (dragged, target) {
+      highlightColor: categoryColor,
+      canAcceptAsChild: (dragged, target) {
         if (dragged.category.id == target.category.id) return false;
         if (dragged.category.parentId == target.category.id) return false;
         final descendants = CategoryTreeBuilder.getDescendantIds(
@@ -254,7 +261,15 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
         if (descendants.contains(target.category.id)) return false;
         return true;
       },
-      onAccept: (dragged, target) {
+      canAcceptBefore: (dragged, target) {
+        if (dragged.category.id == target.category.id) return false;
+        return true;
+      },
+      canAcceptAfter: (dragged, target) {
+        if (dragged.category.id == target.category.id) return false;
+        return true;
+      },
+      onAcceptAsChild: (dragged, target) {
         ref.read(categoriesProvider.notifier).updateParent(
           dragged.category.id,
           target.category.id,
@@ -262,6 +277,29 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
         setState(() {
           _expandedIds.add(target.category.id);
         });
+      },
+      onAcceptBefore: (dragged, target) {
+        ref.read(categoriesProvider.notifier).moveCategoryToPosition(
+          dragged.category.id,
+          target.category.parentId,
+          target.category.id,
+        );
+      },
+      onAcceptAfter: (dragged, target) {
+        // Find the next sibling to insert before, or null to insert at end
+        final categories = ref.read(categoriesProvider);
+        final siblings = categories
+            .where((c) => c.parentId == target.category.parentId && c.type == target.category.type)
+            .toList()
+          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+        final targetIndex = siblings.indexWhere((c) => c.id == target.category.id);
+        final nextSibling = targetIndex < siblings.length - 1 ? siblings[targetIndex + 1] : null;
+
+        ref.read(categoriesProvider.notifier).moveCategoryToPosition(
+          dragged.category.id,
+          target.category.parentId,
+          nextSibling?.id,
+        );
       },
       child: DraggableCategoryTreeTile(
         node: node,
@@ -279,7 +317,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
                 });
               }
             : null,
-        onDragStarted: _startDrag,
+        onDragStarted: () => _startDrag(node),
         onDragEnd: _endDrag,
         onDragUpdate: _updateDragPosition,
       ),

@@ -48,6 +48,51 @@ class CategoriesNotifier extends CrudNotifier<Category> {
     update(updated);
   }
 
+  /// Moves a category to a specific position among siblings.
+  /// [targetParentId] - the parent under which to place the category (null for root)
+  /// [insertBeforeCategoryId] - insert before this category, or null to insert at end
+  void moveCategoryToPosition(String categoryId, String? targetParentId, String? insertBeforeCategoryId) {
+    final categories = state;
+    final category = categories.firstWhere((c) => c.id == categoryId);
+
+    // Prevent moving to itself or creating cycles
+    if (CategoryTreeBuilder.wouldCreateCycle(categories, categoryId, targetParentId)) {
+      return;
+    }
+
+    // Get siblings in target parent (excluding the dragged item)
+    final siblings = categories
+        .where((c) => c.parentId == targetParentId && c.type == category.type && c.id != categoryId)
+        .toList()
+      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
+    int newSortOrder;
+    if (insertBeforeCategoryId == null) {
+      // Insert at end
+      newSortOrder = siblings.isEmpty ? 0 : siblings.last.sortOrder + 1;
+    } else {
+      // Find the target position
+      final targetIndex = siblings.indexWhere((c) => c.id == insertBeforeCategoryId);
+      if (targetIndex == -1) {
+        newSortOrder = siblings.isEmpty ? 0 : siblings.last.sortOrder + 1;
+      } else {
+        newSortOrder = siblings[targetIndex].sortOrder;
+        // Shift all items at and after target position
+        for (int i = targetIndex; i < siblings.length; i++) {
+          final sibling = siblings[i];
+          update(sibling.copyWith(sortOrder: sibling.sortOrder + 1));
+        }
+      }
+    }
+
+    final updated = category.copyWith(
+      parentId: targetParentId,
+      clearParentId: targetParentId == null,
+      sortOrder: newSortOrder,
+    );
+    update(updated);
+  }
+
   void promoteChildren(String parentId) {
     final parent = state.firstWhere((c) => c.id == parentId);
     final children = state.where((c) => c.parentId == parentId).toList();
