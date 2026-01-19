@@ -17,47 +17,78 @@ class TotalBalanceCard extends ConsumerWidget {
     final intensity = ref.watch(colorIntensityProvider);
     final incomeColor = AppColors.getTransactionColor('income', intensity);
     final expenseColor = AppColors.getTransactionColor('expense', intensity);
+    final assets = _getAssets(ref);
+    final liabilities = _getLiabilities(ref);
 
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
-        color: AppColors.surface,
         borderRadius: AppRadius.lgAll,
-        border: Border.all(color: AppColors.border),
+        border: Border.all(
+          color: AppColors.border,
+          width: 1,
+        ),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.surfaceLight.withOpacity(0.5),
+            AppColors.surface.withOpacity(0.3),
+          ],
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Total Balance',
-            style: AppTypography.labelMedium.copyWith(
-              color: AppColors.textSecondary,
-            ),
+          // Header with label
+          Row(
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: totalBalance >= 0 ? incomeColor : expenseColor,
+                  boxShadow: [
+                    BoxShadow(
+                      color: (totalBalance >= 0 ? incomeColor : expenseColor).withOpacity(0.5),
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                'TOTAL BALANCE',
+                style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.textTertiary,
+                  letterSpacing: 1.5,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.md),
+
+          // Main balance amount
           AnimatedCounter(
             value: totalBalance,
             style: AppTypography.moneyLarge.copyWith(
-              fontSize: 26,
-              color: AppColors.textPrimary.withOpacity(0.85),
+              fontSize: 38,
+              fontWeight: FontWeight.w400,
+              color: AppColors.textPrimary,
+              letterSpacing: -0.5,
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              _BalanceIndicator(
-                label: 'Assets',
-                value: _getAssets(ref),
-                color: incomeColor,
-              ),
-              const SizedBox(width: AppSpacing.lg),
-              _BalanceIndicator(
-                label: 'Liabilities',
-                value: _getLiabilities(ref),
-                color: expenseColor,
-              ),
-            ],
+          const SizedBox(height: AppSpacing.xl),
+
+          // Assets and Liabilities breakdown
+          _BalanceBreakdown(
+            assets: assets,
+            liabilities: liabilities,
+            incomeColor: incomeColor,
+            expenseColor: expenseColor,
           ),
         ],
       ),
@@ -79,44 +110,122 @@ class TotalBalanceCard extends ConsumerWidget {
   }
 }
 
-class _BalanceIndicator extends StatelessWidget {
-  final String label;
-  final double value;
-  final Color color;
+class _BalanceBreakdown extends StatelessWidget {
+  final double assets;
+  final double liabilities;
+  final Color incomeColor;
+  final Color expenseColor;
 
-  const _BalanceIndicator({
-    required this.label,
-    required this.value,
-    required this.color,
+  const _BalanceBreakdown({
+    required this.assets,
+    required this.liabilities,
+    required this.incomeColor,
+    required this.expenseColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    final total = assets + liabilities;
+    final assetsRatio = total > 0 ? assets / total : 0.5;
+
+    return Column(
       children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(4),
-          ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        // Labels with values
+        Row(
           children: [
-            Text(
-              label,
-              style: AppTypography.labelSmall,
+            Expanded(
+              child: _BalanceItem(
+                label: 'Assets',
+                value: assets,
+                color: incomeColor,
+              ),
             ),
-            AnimatedCounter(
-              value: value,
-              style: AppTypography.moneyTiny.copyWith(color: color),
+            Container(
+              width: 1,
+              height: 36,
+              color: AppColors.border,
+            ),
+            Expanded(
+              child: _BalanceItem(
+                label: 'Liabilities',
+                value: liabilities,
+                color: expenseColor,
+                alignRight: true,
+              ),
             ),
           ],
         ),
       ],
+    );
+  }
+}
+
+class _BalanceItem extends StatelessWidget {
+  final String label;
+  final double value;
+  final Color color;
+  final bool alignRight;
+
+  const _BalanceItem({
+    required this.label,
+    required this.value,
+    required this.color,
+    this.alignRight = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: alignRight ? AppSpacing.md : 0,
+        right: alignRight ? 0 : AppSpacing.md,
+      ),
+      child: Column(
+        crossAxisAlignment: alignRight ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (!alignRight) ...[
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: color.withOpacity(0.8),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+              ],
+              Text(
+                label,
+                style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.textTertiary,
+                ),
+              ),
+              if (alignRight) ...[
+                const SizedBox(width: AppSpacing.xs),
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: color.withOpacity(0.8),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 4),
+          AnimatedCounter(
+            value: value,
+            style: AppTypography.moneySmall.copyWith(
+              color: color,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

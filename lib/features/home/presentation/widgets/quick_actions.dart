@@ -27,7 +27,7 @@ class QuickActions extends ConsumerWidget {
         Expanded(
           child: _QuickActionButton(
             label: 'Income',
-            icon: LucideIcons.plus,
+            icon: LucideIcons.arrowDownLeft,
             color: incomeColor,
             onTap: () {
               ref.read(transactionFormProvider.notifier).reset();
@@ -40,7 +40,7 @@ class QuickActions extends ConsumerWidget {
         Expanded(
           child: _QuickActionButton(
             label: 'Expense',
-            icon: LucideIcons.minus,
+            icon: LucideIcons.arrowUpRight,
             color: expenseColor,
             onTap: () {
               ref.read(transactionFormProvider.notifier).reset();
@@ -74,7 +74,7 @@ class _QuickActionButton extends StatefulWidget {
 class _QuickActionButtonState extends State<_QuickActionButton>
     with SingleTickerProviderStateMixin, TapScaleMixin {
   @override
-  double get tapScale => AppAnimations.tapScaleDefault;
+  double get tapScale => AppAnimations.tapScaleCard;
 
   @override
   Widget build(BuildContext context) {
@@ -85,36 +85,39 @@ class _QuickActionButtonState extends State<_QuickActionButton>
       onTapCancel: handleTapCancel,
       child: buildScaleTransition(
         child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.md,
-          ),
+          height: 56,
           decoration: BoxDecoration(
-            color: widget.color.withOpacity(0.1),
             borderRadius: AppRadius.mdAll,
-            border: Border.all(color: widget.color.withOpacity(0.3)),
+            border: Border.all(
+              color: widget.color.withOpacity(0.3),
+              width: 1,
+            ),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 32,
-                height: 32,
+                width: 28,
+                height: 28,
                 decoration: BoxDecoration(
-                  color: widget.color.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: widget.color.withOpacity(0.5),
+                    width: 1.5,
+                  ),
                 ),
                 child: Icon(
                   widget.icon,
                   color: widget.color,
-                  size: 18,
+                  size: 14,
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 widget.label,
                 style: AppTypography.labelLarge.copyWith(
-                  color: widget.color,
+                  color: widget.color.withOpacity(0.9),
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
