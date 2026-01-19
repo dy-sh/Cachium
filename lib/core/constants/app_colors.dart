@@ -22,7 +22,7 @@ class AppColors {
   static const Color accentPrimary = Color(0xFFFFFFFF);
   static const Color selectionGlow = Color(0x33FFFFFF); // 20% opacity white
 
-  // Base color palette (dim - softer, muted but visible)
+  // Base color palette (zen - softer, muted but visible)
   static const Color cyan = Color(0xFF5BBCD9);
   static const Color skyBlue = Color(0xFF7BA3C9);
   static const Color cornflower = Color(0xFF8B9DC9);
@@ -42,25 +42,25 @@ class AppColors {
   static const Color pink = Color(0xFFC97BA6);
   static const Color lightPink = Color(0xFFC98BB5);
 
-  // Bright versions (vivid)
-  static const Color cyanBright = Color(0xFF33CCEE);
-  static const Color skyBlueBright = Color(0xFF5599EE);
-  static const Color cornflowerBright = Color(0xFF6688EE);
-  static const Color royalBlueBright = Color(0xFF5577EE);
-  static const Color dodgerBlueBright = Color(0xFF4499EE);
-  static const Color deepSkyBlueBright = Color(0xFF33BBDD);
-  static const Color greenBright = Color(0xFF33DD99);
-  static const Color lightGreenBright = Color(0xFF88DD88);
-  static const Color redBright = Color(0xFFEE5555);
-  static const Color salmonBright = Color(0xFFEE7777);
-  static const Color yellowBright = Color(0xFFEECC55);
-  static const Color lightGoldBright = Color(0xFFEEDD66);
-  static const Color purpleBright = Color(0xFFAA77DD);
-  static const Color lightPurpleBright = Color(0xFF9977DD);
-  static const Color orangeBright = Color(0xFFDD9955);
-  static const Color lightOrangeBright = Color(0xFFDDAA66);
-  static const Color pinkBright = Color(0xFFDD66BB);
-  static const Color lightPinkBright = Color(0xFFDD77CC);
+  // Prism versions (vivid)
+  static const Color cyanPrism = Color(0xFF33CCEE);
+  static const Color skyBluePrism = Color(0xFF5599EE);
+  static const Color cornflowerPrism = Color(0xFF6688EE);
+  static const Color royalBluePrism = Color(0xFF5577EE);
+  static const Color dodgerBluePrism = Color(0xFF4499EE);
+  static const Color deepSkyBluePrism = Color(0xFF33BBDD);
+  static const Color greenPrism = Color(0xFF33DD99);
+  static const Color lightGreenPrism = Color(0xFF88DD88);
+  static const Color redPrism = Color(0xFFEE5555);
+  static const Color salmonPrism = Color(0xFFEE7777);
+  static const Color yellowPrism = Color(0xFFEECC55);
+  static const Color lightGoldPrism = Color(0xFFEEDD66);
+  static const Color purplePrism = Color(0xFFAA77DD);
+  static const Color lightPurplePrism = Color(0xFF9977DD);
+  static const Color orangePrism = Color(0xFFDD9955);
+  static const Color lightOrangePrism = Color(0xFFDDAA66);
+  static const Color pinkPrism = Color(0xFFDD66BB);
+  static const Color lightPinkPrism = Color(0xFFDD77CC);
 
   // Pastel versions (soft, light, calming)
   static const Color cyanPastel = Color(0xFFA8E6F0);
@@ -122,20 +122,20 @@ class AppColors {
   static const Color pinkVintage = Color(0xFFD4789B);
   static const Color lightPinkVintage = Color(0xFFE895B0);
 
-  // Accent color options - Dim (the preferred set)
-  static const List<Color> accentOptionsDim = [
+  // Accent color options - Zen (the preferred set)
+  static const List<Color> accentOptionsZen = [
     Color(0xFFFFFFFF), // White (default)
     cyan, skyBlue, cornflower, royalBlue, dodgerBlue, deepSkyBlue,
     green, lightGreen, red, salmon, yellow, lightGold,
     purple, lightPurple, orange, lightOrange, pink, lightPink,
   ];
 
-  // Accent color options - Bright (more saturated)
-  static const List<Color> accentOptionsBright = [
+  // Accent color options - Prism (more saturated)
+  static const List<Color> accentOptionsPrism = [
     Color(0xFFFFFFFF), // White (default)
-    cyanBright, skyBlueBright, cornflowerBright, royalBlueBright, dodgerBlueBright, deepSkyBlueBright,
-    greenBright, lightGreenBright, redBright, salmonBright, yellowBright, lightGoldBright,
-    purpleBright, lightPurpleBright, orangeBright, lightOrangeBright, pinkBright, lightPinkBright,
+    cyanPrism, skyBluePrism, cornflowerPrism, royalBluePrism, dodgerBluePrism, deepSkyBluePrism,
+    greenPrism, lightGreenPrism, redPrism, salmonPrism, yellowPrism, lightGoldPrism,
+    purplePrism, lightPurplePrism, orangePrism, lightOrangePrism, pinkPrism, lightPinkPrism,
   ];
 
   // Accent color options - Pastel (soft, light)
@@ -163,15 +163,15 @@ class AppColors {
   ];
 
   // Legacy accessor
-  static const List<Color> accentOptions = accentOptionsDim;
+  static const List<Color> accentOptions = accentOptionsZen;
 
   // Get accent options based on intensity
   static List<Color> getAccentOptions(ColorIntensity intensity) {
     switch (intensity) {
-      case ColorIntensity.bright:
-        return accentOptionsBright;
-      case ColorIntensity.dim:
-        return accentOptionsDim;
+      case ColorIntensity.prism:
+        return accentOptionsPrism;
+      case ColorIntensity.zen:
+        return accentOptionsZen;
       case ColorIntensity.pastel:
         return accentOptionsPastel;
       case ColorIntensity.neon:
@@ -188,19 +188,19 @@ class AppColors {
   }
 
   // Account type colors - using base palette
-  static const Color accountBankDim = cyan;
-  static const Color accountCreditCardDim = red;
-  static const Color accountCashDim = green;
-  static const Color accountSavingsDim = yellow;
-  static const Color accountInvestmentDim = purple;
-  static const Color accountWalletDim = orange;
+  static const Color accountBankZen = cyan;
+  static const Color accountCreditCardZen = red;
+  static const Color accountCashZen = green;
+  static const Color accountSavingsZen = yellow;
+  static const Color accountInvestmentZen = purple;
+  static const Color accountWalletZen = orange;
 
-  static const Color accountBankBright = cyanBright;
-  static const Color accountCreditCardBright = redBright;
-  static const Color accountCashBright = greenBright;
-  static const Color accountSavingsBright = yellowBright;
-  static const Color accountInvestmentBright = purpleBright;
-  static const Color accountWalletBright = orangeBright;
+  static const Color accountBankPrism = cyanPrism;
+  static const Color accountCreditCardPrism = redPrism;
+  static const Color accountCashPrism = greenPrism;
+  static const Color accountSavingsPrism = yellowPrism;
+  static const Color accountInvestmentPrism = purplePrism;
+  static const Color accountWalletPrism = orangePrism;
 
   static const Color accountBankPastel = cyanPastel;
   static const Color accountCreditCardPastel = redPastel;
@@ -224,18 +224,18 @@ class AppColors {
   static const Color accountWalletVintage = orangeVintage;
 
   // Legacy accessors (use dim by default)
-  static const Color accountBank = accountBankDim;
-  static const Color accountCreditCard = accountCreditCardDim;
-  static const Color accountCash = accountCashDim;
-  static const Color accountSavings = accountSavingsDim;
-  static const Color accountInvestment = accountInvestmentDim;
-  static const Color accountWallet = accountWalletDim;
+  static const Color accountBank = accountBankZen;
+  static const Color accountCreditCard = accountCreditCardZen;
+  static const Color accountCash = accountCashZen;
+  static const Color accountSavings = accountSavingsZen;
+  static const Color accountInvestment = accountInvestmentZen;
+  static const Color accountWallet = accountWalletZen;
 
   // Semantic colors - using base palette
-  static const Color incomeDim = green;
-  static const Color expenseDim = red;
-  static const Color incomeBright = greenBright;
-  static const Color expenseBright = redBright;
+  static const Color incomeZen = green;
+  static const Color expenseZen = red;
+  static const Color incomePrism = greenPrism;
+  static const Color expensePrism = redPrism;
   static const Color incomePastel = greenPastel;
   static const Color expensePastel = redPastel;
   static const Color incomeNeon = greenNeon;
@@ -244,23 +244,23 @@ class AppColors {
   static const Color expenseVintage = redVintage;
 
   // Legacy semantic colors (dim by default)
-  static const Color income = incomeDim;
-  static const Color expense = expenseDim;
+  static const Color income = incomeZen;
+  static const Color expense = expenseZen;
 
   // Navigation colors
   static const Color navActive = Color(0xFFFFFFFF);
   static const Color navInactive = Color(0xFF5A5A5A);
 
   // Category colors - dim (base palette)
-  static const List<Color> categoryColorsDim = [
+  static const List<Color> categoryColorsZen = [
     cyan, skyBlue, green, lightGreen, red, salmon,
     yellow, purple, lightPurple, orange, pink, lightPink,
   ];
 
   // Category colors - bright (more saturated)
-  static const List<Color> categoryColorsBright = [
-    cyanBright, skyBlueBright, greenBright, lightGreenBright, redBright, salmonBright,
-    yellowBright, purpleBright, lightPurpleBright, orangeBright, pinkBright, lightPinkBright,
+  static const List<Color> categoryColorsPrism = [
+    cyanPrism, skyBluePrism, greenPrism, lightGreenPrism, redPrism, salmonPrism,
+    yellowPrism, purplePrism, lightPurplePrism, orangePrism, pinkPrism, lightPinkPrism,
   ];
 
   // Category colors - pastel (soft, light)
@@ -282,15 +282,15 @@ class AppColors {
   ];
 
   // Legacy accessor
-  static const List<Color> categoryColors = categoryColorsDim;
+  static const List<Color> categoryColors = categoryColorsZen;
 
   // Get category colors based on intensity
   static List<Color> getCategoryColors(ColorIntensity intensity) {
     switch (intensity) {
-      case ColorIntensity.bright:
-        return categoryColorsBright;
-      case ColorIntensity.dim:
-        return categoryColorsDim;
+      case ColorIntensity.prism:
+        return categoryColorsPrism;
+      case ColorIntensity.zen:
+        return categoryColorsZen;
       case ColorIntensity.pastel:
         return categoryColorsPastel;
       case ColorIntensity.neon:
@@ -301,30 +301,30 @@ class AppColors {
   }
 
   // Get account color by type with intensity support
-  static Color getAccountColor(String type, [ColorIntensity intensity = ColorIntensity.bright]) {
+  static Color getAccountColor(String type, [ColorIntensity intensity = ColorIntensity.prism]) {
     switch (type) {
       case 'bank':
-        return _getColorForIntensity(accountBankDim, accountBankBright, accountBankPastel, accountBankNeon, accountBankVintage, intensity);
+        return _getColorForIntensity(accountBankZen, accountBankPrism, accountBankPastel, accountBankNeon, accountBankVintage, intensity);
       case 'creditCard':
-        return _getColorForIntensity(accountCreditCardDim, accountCreditCardBright, accountCreditCardPastel, accountCreditCardNeon, accountCreditCardVintage, intensity);
+        return _getColorForIntensity(accountCreditCardZen, accountCreditCardPrism, accountCreditCardPastel, accountCreditCardNeon, accountCreditCardVintage, intensity);
       case 'cash':
-        return _getColorForIntensity(accountCashDim, accountCashBright, accountCashPastel, accountCashNeon, accountCashVintage, intensity);
+        return _getColorForIntensity(accountCashZen, accountCashPrism, accountCashPastel, accountCashNeon, accountCashVintage, intensity);
       case 'savings':
-        return _getColorForIntensity(accountSavingsDim, accountSavingsBright, accountSavingsPastel, accountSavingsNeon, accountSavingsVintage, intensity);
+        return _getColorForIntensity(accountSavingsZen, accountSavingsPrism, accountSavingsPastel, accountSavingsNeon, accountSavingsVintage, intensity);
       case 'investment':
-        return _getColorForIntensity(accountInvestmentDim, accountInvestmentBright, accountInvestmentPastel, accountInvestmentNeon, accountInvestmentVintage, intensity);
+        return _getColorForIntensity(accountInvestmentZen, accountInvestmentPrism, accountInvestmentPastel, accountInvestmentNeon, accountInvestmentVintage, intensity);
       case 'wallet':
-        return _getColorForIntensity(accountWalletDim, accountWalletBright, accountWalletPastel, accountWalletNeon, accountWalletVintage, intensity);
+        return _getColorForIntensity(accountWalletZen, accountWalletPrism, accountWalletPastel, accountWalletNeon, accountWalletVintage, intensity);
       default:
-        return _getColorForIntensity(accountBankDim, accountBankBright, accountBankPastel, accountBankNeon, accountBankVintage, intensity);
+        return _getColorForIntensity(accountBankZen, accountBankPrism, accountBankPastel, accountBankNeon, accountBankVintage, intensity);
     }
   }
 
   static Color _getColorForIntensity(Color dim, Color bright, Color pastel, Color neon, Color vintage, ColorIntensity intensity) {
     switch (intensity) {
-      case ColorIntensity.bright:
+      case ColorIntensity.prism:
         return bright;
-      case ColorIntensity.dim:
+      case ColorIntensity.zen:
         return dim;
       case ColorIntensity.pastel:
         return pastel;
@@ -336,12 +336,12 @@ class AppColors {
   }
 
   // Get transaction color by type with intensity support
-  static Color getTransactionColor(String type, [ColorIntensity intensity = ColorIntensity.bright]) {
+  static Color getTransactionColor(String type, [ColorIntensity intensity = ColorIntensity.prism]) {
     switch (type) {
       case 'income':
-        return _getColorForIntensity(incomeDim, incomeBright, incomePastel, incomeNeon, incomeVintage, intensity);
+        return _getColorForIntensity(incomeZen, incomePrism, incomePastel, incomeNeon, incomeVintage, intensity);
       case 'expense':
-        return _getColorForIntensity(expenseDim, expenseBright, expensePastel, expenseNeon, expenseVintage, intensity);
+        return _getColorForIntensity(expenseZen, expensePrism, expensePastel, expenseNeon, expenseVintage, intensity);
       default:
         return textPrimary;
     }
@@ -350,13 +350,13 @@ class AppColors {
   // Get background opacity appropriate for each palette
   static double getBgOpacity(ColorIntensity intensity) {
     switch (intensity) {
-      case ColorIntensity.bright:
+      case ColorIntensity.prism:
         return 0.35;
       case ColorIntensity.neon:
         return 0.40;
       case ColorIntensity.pastel:
         return 0.25;
-      case ColorIntensity.dim:
+      case ColorIntensity.zen:
         return 0.20;
       case ColorIntensity.vintage:
         return 0.25;
@@ -366,14 +366,14 @@ class AppColors {
   // Get border opacity appropriate for each palette
   static double getBorderOpacity(ColorIntensity intensity) {
     switch (intensity) {
-      case ColorIntensity.bright:
+      case ColorIntensity.prism:
         return 0.5;
       case ColorIntensity.neon:
         return 1.0;
       case ColorIntensity.pastel:
       case ColorIntensity.vintage:
         return 0.8;
-      case ColorIntensity.dim:
+      case ColorIntensity.zen:
         return 0.6;
     }
   }

@@ -32,8 +32,8 @@ class SettingsTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final intensity = ref.watch(colorIntensityProvider);
-    final isBright = intensity == ColorIntensity.bright;
-    final bgOpacity = isBright ? 0.35 : 0.15;
+    final isPrism = intensity == ColorIntensity.prism;
+    final bgOpacity = isPrism ? 0.35 : 0.15;
 
     return GestureDetector(
       onTap: onTap,
