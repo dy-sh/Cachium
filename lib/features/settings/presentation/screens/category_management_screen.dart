@@ -93,17 +93,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
                       },
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.md),
-                  // Reorder hint
-                  Center(
-                    child: Text(
-                      'Hold and drag to reorder',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textTertiary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.xl),
                 ],
               ),
             ),
@@ -125,8 +115,37 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
                 },
               ),
             ),
+
+            // Reorder hint
+            _buildReorderHint(),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildReorderHint() {
+    return Padding(
+      padding: EdgeInsets.only(
+        top: AppSpacing.xs,
+        bottom: MediaQuery.of(context).padding.bottom + AppSpacing.sm,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            LucideIcons.gripVertical,
+            size: 12,
+            color: AppColors.textTertiary,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            'Hold to reorder',
+            style: AppTypography.labelSmall.copyWith(
+              color: AppColors.textTertiary,
+            ),
+          ),
+        ],
       ),
     );
   }
