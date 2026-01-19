@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,7 +6,6 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/buttons/fm_icon_button.dart';
-import '../../../../design_system/components/buttons/fm_primary_button.dart';
 import '../../../../design_system/components/chips/fm_toggle_chip.dart';
 import '../../../categories/data/models/category.dart';
 import '../../../categories/data/models/category_tree_node.dart';
@@ -113,48 +111,18 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
             // Categories tree
             Expanded(
               child: ListView.builder(
-                padding: const EdgeInsets.only(
-                  left: AppSpacing.screenPadding,
-                  right: AppSpacing.screenPadding,
-                  bottom: AppSpacing.xl,
-                ),
-                itemCount: treeNodes.length + 1, // +1 for root drop zone
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+                itemCount: treeNodes.length + 2, // +1 for root drop zone, +1 for add button
                 itemBuilder: (context, index) {
                   if (index == 0) {
                     return _buildRootDropZone(intensity);
                   }
+                  if (index == treeNodes.length + 1) {
+                    return _buildAddCategoryTile();
+                  }
                   final node = treeNodes[index - 1];
                   return _buildTreeItem(node, intensity);
                 },
-              ),
-            ),
-
-            // Sticky bottom button
-            ClipRect(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.background.withOpacity(0.8),
-                    border: Border(
-                      top: BorderSide(
-                        color: AppColors.border.withOpacity(0.5),
-                        width: 1,
-                      ),
-                    ),
-                  ),
-                  padding: EdgeInsets.only(
-                    left: AppSpacing.screenPadding,
-                    right: AppSpacing.screenPadding,
-                    top: AppSpacing.md,
-                    bottom: MediaQuery.of(context).padding.bottom + AppSpacing.md,
-                  ),
-                  child: FMPrimaryButton(
-                    label: 'Add Category',
-                    icon: LucideIcons.plus,
-                    onPressed: () => _showAddModal(),
-                  ),
-                ),
               ),
             ),
           ],
@@ -222,6 +190,41 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
                 });
               }
             : null,
+      ),
+    );
+  }
+
+  Widget _buildAddCategoryTile() {
+    return GestureDetector(
+      onTap: () => _showAddModal(),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppSpacing.xxl),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppColors.border,
+            style: BorderStyle.solid,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              LucideIcons.plus,
+              size: 18,
+              color: AppColors.textSecondary,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              'Add Category',
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
