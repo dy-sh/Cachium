@@ -7,14 +7,17 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/buttons/fm_primary_button.dart';
 import '../../../../design_system/components/inputs/fm_text_field.dart';
 import '../../../categories/data/models/category.dart';
+import '../../../categories/presentation/providers/categories_provider.dart';
+import '../../data/models/app_settings.dart';
 import '../providers/settings_provider.dart';
 import 'color_picker_grid.dart';
 import 'icon_picker_grid.dart';
+import 'parent_category_picker.dart';
 
 class CategoryFormModal extends ConsumerStatefulWidget {
   final Category? category;
   final CategoryType type;
-  final void Function(String name, IconData icon, int colorIndex) onSave;
+  final void Function(String name, IconData icon, int colorIndex, String? parentId) onSave;
   final VoidCallback? onDelete;
 
   const CategoryFormModal({
@@ -33,6 +36,7 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
   late TextEditingController _nameController;
   late IconData _selectedIcon;
   late int _selectedColorIndex;
+  String? _selectedParentId;
 
   @override
   void initState() {
@@ -40,6 +44,7 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
     _nameController = TextEditingController(text: widget.category?.name ?? '');
     _selectedIcon = widget.category?.icon ?? LucideIcons.tag;
     _selectedColorIndex = widget.category?.colorIndex ?? 0;
+    _selectedParentId = widget.category?.parentId;
   }
 
   @override
@@ -144,6 +149,10 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
                   ),
                   const SizedBox(height: AppSpacing.xxl),
 
+                  // Parent category selector
+                  _buildParentSelector(intensity),
+                  const SizedBox(height: AppSpacing.xl),
+
                   // Name input
                   FMTextField(
                     label: 'Name',
@@ -191,6 +200,7 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
                               _nameController.text.trim(),
                               _selectedIcon,
                               _selectedColorIndex,
+                              _selectedParentId,
                             );
                           }
                         : null,
@@ -247,6 +257,98 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildParentSelector(ColorIntensity intensity) {
+    final parentCategory = _selectedParentId != null
+        ? ref.watch(categoryByIdProvider(_selectedParentId!))
+        : null;
+
+    final parentColor = parentCategory?.getColor(intensity);
+    final bgOpacity = AppColors.getBgOpacity(intensity);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Parent Category', style: AppTypography.labelMedium),
+        const SizedBox(height: AppSpacing.sm),
+        GestureDetector(
+          onTap: () {
+            showParentCategoryPicker(
+              context: context,
+              type: widget.type,
+              currentCategoryId: widget.category?.id,
+              selectedParentId: _selectedParentId,
+              onSelected: (parentId) {
+                setState(() => _selectedParentId = parentId);
+              },
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceLight,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              children: [
+                if (parentCategory != null) ...[
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: parentColor!.withOpacity(bgOpacity),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      parentCategory.icon,
+                      size: 16,
+                      color: parentColor,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      parentCategory.name,
+                      style: AppTypography.bodyMedium,
+                    ),
+                  ),
+                ] else ...[
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      LucideIcons.folderRoot,
+                      size: 16,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      'None (Root Level)',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+                Icon(
+                  LucideIcons.chevronRight,
+                  size: 18,
+                  color: AppColors.textTertiary,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
