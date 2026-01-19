@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -27,6 +29,59 @@ class CategoryManagementScreen extends ConsumerStatefulWidget {
 class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScreen> {
   int _selectedTypeIndex = 1; // 0 = Income, 1 = Expense
   final Set<String> _expandedIds = {};
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _listKey = GlobalKey();
+  Offset? _lastDragPosition;
+  Timer? _scrollTimer;
+
+  static const _scrollAreaHeight = 80.0;
+  static const _scrollSpeed = 5.0;
+
+  @override
+  void dispose() {
+    _scrollTimer?.cancel();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _startDrag() {
+    _scrollTimer?.cancel();
+    _scrollTimer = Timer.periodic(const Duration(milliseconds: 16), (_) {
+      _performAutoScroll();
+    });
+  }
+
+  void _endDrag() {
+    _scrollTimer?.cancel();
+    _scrollTimer = null;
+    _lastDragPosition = null;
+  }
+
+  void _updateDragPosition(Offset globalPosition) {
+    _lastDragPosition = globalPosition;
+  }
+
+  void _performAutoScroll() {
+    if (_lastDragPosition == null || !mounted) return;
+
+    final box = _listKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !_scrollController.hasClients) return;
+
+    final localPosition = box.globalToLocal(_lastDragPosition!);
+    final listHeight = box.size.height;
+
+    if (localPosition.dy < _scrollAreaHeight) {
+      // Near or above top of list - scroll up
+      final intensity = (1 - (localPosition.dy / _scrollAreaHeight)).clamp(0.0, 1.0);
+      final offset = _scrollController.offset - (_scrollSpeed * intensity);
+      _scrollController.jumpTo(offset.clamp(0.0, _scrollController.position.maxScrollExtent));
+    } else if (localPosition.dy > listHeight - _scrollAreaHeight) {
+      // Near or below bottom of list - scroll down
+      final intensity = (1 - ((listHeight - localPosition.dy) / _scrollAreaHeight)).clamp(0.0, 1.0);
+      final offset = _scrollController.offset + (_scrollSpeed * intensity);
+      _scrollController.jumpTo(offset.clamp(0.0, _scrollController.position.maxScrollExtent));
+    }
+  }
 
   CategoryType get _selectedType =>
       _selectedTypeIndex == 0 ? CategoryType.income : CategoryType.expense;
@@ -38,8 +93,18 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
+      body: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerMove: (event) {
+          if (_scrollTimer != null) {
+            _updateDragPosition(event.position);
+          }
+        },
+        onPointerDown: (event) {
+          _lastDragPosition = event.position;
+        },
+        child: SafeArea(
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header
@@ -101,6 +166,8 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
             // Categories tree
             Expanded(
               child: ListView.builder(
+                key: _listKey,
+                controller: _scrollController,
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
                 itemCount: treeNodes.length + 2, // +1 for root drop zone, +1 for add button
                 itemBuilder: (context, index) {
@@ -119,6 +186,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
             // Reorder hint
             _buildReorderHint(),
           ],
+        ),
         ),
       ),
     );
@@ -209,6 +277,9 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
                 });
               }
             : null,
+        onDragStarted: _startDrag,
+        onDragEnd: _endDrag,
+        onDragUpdate: _updateDragPosition,
       ),
     );
   }

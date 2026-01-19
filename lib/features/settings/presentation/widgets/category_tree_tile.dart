@@ -147,6 +147,9 @@ class DraggableCategoryTreeTile extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onExpandToggle;
   final Function(CategoryTreeNode)? onDragCompleted;
+  final VoidCallback? onDragStarted;
+  final VoidCallback? onDragEnd;
+  final Function(Offset globalPosition)? onDragUpdate;
 
   const DraggableCategoryTreeTile({
     super.key,
@@ -156,12 +159,19 @@ class DraggableCategoryTreeTile extends StatelessWidget {
     this.onTap,
     this.onExpandToggle,
     this.onDragCompleted,
+    this.onDragStarted,
+    this.onDragEnd,
+    this.onDragUpdate,
   });
 
   @override
   Widget build(BuildContext context) {
     return LongPressDraggable<CategoryTreeNode>(
       data: node,
+      onDragStarted: onDragStarted,
+      onDragUpdate: (details) => onDragUpdate?.call(details.globalPosition),
+      onDragEnd: (_) => onDragEnd?.call(),
+      onDraggableCanceled: (_, __) => onDragEnd?.call(),
       feedback: Material(
         elevation: 8,
         borderRadius: BorderRadius.circular(12),
@@ -182,7 +192,10 @@ class DraggableCategoryTreeTile extends StatelessWidget {
         onTap: onTap,
         onExpandToggle: onExpandToggle,
       ),
-      onDragCompleted: () => onDragCompleted?.call(node),
+      onDragCompleted: () {
+        onDragEnd?.call();
+        onDragCompleted?.call(node);
+      },
       child: CategoryTreeTile(
         node: node,
         intensity: intensity,
