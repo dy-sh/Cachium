@@ -228,7 +228,10 @@ class AppearanceSettingsScreen extends ConsumerWidget {
             colors: accentOptions,
             selectedColor: settings.accentColor,
             onColorSelected: (color) {
-              ref.read(settingsProvider.notifier).setAccentColor(color);
+              final index = accentOptions.indexWhere((c) => c.value == color.value);
+              if (index >= 0) {
+                ref.read(settingsProvider.notifier).setAccentColorIndex(index);
+              }
             },
           ),
         ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
 
 enum DateFormatOption {
   mmddyyyy('MM/DD/YYYY', 'M/d/yyyy'),
@@ -50,7 +51,7 @@ enum CurrencySymbol {
 class AppSettings {
   // Appearance
   final ColorIntensity colorIntensity;
-  final Color accentColor;
+  final int accentColorIndex;
   final bool tabTransitionsEnabled;
   final bool formAnimationsEnabled;
   final bool balanceCountersEnabled;
@@ -68,7 +69,7 @@ class AppSettings {
 
   const AppSettings({
     this.colorIntensity = ColorIntensity.prism,
-    this.accentColor = const Color(0xFFFFFFFF),
+    this.accentColorIndex = 0,
     this.tabTransitionsEnabled = true,
     this.formAnimationsEnabled = true,
     this.balanceCountersEnabled = true,
@@ -88,9 +89,13 @@ class AppSettings {
     return currencySymbol.symbol;
   }
 
+  Color get accentColor {
+    return AppColors.getAccentColor(accentColorIndex, colorIntensity);
+  }
+
   AppSettings copyWith({
     ColorIntensity? colorIntensity,
-    Color? accentColor,
+    int? accentColorIndex,
     bool? tabTransitionsEnabled,
     bool? formAnimationsEnabled,
     bool? balanceCountersEnabled,
@@ -104,7 +109,7 @@ class AppSettings {
   }) {
     return AppSettings(
       colorIntensity: colorIntensity ?? this.colorIntensity,
-      accentColor: accentColor ?? this.accentColor,
+      accentColorIndex: accentColorIndex ?? this.accentColorIndex,
       tabTransitionsEnabled: tabTransitionsEnabled ?? this.tabTransitionsEnabled,
       formAnimationsEnabled: formAnimationsEnabled ?? this.formAnimationsEnabled,
       balanceCountersEnabled: balanceCountersEnabled ?? this.balanceCountersEnabled,

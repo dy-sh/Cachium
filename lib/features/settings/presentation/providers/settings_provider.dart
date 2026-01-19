@@ -13,8 +13,8 @@ class SettingsNotifier extends Notifier<AppSettings> {
     state = state.copyWith(colorIntensity: intensity);
   }
 
-  void setAccentColor(Color color) {
-    state = state.copyWith(accentColor: color);
+  void setAccentColorIndex(int index) {
+    state = state.copyWith(accentColorIndex: index);
   }
 
   void setTabTransitionsEnabled(bool enabled) {
