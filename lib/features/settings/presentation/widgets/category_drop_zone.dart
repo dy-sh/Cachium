@@ -233,31 +233,45 @@ class _CategoryItemDropTargetState extends State<CategoryItemDropTarget> {
                     : null,
               ),
             ),
-            // The actual item
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 100),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: isCenterZone
-                    ? Border.all(color: color, width: 2)
-                    : null,
-                boxShadow: isCenterZone
-                    ? [
-                        BoxShadow(
-                          color: color.withValues(alpha: 0.4),
-                          blurRadius: 12,
-                          spreadRadius: 2,
+            // The actual item with highlight
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                widget.child,
+                // Overlay highlight for center zone (positioned to match tile's visual bounds)
+                if (isCenterZone)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    bottom: AppSpacing.sm, // Account for tile's bottom margin
+                    child: IgnorePointer(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: color, width: 2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: color.withValues(alpha: 0.4),
+                              blurRadius: 12,
+                              spreadRadius: 2,
+                            ),
+                          ],
                         ),
-                      ]
-                    : null,
-              ),
-              child: widget.child,
+                      ),
+                    ),
+                  ),
+              ],
             ),
             // Bottom insertion indicator
             AnimatedContainer(
               duration: const Duration(milliseconds: 100),
               height: isBottomZone ? 4 : 0,
-              margin: EdgeInsets.only(top: isBottomZone ? 4 : 0),
+              margin: EdgeInsets.only(
+                top: isBottomZone ? 0 : 0,
+                bottom: isBottomZone ? 4 : 0,
+              ),
+              transform: Matrix4.translationValues(0, isBottomZone ? -AppSpacing.sm : 0, 0),
               decoration: BoxDecoration(
                 color: color,
                 borderRadius: BorderRadius.circular(2),
