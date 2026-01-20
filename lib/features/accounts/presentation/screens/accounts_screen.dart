@@ -20,9 +20,11 @@ class AccountsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final accountsAsync = ref.watch(accountsProvider);
     final totalBalance = ref.watch(totalBalanceProvider);
     final accountsByType = ref.watch(accountsByTypeProvider);
     final intensity = ref.watch(colorIntensityProvider);
+    final isLoading = accountsAsync.isLoading;
 
     return SafeArea(
       child: Column(
@@ -134,31 +136,33 @@ class AccountsScreen extends ConsumerWidget {
 
           // Accounts list
           Expanded(
-            child: ListView(
-              padding: EdgeInsets.only(
-                left: AppSpacing.screenPadding,
-                right: AppSpacing.screenPadding,
-                bottom: AppSpacing.bottomNavHeight + AppSpacing.lg,
-              ),
-              children: () {
-                int sectionIndex = 0;
-                return AccountType.values.map((type) {
-                  final accounts = accountsByType[type] ?? [];
-                  if (accounts.isEmpty) return const SizedBox.shrink();
-
-                  final currentIndex = sectionIndex;
-                  sectionIndex++;
-                  return StaggeredListItem(
-                    index: currentIndex,
-                    child: _AccountTypeSection(
-                      type: type,
-                      accounts: accounts,
-                      intensity: intensity,
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : ListView(
+                    padding: EdgeInsets.only(
+                      left: AppSpacing.screenPadding,
+                      right: AppSpacing.screenPadding,
+                      bottom: AppSpacing.bottomNavHeight + AppSpacing.lg,
                     ),
-                  );
-                }).toList();
-              }(),
-            ),
+                    children: () {
+                      int sectionIndex = 0;
+                      return AccountType.values.map((type) {
+                        final accounts = accountsByType[type] ?? [];
+                        if (accounts.isEmpty) return const SizedBox.shrink();
+
+                        final currentIndex = sectionIndex;
+                        sectionIndex++;
+                        return StaggeredListItem(
+                          index: currentIndex,
+                          child: _AccountTypeSection(
+                            type: type,
+                            accounts: accounts,
+                            intensity: intensity,
+                          ),
+                        );
+                      }).toList();
+                    }(),
+                  ),
           ),
         ],
       ),
@@ -226,7 +230,9 @@ class _AccountCard extends ConsumerWidget {
     final shadowBlur = cardStyle == AccountCardStyle.bright ? 12.0 : 8.0;
     final shadowOffset = cardStyle == AccountCardStyle.bright ? 4.0 : 2.0;
 
-    return Container(
+    return GestureDetector(
+      onTap: () => context.push('/account/${account.id}'),
+      child: Container(
       width: 180,
       height: 72,
       clipBehavior: Clip.hardEdge,
@@ -328,6 +334,7 @@ class _AccountCard extends ConsumerWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

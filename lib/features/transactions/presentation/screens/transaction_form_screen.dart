@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -21,19 +22,56 @@ import '../widgets/category_selector.dart';
 import '../widgets/date_selector.dart';
 
 class TransactionFormScreen extends ConsumerStatefulWidget {
-  const TransactionFormScreen({super.key});
+  final String? transactionId;
+
+  const TransactionFormScreen({super.key, this.transactionId});
 
   @override
   ConsumerState<TransactionFormScreen> createState() => _TransactionFormScreenState();
 }
 
 class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
+  bool _initialized = false;
+  late TextEditingController _noteController;
+
+  @override
+  void initState() {
+    super.initState();
+    _noteController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  void _initializeForEdit() {
+    if (_initialized || widget.transactionId == null) return;
+
+    final transaction = ref.read(transactionByIdProvider(widget.transactionId!));
+    if (transaction != null) {
+      ref.read(transactionFormProvider.notifier).initForEdit(transaction);
+      _noteController.text = transaction.note ?? '';
+      _initialized = true;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Initialize for edit mode after the first frame
+    if (widget.transactionId != null && !_initialized) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _initializeForEdit();
+        if (mounted) setState(() {});
+      });
+    }
+
     final formState = ref.watch(transactionFormProvider);
     final incomeCategories = ref.watch(incomeCategoriesProvider);
     final expenseCategories = ref.watch(expenseCategoriesProvider);
-    final accounts = ref.watch(accountsProvider);
+    final accountsAsync = ref.watch(accountsProvider);
+    final accounts = accountsAsync.valueOrNull ?? [];
     final intensity = ref.watch(colorIntensityProvider);
 
     final categories = formState.type == TransactionType.income
@@ -41,6 +79,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
         : expenseCategories;
 
     final isIncome = formState.type == TransactionType.income;
+    final isEditing = formState.isEditing;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -48,8 +87,25 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
         child: Column(
           children: [
             FMFormHeader(
-              title: 'New Transaction',
+              title: isEditing ? 'Edit Transaction' : 'New Transaction',
               onClose: () => context.pop(),
+              trailing: isEditing
+                  ? GestureDetector(
+                      onTap: () => _showDeleteConfirmation(context),
+                      child: Container(
+                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        decoration: BoxDecoration(
+                          color: AppColors.expense.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          LucideIcons.trash2,
+                          size: 18,
+                          color: AppColors.expense,
+                        ),
+                      ),
+                    )
+                  : null,
             ),
 
             Expanded(
@@ -76,8 +132,10 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                     const SizedBox(height: AppSpacing.xxl),
 
                     FMAmountInput(
+                      key: ValueKey('amount_${formState.editingTransactionId}'),
+                      initialValue: formState.amount > 0 ? formState.amount : null,
                       transactionType: formState.type.name,
-                      autofocus: true,
+                      autofocus: !isEditing,
                       onChanged: (amount) {
                         ref.read(transactionFormProvider.notifier).setAmount(amount);
                       },
@@ -115,8 +173,10 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                     const SizedBox(height: AppSpacing.xxl),
 
                     FMTextField(
+                      key: ValueKey('note_${formState.editingTransactionId}'),
                       label: 'Note (optional)',
                       hint: 'Add a note...',
+                      controller: _noteController,
                       onChanged: (value) {
                         ref.read(transactionFormProvider.notifier).setNote(value);
                       },
@@ -147,20 +207,40 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                     bottom: MediaQuery.of(context).padding.bottom + AppSpacing.md,
                   ),
                   child: FMPrimaryButton(
-                    label: 'Save Transaction',
+                    label: isEditing ? 'Save Changes' : 'Save Transaction',
                     onPressed: formState.isValid
                         ? () async {
                             // Save last used account
                             ref.read(settingsProvider.notifier).setLastUsedAccountId(formState.accountId);
 
-                            await ref.read(transactionsProvider.notifier).addTransaction(
+                            if (isEditing) {
+                              // Update existing transaction
+                              final originalTransaction = ref.read(
+                                transactionByIdProvider(formState.editingTransactionId!),
+                              );
+                              if (originalTransaction != null) {
+                                final updatedTransaction = originalTransaction.copyWith(
                                   amount: formState.amount,
                                   type: formState.type,
-                                  categoryId: formState.categoryId!,
-                                  accountId: formState.accountId!,
+                                  categoryId: formState.categoryId,
+                                  accountId: formState.accountId,
                                   date: formState.date,
                                   note: formState.note,
                                 );
+                                await ref.read(transactionsProvider.notifier)
+                                    .updateTransaction(updatedTransaction);
+                              }
+                            } else {
+                              // Add new transaction
+                              await ref.read(transactionsProvider.notifier).addTransaction(
+                                    amount: formState.amount,
+                                    type: formState.type,
+                                    categoryId: formState.categoryId!,
+                                    accountId: formState.accountId!,
+                                    date: formState.date,
+                                    note: formState.note,
+                                  );
+                            }
                             if (context.mounted) {
                               context.pop();
                             }
@@ -172,6 +252,58 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(
+          'Delete Transaction',
+          style: AppTypography.h4,
+        ),
+        content: Text(
+          'Are you sure you want to delete this transaction? This action cannot be undone.',
+          style: AppTypography.bodyMedium.copyWith(
+            color: AppColors.textSecondary,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: AppTypography.button.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final formState = ref.read(transactionFormProvider);
+              if (formState.editingTransactionId != null) {
+                await ref.read(transactionsProvider.notifier)
+                    .deleteTransaction(formState.editingTransactionId!);
+                if (mounted) {
+                  context.pop();
+                }
+              }
+            },
+            child: Text(
+              'Delete',
+              style: AppTypography.button.copyWith(
+                color: AppColors.expense,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

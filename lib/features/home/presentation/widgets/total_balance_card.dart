@@ -96,14 +96,14 @@ class TotalBalanceCard extends ConsumerWidget {
   }
 
   double _getAssets(WidgetRef ref) {
-    final accounts = ref.watch(accountsProvider);
+    final accounts = ref.watch(accountsProvider).valueOrNull ?? [];
     return accounts
         .where((a) => a.balance > 0)
         .fold(0.0, (sum, a) => sum + a.balance);
   }
 
   double _getLiabilities(WidgetRef ref) {
-    final accounts = ref.watch(accountsProvider);
+    final accounts = ref.watch(accountsProvider).valueOrNull ?? [];
     return accounts
         .where((a) => a.balance < 0)
         .fold(0.0, (sum, a) => sum + a.balance.abs());

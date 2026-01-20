@@ -246,68 +246,71 @@ class _TransactionItem extends ConsumerWidget {
     final bgOpacity = AppColors.getBgOpacity(intensity);
     final categoryColor = category?.getColor(intensity) ?? AppColors.textSecondary;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.mdAll,
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: categoryColor.withOpacity(bgOpacity),
-              borderRadius: BorderRadius.circular(10),
+    return GestureDetector(
+      onTap: () => context.push('/transaction/${transaction.id}'),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: AppRadius.mdAll,
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: categoryColor.withOpacity(bgOpacity),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                category?.icon ?? Icons.circle,
+                color: categoryColor,
+                size: 20,
+              ),
             ),
-            child: Icon(
-              category?.icon ?? Icons.circle,
-              color: categoryColor,
-              size: 20,
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    category?.name ?? 'Unknown',
+                    style: AppTypography.labelLarge,
+                  ),
+                  if (transaction.note != null && transaction.note!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        transaction.note!,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(width: AppSpacing.sm),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  category?.name ?? 'Unknown',
-                  style: AppTypography.labelLarge,
+                  CurrencyFormatter.formatWithSign(transaction.amount, transaction.type.name),
+                  style: AppTypography.moneySmall.copyWith(color: color),
                 ),
-                if (transaction.note != null && transaction.note!.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      transaction.note!,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textTertiary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
+                Text(
+                  account?.name ?? 'Unknown',
+                  style: AppTypography.labelSmall,
+                ),
               ],
             ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                CurrencyFormatter.formatWithSign(transaction.amount, transaction.type.name),
-                style: AppTypography.moneySmall.copyWith(color: color),
-              ),
-              Text(
-                account?.name ?? 'Unknown',
-                style: AppTypography.labelSmall,
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

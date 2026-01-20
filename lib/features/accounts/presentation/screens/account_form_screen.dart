@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_animations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
@@ -10,16 +11,64 @@ import '../../../../design_system/components/buttons/fm_primary_button.dart';
 import '../../../../design_system/components/layout/fm_form_header.dart';
 import '../../../../design_system/components/inputs/fm_text_field.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
+import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../data/models/account.dart';
 import '../providers/account_form_provider.dart';
 import '../providers/accounts_provider.dart';
+import '../widgets/delete_account_dialog.dart';
 
-class AccountFormScreen extends ConsumerWidget {
-  const AccountFormScreen({super.key});
+class AccountFormScreen extends ConsumerStatefulWidget {
+  final String? accountId;
+
+  const AccountFormScreen({super.key, this.accountId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AccountFormScreen> createState() => _AccountFormScreenState();
+}
+
+class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
+  bool _initialized = false;
+  late TextEditingController _nameController;
+  late TextEditingController _balanceController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController();
+    _balanceController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _balanceController.dispose();
+    super.dispose();
+  }
+
+  void _initializeForEdit() {
+    if (_initialized || widget.accountId == null) return;
+
+    final account = ref.read(accountByIdProvider(widget.accountId!));
+    if (account != null) {
+      ref.read(accountFormProvider.notifier).initForEdit(account);
+      _nameController.text = account.name;
+      _balanceController.text = account.balance.toString();
+      _initialized = true;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Initialize for edit mode after the first frame
+    if (widget.accountId != null && !_initialized) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _initializeForEdit();
+        if (mounted) setState(() {});
+      });
+    }
+
     final formState = ref.watch(accountFormProvider);
+    final isEditing = formState.isEditing;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -27,8 +76,25 @@ class AccountFormScreen extends ConsumerWidget {
         child: Column(
           children: [
             FMFormHeader(
-              title: 'New Account',
+              title: isEditing ? 'Edit Account' : 'New Account',
               onClose: () => context.pop(),
+              trailing: isEditing
+                  ? GestureDetector(
+                      onTap: () => _showDeleteConfirmation(context),
+                      child: Container(
+                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        decoration: BoxDecoration(
+                          color: AppColors.expense.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          LucideIcons.trash2,
+                          size: 18,
+                          color: AppColors.expense,
+                        ),
+                      ),
+                    )
+                  : null,
             ),
 
             Expanded(
@@ -48,8 +114,10 @@ class AccountFormScreen extends ConsumerWidget {
                     const SizedBox(height: AppSpacing.xxl),
 
                     FMTextField(
+                      key: ValueKey('name_${formState.editingAccountId}'),
                       label: 'Account Name',
                       hint: 'Enter account name...',
+                      controller: _nameController,
                       autofocus: false,
                       onChanged: (value) {
                         ref.read(accountFormProvider.notifier).setName(value);
@@ -57,25 +125,61 @@ class AccountFormScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: AppSpacing.xxl),
 
-                    FMTextField(
-                      label: 'Initial Balance',
-                      hint: '0.00',
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                        signed: true,
-                      ),
-                      prefix: Text(
-                        '\$',
-                        style: AppTypography.input.copyWith(
-                          color: AppColors.textSecondary,
+                    if (!isEditing) ...[
+                      FMTextField(
+                        label: 'Initial Balance',
+                        hint: '0.00',
+                        controller: _balanceController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                          signed: true,
                         ),
+                        prefix: Text(
+                          '\$',
+                          style: AppTypography.input.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        onChanged: (value) {
+                          ref.read(accountFormProvider.notifier).setInitialBalance(
+                                double.tryParse(value) ?? 0,
+                              );
+                        },
                       ),
-                      onChanged: (value) {
-                        ref.read(accountFormProvider.notifier).setInitialBalance(
-                              double.tryParse(value) ?? 0,
-                            );
-                      },
-                    ),
+                    ] else ...[
+                      // When editing, show balance as read-only
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Current Balance', style: AppTypography.labelMedium),
+                          const SizedBox(height: AppSpacing.sm),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceLight,
+                              borderRadius: AppRadius.mdAll,
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: Row(
+                              children: [
+                                Text(
+                                  '\$${formState.initialBalance.toStringAsFixed(2)}',
+                                  style: AppTypography.moneyMedium,
+                                ),
+                                const Spacer(),
+                                Text(
+                                  'Managed by transactions',
+                                  style: AppTypography.labelSmall.copyWith(
+                                    color: AppColors.textTertiary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: AppSpacing.xxxl),
                   ],
                 ),
@@ -89,16 +193,34 @@ class AccountFormScreen extends ConsumerWidget {
                 bottom: MediaQuery.of(context).padding.bottom + AppSpacing.md,
               ),
               child: FMPrimaryButton(
-                label: 'Create Account',
+                label: isEditing ? 'Save Changes' : 'Create Account',
                 onPressed: formState.isValid
-                    ? () {
-                        ref.read(accountsProvider.notifier).addAccount(
+                    ? () async {
+                        if (isEditing) {
+                          // Update existing account
+                          final originalAccount = ref.read(
+                            accountByIdProvider(formState.editingAccountId!),
+                          );
+                          if (originalAccount != null) {
+                            final updatedAccount = originalAccount.copyWith(
                               name: formState.name,
-                              type: formState.type!,
-                              initialBalance: formState.initialBalance,
+                              type: formState.type,
                             );
+                            await ref.read(accountsProvider.notifier)
+                                .updateAccount(updatedAccount);
+                          }
+                        } else {
+                          // Add new account
+                          await ref.read(accountsProvider.notifier).addAccount(
+                                name: formState.name,
+                                type: formState.type!,
+                                initialBalance: formState.initialBalance,
+                              );
+                        }
                         ref.read(accountFormProvider.notifier).reset();
-                        context.pop();
+                        if (context.mounted) {
+                          context.pop();
+                        }
                       }
                     : null,
               ),
@@ -107,6 +229,87 @@ class AccountFormScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _showDeleteConfirmation(BuildContext context) async {
+    final formState = ref.read(accountFormProvider);
+    if (formState.editingAccountId == null) return;
+
+    final account = ref.read(accountByIdProvider(formState.editingAccountId!));
+    if (account == null) return;
+
+    final transactionCount = ref.read(transactionCountByAccountProvider(account.id));
+
+    if (transactionCount > 0) {
+      // Show dialog with options
+      final action = await showDeleteAccountDialog(
+        context: context,
+        account: account,
+        transactionCount: transactionCount,
+      );
+
+      if (action == null || action == DeleteAccountAction.cancel) return;
+
+      if (action == DeleteAccountAction.moveTransactions) {
+        // Show account picker
+        final accountsAsync = ref.read(accountsProvider);
+        final accounts = accountsAsync.valueOrNull ?? [];
+        final availableAccounts = accounts.where((a) => a.id != account.id).toList();
+
+        if (availableAccounts.isEmpty) {
+          // Can't move, show error
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'No other accounts available to move transactions to',
+                  style: AppTypography.bodySmall.copyWith(color: AppColors.textPrimary),
+                ),
+                backgroundColor: AppColors.surface,
+              ),
+            );
+          }
+          return;
+        }
+
+        if (!context.mounted) return;
+
+        final targetAccount = await showMoveTransactionsDialog(
+          context: context,
+          sourceAccount: account,
+          availableAccounts: availableAccounts,
+        );
+
+        if (targetAccount == null) return;
+
+        // Move transactions then delete account
+        await ref.read(transactionsProvider.notifier)
+            .moveTransactionsToAccount(account.id, targetAccount.id);
+        await ref.read(accountsProvider.notifier).deleteAccount(account.id);
+      } else if (action == DeleteAccountAction.deleteWithTransactions) {
+        // Delete all transactions then delete account
+        await ref.read(transactionsProvider.notifier)
+            .deleteTransactionsForAccount(account.id);
+        await ref.read(accountsProvider.notifier).deleteAccount(account.id);
+      }
+    } else {
+      // No transactions, show simple confirmation
+      final confirmed = await showSimpleDeleteAccountDialog(
+        context: context,
+        account: account,
+      );
+
+      if (confirmed == true) {
+        await ref.read(accountsProvider.notifier).deleteAccount(account.id);
+      } else {
+        return;
+      }
+    }
+
+    ref.read(accountFormProvider.notifier).reset();
+    if (context.mounted) {
+      context.pop();
+    }
   }
 }
 

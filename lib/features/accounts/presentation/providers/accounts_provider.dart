@@ -1,25 +1,38 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
-import '../../../../core/providers/crud_notifier.dart';
+import '../../../../core/providers/database_providers.dart';
 import '../../../../data/demo/demo_data.dart';
 import '../../data/models/account.dart';
 
-class AccountsNotifier extends CrudNotifier<Account> {
+class AccountsNotifier extends AsyncNotifier<List<Account>> {
   final _uuid = const Uuid();
 
   @override
-  String getId(Account item) => item.id;
+  Future<List<Account>> build() async {
+    final repo = ref.watch(accountRepositoryProvider);
 
-  @override
-  List<Account> build() {
-    return List.from(DemoData.accounts);
+    // Check if we have any accounts in the database
+    final hasData = await repo.hasAccounts();
+
+    if (!hasData) {
+      // Seed demo data on first run
+      for (final account in DemoData.accounts) {
+        await repo.createAccount(account);
+      }
+      return List.from(DemoData.accounts);
+    }
+
+    // Load existing accounts from database
+    return repo.getAllAccounts();
   }
 
-  void addAccount({
+  Future<void> addAccount({
     required String name,
     required AccountType type,
     required double initialBalance,
-  }) {
+  }) async {
+    final repo = ref.read(accountRepositoryProvider);
+
     final account = Account(
       id: _uuid.v4(),
       name: name,
@@ -27,34 +40,82 @@ class AccountsNotifier extends CrudNotifier<Account> {
       balance: initialBalance,
       createdAt: DateTime.now(),
     );
-    add(account);
+
+    // Save to encrypted database
+    await repo.createAccount(account);
+
+    // Update local state
+    state = state.whenData((accounts) => [account, ...accounts]);
   }
 
-  void updateAccount(Account account) => update(account);
+  Future<void> updateAccount(Account account) async {
+    final repo = ref.read(accountRepositoryProvider);
 
-  void deleteAccount(String id) => delete(id);
+    // Update in encrypted database
+    await repo.updateAccount(account);
 
-  void updateBalance(String accountId, double amount) {
-    state = state.map((a) {
-      if (a.id == accountId) {
-        return a.copyWith(balance: a.balance + amount);
-      }
-      return a;
-    }).toList();
+    // Update local state
+    state = state.whenData(
+      (accounts) =>
+          accounts.map((a) => a.id == account.id ? account : a).toList(),
+    );
+  }
+
+  Future<void> deleteAccount(String id) async {
+    final repo = ref.read(accountRepositoryProvider);
+
+    // Soft delete in database
+    await repo.deleteAccount(id);
+
+    // Update local state
+    state = state.whenData(
+      (accounts) => accounts.where((a) => a.id != id).toList(),
+    );
+  }
+
+  Future<void> updateBalance(String accountId, double amount) async {
+    final currentState = state.valueOrNull;
+    if (currentState == null) return;
+
+    final accountIndex = currentState.indexWhere((a) => a.id == accountId);
+    if (accountIndex == -1) return;
+
+    final account = currentState[accountIndex];
+    final updatedAccount = account.copyWith(balance: account.balance + amount);
+
+    // Update in database
+    final repo = ref.read(accountRepositoryProvider);
+    await repo.updateAccount(updatedAccount);
+
+    // Update local state
+    state = state.whenData(
+      (accounts) =>
+          accounts.map((a) => a.id == accountId ? updatedAccount : a).toList(),
+    );
+  }
+
+  /// Refresh accounts from database
+  Future<void> refresh() async {
+    final repo = ref.read(accountRepositoryProvider);
+    state = AsyncData(await repo.getAllAccounts());
   }
 }
 
-final accountsProvider = NotifierProvider<AccountsNotifier, List<Account>>(() {
+final accountsProvider =
+    AsyncNotifierProvider<AccountsNotifier, List<Account>>(() {
   return AccountsNotifier();
 });
 
 final totalBalanceProvider = Provider<double>((ref) {
-  final accounts = ref.watch(accountsProvider);
+  final accountsAsync = ref.watch(accountsProvider);
+  final accounts = accountsAsync.valueOrNull;
+  if (accounts == null) return 0.0;
   return accounts.fold(0.0, (sum, account) => sum + account.balance);
 });
 
 final accountsByTypeProvider = Provider<Map<AccountType, List<Account>>>((ref) {
-  final accounts = ref.watch(accountsProvider);
+  final accountsAsync = ref.watch(accountsProvider);
+  final accounts = accountsAsync.valueOrNull ?? [];
   final Map<AccountType, List<Account>> grouped = {};
 
   for (final account in accounts) {
@@ -65,7 +126,9 @@ final accountsByTypeProvider = Provider<Map<AccountType, List<Account>>>((ref) {
 });
 
 final accountByIdProvider = Provider.family<Account?, String>((ref, id) {
-  final accounts = ref.watch(accountsProvider);
+  final accountsAsync = ref.watch(accountsProvider);
+  final accounts = accountsAsync.valueOrNull;
+  if (accounts == null) return null;
   try {
     return accounts.firstWhere((a) => a.id == id);
   } catch (_) {

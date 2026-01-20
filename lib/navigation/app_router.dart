@@ -28,7 +28,9 @@ class AppRoutes {
   static const comingSoonSettings = '/settings/coming-soon';
   static const aboutSettings = '/settings/about';
   static const transactionForm = '/transaction/new';
+  static const transactionEdit = '/transaction/:id';
   static const accountForm = '/account/new';
+  static const accountEdit = '/account/:id';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -79,12 +81,34 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
+        path: AppRoutes.transactionEdit,
+        pageBuilder: (context, state) {
+          final transactionId = state.pathParameters['id']!;
+          return PageTransitions.buildSlideLeftTransition(
+            state,
+            TransactionFormScreen(transactionId: transactionId),
+            animationsEnabled: ref.read(settingsProvider).formAnimationsEnabled,
+          );
+        },
+      ),
+      GoRoute(
         path: AppRoutes.accountForm,
         pageBuilder: (context, state) => PageTransitions.buildSlideUpTransition(
           state,
           const AccountFormScreen(),
           animationsEnabled: ref.read(settingsProvider).formAnimationsEnabled,
         ),
+      ),
+      GoRoute(
+        path: AppRoutes.accountEdit,
+        pageBuilder: (context, state) {
+          final accountId = state.pathParameters['id']!;
+          return PageTransitions.buildSlideUpTransition(
+            state,
+            AccountFormScreen(accountId: accountId),
+            animationsEnabled: ref.read(settingsProvider).formAnimationsEnabled,
+          );
+        },
       ),
       GoRoute(
         path: AppRoutes.categoryManagement,

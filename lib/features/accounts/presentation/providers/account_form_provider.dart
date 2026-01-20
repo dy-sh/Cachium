@@ -5,24 +5,30 @@ class AccountFormState {
   final AccountType? type;
   final String name;
   final double initialBalance;
+  final String? editingAccountId;
 
   const AccountFormState({
     this.type,
     this.name = '',
     this.initialBalance = 0,
+    this.editingAccountId,
   });
 
   bool get isValid => type != null && name.isNotEmpty;
+
+  bool get isEditing => editingAccountId != null;
 
   AccountFormState copyWith({
     AccountType? type,
     String? name,
     double? initialBalance,
+    String? editingAccountId,
   }) {
     return AccountFormState(
       type: type ?? this.type,
       name: name ?? this.name,
       initialBalance: initialBalance ?? this.initialBalance,
+      editingAccountId: editingAccountId ?? this.editingAccountId,
     );
   }
 }
@@ -54,6 +60,7 @@ class AccountFormNotifier extends Notifier<AccountFormState> {
       type: account.type,
       name: account.name,
       initialBalance: account.balance,
+      editingAccountId: account.id,
     );
   }
 }

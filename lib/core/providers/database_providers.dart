@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/repositories/account_repository.dart';
 import '../../data/repositories/transaction_repository.dart';
 import '../database/app_database.dart';
 import '../database/services/encryption_service.dart';
@@ -35,6 +36,16 @@ final databaseProvider = Provider<AppDatabase>((ref) {
 /// Combines database operations with encryption/decryption.
 final transactionRepositoryProvider = Provider<TransactionRepository>((ref) {
   return TransactionRepository(
+    database: ref.watch(databaseProvider),
+    encryptionService: ref.watch(encryptionServiceProvider),
+  );
+});
+
+/// Provider for the account repository.
+///
+/// Combines database operations with encryption/decryption.
+final accountRepositoryProvider = Provider<AccountRepository>((ref) {
+  return AccountRepository(
     database: ref.watch(databaseProvider),
     encryptionService: ref.watch(encryptionServiceProvider),
   );

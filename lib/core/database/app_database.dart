@@ -27,17 +27,54 @@ class Transactions extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Table for storing encrypted accounts.
+///
+/// Only `id`, `createdAt`, `lastUpdatedAt`, and `isDeleted` are stored in plaintext
+/// for querying and sorting. All other account data is encrypted in `encryptedBlob`.
+class Accounts extends Table {
+  /// UUID primary key (plaintext for lookups)
+  TextColumn get id => text()();
+
+  /// Account creation date in Unix milliseconds (plaintext for sorting)
+  IntColumn get createdAt => integer()();
+
+  /// Last updated timestamp for LWW (Last-Write-Wins) sync resolution
+  IntColumn get lastUpdatedAt => integer()();
+
+  /// Soft delete flag - allows sync to propagate deletions
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+
+  /// AES-GCM encrypted JSON blob containing all account data
+  BlobColumn get encryptedBlob => blob()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// The main application database.
 ///
 /// Uses Drift with SQLite for local persistence. In Stage 1, the database
 /// is stored unencrypted on disk, but all sensitive transaction data is
 /// encrypted at the application layer before being stored.
-@DriftDatabase(tables: [Transactions])
+@DriftDatabase(tables: [Transactions, Accounts])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (Migrator m) async {
+          await m.createAll();
+        },
+        onUpgrade: (Migrator m, int from, int to) async {
+          if (from < 2) {
+            // Add accounts table in version 2
+            await m.createTable(accounts);
+          }
+        },
+      );
 
   static QueryExecutor _openConnection() {
     return driftDatabase(name: 'cachium_db');
@@ -117,6 +154,82 @@ class AppDatabase extends _$AppDatabase {
     final count = await (selectOnly(transactions)
           ..addColumns([transactions.id.count()]))
         .map((row) => row.read(transactions.id.count()))
+        .getSingle();
+    return (count ?? 0) > 0;
+  }
+
+  // CRUD operations for accounts
+
+  /// Insert a new account row
+  Future<void> insertAccount({
+    required String id,
+    required int createdAt,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+  }) async {
+    await into(accounts).insert(
+      AccountsCompanion.insert(
+        id: id,
+        createdAt: createdAt,
+        lastUpdatedAt: lastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+      ),
+    );
+  }
+
+  /// Update an existing account row
+  Future<void> updateAccount({
+    required String id,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+  }) async {
+    await (update(accounts)..where((a) => a.id.equals(id))).write(
+      AccountsCompanion(
+        lastUpdatedAt: Value(lastUpdatedAt),
+        encryptedBlob: Value(encryptedBlob),
+      ),
+    );
+  }
+
+  /// Soft delete an account (set isDeleted = true)
+  Future<void> softDeleteAccount(String id, int lastUpdatedAt) async {
+    await (update(accounts)..where((a) => a.id.equals(id))).write(
+      AccountsCompanion(
+        isDeleted: const Value(true),
+        lastUpdatedAt: Value(lastUpdatedAt),
+      ),
+    );
+  }
+
+  /// Get a single account by ID (only if not deleted)
+  Future<Account?> getAccount(String id) async {
+    return (select(accounts)
+          ..where((a) => a.id.equals(id))
+          ..where((a) => a.isDeleted.equals(false)))
+        .getSingleOrNull();
+  }
+
+  /// Get all non-deleted accounts ordered by createdAt descending
+  Future<List<Account>> getAllAccounts() async {
+    return (select(accounts)
+          ..where((a) => a.isDeleted.equals(false))
+          ..orderBy([(a) => OrderingTerm.desc(a.createdAt)]))
+        .get();
+  }
+
+  /// Watch all non-deleted accounts (for reactive UI)
+  Stream<List<Account>> watchAllAccounts() {
+    return (select(accounts)
+          ..where((a) => a.isDeleted.equals(false))
+          ..orderBy([(a) => OrderingTerm.desc(a.createdAt)]))
+        .watch();
+  }
+
+  /// Check if any accounts exist (for seeding demo data)
+  Future<bool> hasAccounts() async {
+    final count = await (selectOnly(accounts)
+          ..addColumns([accounts.id.count()]))
+        .map((row) => row.read(accounts.id.count()))
         .getSingle();
     return (count ?? 0) > 0;
   }

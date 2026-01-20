@@ -62,6 +62,31 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
   Future<void> updateTransaction(Transaction transaction) async {
     final repo = ref.read(transactionRepositoryProvider);
 
+    // Get original transaction to calculate balance difference
+    final currentState = state.valueOrNull;
+    if (currentState == null) return;
+
+    final originalTransaction = currentState.firstWhere((t) => t.id == transaction.id);
+
+    // Calculate balance adjustments
+    // First, reverse the original transaction's effect
+    final originalBalanceChange = originalTransaction.type == TransactionType.income
+        ? -originalTransaction.amount
+        : originalTransaction.amount;
+    ref.read(accountsProvider.notifier).updateBalance(
+          originalTransaction.accountId,
+          originalBalanceChange,
+        );
+
+    // Then, apply the new transaction's effect
+    final newBalanceChange = transaction.type == TransactionType.income
+        ? transaction.amount
+        : -transaction.amount;
+    ref.read(accountsProvider.notifier).updateBalance(
+          transaction.accountId,
+          newBalanceChange,
+        );
+
     // Update in encrypted database
     await repo.updateTransaction(transaction);
 
@@ -102,6 +127,48 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
   Future<void> refresh() async {
     final repo = ref.read(transactionRepositoryProvider);
     state = AsyncData(await repo.getAllTransactions());
+  }
+
+  /// Move all transactions from one account to another
+  Future<void> moveTransactionsToAccount(String fromAccountId, String toAccountId) async {
+    final repo = ref.read(transactionRepositoryProvider);
+    final currentState = state.valueOrNull;
+    if (currentState == null) return;
+
+    final transactionsToMove = currentState.where((t) => t.accountId == fromAccountId).toList();
+
+    for (final tx in transactionsToMove) {
+      final updatedTx = tx.copyWith(accountId: toAccountId);
+      await repo.updateTransaction(updatedTx);
+    }
+
+    // Update local state
+    state = state.whenData(
+      (transactions) => transactions.map((t) {
+        if (t.accountId == fromAccountId) {
+          return t.copyWith(accountId: toAccountId);
+        }
+        return t;
+      }).toList(),
+    );
+  }
+
+  /// Delete all transactions for a specific account
+  Future<void> deleteTransactionsForAccount(String accountId) async {
+    final repo = ref.read(transactionRepositoryProvider);
+    final currentState = state.valueOrNull;
+    if (currentState == null) return;
+
+    final transactionsToDelete = currentState.where((t) => t.accountId == accountId).toList();
+
+    for (final tx in transactionsToDelete) {
+      await repo.deleteTransaction(tx.id);
+    }
+
+    // Update local state
+    state = state.whenData(
+      (transactions) => transactions.where((t) => t.accountId != accountId).toList(),
+    );
   }
 }
 
@@ -166,6 +233,26 @@ final recentTransactionsProvider = Provider<AsyncValue<List<Transaction>>>((ref)
 });
 
 final transactionSearchQueryProvider = StateProvider<String>((ref) => '');
+
+final transactionByIdProvider = Provider.family<Transaction?, String>((ref, id) {
+  final transactions = ref.watch(transactionsProvider).valueOrNull;
+  if (transactions == null) return null;
+  try {
+    return transactions.firstWhere((t) => t.id == id);
+  } catch (_) {
+    return null;
+  }
+});
+
+final transactionsByAccountProvider = Provider.family<List<Transaction>, String>((ref, accountId) {
+  final transactions = ref.watch(transactionsProvider).valueOrNull;
+  if (transactions == null) return [];
+  return transactions.where((t) => t.accountId == accountId).toList();
+});
+
+final transactionCountByAccountProvider = Provider.family<int, String>((ref, accountId) {
+  return ref.watch(transactionsByAccountProvider(accountId)).length;
+});
 
 final searchedTransactionsProvider = Provider<AsyncValue<List<TransactionGroup>>>((ref) {
   final groupsAsync = ref.watch(groupedTransactionsProvider);

@@ -9,6 +9,7 @@ class TransactionFormState {
   final String? accountId;
   final DateTime date;
   final String? note;
+  final String? editingTransactionId;
 
   const TransactionFormState({
     this.type = TransactionType.expense,
@@ -17,10 +18,13 @@ class TransactionFormState {
     this.accountId,
     required this.date,
     this.note,
+    this.editingTransactionId,
   });
 
   bool get isValid =>
       amount > 0 && categoryId != null && accountId != null;
+
+  bool get isEditing => editingTransactionId != null;
 
   TransactionFormState copyWith({
     TransactionType? type,
@@ -29,6 +33,7 @@ class TransactionFormState {
     String? accountId,
     DateTime? date,
     String? note,
+    String? editingTransactionId,
   }) {
     return TransactionFormState(
       type: type ?? this.type,
@@ -37,6 +42,7 @@ class TransactionFormState {
       accountId: accountId ?? this.accountId,
       date: date ?? this.date,
       note: note ?? this.note,
+      editingTransactionId: editingTransactionId ?? this.editingTransactionId,
     );
   }
 }
@@ -88,6 +94,7 @@ class TransactionFormNotifier extends Notifier<TransactionFormState> {
       accountId: transaction.accountId,
       date: transaction.date,
       note: transaction.note,
+      editingTransactionId: transaction.id,
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -15,19 +16,43 @@ class AccountPreviewList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final accounts = ref.watch(accountsProvider);
+    final accountsAsync = ref.watch(accountsProvider);
     final intensity = ref.watch(colorIntensityProvider);
 
-    return SizedBox(
-      height: 72,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-        itemCount: accounts.length,
-        separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.sm),
-        itemBuilder: (context, index) {
-          return _AccountPreviewCard(account: accounts[index], intensity: intensity);
-        },
+    return accountsAsync.when(
+      loading: () => SizedBox(
+        height: 72,
+        child: Center(
+          child: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppColors.textTertiary,
+            ),
+          ),
+        ),
+      ),
+      error: (error, stack) => SizedBox(
+        height: 72,
+        child: Center(
+          child: Text(
+            'Error loading accounts',
+            style: AppTypography.bodySmall.copyWith(color: AppColors.textTertiary),
+          ),
+        ),
+      ),
+      data: (accounts) => SizedBox(
+        height: 72,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+          itemCount: accounts.length,
+          separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.sm),
+          itemBuilder: (context, index) {
+            return _AccountPreviewCard(account: accounts[index], intensity: intensity);
+          },
+        ),
       ),
     );
   }
@@ -57,7 +82,9 @@ class _AccountPreviewCard extends ConsumerWidget {
     final shadowBlur = cardStyle == AccountCardStyle.bright ? 12.0 : 8.0;
     final shadowOffset = cardStyle == AccountCardStyle.bright ? 4.0 : 2.0;
 
-    return Container(
+    return GestureDetector(
+      onTap: () => context.push('/account/${account.id}'),
+      child: Container(
       width: 180,
       clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
@@ -158,6 +185,7 @@ class _AccountPreviewCard extends ConsumerWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

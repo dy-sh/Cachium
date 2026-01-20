@@ -7,7 +7,7 @@ import '../../../data/models/transaction_data.dart';
 import '../exceptions/security_exception.dart';
 import 'key_provider.dart';
 
-/// Service for encrypting and decrypting transaction data using AES-256-GCM.
+/// Service for encrypting and decrypting data using AES-256-GCM.
 ///
 /// The encrypted blob format is: [12-byte nonce][ciphertext][16-byte MAC]
 /// This format allows the nonce to be prepended and MAC appended automatically
@@ -18,15 +18,15 @@ class EncryptionService {
 
   EncryptionService(this._keyProvider) : _algorithm = AesGcm.with256bits();
 
-  /// Encrypts transaction data into a binary blob.
+  /// Encrypts any JSON-encodable data into a binary blob.
   ///
   /// Returns a Uint8List containing: nonce (12 bytes) + ciphertext + MAC (16 bytes)
-  Future<Uint8List> encrypt(TransactionData data) async {
+  Future<Uint8List> encryptJson(Map<String, dynamic> json) async {
     final key = await _keyProvider.getKey();
     final secretKey = SecretKey(key);
 
     // Serialize to JSON then to bytes
-    final jsonString = jsonEncode(data.toJson());
+    final jsonString = jsonEncode(json);
     final plaintext = utf8.encode(jsonString);
 
     // Encrypt with AES-GCM (automatically generates nonce)
@@ -55,19 +55,10 @@ class EncryptionService {
     return result;
   }
 
-  /// Decrypts an encrypted blob back to transaction data.
+  /// Decrypts an encrypted blob back to JSON.
   ///
-  /// Performs integrity verification to ensure the decrypted data matches
-  /// the expected row metadata (id and dateMillis). This prevents blob-swapping
-  /// attacks where an attacker might swap encrypted blobs between rows.
-  ///
-  /// Throws [SecurityException] if integrity check fails.
   /// Throws [SecretBoxAuthenticationError] if decryption fails (wrong key or tampered data).
-  Future<TransactionData> decrypt(
-    Uint8List encryptedBlob, {
-    required String expectedId,
-    required int expectedDateMillis,
-  }) async {
+  Future<Map<String, dynamic>> decryptJson(Uint8List encryptedBlob) async {
     final key = await _keyProvider.getKey();
     final secretKey = SecretKey(key);
 
@@ -102,7 +93,30 @@ class EncryptionService {
 
     // Parse JSON
     final jsonString = utf8.decode(plaintext);
-    final json = jsonDecode(jsonString) as Map<String, dynamic>;
+    return jsonDecode(jsonString) as Map<String, dynamic>;
+  }
+
+  /// Encrypts transaction data into a binary blob.
+  ///
+  /// Returns a Uint8List containing: nonce (12 bytes) + ciphertext + MAC (16 bytes)
+  Future<Uint8List> encrypt(TransactionData data) async {
+    return encryptJson(data.toJson());
+  }
+
+  /// Decrypts an encrypted blob back to transaction data.
+  ///
+  /// Performs integrity verification to ensure the decrypted data matches
+  /// the expected row metadata (id and dateMillis). This prevents blob-swapping
+  /// attacks where an attacker might swap encrypted blobs between rows.
+  ///
+  /// Throws [SecurityException] if integrity check fails.
+  /// Throws [SecretBoxAuthenticationError] if decryption fails (wrong key or tampered data).
+  Future<TransactionData> decrypt(
+    Uint8List encryptedBlob, {
+    required String expectedId,
+    required int expectedDateMillis,
+  }) async {
+    final json = await decryptJson(encryptedBlob);
     final data = TransactionData.fromJson(json);
 
     // Integrity check: verify decrypted data matches row metadata

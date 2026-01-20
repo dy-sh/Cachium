@@ -41,6 +41,18 @@ class _FMAmountInputState extends ConsumerState<FMAmountInput> {
   }
 
   @override
+  void didUpdateWidget(FMAmountInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Update controller when initialValue changes (for edit mode)
+    if (widget.initialValue != oldWidget.initialValue && widget.initialValue != null) {
+      final newText = widget.initialValue.toString();
+      if (_controller.text != newText) {
+        _controller.text = newText;
+      }
+    }
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     _focusNode.dispose();
