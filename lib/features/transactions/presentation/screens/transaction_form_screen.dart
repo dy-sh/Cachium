@@ -39,13 +39,6 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   void initState() {
     super.initState();
     _noteController = TextEditingController();
-
-    // Reset form when creating new transaction
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.transactionId == null) {
-        ref.read(transactionFormProvider.notifier).reset();
-      }
-    });
   }
 
   @override

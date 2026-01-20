@@ -8,6 +8,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../providers/database_providers.dart';
 import '../providers/settings_provider.dart';
+import '../widgets/database_consistency_card.dart';
 import '../widgets/database_metrics_card.dart';
 import '../widgets/delete_database_dialog.dart';
 import '../widgets/recalculate_preview_dialog.dart';
@@ -74,6 +75,8 @@ class DatabaseSettingsScreen extends ConsumerWidget {
                     _buildSectionLabel('METRICS'),
                     const SizedBox(height: AppSpacing.sm),
                     const DatabaseMetricsCard(),
+                    const SizedBox(height: AppSpacing.md),
+                    const DatabaseConsistencyCard(),
                     const SizedBox(height: AppSpacing.xxl),
 
                     // Data Section

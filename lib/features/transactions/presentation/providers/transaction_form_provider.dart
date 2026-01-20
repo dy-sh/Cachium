@@ -47,7 +47,7 @@ class TransactionFormState {
   }
 }
 
-class TransactionFormNotifier extends Notifier<TransactionFormState> {
+class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> {
   @override
   TransactionFormState build() {
     final lastUsedAccountId = ref.read(lastUsedAccountIdProvider);
@@ -83,7 +83,11 @@ class TransactionFormNotifier extends Notifier<TransactionFormState> {
   }
 
   void reset() {
-    state = TransactionFormState(date: DateTime.now());
+    final lastUsedAccountId = ref.read(lastUsedAccountIdProvider);
+    state = TransactionFormState(
+      date: DateTime.now(),
+      accountId: lastUsedAccountId,
+    );
   }
 
   void initForEdit(Transaction transaction) {
@@ -100,6 +104,6 @@ class TransactionFormNotifier extends Notifier<TransactionFormState> {
 }
 
 final transactionFormProvider =
-    NotifierProvider<TransactionFormNotifier, TransactionFormState>(() {
+    AutoDisposeNotifierProvider<TransactionFormNotifier, TransactionFormState>(() {
   return TransactionFormNotifier();
 });

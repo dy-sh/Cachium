@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/database/services/database_consistency_service.dart';
 import '../../../../core/database/services/database_export_service.dart';
 import '../../../../core/database/services/database_import_service.dart';
 import '../../../../core/database/services/database_metrics_service.dart';
@@ -8,6 +9,7 @@ import '../../../../data/demo/demo_data.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
+import '../../data/models/database_consistency.dart';
 import '../../data/models/database_metrics.dart';
 import '../../data/models/export_options.dart';
 import 'settings_provider.dart';
@@ -40,6 +42,24 @@ final databaseImportServiceProvider = Provider<DatabaseImportService>((ref) {
 final databaseMetricsProvider = FutureProvider<DatabaseMetrics>((ref) async {
   final service = ref.watch(databaseMetricsServiceProvider);
   return service.getMetrics();
+});
+
+/// Provider for the database consistency service.
+final databaseConsistencyServiceProvider =
+    Provider<DatabaseConsistencyService>((ref) {
+  return DatabaseConsistencyService(
+    transactionRepository: ref.watch(transactionRepositoryProvider),
+    accountRepository: ref.watch(accountRepositoryProvider),
+    categoryRepository: ref.watch(categoryRepositoryProvider),
+  );
+});
+
+/// Provider for database consistency checks.
+/// This is a future provider that performs consistency checks on the database.
+final databaseConsistencyProvider =
+    FutureProvider<DatabaseConsistency>((ref) async {
+  final service = ref.watch(databaseConsistencyServiceProvider);
+  return service.checkConsistency();
 });
 
 /// Provider for export options state.
@@ -115,8 +135,9 @@ class ImportStateNotifier extends Notifier<AsyncValue<ImportResult?>> {
       final service = ref.read(databaseImportServiceProvider);
       final result = await service.pickAndImportSqlite();
       state = AsyncValue.data(result);
-      // Refresh metrics after import
+      // Refresh metrics and consistency after import
       ref.invalidate(databaseMetricsProvider);
+      ref.invalidate(databaseConsistencyProvider);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -128,8 +149,9 @@ class ImportStateNotifier extends Notifier<AsyncValue<ImportResult?>> {
       final service = ref.read(databaseImportServiceProvider);
       final result = await service.pickAndImportCsv();
       state = AsyncValue.data(result);
-      // Refresh metrics after import
+      // Refresh metrics and consistency after import
       ref.invalidate(databaseMetricsProvider);
+      ref.invalidate(databaseConsistencyProvider);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -169,6 +191,7 @@ class DatabaseManagementNotifier extends Notifier<AsyncValue<void>> {
       ref.invalidate(transactionsProvider);
       ref.invalidate(categoriesProvider);
       ref.invalidate(databaseMetricsProvider);
+      ref.invalidate(databaseConsistencyProvider);
 
       state = const AsyncValue.data(null);
       return true;
@@ -207,6 +230,7 @@ class DatabaseManagementNotifier extends Notifier<AsyncValue<void>> {
       ref.invalidate(transactionsProvider);
       ref.invalidate(categoriesProvider);
       ref.invalidate(databaseMetricsProvider);
+      ref.invalidate(databaseConsistencyProvider);
 
       state = const AsyncValue.data(null);
       return true;
@@ -338,6 +362,7 @@ class RecalculateBalancesNotifier extends Notifier<AsyncValue<RecalculatePreview
       // Refresh accounts provider
       ref.invalidate(accountsProvider);
       ref.invalidate(databaseMetricsProvider);
+      ref.invalidate(databaseConsistencyProvider);
 
       state = const AsyncValue.data(null);
       return updatedCount;
