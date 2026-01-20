@@ -173,33 +173,6 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                         },
                       ),
                     ] else ...[
-                      // When editing, show current balance as info note
-                      Row(
-                        children: [
-                          Icon(
-                            LucideIcons.wallet,
-                            size: 18,
-                            color: AppColors.textTertiary,
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Text(
-                            'Current balance:',
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: AppColors.textTertiary,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Text(
-                            '\$${formState.currentBalance.toStringAsFixed(2)}',
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: AppColors.textSecondary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-
                       // Initial balance (editable in edit mode)
                       FMTextField(
                         key: ValueKey('initial_balance_${formState.editingAccountId}'),
@@ -223,6 +196,33 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                         },
                       ),
                       const SizedBox(height: AppSpacing.sm),
+
+                      // Current balance info note
+                      Row(
+                        children: [
+                          Icon(
+                            LucideIcons.wallet,
+                            size: 18,
+                            color: AppColors.textSecondary,
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            'Current balance:',
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            '\$${formState.currentBalance.toStringAsFixed(2)}',
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.md),
 
                       // Hint about recalculation
                       Container(
@@ -480,8 +480,8 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
       final updatedAccount = account.copyWith(balance: expectedBalance);
       await ref.read(accountsProvider.notifier).updateAccount(updatedAccount);
 
-      // Update the form state to reflect the new balance
-      ref.read(accountFormProvider.notifier).setCurrentBalance(expectedBalance);
+      // Update the form state to reflect the new transaction delta
+      ref.read(accountFormProvider.notifier).setTransactionDelta(transactionDelta);
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

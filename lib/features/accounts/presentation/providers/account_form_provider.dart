@@ -6,7 +6,7 @@ class AccountFormState {
   final AccountType? type;
   final String name;
   final double initialBalance;
-  final double currentBalance;
+  final double transactionDelta; // sum of all transactions for this account
   final String? editingAccountId;
   final int? customColorIndex; // null means use default type color
   final Color? originalCustomColor; // stored color from account being edited
@@ -15,11 +15,14 @@ class AccountFormState {
     this.type,
     this.name = '',
     this.initialBalance = 0,
-    this.currentBalance = 0,
+    this.transactionDelta = 0,
     this.editingAccountId,
     this.customColorIndex,
     this.originalCustomColor,
   });
+
+  // Current balance is computed from initial balance + transactions
+  double get currentBalance => initialBalance + transactionDelta;
 
   bool get isValid => type != null && name.isNotEmpty;
 
@@ -31,20 +34,21 @@ class AccountFormState {
     AccountType? type,
     String? name,
     double? initialBalance,
-    double? currentBalance,
+    double? transactionDelta,
     String? editingAccountId,
     int? customColorIndex,
     bool clearCustomColor = false,
     Color? originalCustomColor,
+    bool clearOriginalCustomColor = false,
   }) {
     return AccountFormState(
       type: type ?? this.type,
       name: name ?? this.name,
       initialBalance: initialBalance ?? this.initialBalance,
-      currentBalance: currentBalance ?? this.currentBalance,
+      transactionDelta: transactionDelta ?? this.transactionDelta,
       editingAccountId: editingAccountId ?? this.editingAccountId,
       customColorIndex: clearCustomColor ? null : (customColorIndex ?? this.customColorIndex),
-      originalCustomColor: originalCustomColor ?? this.originalCustomColor,
+      originalCustomColor: clearOriginalCustomColor ? null : (originalCustomColor ?? this.originalCustomColor),
     );
   }
 }
@@ -73,18 +77,20 @@ class AccountFormNotifier extends Notifier<AccountFormState> {
   }
 
   void initForEdit(Account account) {
+    // Transaction delta = current balance - initial balance
+    final transactionDelta = account.balance - account.initialBalance;
     state = AccountFormState(
       type: account.type,
       name: account.name,
       initialBalance: account.initialBalance,
-      currentBalance: account.balance,
+      transactionDelta: transactionDelta,
       editingAccountId: account.id,
       originalCustomColor: account.customColor,
     );
   }
 
-  void setCurrentBalance(double balance) {
-    state = state.copyWith(currentBalance: balance);
+  void setTransactionDelta(double delta) {
+    state = state.copyWith(transactionDelta: delta);
   }
 
   void setCustomColorIndex(int? index) {
