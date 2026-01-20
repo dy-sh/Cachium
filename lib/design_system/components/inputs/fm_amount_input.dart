@@ -44,7 +44,10 @@ class _FMAmountInputState extends ConsumerState<FMAmountInput> {
   void didUpdateWidget(FMAmountInput oldWidget) {
     super.didUpdateWidget(oldWidget);
     // Update controller when initialValue changes (for edit mode)
-    if (widget.initialValue != oldWidget.initialValue && widget.initialValue != null) {
+    // Skip if focused - user is actively typing
+    if (!_focusNode.hasFocus &&
+        widget.initialValue != oldWidget.initialValue &&
+        widget.initialValue != null) {
       final newText = widget.initialValue.toString();
       if (_controller.text != newText) {
         _controller.text = newText;
@@ -108,7 +111,7 @@ class _FMAmountInputState extends ConsumerState<FMAmountInput> {
               autofocus: widget.autofocus,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                _AmountInputFormatter(),
               ],
               onChanged: (value) {
                 final amount = double.tryParse(value) ?? 0;
@@ -130,5 +133,28 @@ class _FMAmountInputState extends ConsumerState<FMAmountInput> {
         ],
       ),
     );
+  }
+}
+
+class _AmountInputFormatter extends TextInputFormatter {
+  final RegExp _validPattern = RegExp(r'^\d*\.?\d{0,2}$');
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    // Allow empty string
+    if (newValue.text.isEmpty) {
+      return newValue;
+    }
+
+    // If the new value matches the pattern, accept it and preserve cursor position
+    if (_validPattern.hasMatch(newValue.text)) {
+      return newValue;
+    }
+
+    // Otherwise, reject the change and keep the old value
+    return oldValue;
   }
 }

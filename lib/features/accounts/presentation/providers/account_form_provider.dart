@@ -61,7 +61,7 @@ class AccountFormNotifier extends Notifier<AccountFormState> {
 
   void setType(AccountType type) {
     // Clear custom color when changing type (reset to type's default color)
-    state = state.copyWith(type: type, clearCustomColor: true);
+    state = state.copyWith(type: type, clearCustomColor: true, clearOriginalCustomColor: true);
   }
 
   void setName(String name) {
