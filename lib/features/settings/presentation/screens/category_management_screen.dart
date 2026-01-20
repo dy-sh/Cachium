@@ -18,6 +18,8 @@ import '../widgets/category_form_modal.dart';
 import '../widgets/category_tree_tile.dart';
 import '../widgets/category_drop_zone.dart';
 import '../widgets/delete_category_dialog.dart';
+import '../widgets/category_transactions_reassign_dialog.dart';
+import '../../../transactions/presentation/providers/transactions_provider.dart';
 
 class CategoryManagementScreen extends ConsumerStatefulWidget {
   const CategoryManagementScreen({super.key});
@@ -729,15 +731,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
           },
           onDelete: () async {
             Navigator.pop(context);
-            final hasChildren = ref.read(hasChildrenProvider(category.id));
-
-            if (hasChildren) {
-              // Show dialog to choose what to do with children
-              await _handleDelete(category);
-            } else {
-              // Confirmation was already shown in the form modal
-              ref.read(categoriesProvider.notifier).deleteCategory(category.id);
-            }
+            await _handleDelete(category);
           },
           onAddChild: () {
             Navigator.pop(context);
@@ -787,7 +781,10 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
 
   Future<void> _handleDelete(Category category) async {
     final hasChildren = ref.read(hasChildrenProvider(category.id));
+    List<String> categoryIdsToDelete = [category.id];
+    bool promoteChildren = false;
 
+    // Step 1: If category has children, ask what to do with them
     if (hasChildren) {
       final childCount = ref.read(childCategoriesProvider(category.id)).length;
       final action = await showDeleteCategoryDialog(
@@ -801,19 +798,71 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
       }
 
       if (action == DeleteCategoryAction.promoteChildren) {
-        ref.read(categoriesProvider.notifier).deleteCategoryPromotingChildren(category.id);
+        promoteChildren = true;
+        categoryIdsToDelete = [category.id];
       } else if (action == DeleteCategoryAction.deleteAll) {
-        ref.read(categoriesProvider.notifier).deleteWithChildren(category.id);
+        final categories = ref.read(categoriesProvider).valueOrNull ?? [];
+        final descendantIds = CategoryTreeBuilder.getDescendantIds(categories, category.id);
+        categoryIdsToDelete = [category.id, ...descendantIds];
       }
-    } else {
-      final confirmed = await showSimpleDeleteConfirmationDialog(
+    }
+
+    // Step 2: Find categories with transactions
+    final categoriesWithTransactions = <Category>[];
+    for (final id in categoryIdsToDelete) {
+      final txCount = ref.read(transactionCountByCategoryProvider(id));
+      if (txCount > 0) {
+        final cat = ref.read(categoryByIdProvider(id));
+        if (cat != null) {
+          categoriesWithTransactions.add(cat);
+        }
+      }
+    }
+
+    // Step 3: If any have transactions, show reassign screen
+    List<CategoryTransactionDecision>? decisions;
+    if (categoriesWithTransactions.isNotEmpty) {
+      if (!mounted) return;
+      decisions = await showCategoryTransactionsReassignDialog(
         context: context,
-        category: category,
+        categoriesToDelete: categoriesWithTransactions,
+        categoryType: category.type,
       );
 
-      if (confirmed == true) {
-        ref.read(categoriesProvider.notifier).deleteCategory(category.id);
+      if (!mounted) return;
+      if (decisions == null) return; // Cancelled
+    }
+
+    // Step 4: Show final confirmation (as last step)
+    if (!mounted) return;
+    final confirmed = await showSimpleDeleteConfirmationDialog(
+      context: context,
+      category: category,
+    );
+
+    if (!mounted) return;
+    if (confirmed != true) return;
+
+    // Step 5: Execute transaction decisions if any
+    if (decisions != null) {
+      for (final decision in decisions) {
+        if (decision.targetCategoryId != null && decision.targetCategoryId!.isNotEmpty) {
+          await ref.read(transactionsProvider.notifier)
+              .moveTransactionsToCategory(decision.categoryId, decision.targetCategoryId!);
+        } else {
+          await ref.read(transactionsProvider.notifier)
+              .deleteTransactionsForCategory(decision.categoryId);
+        }
       }
+    }
+
+    // Step 6: Delete categories
+    if (promoteChildren) {
+      ref.read(categoriesProvider.notifier).deleteCategoryPromotingChildren(category.id);
+    } else if (categoryIdsToDelete.length > 1) {
+      ref.read(categoriesProvider.notifier).deleteWithChildren(category.id);
+    } else {
+      ref.read(categoriesProvider.notifier).deleteCategory(category.id);
     }
   }
 }

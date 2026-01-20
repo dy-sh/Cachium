@@ -214,6 +214,60 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
       (transactions) => transactions.where((t) => t.accountId != accountId).toList(),
     );
   }
+
+  /// Move all transactions from one category to another
+  Future<void> moveTransactionsToCategory(String fromCategoryId, String toCategoryId) async {
+    final repo = ref.read(transactionRepositoryProvider);
+    final currentState = state.valueOrNull;
+    if (currentState == null) return;
+
+    final transactionsToMove = currentState.where((t) => t.categoryId == fromCategoryId).toList();
+
+    if (transactionsToMove.isEmpty) return;
+
+    // Update transactions in database
+    for (final tx in transactionsToMove) {
+      final updatedTx = tx.copyWith(categoryId: toCategoryId);
+      await repo.updateTransaction(updatedTx);
+    }
+
+    // Update local state for transactions
+    state = state.whenData(
+      (transactions) => transactions.map((t) {
+        if (t.categoryId == fromCategoryId) {
+          return t.copyWith(categoryId: toCategoryId);
+        }
+        return t;
+      }).toList(),
+    );
+  }
+
+  /// Delete all transactions for a specific category and reverse account balances
+  Future<void> deleteTransactionsForCategory(String categoryId) async {
+    final repo = ref.read(transactionRepositoryProvider);
+    final currentState = state.valueOrNull;
+    if (currentState == null) return;
+
+    final transactionsToDelete = currentState.where((t) => t.categoryId == categoryId).toList();
+
+    // Delete each transaction and reverse its balance effect
+    for (final tx in transactionsToDelete) {
+      await repo.deleteTransaction(tx.id);
+
+      // Reverse the balance change
+      final balanceChange =
+          tx.type == TransactionType.income ? -tx.amount : tx.amount;
+      await ref.read(accountsProvider.notifier).updateBalance(
+            tx.accountId,
+            balanceChange,
+          );
+    }
+
+    // Update local state
+    state = state.whenData(
+      (transactions) => transactions.where((t) => t.categoryId != categoryId).toList(),
+    );
+  }
 }
 
 final transactionsProvider =
@@ -296,6 +350,16 @@ final transactionsByAccountProvider = Provider.family<List<Transaction>, String>
 
 final transactionCountByAccountProvider = Provider.family<int, String>((ref, accountId) {
   return ref.watch(transactionsByAccountProvider(accountId)).length;
+});
+
+final transactionsByCategoryProvider = Provider.family<List<Transaction>, String>((ref, categoryId) {
+  final transactions = ref.watch(transactionsProvider).valueOrNull;
+  if (transactions == null) return [];
+  return transactions.where((t) => t.categoryId == categoryId).toList();
+});
+
+final transactionCountByCategoryProvider = Provider.family<int, String>((ref, categoryId) {
+  return ref.watch(transactionsByCategoryProvider(categoryId)).length;
 });
 
 final searchedTransactionsProvider = Provider<AsyncValue<List<TransactionGroup>>>((ref) {

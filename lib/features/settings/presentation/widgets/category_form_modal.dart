@@ -346,48 +346,8 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
   }
 
   void _showDeleteConfirmation(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Text(
-          'Delete Category',
-          style: AppTypography.h4,
-        ),
-        content: Text(
-          'Are you sure you want to delete "${widget.category!.name}"? This action cannot be undone.',
-          style: AppTypography.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: AppTypography.button.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              widget.onDelete?.call();
-            },
-            child: Text(
-              'Delete',
-              style: AppTypography.button.copyWith(
-                color: AppColors.expense,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    // Directly call onDelete - confirmation will be shown by the parent
+    widget.onDelete?.call();
   }
 
   Widget _buildParentSelector(ColorIntensity intensity) {

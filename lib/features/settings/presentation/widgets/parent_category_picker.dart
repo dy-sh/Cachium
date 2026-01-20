@@ -9,7 +9,7 @@ import '../../../categories/data/models/category_tree_node.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../providers/settings_provider.dart';
 
-class ParentCategoryPicker extends ConsumerWidget {
+class ParentCategoryPicker extends ConsumerStatefulWidget {
   final CategoryType type;
   final String? currentCategoryId;
   final String? selectedParentId;
@@ -24,24 +24,63 @@ class ParentCategoryPicker extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ParentCategoryPicker> createState() => _ParentCategoryPickerState();
+}
+
+class _ParentCategoryPickerState extends ConsumerState<ParentCategoryPicker> {
+  final Set<String> _expandedIds = {};
+
+  List<CategoryTreeNode> _buildVisibleNodes(List<CategoryTreeNode> tree, Set<String> excludedIds) {
+    final result = <CategoryTreeNode>[];
+
+    void addWithChildren(CategoryTreeNode node) {
+      if (excludedIds.contains(node.category.id)) return;
+
+      result.add(node);
+      // Only add children if this node is expanded
+      if (_expandedIds.contains(node.category.id)) {
+        for (final child in node.children) {
+          addWithChildren(child);
+        }
+      }
+    }
+
+    for (final node in tree) {
+      addWithChildren(node);
+    }
+
+    return result;
+  }
+
+  bool _hasVisibleChildren(CategoryTreeNode node, Set<String> excludedIds) {
+    for (final child in node.children) {
+      if (!excludedIds.contains(child.category.id)) {
+        return true;
+      }
+      if (_hasVisibleChildren(child, excludedIds)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final intensity = ref.watch(colorIntensityProvider);
     final categoriesAsync = ref.watch(categoriesProvider);
     final categories = categoriesAsync.valueOrNull ?? [];
-    final filteredCategories = categories.where((c) => c.type == type).toList();
-    final treeNodes = CategoryTreeBuilder.buildFlatTree(filteredCategories);
+    final filteredCategories = categories.where((c) => c.type == widget.type).toList();
+    final tree = CategoryTreeBuilder.buildTree(filteredCategories);
 
     final excludedIds = <String>{};
-    if (currentCategoryId != null) {
-      excludedIds.add(currentCategoryId!);
+    if (widget.currentCategoryId != null) {
+      excludedIds.add(widget.currentCategoryId!);
       excludedIds.addAll(
-        CategoryTreeBuilder.getDescendantIds(categories, currentCategoryId!),
+        CategoryTreeBuilder.getDescendantIds(categories, widget.currentCategoryId!),
       );
     }
 
-    final selectableNodes = treeNodes
-        .where((node) => !excludedIds.contains(node.category.id))
-        .toList();
+    final visibleNodes = _buildVisibleNodes(tree, excludedIds);
 
     return Container(
       decoration: const BoxDecoration(
@@ -87,21 +126,23 @@ class ParentCategoryPicker extends ConsumerWidget {
                   _buildOptionTile(
                     context: context,
                     label: '(None - Root Level)',
-                    isSelected: selectedParentId == null,
+                    isSelected: widget.selectedParentId == null,
                     onTap: () {
-                      onSelected(null);
+                      widget.onSelected(null);
                       Navigator.pop(context);
                     },
                   ),
                   const SizedBox(height: AppSpacing.sm),
 
                   // Category tree
-                  ...selectableNodes.map((node) {
+                  ...visibleNodes.map((node) {
                     final category = node.category;
                     final categoryColor = category.getColor(intensity);
                     final bgOpacity = AppColors.getBgOpacity(intensity);
-                    final isSelected = selectedParentId == category.id;
+                    final isSelected = widget.selectedParentId == category.id;
                     final indentation = node.depth * 24.0;
+                    final hasChildren = _hasVisibleChildren(node, excludedIds);
+                    final isExpanded = _expandedIds.contains(category.id);
 
                     return Padding(
                       padding: EdgeInsets.only(
@@ -114,10 +155,23 @@ class ParentCategoryPicker extends ConsumerWidget {
                         categoryColor: categoryColor,
                         bgOpacity: bgOpacity,
                         isSelected: isSelected,
+                        hasChildren: hasChildren,
+                        isExpanded: isExpanded,
                         onTap: () {
-                          onSelected(category.id);
+                          widget.onSelected(category.id);
                           Navigator.pop(context);
                         },
+                        onToggleExpand: hasChildren
+                            ? () {
+                                setState(() {
+                                  if (isExpanded) {
+                                    _expandedIds.remove(category.id);
+                                  } else {
+                                    _expandedIds.add(category.id);
+                                  }
+                                });
+                              }
+                            : null,
                       ),
                     );
                   }),
@@ -154,6 +208,8 @@ class ParentCategoryPicker extends ConsumerWidget {
         ),
         child: Row(
           children: [
+            // Spacer to align with category tiles that have expand button
+            const SizedBox(width: 26),
             Container(
               width: 40,
               height: 40,
@@ -197,7 +253,10 @@ class ParentCategoryPicker extends ConsumerWidget {
     required Color categoryColor,
     required double bgOpacity,
     required bool isSelected,
+    required bool hasChildren,
+    required bool isExpanded,
     required VoidCallback onTap,
+    VoidCallback? onToggleExpand,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -215,6 +274,26 @@ class ParentCategoryPicker extends ConsumerWidget {
         ),
         child: Row(
           children: [
+            // Expand/collapse button
+            if (hasChildren)
+              GestureDetector(
+                onTap: onToggleExpand,
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: AppSpacing.sm),
+                  child: AnimatedRotation(
+                    turns: isExpanded ? 0.25 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(
+                      LucideIcons.chevronRight,
+                      size: 18,
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
+                ),
+              )
+            else
+              const SizedBox(width: 26),
             Container(
               width: 40,
               height: 40,
