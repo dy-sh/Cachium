@@ -116,16 +116,6 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Account Type', style: AppTypography.labelMedium),
-                    const SizedBox(height: AppSpacing.md),
-                    _AccountTypeGrid(
-                      selectedType: formState.type,
-                      onChanged: (type) {
-                        ref.read(accountFormProvider.notifier).setType(type);
-                      },
-                    ),
-                    const SizedBox(height: AppSpacing.xxl),
-
                     FMTextField(
                       key: ValueKey('name_${formState.editingAccountId}'),
                       label: 'Account Name',
@@ -134,6 +124,16 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                       autofocus: false,
                       onChanged: (value) {
                         ref.read(accountFormProvider.notifier).setName(value);
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+
+                    Text('Account Type', style: AppTypography.labelMedium),
+                    const SizedBox(height: AppSpacing.md),
+                    _AccountTypeGrid(
+                      selectedType: formState.type,
+                      onChanged: (type) {
+                        ref.read(accountFormProvider.notifier).setType(type);
                       },
                     ),
                     const SizedBox(height: AppSpacing.xxl),
@@ -160,34 +160,27 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                         },
                       ),
                     ] else ...[
-                      // When editing, show current balance as read-only
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      // When editing, show current balance as info note
+                      Row(
                         children: [
-                          Text('Current Balance', style: AppTypography.labelMedium),
-                          const SizedBox(height: AppSpacing.sm),
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(AppSpacing.md),
-                            decoration: BoxDecoration(
-                              color: AppColors.surfaceLight,
-                              borderRadius: AppRadius.mdAll,
-                              border: Border.all(color: AppColors.border),
+                          Icon(
+                            LucideIcons.wallet,
+                            size: 18,
+                            color: AppColors.textTertiary,
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            'Current balance:',
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.textTertiary,
                             ),
-                            child: Row(
-                              children: [
-                                Text(
-                                  '\$${formState.currentBalance.toStringAsFixed(2)}',
-                                  style: AppTypography.moneyMedium,
-                                ),
-                                const Spacer(),
-                                Text(
-                                  'Stored in database',
-                                  style: AppTypography.labelSmall.copyWith(
-                                    color: AppColors.textTertiary,
-                                  ),
-                                ),
-                              ],
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            '\$${formState.currentBalance.toStringAsFixed(2)}',
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
