@@ -411,21 +411,14 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
       onHoverChanged: _handleHoverChanged,
       suppressPlaceholder: isDraggedNode,
       canAccept: (dragged, target, depth) {
-        // Allow dropping on same item only if depth changes (to change parent)
+        // Allow dropping on same item (to cancel move or change parent)
         if (dragged.category.id == target.category.id) {
-          // Calculate what the new parent would be
-          String? newParentId;
           if (depth == target.depth + 1) {
             // Can't be child of itself
             return false;
-          } else if (depth == target.depth) {
-            newParentId = target.category.parentId;
-          } else {
-            // Shallower depth - would need to calculate parent
-            newParentId = _getParentForInsertionDepth(target, depth);
           }
-          // Only allow if parent would actually change
-          return newParentId != dragged.category.parentId;
+          // Allow drop (will check in onAccept if parent actually changes)
+          return true;
         }
         // If inserting as child, check if that's allowed
         if (depth == target.depth + 1) {
@@ -441,7 +434,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
       onAccept: (dragged, target, depth) {
         final categories = ref.read(categoriesProvider);
 
-        // Handle dropping on same item (changing parent only)
+        // Handle dropping on same item (changing parent only, or cancel move)
         if (dragged.category.id == target.category.id) {
           String? newParentId;
           if (depth == target.depth) {
@@ -449,11 +442,14 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
           } else {
             newParentId = _getParentForInsertionDepth(target, depth);
           }
-          // Just update the parent, keep the same position among new siblings
-          ref.read(categoriesProvider.notifier).updateParent(
-            dragged.category.id,
-            newParentId,
-          );
+          // Only update if parent would actually change
+          if (newParentId != dragged.category.parentId) {
+            ref.read(categoriesProvider.notifier).updateParent(
+              dragged.category.id,
+              newParentId,
+            );
+          }
+          // If parent is the same, do nothing (cancel move)
           return;
         }
 
@@ -512,8 +508,9 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
           }
 
           // Find the sibling that comes after insertAfterCategoryId to get insertBeforeId
+          // Exclude the dragged item from siblings list to avoid incorrect calculations
           final siblings = categories
-              .where((c) => c.parentId == parentId && c.type == dragged.category.type)
+              .where((c) => c.parentId == parentId && c.type == dragged.category.type && c.id != dragged.category.id)
               .toList()
             ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
