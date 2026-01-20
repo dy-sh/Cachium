@@ -15,11 +15,27 @@ import '../widgets/recalculate_preview_dialog.dart';
 import '../widgets/settings_section.dart';
 import '../widgets/settings_tile.dart';
 
-class DatabaseSettingsScreen extends ConsumerWidget {
+class DatabaseSettingsScreen extends ConsumerStatefulWidget {
   const DatabaseSettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DatabaseSettingsScreen> createState() =>
+      _DatabaseSettingsScreenState();
+}
+
+class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Refresh metrics and consistency every time screen opens
+    Future.microtask(() {
+      ref.invalidate(databaseMetricsProvider);
+      ref.invalidate(databaseConsistencyProvider);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final intensity = ref.watch(colorIntensityProvider);
     final managementState = ref.watch(databaseManagementProvider);
     final importState = ref.watch(importStateProvider);
@@ -90,7 +106,7 @@ class DatabaseSettingsScreen extends ConsumerWidget {
                           iconColor: AppColors.expense,
                           onTap: managementState.isLoading
                               ? null
-                              : () => _handleDeleteDatabase(context, ref),
+                              : () => _handleDeleteDatabase(context),
                         ),
                         SettingsTile(
                           title: 'Create Demo Database',
@@ -99,7 +115,7 @@ class DatabaseSettingsScreen extends ConsumerWidget {
                           iconColor: AppColors.getAccentColor(11, intensity),
                           onTap: managementState.isLoading
                               ? null
-                              : () => _handleCreateDemoDatabase(context, ref),
+                              : () => _handleCreateDemoDatabase(context),
                         ),
                         SettingsTile(
                           title: 'Recalculate Balances',
@@ -108,7 +124,7 @@ class DatabaseSettingsScreen extends ConsumerWidget {
                           iconColor: AppColors.getAccentColor(5, intensity),
                           onTap: recalculateState.isLoading
                               ? null
-                              : () => _handleRecalculateBalances(context, ref),
+                              : () => _handleRecalculateBalances(context),
                         ),
                       ],
                     ),
@@ -147,7 +163,7 @@ class DatabaseSettingsScreen extends ConsumerWidget {
                           iconColor: AppColors.getAccentColor(5, intensity),
                           onTap: importState.isLoading
                               ? null
-                              : () => _handleImportSqlite(context, ref),
+                              : () => _handleImportSqlite(context),
                         ),
                         SettingsTile(
                           title: 'Import CSV',
@@ -156,7 +172,7 @@ class DatabaseSettingsScreen extends ConsumerWidget {
                           iconColor: AppColors.getAccentColor(9, intensity),
                           onTap: importState.isLoading
                               ? null
-                              : () => _handleImportCsv(context, ref),
+                              : () => _handleImportCsv(context),
                         ),
                       ],
                     ),
@@ -184,7 +200,7 @@ class DatabaseSettingsScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _handleDeleteDatabase(BuildContext context, WidgetRef ref) async {
+  Future<void> _handleDeleteDatabase(BuildContext context) async {
     final result = await showDeleteDatabaseDialog(context: context);
 
     if (result != null && result.confirmed) {
@@ -205,10 +221,10 @@ class DatabaseSettingsScreen extends ConsumerWidget {
     }
   }
 
-  Future<void> _handleCreateDemoDatabase(BuildContext context, WidgetRef ref) async {
+  Future<void> _handleCreateDemoDatabase(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
@@ -222,7 +238,7 @@ class DatabaseSettingsScreen extends ConsumerWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: Text(
               'Cancel',
               style: AppTypography.button.copyWith(
@@ -231,7 +247,7 @@ class DatabaseSettingsScreen extends ConsumerWidget {
             ),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             child: Text(
               'Create',
               style: AppTypography.button.copyWith(
@@ -261,7 +277,7 @@ class DatabaseSettingsScreen extends ConsumerWidget {
     }
   }
 
-  Future<void> _handleRecalculateBalances(BuildContext context, WidgetRef ref) async {
+  Future<void> _handleRecalculateBalances(BuildContext context) async {
     // Calculate preview
     final preview = await ref
         .read(recalculateBalancesProvider.notifier)
@@ -291,7 +307,7 @@ class DatabaseSettingsScreen extends ConsumerWidget {
     }
   }
 
-  Future<void> _handleImportSqlite(BuildContext context, WidgetRef ref) async {
+  Future<void> _handleImportSqlite(BuildContext context) async {
     await ref.read(importStateProvider.notifier).importFromSqlite();
 
     final importResult = ref.read(importStateProvider);
@@ -322,7 +338,7 @@ class DatabaseSettingsScreen extends ConsumerWidget {
     }
   }
 
-  Future<void> _handleImportCsv(BuildContext context, WidgetRef ref) async {
+  Future<void> _handleImportCsv(BuildContext context) async {
     await ref.read(importStateProvider.notifier).importFromCsv();
 
     final importResult = ref.read(importStateProvider);

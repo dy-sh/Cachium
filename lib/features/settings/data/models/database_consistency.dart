@@ -1,11 +1,16 @@
+import 'package:flutter/widgets.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+
 /// Result of a single consistency check.
 class ConsistencyCheck {
   final String label;
   final int count;
+  final IconData icon;
 
   const ConsistencyCheck({
     required this.label,
     required this.count,
+    required this.icon,
   });
 
   bool get hasIssues => count > 0;
@@ -38,18 +43,22 @@ class DatabaseConsistency {
         ConsistencyCheck(
           label: 'Transactions with invalid category',
           count: transactionsWithInvalidCategory,
+          icon: LucideIcons.tag,
         ),
         ConsistencyCheck(
           label: 'Transactions with invalid account',
           count: transactionsWithInvalidAccount,
+          icon: LucideIcons.wallet,
         ),
         ConsistencyCheck(
           label: 'Categories with invalid parent',
           count: categoriesWithInvalidParent,
+          icon: LucideIcons.folderTree,
         ),
         ConsistencyCheck(
           label: 'Accounts with incorrect balance',
           count: accountsWithIncorrectBalance,
+          icon: LucideIcons.calculator,
         ),
       ];
 

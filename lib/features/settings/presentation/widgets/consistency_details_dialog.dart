@@ -95,10 +95,18 @@ class _CheckRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final statusColor = check.hasIssues ? AppColors.expense : AppColors.income;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: Row(
         children: [
+          Icon(
+            check.icon,
+            size: 18,
+            color: AppColors.textSecondary,
+          ),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
               check.label,
@@ -109,7 +117,7 @@ class _CheckRow extends StatelessWidget {
           Text(
             check.count.toString(),
             style: AppTypography.bodyMedium.copyWith(
-              color: check.hasIssues ? AppColors.expense : AppColors.income,
+              color: statusColor,
               fontWeight: FontWeight.w600,
             ),
           ),
