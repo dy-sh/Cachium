@@ -124,7 +124,12 @@
         *   New devices download the Snapshot first, then only play events *after* the snapshot's ID.
 2.  **Key Rotation:**
     *   Logic to allow changing the Master Key. This would require re-encrypting the entire local database and uploading a fresh Snapshot, effectively invalidating the old event log.
-
+3.  **True Collaboration (CRDTs):**
+    *   *Problem:* The current LWW (Last-Write-Wins) strategy is sufficient for a single user but risks data loss in multi-user scenarios (e.g., if User A edits "Amount" and User B edits "Category" simultaneously, one change is overwritten).
+    *   *Solution:* Migrate the internal data structure from plain JSON to **JSON CRDTs** (Conflict-free Replicated Data Types).
+        *   **Client-Side Merge:** Since the server cannot see the data, the merge logic moves to the Client. When an `UPSERT` event arrives, the client decrypts the payload and uses a CRDT library to mathematically merge field-level changes (e.g., keeping *both* the new Amount and the new Category).
+        *   **Vector Clocks:** Replace the simple `last_updated_at` timestamp with a "Vector Clock" (e.g., `{"DeviceA": 10, "DeviceB": 5}`) to accurately track causal history inside the encrypted blob.
+        
 ---
 
 
@@ -168,9 +173,10 @@
     *   **Integrity Check:** We store the `id` inside the encrypted JSON *and* as a plaintext column. During decryption, we verify they match.
     *   **Anti-Tampering:** This prevents a malicious server (or Man-in-the-Middle) from swapping the encrypted blobs of two different transactions (e.g., swapping a $5 transaction with a $5000 one) without the app noticing the mismatch.
 
-9.  **Why Last-Write-Wins (LWW) instead of CRDTs?**
-    *   **Pragmatism vs. Complexity:** While Conflict-Free Replicated Data Types (CRDTs) allow mathematical merging of data, they require complex custom data structures (like vector clocks) that are hard to map to standard SQL tables.
-    *   **Context Logic:** For a personal finance app, if a user edits a transaction on two devices simultaneously, the intuitive expectation is that the "most recent" edit is the correct one. LWW is sufficient for this use case and significantly reduces codebase complexity.
+### **9. Why Last-Write-Wins (LWW) instead of CRDTs?**
+    *   **Pragmatism vs. Complexity:** While Conflict-Free Replicated Data Types (CRDTs) allow mathematical merging of data (e.g., keeping edits from both Device A and Device B), they require complex custom data structures (Vector Clocks, Tombstones) that are difficult to map to standard, flat SQL tables without significant overhead.
+    *   **The "Atomic Blob" Constraint:** Our Zero-Knowledge architecture encrypts the entire `TransactionData` into a single opaque blob. CRDTs require field-level access to merge changes. Implementing CRDTs would force the client to download *multiple* conflicting versions of the blob, decrypt all of them, merge them in memory, and re-encrypt the result. LWW allows us to treat the encrypted blob as an **atomic unit**—the newest blob simply replaces the old one, keeping the client logic lightweight.
+    *   **Context Logic:** For a personal finance app, if a user edits a transaction on two devices simultaneously, the intuitive expectation is that the "most recent" edit is the correct one. The likelihood of two users needing to edit *different fields* of the *same transaction* at the *exact same second* is negligible, making the complexity cost of CRDTs unjustified for the MVP.
 
 10. **Why Supabase RLS (Row Level Security) if data is encrypted?**
     *   **Defense in Depth:** Encryption protects the *confidentiality* of the data (Supabase admins can't read it). RLS protects the *integrity* and *isolation* of the data.
