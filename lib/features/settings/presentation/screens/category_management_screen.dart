@@ -444,9 +444,35 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
           }
           // Only update if parent would actually change
           if (newParentId != dragged.category.parentId) {
-            ref.read(categoriesProvider.notifier).updateParent(
+            // Find the correct position - should be after current parent
+            final currentParentId = dragged.category.parentId;
+            String? insertBeforeId;
+
+            if (currentParentId != null && newParentId == null) {
+              // Moving from child to root level - place after current parent
+              final siblings = categories
+                  .where((c) => c.parentId == null && c.type == dragged.category.type && c.id != dragged.category.id)
+                  .toList()
+                ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+              final parentIndex = siblings.indexWhere((c) => c.id == currentParentId);
+              if (parentIndex >= 0 && parentIndex < siblings.length - 1) {
+                insertBeforeId = siblings[parentIndex + 1].id;
+              }
+            } else if (newParentId != null) {
+              // Moving to a different parent - place at the start of new parent's children
+              final newSiblings = categories
+                  .where((c) => c.parentId == newParentId && c.type == dragged.category.type && c.id != dragged.category.id)
+                  .toList()
+                ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+              if (newSiblings.isNotEmpty) {
+                insertBeforeId = newSiblings.first.id;
+              }
+            }
+
+            ref.read(categoriesProvider.notifier).moveCategoryToPosition(
               dragged.category.id,
               newParentId,
+              insertBeforeId,
             );
           }
           // If parent is the same, do nothing (cancel move)

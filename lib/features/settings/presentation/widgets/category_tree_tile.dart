@@ -279,8 +279,29 @@ class DraggableCategoryTreeTile extends StatelessWidget {
   });
 
   Widget _buildDragPlaceholder(BuildContext context) {
-    // Invisible spacer - just maintains height, no visuals at all
-    return const SizedBox(height: 80); // 72 + 8 margin
+    final categoryColor = node.category.getColor(intensity);
+    final indentation = node.depth * 24.0;
+
+    // Visible placeholder at original position
+    return Container(
+      height: 72,
+      margin: EdgeInsets.only(
+        left: indentation,
+        bottom: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: categoryColor.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: categoryColor, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: categoryColor.withValues(alpha: 0.3),
+            blurRadius: 8,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+    );
   }
 
   @override
