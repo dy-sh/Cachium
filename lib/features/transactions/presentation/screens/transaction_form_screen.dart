@@ -211,7 +211,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                   ),
                   child: FMPrimaryButton(
                     label: isEditing ? 'Save Changes' : 'Save Transaction',
-                    onPressed: formState.isValid
+                    onPressed: formState.canSave
                         ? () async {
                             // Save last used account
                             ref.read(settingsProvider.notifier).setLastUsedAccountId(formState.accountId);

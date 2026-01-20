@@ -9,7 +9,7 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../design_system/components/inputs/fm_date_picker.dart';
 
-/// A widget for selecting a date with quick options.
+/// A widget for selecting a date and time with quick options.
 class DateSelector extends StatelessWidget {
   final DateTime date;
   final ValueChanged<DateTime> onChanged;
@@ -31,6 +31,33 @@ class DateSelector extends StatelessWidget {
         DateFormatter.isSameDay(date, monthStart);
   }
 
+  /// Combines a date with current time, preserving existing seconds/milliseconds.
+  DateTime _withCurrentTime(DateTime dateOnly) {
+    final now = DateTime.now();
+    return DateTime(
+      dateOnly.year,
+      dateOnly.month,
+      dateOnly.day,
+      now.hour,
+      now.minute,
+      date.second,
+      date.millisecond,
+    );
+  }
+
+  /// Combines selected date with selected time, preserving existing seconds/milliseconds.
+  DateTime _combineDateTime(DateTime selectedDate, TimeOfDay time) {
+    return DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+      time.hour,
+      time.minute,
+      date.second,
+      date.millisecond,
+    );
+  }
+
   Future<void> _showCustomDatePicker(BuildContext context) async {
     HapticHelper.lightImpact();
     final picked = await showFMDatePicker(
@@ -40,7 +67,41 @@ class DateSelector extends StatelessWidget {
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
     if (picked != null) {
-      onChanged(picked);
+      // Preserve existing seconds/milliseconds
+      final newDate = DateTime(
+        picked.year,
+        picked.month,
+        picked.day,
+        date.hour,
+        date.minute,
+        date.second,
+        date.millisecond,
+      );
+      onChanged(newDate);
+    }
+  }
+
+  Future<void> _showTimePicker(BuildContext context) async {
+    HapticHelper.lightImpact();
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(date),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.dark(
+              primary: AppColors.accentPrimary,
+              surface: AppColors.surface,
+              onSurface: AppColors.textPrimary,
+            ),
+            dialogBackgroundColor: AppColors.surface,
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      onChanged(_combineDateTime(date, picked));
     }
   }
 
@@ -65,7 +126,7 @@ class DateSelector extends StatelessWidget {
               isSelected: DateFormatter.isSameDay(date, today),
               onTap: () {
                 HapticHelper.lightImpact();
-                onChanged(today);
+                onChanged(_withCurrentTime(today));
               },
             ),
             _QuickDateChip(
@@ -73,7 +134,7 @@ class DateSelector extends StatelessWidget {
               isSelected: DateFormatter.isSameDay(date, yesterday),
               onTap: () {
                 HapticHelper.lightImpact();
-                onChanged(yesterday);
+                onChanged(_withCurrentTime(yesterday));
               },
             ),
             _QuickDateChip(
@@ -81,7 +142,7 @@ class DateSelector extends StatelessWidget {
               isSelected: DateFormatter.isSameDay(date, monthStart),
               onTap: () {
                 HapticHelper.lightImpact();
-                onChanged(monthStart);
+                onChanged(_withCurrentTime(monthStart));
               },
             ),
             _QuickDateChip(
@@ -92,37 +153,72 @@ class DateSelector extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
-        GestureDetector(
-          onTap: () => _showCustomDatePicker(context),
-          child: Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: AppRadius.mdAll,
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  LucideIcons.calendar,
-                  color: AppColors.textSecondary,
-                  size: 20,
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Text(
-                    DateFormatter.formatFull(date),
-                    style: AppTypography.bodyMedium,
+        Row(
+          children: [
+            // Date field
+            Expanded(
+              child: GestureDetector(
+                onTap: () => _showCustomDatePicker(context),
+                child: Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: AppRadius.mdAll,
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        LucideIcons.calendar,
+                        color: AppColors.textSecondary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Text(
+                          DateFormatter.formatFull(date),
+                          style: AppTypography.bodyMedium,
+                        ),
+                      ),
+                      const Icon(
+                        LucideIcons.chevronRight,
+                        color: AppColors.textTertiary,
+                        size: 18,
+                      ),
+                    ],
                   ),
                 ),
-                const Icon(
-                  LucideIcons.chevronRight,
-                  color: AppColors.textTertiary,
-                  size: 18,
-                ),
-              ],
+              ),
             ),
-          ),
+            const SizedBox(width: AppSpacing.sm),
+            // Time field
+            GestureDetector(
+              onTap: () => _showTimePicker(context),
+              child: Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: AppRadius.mdAll,
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      LucideIcons.clock,
+                      color: AppColors.textSecondary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text(
+                      DateFormatter.formatTime(date),
+                      style: AppTypography.bodyMedium,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );

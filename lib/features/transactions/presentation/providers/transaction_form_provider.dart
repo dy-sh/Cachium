@@ -10,6 +10,13 @@ class TransactionFormState {
   final DateTime date;
   final String? note;
   final String? editingTransactionId;
+  // Original values for change tracking (only set when editing)
+  final TransactionType? originalType;
+  final double? originalAmount;
+  final String? originalCategoryId;
+  final String? originalAccountId;
+  final DateTime? originalDate;
+  final String? originalNote;
 
   const TransactionFormState({
     this.type = TransactionType.expense,
@@ -19,12 +26,42 @@ class TransactionFormState {
     required this.date,
     this.note,
     this.editingTransactionId,
+    this.originalType,
+    this.originalAmount,
+    this.originalCategoryId,
+    this.originalAccountId,
+    this.originalDate,
+    this.originalNote,
   });
 
   bool get isValid =>
       amount > 0 && categoryId != null && accountId != null;
 
   bool get isEditing => editingTransactionId != null;
+
+  /// Check if any field has changed from original (for edit mode).
+  bool get hasChanges {
+    if (!isEditing) return true; // New transaction always "has changes"
+    return type != originalType ||
+        amount != originalAmount ||
+        categoryId != originalCategoryId ||
+        accountId != originalAccountId ||
+        !_isSameDateTime(date, originalDate) ||
+        note != originalNote;
+  }
+
+  /// Compare dates ignoring seconds/milliseconds (only year, month, day, hour, minute).
+  bool _isSameDateTime(DateTime a, DateTime? b) {
+    if (b == null) return false;
+    return a.year == b.year &&
+        a.month == b.month &&
+        a.day == b.day &&
+        a.hour == b.hour &&
+        a.minute == b.minute;
+  }
+
+  /// Valid and has changes (for Save button).
+  bool get canSave => isValid && hasChanges;
 
   TransactionFormState copyWith({
     TransactionType? type,
@@ -34,6 +71,12 @@ class TransactionFormState {
     DateTime? date,
     String? note,
     String? editingTransactionId,
+    TransactionType? originalType,
+    double? originalAmount,
+    String? originalCategoryId,
+    String? originalAccountId,
+    DateTime? originalDate,
+    String? originalNote,
   }) {
     return TransactionFormState(
       type: type ?? this.type,
@@ -43,6 +86,12 @@ class TransactionFormState {
       date: date ?? this.date,
       note: note ?? this.note,
       editingTransactionId: editingTransactionId ?? this.editingTransactionId,
+      originalType: originalType ?? this.originalType,
+      originalAmount: originalAmount ?? this.originalAmount,
+      originalCategoryId: originalCategoryId ?? this.originalCategoryId,
+      originalAccountId: originalAccountId ?? this.originalAccountId,
+      originalDate: originalDate ?? this.originalDate,
+      originalNote: originalNote ?? this.originalNote,
     );
   }
 }
@@ -99,6 +148,13 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
       date: transaction.date,
       note: transaction.note,
       editingTransactionId: transaction.id,
+      // Store original values for change tracking
+      originalType: transaction.type,
+      originalAmount: transaction.amount,
+      originalCategoryId: transaction.categoryId,
+      originalAccountId: transaction.accountId,
+      originalDate: transaction.date,
+      originalNote: transaction.note,
     );
   }
 }
