@@ -729,7 +729,15 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
           },
           onDelete: () async {
             Navigator.pop(context);
-            await _handleDelete(category);
+            final hasChildren = ref.read(hasChildrenProvider(category.id));
+
+            if (hasChildren) {
+              // Show dialog to choose what to do with children
+              await _handleDelete(category);
+            } else {
+              // Confirmation was already shown in the form modal
+              ref.read(categoriesProvider.notifier).deleteCategory(category.id);
+            }
           },
           onAddChild: () {
             Navigator.pop(context);
