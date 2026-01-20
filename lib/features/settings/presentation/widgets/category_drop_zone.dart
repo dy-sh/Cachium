@@ -198,31 +198,10 @@ class _CategoryItemDropTargetState extends State<CategoryItemDropTarget> {
           key: _key,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Preview placeholder showing where item will be inserted (ABOVE the target)
-            if (_isHovering && _currentDepth <= widget.targetNode.depth)
-              Container(
-                height: _feedbackHeight,
-                margin: EdgeInsets.only(
-                  left: previewIndentation,
-                  bottom: AppSpacing.sm,
-                ),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: color, width: 2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      spreadRadius: 1,
-                    ),
-                  ],
-                ),
-              ),
             // The actual item
             widget.child,
-            // Preview for inserting as first child (shows BELOW/inside the target)
-            if (_isHovering && _currentDepth > widget.targetNode.depth)
+            // Preview placeholder showing where item will be inserted (AFTER the target)
+            if (_isHovering)
               Transform.translate(
                 offset: Offset(0, -AppSpacing.sm),
                 child: Container(

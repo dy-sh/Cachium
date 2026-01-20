@@ -432,25 +432,24 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
             _expandedIds.add(target.category.id);
           });
         } else {
-          // Insert as sibling at the specified depth, BEFORE the target (or target's ancestor)
-          // This matches user expectation: hovering over B at same depth = insert before B
-          String? insertBeforeCategoryId;
+          // Insert as sibling at the specified depth, AFTER the target (or target's ancestor)
+          String? insertAfterCategoryId;
           String? parentId;
 
           if (depth == target.depth) {
-            // Same level as target - insert right before target
-            insertBeforeCategoryId = target.category.id;
+            // Same level as target - insert right after target
+            insertAfterCategoryId = target.category.id;
             parentId = target.category.parentId;
           } else {
-            // Shallower level - find target's ancestor at that depth and insert before it
+            // Shallower level - find target's ancestor at that depth and insert after it
             final ancestors = ref.read(categoryAncestorsProvider(target.category.id));
             // ancestors is [parent, grandparent, ..., root] with depths [target.depth-1, ..., 0]
             if (depth == 0) {
-              // Insert at root level before the root ancestor
+              // Insert at root level after the root ancestor
               if (ancestors.isNotEmpty) {
-                insertBeforeCategoryId = ancestors.last.id;
+                insertAfterCategoryId = ancestors.last.id;
               } else {
-                insertBeforeCategoryId = target.category.id;
+                insertAfterCategoryId = target.category.id;
               }
               parentId = null;
             } else {
@@ -458,20 +457,32 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
               // Ancestor at depth D is at index (target.depth - D - 1)
               final ancestorIndex = target.depth - depth - 1;
               if (ancestorIndex >= 0 && ancestorIndex < ancestors.length) {
-                insertBeforeCategoryId = ancestors[ancestorIndex].id;
+                insertAfterCategoryId = ancestors[ancestorIndex].id;
                 parentId = ancestors[ancestorIndex].parentId;
               } else {
                 // Fallback
                 parentId = _getParentForInsertionDepth(target, depth);
-                insertBeforeCategoryId = target.category.id;
+                insertAfterCategoryId = target.category.id;
               }
             }
+          }
+
+          // Find the sibling that comes after insertAfterCategoryId to get insertBeforeId
+          final siblings = categories
+              .where((c) => c.parentId == parentId && c.type == dragged.category.type)
+              .toList()
+            ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
+          String? insertBeforeId;
+          final afterIndex = siblings.indexWhere((c) => c.id == insertAfterCategoryId);
+          if (afterIndex >= 0 && afterIndex < siblings.length - 1) {
+            insertBeforeId = siblings[afterIndex + 1].id;
           }
 
           ref.read(categoriesProvider.notifier).moveCategoryToPosition(
             dragged.category.id,
             parentId,
-            insertBeforeCategoryId,
+            insertBeforeId,
           );
         }
       },
