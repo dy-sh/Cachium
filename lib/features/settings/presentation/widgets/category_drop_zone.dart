@@ -96,6 +96,7 @@ class CategoryItemDropTarget extends StatefulWidget {
   final void Function(CategoryTreeNode dragged, CategoryTreeNode target, int depth) onAccept;
   final void Function(CategoryTreeNode targetNode, int depth)? onHoverChanged;
   final Color? highlightColor;
+  final bool suppressPlaceholder; // Don't show placeholder (used when this is the dragged item)
 
   const CategoryItemDropTarget({
     super.key,
@@ -105,6 +106,7 @@ class CategoryItemDropTarget extends StatefulWidget {
     required this.onAccept,
     this.onHoverChanged,
     this.highlightColor,
+    this.suppressPlaceholder = false,
   });
 
   @override
@@ -201,7 +203,8 @@ class _CategoryItemDropTargetState extends State<CategoryItemDropTarget> {
             // The actual item
             widget.child,
             // Preview placeholder showing where item will be inserted (AFTER the target)
-            if (_isHovering)
+            // Don't show if this is the dragged item (childWhenDragging handles it)
+            if (_isHovering && !widget.suppressPlaceholder)
               Transform.translate(
                 offset: Offset(0, -AppSpacing.sm),
                 child: Container(

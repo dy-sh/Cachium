@@ -35,6 +35,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
   Timer? _scrollTimer;
   CategoryTreeNode? _draggedNode;
   String? _currentTargetParentId; // Parent ID where item will be placed
+  String? _hoverTargetNodeId; // Node ID we're currently hovering over
 
   static const _scrollAreaHeight = 80.0;
   static const _scrollSpeed = 25.0;
@@ -61,25 +62,33 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
     _lastDragPosition = null;
     setState(() {
       _currentTargetParentId = null;
+      _hoverTargetNodeId = null;
     });
   }
 
   void _handleHoverChanged(CategoryTreeNode targetNode, int depth) {
     String? parentId;
+    String? hoverNodeId;
+
     if (depth < 0) {
       // Hover cleared
       parentId = null;
-    } else if (depth == targetNode.depth + 1) {
-      // Inserting as child of target
-      parentId = targetNode.category.id;
+      hoverNodeId = null;
     } else {
-      // Inserting as sibling - use existing logic
-      parentId = _getParentForInsertionDepth(targetNode, depth);
+      hoverNodeId = targetNode.category.id;
+      if (depth == targetNode.depth + 1) {
+        // Inserting as child of target
+        parentId = targetNode.category.id;
+      } else {
+        // Inserting as sibling - use existing logic
+        parentId = _getParentForInsertionDepth(targetNode, depth);
+      }
     }
 
-    if (_currentTargetParentId != parentId) {
+    if (_currentTargetParentId != parentId || _hoverTargetNodeId != hoverNodeId) {
       setState(() {
         _currentTargetParentId = parentId;
+        _hoverTargetNodeId = hoverNodeId;
       });
     }
   }
@@ -393,12 +402,31 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
     final draggedCategory = _draggedNode?.category;
     final targetColor = draggedCategory?.getColor(intensity);
 
+    // Suppress placeholder on the dragged item (childWhenDragging shows it instead)
+    final isDraggedNode = _draggedNode?.category.id == node.category.id;
+
     return CategoryItemDropTarget(
       targetNode: node,
       highlightColor: categoryColor,
       onHoverChanged: _handleHoverChanged,
+      suppressPlaceholder: isDraggedNode,
       canAccept: (dragged, target, depth) {
-        if (dragged.category.id == target.category.id) return false;
+        // Allow dropping on same item only if depth changes (to change parent)
+        if (dragged.category.id == target.category.id) {
+          // Calculate what the new parent would be
+          String? newParentId;
+          if (depth == target.depth + 1) {
+            // Can't be child of itself
+            return false;
+          } else if (depth == target.depth) {
+            newParentId = target.category.parentId;
+          } else {
+            // Shallower depth - would need to calculate parent
+            newParentId = _getParentForInsertionDepth(target, depth);
+          }
+          // Only allow if parent would actually change
+          return newParentId != dragged.category.parentId;
+        }
         // If inserting as child, check if that's allowed
         if (depth == target.depth + 1) {
           if (dragged.category.parentId == target.category.id) return false;
@@ -412,6 +440,22 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
       },
       onAccept: (dragged, target, depth) {
         final categories = ref.read(categoriesProvider);
+
+        // Handle dropping on same item (changing parent only)
+        if (dragged.category.id == target.category.id) {
+          String? newParentId;
+          if (depth == target.depth) {
+            newParentId = target.category.parentId;
+          } else {
+            newParentId = _getParentForInsertionDepth(target, depth);
+          }
+          // Just update the parent, keep the same position among new siblings
+          ref.read(categoriesProvider.notifier).updateParent(
+            dragged.category.id,
+            newParentId,
+          );
+          return;
+        }
 
         if (depth == target.depth + 1) {
           // Insert as FIRST child of target (placeholder shows right after target)
@@ -492,6 +536,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
         isExpanded: isExpanded,
         isTargetParent: isThisTargetParent,
         targetParentColor: targetColor,
+        showDragPlaceholder: _hoverTargetNodeId == null || _hoverTargetNodeId == node.category.id,
         onTap: () => _showEditModal(node.category),
         onExpandToggle: node.hasChildren
             ? () {

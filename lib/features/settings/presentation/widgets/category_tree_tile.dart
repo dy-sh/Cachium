@@ -138,7 +138,7 @@ class CategoryTreeTile extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(12),
           child: Opacity(
-            opacity: isDragging ? 0.5 : 1.0,
+            opacity: isDragging ? 0.0 : 1.0,
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.md),
               child: Row(
@@ -254,6 +254,7 @@ class DraggableCategoryTreeTile extends StatelessWidget {
   final bool isExpanded;
   final bool isTargetParent;
   final Color? targetParentColor;
+  final bool showDragPlaceholder; // Show placeholder at original position when dragging
   final VoidCallback? onTap;
   final VoidCallback? onExpandToggle;
   final Function(CategoryTreeNode)? onDragCompleted;
@@ -268,6 +269,7 @@ class DraggableCategoryTreeTile extends StatelessWidget {
     this.isExpanded = false,
     this.isTargetParent = false,
     this.targetParentColor,
+    this.showDragPlaceholder = true,
     this.onTap,
     this.onExpandToggle,
     this.onDragCompleted,
@@ -275,6 +277,31 @@ class DraggableCategoryTreeTile extends StatelessWidget {
     this.onDragEnd,
     this.onDragUpdate,
   });
+
+  Widget _buildDragPlaceholder(BuildContext context) {
+    final categoryColor = node.category.getColor(intensity);
+    final indentation = node.depth * 24.0;
+
+    return Container(
+      height: 72,
+      margin: EdgeInsets.only(
+        left: indentation,
+        bottom: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: categoryColor.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: categoryColor, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: categoryColor.withValues(alpha: 0.3),
+            blurRadius: 8,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -296,16 +323,9 @@ class DraggableCategoryTreeTile extends StatelessWidget {
           ),
         ),
       ),
-      childWhenDragging: CategoryTreeTile(
-        node: node,
-        intensity: intensity,
-        isExpanded: isExpanded,
-        isDragging: true,
-        isTargetParent: isTargetParent,
-        targetParentColor: targetParentColor,
-        onTap: onTap,
-        onExpandToggle: onExpandToggle,
-      ),
+      childWhenDragging: showDragPlaceholder
+          ? _buildDragPlaceholder(context)
+          : const SizedBox.shrink(),
       onDragCompleted: () {
         onDragEnd?.call();
         onDragCompleted?.call(node);
