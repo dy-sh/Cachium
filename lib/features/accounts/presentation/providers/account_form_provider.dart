@@ -5,12 +5,14 @@ class AccountFormState {
   final AccountType? type;
   final String name;
   final double initialBalance;
+  final double currentBalance;
   final String? editingAccountId;
 
   const AccountFormState({
     this.type,
     this.name = '',
     this.initialBalance = 0,
+    this.currentBalance = 0,
     this.editingAccountId,
   });
 
@@ -22,12 +24,14 @@ class AccountFormState {
     AccountType? type,
     String? name,
     double? initialBalance,
+    double? currentBalance,
     String? editingAccountId,
   }) {
     return AccountFormState(
       type: type ?? this.type,
       name: name ?? this.name,
       initialBalance: initialBalance ?? this.initialBalance,
+      currentBalance: currentBalance ?? this.currentBalance,
       editingAccountId: editingAccountId ?? this.editingAccountId,
     );
   }
@@ -59,9 +63,14 @@ class AccountFormNotifier extends Notifier<AccountFormState> {
     state = AccountFormState(
       type: account.type,
       name: account.name,
-      initialBalance: account.balance,
+      initialBalance: account.initialBalance,
+      currentBalance: account.balance,
       editingAccountId: account.id,
     );
+  }
+
+  void setCurrentBalance(double balance) {
+    state = state.copyWith(currentBalance: balance);
   }
 }
 
