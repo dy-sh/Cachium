@@ -68,8 +68,9 @@
         2.  Serialize `TransactionData` to JSON -> Encrypt with MK.
         3.  Insert into `SyncQueue` with operation `UPSERT`.
     *   **On Delete:**
-        1.  Mark `is_deleted = true` in local `Transactions`.
-        2.  Insert into `SyncQueue` with operation `DELETE` (payload can be empty or minimal).
+        1.  Mark `is_deleted = true` in local `Transactions` and **update `last_updated_at`**.
+        2.  Serialize a minimal JSON (containing only `id`, `last_updated_at`, and `is_deleted=true`) -> Encrypt with MK.
+        3.  Insert into `SyncQueue` with operation `DELETE`. **(Crucial: Payload must include timestamp to resolve "Edit vs Delete" conflicts).**
     *   Ensure strict Atomicity (Drift `.transaction()`).
 **Deliverable:** Add/Delete a transaction in UI. Verify `SyncQueue` captures these events with encrypted payloads.
 
@@ -101,8 +102,12 @@
 **Objective:** Handle collisions (LWW) and connectivity.
 **Tasks:**
 1.  **LWW (Last Write Wins):**
-    *   Modify Pull logic: When receiving an UPSERT, compare incoming `last_updated_at` (from inside the decrypted payload) vs local `last_updated_at`.
-    *   Only apply update if incoming is newer.
+    *   Modify Pull logic: For both **UPSERT** and **DELETE** events, decrypt the payload first to extract the `incoming_timestamp`.
+    *   Compare `incoming_timestamp` vs `local_timestamp` of the target row.
+    *   **Resolution Rule:**
+        *   If `incoming > local`: Apply the change (update fields or set `is_deleted=true`).
+        *   If `incoming < local`: Ignore the event (Stale data/Stale delete).
+        *   *Note:* This specifically prevents a stale "Delete" event from destroying a transaction that was edited (resurrected) on another device recently.
 2.  **Connectivity:**
     *   Use `connectivity_plus` to trigger sync when internet becomes available.
     *   Lifecycle Sync: Trigger a generic "Pull" when the app comes to the foreground (using AppLifecycleListener).
