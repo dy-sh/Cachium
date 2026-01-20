@@ -114,6 +114,12 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     final settings = await repo.loadSettings();
     state = AsyncData(settings ?? const AppSettings());
   }
+
+  /// Reset settings to defaults
+  Future<void> reset() async {
+    const defaultSettings = AppSettings();
+    await _saveAndUpdate(defaultSettings);
+  }
 }
 
 final settingsProvider = AsyncNotifierProvider<SettingsNotifier, AppSettings>(() {

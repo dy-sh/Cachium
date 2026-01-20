@@ -53,10 +53,16 @@ dependencies:
   drift: ^2.24.0
   drift_flutter: ^0.2.4
   sqlite3_flutter_libs: ^0.5.32
+  sqlite3: ^2.4.0
   path_provider: ^2.1.5
 
   # Encryption
   cryptography: ^2.7.0
+
+  # File operations
+  share_plus: ^7.2.1
+  file_picker: ^6.1.1
+  csv: ^5.1.1
 
   # Code generation
   freezed_annotation: ^2.4.4

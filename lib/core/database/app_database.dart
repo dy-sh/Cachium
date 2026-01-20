@@ -384,4 +384,36 @@ class AppDatabase extends _$AppDatabase {
     final result = await getSettings(id);
     return result != null;
   }
+
+  // Database management operations
+
+  /// Delete all transactions from the database
+  Future<void> deleteAllTransactions() async {
+    await delete(transactions).go();
+  }
+
+  /// Delete all accounts from the database
+  Future<void> deleteAllAccounts() async {
+    await delete(accounts).go();
+  }
+
+  /// Delete all categories from the database
+  Future<void> deleteAllCategories() async {
+    await delete(categories).go();
+  }
+
+  /// Delete all app settings from the database
+  Future<void> deleteAllSettings() async {
+    await delete(appSettings).go();
+  }
+
+  /// Delete all data from the database
+  Future<void> deleteAllData({bool includeSettings = false}) async {
+    await deleteAllTransactions();
+    await deleteAllAccounts();
+    await deleteAllCategories();
+    if (includeSettings) {
+      await deleteAllSettings();
+    }
+  }
 }

@@ -41,7 +41,7 @@ class SettingsScreen extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                // Categories Section
+                // Data Section
                 StaggeredListItem(
                   index: 0,
                   child: SettingsSection(
@@ -55,6 +55,13 @@ class SettingsScreen extends ConsumerWidget {
                         icon: LucideIcons.tags,
                         iconColor: AppColors.getAccentColor(1, intensity), // Cyan
                         onTap: () => context.push('/settings/categories'),
+                      ),
+                      SettingsTile(
+                        title: 'Database',
+                        description: 'Export, import, manage data',
+                        icon: LucideIcons.database,
+                        iconColor: AppColors.getAccentColor(3, intensity), // Blue
+                        onTap: () => context.push('/settings/database'),
                       ),
                     ],
                   ),
