@@ -384,7 +384,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
         _updateDragPlaceholderVisibility();
       },
       onAccept: (node) {
-        final categories = ref.read(categoriesProvider);
+        final categories = ref.read(categoriesProvider).valueOrNull ?? [];
         // Find the first root item to insert before
         final rootItems = categories
             .where((c) => c.parentId == null && c.type == node.category.type && c.id != node.category.id)
@@ -467,7 +467,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
         if (depth == target.depth + 1) {
           if (dragged.category.parentId == target.category.id) return false;
           final descendants = CategoryTreeBuilder.getDescendantIds(
-            ref.read(categoriesProvider),
+            ref.read(categoriesProvider).valueOrNull ?? [],
             dragged.category.id,
           );
           if (descendants.contains(target.category.id)) return false;
@@ -475,7 +475,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
         return true;
       },
       onAccept: (dragged, target, depth) {
-        final categories = ref.read(categoriesProvider);
+        final categories = ref.read(categoriesProvider).valueOrNull ?? [];
 
         // Handle dropping on same item (changing parent only, or cancel move)
         if (dragged.category.id == target.category.id) {
@@ -661,7 +661,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
   bool _shouldShowNode(CategoryTreeNode node) {
     if (node.depth == 0) return true;
 
-    final categories = ref.read(categoriesProvider);
+    final categories = ref.read(categoriesProvider).valueOrNull ?? [];
     String? currentParentId = node.category.parentId;
 
     while (currentParentId != null) {
@@ -684,7 +684,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
         builder: (context) => CategoryFormModal(
           type: _selectedType,
           onSave: (name, icon, colorIndex, parentId) {
-            final categories = ref.read(categoriesProvider);
+            final categories = ref.read(categoriesProvider).valueOrNull ?? [];
             final siblings = categories
                 .where((c) => c.parentId == parentId && c.type == _selectedType)
                 .toList();
@@ -758,7 +758,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
           type: parentCategory.type,
           initialParentId: parentCategory.id,
           onSave: (name, icon, colorIndex, parentId) {
-            final categories = ref.read(categoriesProvider);
+            final categories = ref.read(categoriesProvider).valueOrNull ?? [];
             final effectiveParentId = parentId ?? parentCategory.id;
             final siblings = categories
                 .where((c) => c.parentId == effectiveParentId && c.type == parentCategory.type)

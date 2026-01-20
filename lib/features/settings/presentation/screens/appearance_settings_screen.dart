@@ -16,7 +16,15 @@ class AppearanceSettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(settingsProvider);
+    final settingsAsync = ref.watch(settingsProvider);
+    final settings = settingsAsync.valueOrNull;
+
+    if (settings == null) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,

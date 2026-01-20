@@ -49,7 +49,7 @@ class _StaggeredListItemState extends ConsumerState<StaggeredListItem>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final animationsEnabled = ref.read(settingsProvider).formAnimationsEnabled;
+    final animationsEnabled = ref.read(formAnimationsEnabledProvider);
     if (animationsEnabled) {
       Future.delayed(widget.delay * widget.index, () {
         if (mounted) {
@@ -69,7 +69,7 @@ class _StaggeredListItemState extends ConsumerState<StaggeredListItem>
 
   @override
   Widget build(BuildContext context) {
-    final animationsEnabled = ref.watch(settingsProvider).formAnimationsEnabled;
+    final animationsEnabled = ref.watch(formAnimationsEnabledProvider);
 
     if (!animationsEnabled) {
       return widget.child;

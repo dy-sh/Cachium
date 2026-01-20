@@ -1,25 +1,64 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/providers/crud_notifier.dart';
+import '../../../../core/providers/database_providers.dart';
 import '../../data/models/category.dart';
 import '../../data/models/category_tree_node.dart';
 
-class CategoriesNotifier extends CrudNotifier<Category> {
+class CategoriesNotifier extends AsyncNotifier<List<Category>> {
   @override
-  String getId(Category item) => item.id;
+  Future<List<Category>> build() async {
+    final repo = ref.watch(categoryRepositoryProvider);
 
-  @override
-  List<Category> build() {
-    return List.from(DefaultCategories.all);
+    // Check if we have any categories in the database
+    final hasData = await repo.hasCategories();
+
+    if (!hasData) {
+      // Seed default categories on first run
+      await repo.seedDefaultCategories();
+      return List.from(DefaultCategories.all);
+    }
+
+    // Load existing categories from database
+    return repo.getAllCategories();
   }
 
-  void addCategory(Category category) => add(category);
+  Future<void> addCategory(Category category) async {
+    final repo = ref.read(categoryRepositoryProvider);
 
-  void updateCategory(Category category) => update(category);
+    // Save to encrypted database
+    await repo.createCategory(category);
 
-  void deleteCategory(String id) => delete(id);
+    // Update local state
+    state = state.whenData((categories) => [...categories, category]);
+  }
 
-  void updateParent(String categoryId, String? newParentId) {
-    final categories = state;
+  Future<void> updateCategory(Category category) async {
+    final repo = ref.read(categoryRepositoryProvider);
+
+    // Update in encrypted database
+    await repo.updateCategory(category);
+
+    // Update local state
+    state = state.whenData(
+      (categories) =>
+          categories.map((c) => c.id == category.id ? category : c).toList(),
+    );
+  }
+
+  Future<void> deleteCategory(String id) async {
+    final repo = ref.read(categoryRepositoryProvider);
+
+    // Soft delete in database
+    await repo.deleteCategory(id);
+
+    // Update local state
+    state = state.whenData(
+      (categories) => categories.where((c) => c.id != id).toList(),
+    );
+  }
+
+  Future<void> updateParent(String categoryId, String? newParentId) async {
+    final categories = state.valueOrNull;
+    if (categories == null) return;
 
     if (CategoryTreeBuilder.wouldCreateCycle(categories, categoryId, newParentId)) {
       return;
@@ -39,20 +78,25 @@ class CategoriesNotifier extends CrudNotifier<Category> {
       clearParentId: newParentId == null,
       sortOrder: newSortOrder,
     );
-    update(updated);
+    await updateCategory(updated);
   }
 
-  void reorderInParent(String categoryId, int newSortOrder) {
-    final category = state.firstWhere((c) => c.id == categoryId);
+  Future<void> reorderInParent(String categoryId, int newSortOrder) async {
+    final categories = state.valueOrNull;
+    if (categories == null) return;
+
+    final category = categories.firstWhere((c) => c.id == categoryId);
     final updated = category.copyWith(sortOrder: newSortOrder);
-    update(updated);
+    await updateCategory(updated);
   }
 
   /// Moves a category to a specific position among siblings.
   /// [targetParentId] - the parent under which to place the category (null for root)
   /// [insertBeforeCategoryId] - insert before this category, or null to insert at end
-  void moveCategoryToPosition(String categoryId, String? targetParentId, String? insertBeforeCategoryId) {
-    final categories = state;
+  Future<void> moveCategoryToPosition(String categoryId, String? targetParentId, String? insertBeforeCategoryId) async {
+    final categories = state.valueOrNull;
+    if (categories == null) return;
+
     final category = categories.firstWhere((c) => c.id == categoryId);
 
     // Prevent moving to itself or creating cycles
@@ -80,7 +124,7 @@ class CategoriesNotifier extends CrudNotifier<Category> {
         // Shift all items at and after target position
         for (int i = targetIndex; i < siblings.length; i++) {
           final sibling = siblings[i];
-          update(sibling.copyWith(sortOrder: sibling.sortOrder + 1));
+          await updateCategory(sibling.copyWith(sortOrder: sibling.sortOrder + 1));
         }
       }
     }
@@ -90,14 +134,17 @@ class CategoriesNotifier extends CrudNotifier<Category> {
       clearParentId: targetParentId == null,
       sortOrder: newSortOrder,
     );
-    update(updated);
+    await updateCategory(updated);
   }
 
-  void promoteChildren(String parentId) {
-    final parent = state.firstWhere((c) => c.id == parentId);
-    final children = state.where((c) => c.parentId == parentId).toList();
+  Future<void> promoteChildren(String parentId) async {
+    final categories = state.valueOrNull;
+    if (categories == null) return;
 
-    final rootSiblings = state
+    final parent = categories.firstWhere((c) => c.id == parentId);
+    final children = categories.where((c) => c.parentId == parentId).toList();
+
+    final rootSiblings = categories
         .where((c) => c.parentId == parent.parentId && c.type == parent.type)
         .toList();
     var nextSortOrder = rootSiblings.isEmpty
@@ -110,41 +157,54 @@ class CategoriesNotifier extends CrudNotifier<Category> {
         clearParentId: parent.parentId == null,
         sortOrder: nextSortOrder++,
       );
-      update(updated);
+      await updateCategory(updated);
     }
   }
 
-  void deleteWithChildren(String id) {
-    final descendants = CategoryTreeBuilder.getDescendantIds(state, id);
+  Future<void> deleteWithChildren(String id) async {
+    final categories = state.valueOrNull;
+    if (categories == null) return;
+
+    final descendants = CategoryTreeBuilder.getDescendantIds(categories, id);
 
     for (final descendantId in descendants.reversed) {
-      delete(descendantId);
+      await deleteCategory(descendantId);
     }
-    delete(id);
+    await deleteCategory(id);
   }
 
-  void deleteCategoryPromotingChildren(String id) {
-    promoteChildren(id);
-    delete(id);
+  Future<void> deleteCategoryPromotingChildren(String id) async {
+    await promoteChildren(id);
+    await deleteCategory(id);
+  }
+
+  /// Refresh categories from database
+  Future<void> refresh() async {
+    final repo = ref.read(categoryRepositoryProvider);
+    state = AsyncData(await repo.getAllCategories());
   }
 }
 
-final categoriesProvider = NotifierProvider<CategoriesNotifier, List<Category>>(() {
+final categoriesProvider = AsyncNotifierProvider<CategoriesNotifier, List<Category>>(() {
   return CategoriesNotifier();
 });
 
 final incomeCategoriesProvider = Provider<List<Category>>((ref) {
-  final categories = ref.watch(categoriesProvider);
+  final categoriesAsync = ref.watch(categoriesProvider);
+  final categories = categoriesAsync.valueOrNull ?? [];
   return categories.where((c) => c.type == CategoryType.income).toList();
 });
 
 final expenseCategoriesProvider = Provider<List<Category>>((ref) {
-  final categories = ref.watch(categoriesProvider);
+  final categoriesAsync = ref.watch(categoriesProvider);
+  final categories = categoriesAsync.valueOrNull ?? [];
   return categories.where((c) => c.type == CategoryType.expense).toList();
 });
 
 final categoryByIdProvider = Provider.family<Category?, String>((ref, id) {
-  final categories = ref.watch(categoriesProvider);
+  final categoriesAsync = ref.watch(categoriesProvider);
+  final categories = categoriesAsync.valueOrNull;
+  if (categories == null) return null;
   try {
     return categories.firstWhere((c) => c.id == id);
   } catch (_) {
@@ -153,7 +213,8 @@ final categoryByIdProvider = Provider.family<Category?, String>((ref, id) {
 });
 
 final rootIncomeCategoriesProvider = Provider<List<Category>>((ref) {
-  final categories = ref.watch(categoriesProvider);
+  final categoriesAsync = ref.watch(categoriesProvider);
+  final categories = categoriesAsync.valueOrNull ?? [];
   return categories
       .where((c) => c.type == CategoryType.income && c.parentId == null)
       .toList()
@@ -161,7 +222,8 @@ final rootIncomeCategoriesProvider = Provider<List<Category>>((ref) {
 });
 
 final rootExpenseCategoriesProvider = Provider<List<Category>>((ref) {
-  final categories = ref.watch(categoriesProvider);
+  final categoriesAsync = ref.watch(categoriesProvider);
+  final categories = categoriesAsync.valueOrNull ?? [];
   return categories
       .where((c) => c.type == CategoryType.expense && c.parentId == null)
       .toList()
@@ -169,7 +231,8 @@ final rootExpenseCategoriesProvider = Provider<List<Category>>((ref) {
 });
 
 final childCategoriesProvider = Provider.family<List<Category>, String>((ref, parentId) {
-  final categories = ref.watch(categoriesProvider);
+  final categoriesAsync = ref.watch(categoriesProvider);
+  final categories = categoriesAsync.valueOrNull ?? [];
   return categories
       .where((c) => c.parentId == parentId)
       .toList()
@@ -177,24 +240,28 @@ final childCategoriesProvider = Provider.family<List<Category>, String>((ref, pa
 });
 
 final hasChildrenProvider = Provider.family<bool, String>((ref, categoryId) {
-  final categories = ref.watch(categoriesProvider);
+  final categoriesAsync = ref.watch(categoriesProvider);
+  final categories = categoriesAsync.valueOrNull ?? [];
   return categories.any((c) => c.parentId == categoryId);
 });
 
 final categoryTreeProvider = Provider.family<List<CategoryTreeNode>, CategoryType>((ref, type) {
-  final categories = ref.watch(categoriesProvider);
+  final categoriesAsync = ref.watch(categoriesProvider);
+  final categories = categoriesAsync.valueOrNull ?? [];
   final filteredCategories = categories.where((c) => c.type == type).toList();
   return CategoryTreeBuilder.buildTree(filteredCategories);
 });
 
 final flatCategoryTreeProvider = Provider.family<List<CategoryTreeNode>, CategoryType>((ref, type) {
-  final categories = ref.watch(categoriesProvider);
+  final categoriesAsync = ref.watch(categoriesProvider);
+  final categories = categoriesAsync.valueOrNull ?? [];
   final filteredCategories = categories.where((c) => c.type == type).toList();
   return CategoryTreeBuilder.buildFlatTree(filteredCategories);
 });
 
 final categoryAncestorsProvider = Provider.family<List<Category>, String>((ref, categoryId) {
-  final categories = ref.watch(categoriesProvider);
+  final categoriesAsync = ref.watch(categoriesProvider);
+  final categories = categoriesAsync.valueOrNull ?? [];
   try {
     return CategoryTreeBuilder.getAncestors(categories, categoryId);
   } catch (_) {
@@ -205,7 +272,8 @@ final categoryAncestorsProvider = Provider.family<List<Category>, String>((ref, 
 /// Checks if a category name already exists (case-insensitive).
 /// Returns true if duplicate exists, excluding the category with excludeId.
 final categoryNameExistsProvider = Provider.family<bool, ({String name, String? excludeId})>((ref, params) {
-  final categories = ref.watch(categoriesProvider);
+  final categoriesAsync = ref.watch(categoriesProvider);
+  final categories = categoriesAsync.valueOrNull ?? [];
   final nameLower = params.name.trim().toLowerCase();
   return categories.any((c) =>
     c.name.toLowerCase() == nameLower && c.id != params.excludeId

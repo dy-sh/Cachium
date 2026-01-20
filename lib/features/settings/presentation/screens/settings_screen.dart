@@ -16,7 +16,8 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final categories = ref.watch(categoriesProvider);
+    final categoriesAsync = ref.watch(categoriesProvider);
+    final categories = categoriesAsync.valueOrNull ?? [];
     final customCategoryCount = categories.where((c) => c.isCustom).length;
     final intensity = ref.watch(colorIntensityProvider);
 

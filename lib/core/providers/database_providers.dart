@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/repositories/account_repository.dart';
+import '../../data/repositories/category_repository.dart';
+import '../../data/repositories/settings_repository.dart';
 import '../../data/repositories/transaction_repository.dart';
 import '../database/app_database.dart';
 import '../database/services/encryption_service.dart';
@@ -48,5 +50,24 @@ final accountRepositoryProvider = Provider<AccountRepository>((ref) {
   return AccountRepository(
     database: ref.watch(databaseProvider),
     encryptionService: ref.watch(encryptionServiceProvider),
+  );
+});
+
+/// Provider for the category repository.
+///
+/// Combines database operations with encryption/decryption.
+final categoryRepositoryProvider = Provider<CategoryRepository>((ref) {
+  return CategoryRepository(
+    database: ref.watch(databaseProvider),
+    encryptionService: ref.watch(encryptionServiceProvider),
+  );
+});
+
+/// Provider for the settings repository.
+///
+/// Settings are stored as unencrypted JSON.
+final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
+  return SettingsRepository(
+    database: ref.watch(databaseProvider),
   );
 });

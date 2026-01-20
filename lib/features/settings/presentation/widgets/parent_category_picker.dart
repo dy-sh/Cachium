@@ -26,7 +26,8 @@ class ParentCategoryPicker extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final intensity = ref.watch(colorIntensityProvider);
-    final categories = ref.watch(categoriesProvider);
+    final categoriesAsync = ref.watch(categoriesProvider);
+    final categories = categoriesAsync.valueOrNull ?? [];
     final filteredCategories = categories.where((c) => c.type == type).toList();
     final treeNodes = CategoryTreeBuilder.buildFlatTree(filteredCategories);
 

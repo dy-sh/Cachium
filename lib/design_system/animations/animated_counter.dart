@@ -44,7 +44,7 @@ class _AnimatedCounterState extends ConsumerState<AnimatedCounter>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final animationsEnabled = ref.read(settingsProvider).balanceCountersEnabled;
+    final animationsEnabled = ref.read(balanceCountersEnabledProvider);
     if (animationsEnabled) {
       _controller.forward();
     } else {
@@ -56,7 +56,7 @@ class _AnimatedCounterState extends ConsumerState<AnimatedCounter>
   void didUpdateWidget(AnimatedCounter oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.value != widget.value) {
-      final animationsEnabled = ref.read(settingsProvider).balanceCountersEnabled;
+      final animationsEnabled = ref.read(balanceCountersEnabledProvider);
       _previousValue = _animation.value;
       _animation = Tween<double>(begin: _previousValue, end: widget.value).animate(
         CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
@@ -78,7 +78,7 @@ class _AnimatedCounterState extends ConsumerState<AnimatedCounter>
 
   @override
   Widget build(BuildContext context) {
-    final animationsEnabled = ref.watch(settingsProvider).balanceCountersEnabled;
+    final animationsEnabled = ref.watch(balanceCountersEnabledProvider);
 
     if (!animationsEnabled) {
       final formattedValue = CurrencyFormatter.format(widget.value);

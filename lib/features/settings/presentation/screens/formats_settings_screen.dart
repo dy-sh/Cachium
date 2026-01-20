@@ -15,7 +15,15 @@ class FormatsSettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(settingsProvider);
+    final settingsAsync = ref.watch(settingsProvider);
+    final settings = settingsAsync.valueOrNull;
+
+    if (settings == null) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -165,7 +173,7 @@ class FormatsSettingsScreen extends ConsumerWidget {
   }
 
   void _showDateFormatPicker(BuildContext context, WidgetRef ref, AppSettings settings) {
-    final animationsEnabled = ref.read(settingsProvider).formAnimationsEnabled;
+    final animationsEnabled = ref.read(formAnimationsEnabledProvider);
     final modalContent = _OptionPickerSheet(
       title: 'Date Format',
       options: DateFormatOption.values.map((f) => f.label).toList(),
@@ -209,7 +217,7 @@ class FormatsSettingsScreen extends ConsumerWidget {
   }
 
   void _showCurrencyPicker(BuildContext context, WidgetRef ref, AppSettings settings) {
-    final animationsEnabled = ref.read(settingsProvider).formAnimationsEnabled;
+    final animationsEnabled = ref.read(formAnimationsEnabledProvider);
     final modalContent = _CurrencyPickerSheet(
       settings: settings,
       onSelected: (symbol, customValue) {

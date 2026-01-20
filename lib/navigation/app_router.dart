@@ -77,7 +77,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
           state,
           const TransactionFormScreen(),
-          animationsEnabled: ref.read(settingsProvider).formAnimationsEnabled,
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
         ),
       ),
       GoRoute(
@@ -87,7 +87,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return PageTransitions.buildSlideLeftTransition(
             state,
             TransactionFormScreen(transactionId: transactionId),
-            animationsEnabled: ref.read(settingsProvider).formAnimationsEnabled,
+            animationsEnabled: ref.read(formAnimationsEnabledProvider),
           );
         },
       ),
@@ -96,7 +96,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => PageTransitions.buildSlideUpTransition(
           state,
           const AccountFormScreen(),
-          animationsEnabled: ref.read(settingsProvider).formAnimationsEnabled,
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
         ),
       ),
       GoRoute(
@@ -106,7 +106,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return PageTransitions.buildSlideUpTransition(
             state,
             AccountFormScreen(accountId: accountId),
-            animationsEnabled: ref.read(settingsProvider).formAnimationsEnabled,
+            animationsEnabled: ref.read(formAnimationsEnabledProvider),
           );
         },
       ),
@@ -115,7 +115,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
           state,
           const CategoryManagementScreen(),
-          animationsEnabled: ref.read(settingsProvider).formAnimationsEnabled,
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
         ),
       ),
       GoRoute(
@@ -123,7 +123,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
           state,
           const AppearanceSettingsScreen(),
-          animationsEnabled: ref.read(settingsProvider).formAnimationsEnabled,
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
         ),
       ),
       GoRoute(
@@ -131,7 +131,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
           state,
           const FormatsSettingsScreen(),
-          animationsEnabled: ref.read(settingsProvider).formAnimationsEnabled,
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
         ),
       ),
       GoRoute(
@@ -139,7 +139,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
           state,
           const PreferencesSettingsScreen(),
-          animationsEnabled: ref.read(settingsProvider).formAnimationsEnabled,
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
         ),
       ),
       GoRoute(
@@ -147,7 +147,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
           state,
           const ComingSoonSettingsScreen(),
-          animationsEnabled: ref.read(settingsProvider).formAnimationsEnabled,
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
         ),
       ),
       GoRoute(
@@ -155,7 +155,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
           state,
           const AboutSettingsScreen(),
-          animationsEnabled: ref.read(settingsProvider).formAnimationsEnabled,
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
         ),
       ),
     ],

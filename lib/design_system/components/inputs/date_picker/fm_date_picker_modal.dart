@@ -542,7 +542,7 @@ class _DatePickerIconButtonState extends ConsumerState<_DatePickerIconButton> {
 
   @override
   Widget build(BuildContext context) {
-    final animationsEnabled = ref.watch(settingsProvider).formAnimationsEnabled;
+    final animationsEnabled = ref.watch(formAnimationsEnabledProvider);
     final backgroundColor = widget.isActive
         ? widget.accentColor
         : _isPressed
@@ -609,7 +609,7 @@ class _DatePickerNavigationButtonState extends ConsumerState<_DatePickerNavigati
 
   @override
   Widget build(BuildContext context) {
-    final animationsEnabled = ref.watch(settingsProvider).formAnimationsEnabled;
+    final animationsEnabled = ref.watch(formAnimationsEnabledProvider);
     final backgroundColor = _isPressed ? AppColors.surfaceLight : AppColors.background;
 
     return GestureDetector(

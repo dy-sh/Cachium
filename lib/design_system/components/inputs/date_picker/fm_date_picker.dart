@@ -18,7 +18,7 @@ Future<DateTime?> showFMDatePicker({
   DateTime? lastDate,
 }) {
   final container = ProviderScope.containerOf(context);
-  final animationsEnabled = container.read(settingsProvider).formAnimationsEnabled;
+  final animationsEnabled = container.read(formAnimationsEnabledProvider);
 
   if (!animationsEnabled) {
     return Navigator.of(context).push<DateTime>(

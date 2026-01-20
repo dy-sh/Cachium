@@ -16,7 +16,15 @@ class PreferencesSettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(settingsProvider);
+    final settingsAsync = ref.watch(settingsProvider);
+    final settings = settingsAsync.valueOrNull;
+
+    if (settings == null) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -99,7 +107,7 @@ class PreferencesSettingsScreen extends ConsumerWidget {
   }
 
   void _showStartScreenPicker(BuildContext context, WidgetRef ref, AppSettings settings) {
-    final animationsEnabled = ref.read(settingsProvider).formAnimationsEnabled;
+    final animationsEnabled = ref.read(formAnimationsEnabledProvider);
     final modalContent = _OptionPickerSheet(
       title: 'Start Screen',
       options: const ['Home', 'Transactions', 'Accounts'],

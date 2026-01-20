@@ -153,14 +153,14 @@ class _NavItemState extends ConsumerState<_NavItem> with TickerProviderStateMixi
   }
 
   void _handleTapDown(TapDownDetails details) {
-    final animationsEnabled = ref.read(settingsProvider).tabTransitionsEnabled;
+    final animationsEnabled = ref.read(tabTransitionsEnabledProvider);
     if (animationsEnabled) {
       _scaleController.forward();
     }
   }
 
   void _handleTapUp(TapUpDetails details) {
-    final animationsEnabled = ref.read(settingsProvider).tabTransitionsEnabled;
+    final animationsEnabled = ref.read(tabTransitionsEnabledProvider);
     if (animationsEnabled) {
       _scaleController.reverse();
       _bounceController.forward(from: 0);
@@ -174,7 +174,7 @@ class _NavItemState extends ConsumerState<_NavItem> with TickerProviderStateMixi
 
   @override
   Widget build(BuildContext context) {
-    final animationsEnabled = ref.watch(settingsProvider).tabTransitionsEnabled;
+    final animationsEnabled = ref.watch(tabTransitionsEnabledProvider);
     final color = widget.isSelected ? widget.accentColor : AppColors.navInactive;
     final hasBadge = widget.item.badgeCount != null && widget.item.badgeCount! > 0;
 

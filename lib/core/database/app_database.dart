@@ -51,17 +51,60 @@ class Accounts extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Table for storing encrypted categories.
+///
+/// Only `id`, `sortOrder`, `lastUpdatedAt`, and `isDeleted` are stored in plaintext
+/// for querying and sorting. All other category data is encrypted in `encryptedBlob`.
+@DataClassName('CategoryRow')
+class Categories extends Table {
+  /// UUID primary key (plaintext for lookups)
+  TextColumn get id => text()();
+
+  /// Sort order for display ordering (plaintext for sorting)
+  IntColumn get sortOrder => integer()();
+
+  /// Last updated timestamp for LWW (Last-Write-Wins) sync resolution
+  IntColumn get lastUpdatedAt => integer()();
+
+  /// Soft delete flag - allows sync to propagate deletions
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+
+  /// AES-GCM encrypted JSON blob containing all category data
+  BlobColumn get encryptedBlob => blob()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Table for storing app settings.
+///
+/// Settings are stored as unencrypted JSON since they don't contain sensitive data.
+/// Uses a single-row pattern with a fixed ID ('app_settings').
+class AppSettings extends Table {
+  /// Fixed ID - always 'app_settings' (single-row pattern)
+  TextColumn get id => text()();
+
+  /// Last updated timestamp for sync resolution
+  IntColumn get lastUpdatedAt => integer()();
+
+  /// JSON-encoded settings data
+  TextColumn get jsonData => text()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// The main application database.
 ///
 /// Uses Drift with SQLite for local persistence. In Stage 1, the database
 /// is stored unencrypted on disk, but all sensitive transaction data is
 /// encrypted at the application layer before being stored.
-@DriftDatabase(tables: [Transactions, Accounts])
+@DriftDatabase(tables: [Transactions, Accounts, Categories, AppSettings])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -69,10 +112,11 @@ class AppDatabase extends _$AppDatabase {
           await m.createAll();
         },
         onUpgrade: (Migrator m, int from, int to) async {
-          if (from < 2) {
-            // Add accounts table in version 2
-            await m.createTable(accounts);
-          }
+          // Recreate database on upgrade - no migration needed
+          // Delete and recreate all tables
+          await m.deleteTable('transactions');
+          await m.deleteTable('accounts');
+          await m.createAll();
         },
       );
 
@@ -232,5 +276,112 @@ class AppDatabase extends _$AppDatabase {
         .map((row) => row.read(accounts.id.count()))
         .getSingle();
     return (count ?? 0) > 0;
+  }
+
+  // CRUD operations for categories
+
+  /// Insert a new category row
+  Future<void> insertCategory({
+    required String id,
+    required int sortOrder,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+  }) async {
+    await into(categories).insert(
+      CategoriesCompanion.insert(
+        id: id,
+        sortOrder: sortOrder,
+        lastUpdatedAt: lastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+      ),
+    );
+  }
+
+  /// Update an existing category row
+  Future<void> updateCategory({
+    required String id,
+    required int sortOrder,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+  }) async {
+    await (update(categories)..where((c) => c.id.equals(id))).write(
+      CategoriesCompanion(
+        sortOrder: Value(sortOrder),
+        lastUpdatedAt: Value(lastUpdatedAt),
+        encryptedBlob: Value(encryptedBlob),
+      ),
+    );
+  }
+
+  /// Soft delete a category (set isDeleted = true)
+  Future<void> softDeleteCategory(String id, int lastUpdatedAt) async {
+    await (update(categories)..where((c) => c.id.equals(id))).write(
+      CategoriesCompanion(
+        isDeleted: const Value(true),
+        lastUpdatedAt: Value(lastUpdatedAt),
+      ),
+    );
+  }
+
+  /// Get a single category by ID (only if not deleted)
+  Future<CategoryRow?> getCategory(String id) async {
+    return (select(categories)
+          ..where((c) => c.id.equals(id))
+          ..where((c) => c.isDeleted.equals(false)))
+        .getSingleOrNull();
+  }
+
+  /// Get all non-deleted categories ordered by sortOrder
+  Future<List<CategoryRow>> getAllCategories() async {
+    return (select(categories)
+          ..where((c) => c.isDeleted.equals(false))
+          ..orderBy([(c) => OrderingTerm.asc(c.sortOrder)]))
+        .get();
+  }
+
+  /// Watch all non-deleted categories (for reactive UI)
+  Stream<List<CategoryRow>> watchAllCategories() {
+    return (select(categories)
+          ..where((c) => c.isDeleted.equals(false))
+          ..orderBy([(c) => OrderingTerm.asc(c.sortOrder)]))
+        .watch();
+  }
+
+  /// Check if any categories exist (for seeding defaults)
+  Future<bool> hasCategories() async {
+    final count = await (selectOnly(categories)
+          ..addColumns([categories.id.count()]))
+        .map((row) => row.read(categories.id.count()))
+        .getSingle();
+    return (count ?? 0) > 0;
+  }
+
+  // CRUD operations for app settings
+
+  /// Insert or update app settings
+  Future<void> upsertSettings({
+    required String id,
+    required int lastUpdatedAt,
+    required String jsonData,
+  }) async {
+    await into(appSettings).insertOnConflictUpdate(
+      AppSettingsCompanion.insert(
+        id: id,
+        lastUpdatedAt: lastUpdatedAt,
+        jsonData: jsonData,
+      ),
+    );
+  }
+
+  /// Get app settings by ID
+  Future<AppSetting?> getSettings(String id) async {
+    return (select(appSettings)..where((s) => s.id.equals(id)))
+        .getSingleOrNull();
+  }
+
+  /// Check if settings exist
+  Future<bool> hasSettings(String id) async {
+    final result = await getSettings(id);
+    return result != null;
   }
 }
