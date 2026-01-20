@@ -79,10 +79,19 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
     String? hoverNodeId;
 
     if (depth < 0) {
-      // Hover cleared
-      parentId = null;
-      hoverNodeId = null;
-      _currentHoverDepth = null;
+      // Hover cleared - but if we're over the dragged item itself, show its current parent
+      if (_draggedNode != null && targetNode.category.id == _draggedNode!.category.id) {
+        // Still hovering over the dragged item, show its current parent
+        parentId = _draggedNode!.category.parentId;
+        hoverNodeId = targetNode.category.id;
+        // Use the item's original depth for preview
+        _currentHoverDepth = _draggedNode!.depth;
+        _previewDepthNotifier.value = _draggedNode!.depth;
+      } else {
+        parentId = null;
+        hoverNodeId = null;
+        _currentHoverDepth = null;
+      }
     } else {
       hoverNodeId = targetNode.category.id;
       _currentHoverDepth = depth;
@@ -407,19 +416,13 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
     // If inserting at same level or shallower than prevNode,
     // find the ancestor at depth-1
     if (depth <= prevNode.depth) {
-      if (depth == 1) {
-        // Need root-level parent (depth 0) - get the root ancestor
-        final ancestors = ref.read(categoryAncestorsProvider(prevNode.category.id));
-        return ancestors.isNotEmpty ? ancestors.last.id : null;
-      } else {
-        // Need parent at depth-1
-        final ancestors = ref.read(categoryAncestorsProvider(prevNode.category.id));
-        // ancestors is [parent, grandparent, ..., root]
-        // We want ancestor at depth (depth-1), which is at index (prevNode.depth - depth)
-        final ancestorIndex = prevNode.depth - depth;
-        if (ancestorIndex >= 0 && ancestorIndex < ancestors.length) {
-          return ancestors[ancestorIndex].id;
-        }
+      // ancestors is ordered [root, grandparent, ..., parent]
+      // The ancestor at depth D is at index D (root at 0, etc.)
+      // We want the parent for depth, which is at depth-1
+      final ancestors = ref.read(categoryAncestorsProvider(prevNode.category.id));
+      final ancestorIndex = depth - 1;
+      if (ancestorIndex >= 0 && ancestorIndex < ancestors.length) {
+        return ancestors[ancestorIndex].id;
       }
     }
 
