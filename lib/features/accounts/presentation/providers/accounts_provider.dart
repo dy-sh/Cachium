@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/providers/database_providers.dart';
@@ -30,6 +32,7 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
     required String name,
     required AccountType type,
     required double initialBalance,
+    Color? customColor,
   }) async {
     final repo = ref.read(accountRepositoryProvider);
 
@@ -39,6 +42,7 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
       type: type,
       balance: initialBalance,
       initialBalance: initialBalance,
+      customColor: customColor,
       createdAt: DateTime.now(),
     );
 

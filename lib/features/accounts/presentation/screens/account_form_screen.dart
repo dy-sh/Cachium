@@ -12,6 +12,7 @@ import '../../../../design_system/components/layout/fm_form_header.dart';
 import '../../../../design_system/components/inputs/fm_text_field.dart';
 import '../../../settings/presentation/providers/database_providers.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
+import '../../../settings/presentation/widgets/color_picker_grid.dart';
 import '../../../settings/presentation/widgets/recalculate_preview_dialog.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../data/models/account.dart';
@@ -130,10 +131,22 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
 
                     Text('Account Type', style: AppTypography.labelMedium),
                     const SizedBox(height: AppSpacing.md),
-                    _AccountTypeGrid(
-                      selectedType: formState.type,
-                      onChanged: (type) {
-                        ref.read(accountFormProvider.notifier).setType(type);
+                    Builder(
+                      builder: (context) {
+                        // Calculate custom color for the type grid
+                        final intensity = ref.watch(colorIntensityProvider);
+                        final accountColors = AppColors.getCategoryColors(intensity);
+                        Color? customColor;
+                        if (formState.customColorIndex != null) {
+                          customColor = accountColors[formState.customColorIndex!.clamp(0, accountColors.length - 1)];
+                        }
+                        return _AccountTypeGrid(
+                          selectedType: formState.type,
+                          customColor: customColor,
+                          onChanged: (type) {
+                            ref.read(accountFormProvider.notifier).setType(type);
+                          },
+                        );
                       },
                     ),
                     const SizedBox(height: AppSpacing.xxl),
@@ -269,6 +282,10 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                         ),
                       ),
                     ],
+                    const SizedBox(height: AppSpacing.xxl),
+
+                    // Color picker
+                    _buildColorPicker(ref, formState),
                     const SizedBox(height: AppSpacing.xxxl),
                   ],
                 ),
@@ -285,6 +302,13 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                 label: isEditing ? 'Save Changes' : 'Create Account',
                 onPressed: formState.isValid
                     ? () async {
+                        // Get custom color if set
+                        final intensity = ref.read(colorIntensityProvider);
+                        final accountColors = AppColors.getCategoryColors(intensity);
+                        final customColor = formState.customColorIndex != null
+                            ? accountColors[formState.customColorIndex!.clamp(0, accountColors.length - 1)]
+                            : null;
+
                         if (isEditing) {
                           // Update existing account
                           final originalAccount = ref.read(
@@ -300,6 +324,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                               type: formState.type,
                               initialBalance: formState.initialBalance,
                               balance: newBalance,
+                              customColor: customColor,
                             );
                             await ref.read(accountsProvider.notifier)
                                 .updateAccount(updatedAccount);
@@ -310,6 +335,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                                 name: formState.name,
                                 type: formState.type!,
                                 initialBalance: formState.initialBalance,
+                                customColor: customColor,
                               );
                         }
                         ref.read(accountFormProvider.notifier).reset();
@@ -467,15 +493,89 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
       }
     }
   }
+
+  Widget _buildColorPicker(WidgetRef ref, AccountFormState formState) {
+    final intensity = ref.watch(colorIntensityProvider);
+    final accountColors = AppColors.getCategoryColors(intensity); // Use category colors palette
+
+    // Get the default type color if available
+    final defaultColor = formState.type != null
+        ? AppColors.getAccountColor(formState.type!.name, intensity)
+        : null;
+
+    // Determine selected color:
+    // 1. If user has selected a custom color index in this session, use that
+    // 2. If editing and account has original custom color, try to find it in palette
+    // 3. Otherwise use default type color
+    Color? selectedColor;
+    bool hasCustomColor = formState.hasCustomColor;
+
+    if (formState.customColorIndex != null) {
+      selectedColor = accountColors[formState.customColorIndex!.clamp(0, accountColors.length - 1)];
+    } else if (formState.originalCustomColor != null) {
+      // Try to find the original color in the palette
+      final originalColorIndex = accountColors.indexWhere(
+        (c) => c.value == formState.originalCustomColor!.value,
+      );
+      if (originalColorIndex != -1) {
+        selectedColor = accountColors[originalColorIndex];
+        hasCustomColor = true;
+      } else {
+        selectedColor = defaultColor;
+      }
+    } else {
+      selectedColor = defaultColor;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text('Color', style: AppTypography.labelMedium),
+            if (hasCustomColor || formState.originalCustomColor != null) ...[
+              const Spacer(),
+              GestureDetector(
+                onTap: () {
+                  ref.read(accountFormProvider.notifier).setCustomColorIndex(null);
+                },
+                child: Text(
+                  'Reset to default',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: AppColors.accentPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        ColorPickerGrid(
+          colors: accountColors,
+          selectedColor: selectedColor ?? accountColors[0],
+          crossAxisCount: 6,
+          itemSize: 40,
+          onColorSelected: (color) {
+            final index = accountColors.indexOf(color);
+            if (index != -1) {
+              ref.read(accountFormProvider.notifier).setCustomColorIndex(index);
+            }
+          },
+        ),
+      ],
+    );
+  }
 }
 
 class _AccountTypeGrid extends ConsumerWidget {
   final AccountType? selectedType;
   final ValueChanged<AccountType> onChanged;
+  final Color? customColor;
 
   const _AccountTypeGrid({
     this.selectedType,
     required this.onChanged,
+    this.customColor,
   });
 
   @override
@@ -492,18 +592,22 @@ class _AccountTypeGrid extends ConsumerWidget {
       childAspectRatio: 1.1,
       children: AccountType.values.map((type) {
         final isSelected = type == selectedType;
-        final typeColor = AppColors.getAccountColor(type.name, intensity);
+        final defaultTypeColor = AppColors.getAccountColor(type.name, intensity);
+        // Use custom color for selected type, otherwise use default type color
+        final displayColor = isSelected && customColor != null
+            ? customColor!
+            : defaultTypeColor;
         return GestureDetector(
           onTap: () => onChanged(type),
           child: AnimatedContainer(
             duration: AppAnimations.normal,
             decoration: BoxDecoration(
               color: isSelected
-                  ? typeColor.withOpacity(bgOpacity)
+                  ? displayColor.withOpacity(bgOpacity)
                   : AppColors.surface,
               borderRadius: AppRadius.mdAll,
               border: Border.all(
-                color: isSelected ? typeColor : AppColors.border,
+                color: isSelected ? displayColor : AppColors.border,
                 width: isSelected ? 1.5 : 1,
               ),
             ),
@@ -512,14 +616,14 @@ class _AccountTypeGrid extends ConsumerWidget {
               children: [
                 Icon(
                   type.icon,
-                  color: isSelected ? typeColor : AppColors.textSecondary,
+                  color: isSelected ? displayColor : AppColors.textSecondary,
                   size: 28,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   type.displayName,
                   style: AppTypography.labelSmall.copyWith(
-                    color: isSelected ? typeColor : AppColors.textSecondary,
+                    color: isSelected ? displayColor : AppColors.textSecondary,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   ),
                   textAlign: TextAlign.center,
