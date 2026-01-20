@@ -10,7 +10,9 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/buttons/fm_primary_button.dart';
 import '../../../../design_system/components/layout/fm_form_header.dart';
 import '../../../../design_system/components/inputs/fm_text_field.dart';
+import '../../../settings/presentation/providers/database_providers.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
+import '../../../settings/presentation/widgets/recalculate_preview_dialog.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../data/models/account.dart';
 import '../providers/account_form_provider.dart';
@@ -432,92 +434,29 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
 
     // Calculate what the balance should be
     final expectedBalance = formState.initialBalance + transactionDelta;
-    final currentBalance = formState.currentBalance;
-    final difference = expectedBalance - currentBalance;
 
-    if (difference.abs() < 0.001) {
-      // No change needed
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Balance is already correct',
-              style: AppTypography.bodySmall.copyWith(color: AppColors.textPrimary),
-            ),
-            backgroundColor: AppColors.surface,
-          ),
-        );
-      }
-      return;
-    }
-
-    // Show confirmation dialog
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Text('Recalculate Balance?', style: AppTypography.h4),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Based on initial balance and transaction history:',
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _buildBalanceRow('Current', currentBalance),
-            const SizedBox(height: AppSpacing.xs),
-            _buildBalanceRow('Calculated', expectedBalance),
-            const SizedBox(height: AppSpacing.sm),
-            Row(
-              children: [
-                Text(
-                  'Difference: ',
-                  style: AppTypography.labelSmall.copyWith(
-                    color: AppColors.textTertiary,
-                  ),
-                ),
-                Text(
-                  '${difference > 0 ? '+' : ''}\$${difference.toStringAsFixed(2)}',
-                  style: AppTypography.labelMedium.copyWith(
-                    color: difference > 0 ? AppColors.income : AppColors.expense,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              'Cancel',
-              style: AppTypography.button.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(
-              'Apply',
-              style: AppTypography.button.copyWith(
-                color: AppColors.accentPrimary,
-              ),
-            ),
-          ),
-        ],
-      ),
+    // Create a single-account preview using the same model as database settings
+    final change = BalanceChange(
+      accountId: account.id,
+      accountName: account.name,
+      oldBalance: formState.currentBalance,
+      newBalance: expectedBalance,
+      initialBalance: formState.initialBalance,
+      transactionDelta: transactionDelta,
     );
 
-    if (confirmed == true) {
+    final preview = RecalculatePreview(
+      changes: [change],
+      totalAccounts: 1,
+    );
+
+    // Show the same preview dialog as database settings
+    final shouldApply = await showRecalculatePreviewDialog(
+      context: context,
+      preview: preview,
+    );
+
+    if (shouldApply == true && context.mounted) {
       // Update the account balance
       final updatedAccount = account.copyWith(balance: expectedBalance);
       await ref.read(accountsProvider.notifier).updateAccount(updatedAccount);
@@ -534,26 +473,6 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
         );
       }
     }
-  }
-
-  Widget _buildBalanceRow(String label, double amount) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: AppTypography.labelSmall.copyWith(
-            color: AppColors.textTertiary,
-          ),
-        ),
-        Text(
-          '\$${amount.toStringAsFixed(2)}',
-          style: AppTypography.bodyMedium.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
   }
 }
 
