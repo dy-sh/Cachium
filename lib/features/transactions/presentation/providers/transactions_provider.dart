@@ -56,7 +56,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
 
     // Update account balance
     final balanceChange = type == TransactionType.income ? amount : -amount;
-    ref.read(accountsProvider.notifier).updateBalance(accountId, balanceChange);
+    await ref.read(accountsProvider.notifier).updateBalance(accountId, balanceChange);
   }
 
   Future<void> updateTransaction(Transaction transaction) async {
@@ -69,23 +69,47 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     final originalTransaction = currentState.firstWhere((t) => t.id == transaction.id);
 
     // Calculate balance adjustments
-    // First, reverse the original transaction's effect
-    final originalBalanceChange = originalTransaction.type == TransactionType.income
-        ? -originalTransaction.amount
-        : originalTransaction.amount;
-    ref.read(accountsProvider.notifier).updateBalance(
-          originalTransaction.accountId,
-          originalBalanceChange,
-        );
+    final sameAccount = originalTransaction.accountId == transaction.accountId;
 
-    // Then, apply the new transaction's effect
-    final newBalanceChange = transaction.type == TransactionType.income
-        ? transaction.amount
-        : -transaction.amount;
-    ref.read(accountsProvider.notifier).updateBalance(
-          transaction.accountId,
-          newBalanceChange,
-        );
+    if (sameAccount) {
+      // Same account: calculate net difference
+      // Original effect: income = +amount, expense = -amount
+      // New effect: income = +amount, expense = -amount
+      // Net change = new effect - original effect
+      final originalEffect = originalTransaction.type == TransactionType.income
+          ? originalTransaction.amount
+          : -originalTransaction.amount;
+      final newEffect = transaction.type == TransactionType.income
+          ? transaction.amount
+          : -transaction.amount;
+      final netChange = newEffect - originalEffect;
+
+      if (netChange != 0) {
+        await ref.read(accountsProvider.notifier).updateBalance(
+              transaction.accountId,
+              netChange,
+            );
+      }
+    } else {
+      // Different accounts: reverse from original, apply to new
+      // First, reverse the original transaction's effect
+      final originalBalanceChange = originalTransaction.type == TransactionType.income
+          ? -originalTransaction.amount
+          : originalTransaction.amount;
+      await ref.read(accountsProvider.notifier).updateBalance(
+            originalTransaction.accountId,
+            originalBalanceChange,
+          );
+
+      // Then, apply the new transaction's effect
+      final newBalanceChange = transaction.type == TransactionType.income
+          ? transaction.amount
+          : -transaction.amount;
+      await ref.read(accountsProvider.notifier).updateBalance(
+            transaction.accountId,
+            newBalanceChange,
+          );
+    }
 
     // Update in encrypted database
     await repo.updateTransaction(transaction);
@@ -117,7 +141,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     // Reverse the balance change
     final balanceChange =
         transaction.type == TransactionType.income ? -transaction.amount : transaction.amount;
-    ref.read(accountsProvider.notifier).updateBalance(
+    await ref.read(accountsProvider.notifier).updateBalance(
           transaction.accountId,
           balanceChange,
         );

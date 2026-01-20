@@ -36,6 +36,13 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
     super.initState();
     _nameController = TextEditingController();
     _balanceController = TextEditingController();
+
+    // Reset form when creating new account
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.accountId == null) {
+        ref.read(accountFormProvider.notifier).reset();
+      }
+    });
   }
 
   @override
