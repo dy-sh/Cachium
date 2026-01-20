@@ -29,84 +29,87 @@ class AppearanceSettingsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
+        child: Column(
+          children: [
+            // Pinned header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: AppSpacing.md),
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => context.pop(),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Icon(
+                            LucideIcons.chevronLeft,
+                            size: 20,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Text('Appearance', style: AppTypography.h3),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.xxl),
+                ],
+              ),
+            ),
+            // Scrollable content
+            Expanded(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: AppSpacing.md),
-                    Row(
+                    // Colors Section
+                    SettingsSection(
+                      title: 'Colors',
                       children: [
-                        GestureDetector(
-                          onTap: () => context.pop(),
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: AppColors.border),
-                            ),
-                            child: Icon(
-                              LucideIcons.chevronLeft,
-                              size: 20,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Text('Appearance', style: AppTypography.h3),
+                        _buildColorIntensityTile(context, ref, settings),
+                        _buildAccentColorTile(context, ref, settings),
+                        _buildAccountCardStyleTile(context, ref, settings),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.xxl),
+
+                    // Animations Section
+                    SettingsSection(
+                      title: 'Animations',
+                      children: [
+                        SettingsToggleTile(
+                          title: 'Tab Transitions',
+                          description: 'Fade effect when switching tabs',
+                          value: settings.tabTransitionsEnabled,
+                          onChanged: (value) => ref.read(settingsProvider.notifier).setTabTransitionsEnabled(value),
+                        ),
+                        SettingsToggleTile(
+                          title: 'Form Animations',
+                          description: 'Slide-in effects for forms and modals',
+                          value: settings.formAnimationsEnabled,
+                          onChanged: (value) => ref.read(settingsProvider.notifier).setFormAnimationsEnabled(value),
+                        ),
+                        SettingsToggleTile(
+                          title: 'Balance Counters',
+                          description: 'Animate balance numbers when they change',
+                          value: settings.balanceCountersEnabled,
+                          onChanged: (value) => ref.read(settingsProvider.notifier).setBalanceCountersEnabled(value),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xxxl),
                   ],
                 ),
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  // Colors Section
-                  SettingsSection(
-                    title: 'Colors',
-                    children: [
-                      _buildColorIntensityTile(context, ref, settings),
-                      _buildAccentColorTile(context, ref, settings),
-                      _buildAccountCardStyleTile(context, ref, settings),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
-
-                  // Animations Section
-                  SettingsSection(
-                    title: 'Animations',
-                    children: [
-                      SettingsToggleTile(
-                        title: 'Tab Transitions',
-                        description: 'Fade effect when switching tabs',
-                        value: settings.tabTransitionsEnabled,
-                        onChanged: (value) => ref.read(settingsProvider.notifier).setTabTransitionsEnabled(value),
-                      ),
-                      SettingsToggleTile(
-                        title: 'Form Animations',
-                        description: 'Slide-in effects for forms and modals',
-                        value: settings.formAnimationsEnabled,
-                        onChanged: (value) => ref.read(settingsProvider.notifier).setFormAnimationsEnabled(value),
-                      ),
-                      SettingsToggleTile(
-                        title: 'Balance Counters',
-                        description: 'Animate balance numbers when they change',
-                        value: settings.balanceCountersEnabled,
-                        onChanged: (value) => ref.read(settingsProvider.notifier).setBalanceCountersEnabled(value),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xxxl),
-                ]),
               ),
             ),
           ],

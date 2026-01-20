@@ -25,127 +25,130 @@ class DatabaseSettingsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
+        child: Column(
+          children: [
+            // Pinned header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: AppSpacing.md),
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => context.pop(),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Icon(
+                            LucideIcons.chevronLeft,
+                            size: 20,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Text('Database', style: AppTypography.h3),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.xxl),
+                ],
+              ),
+            ),
+            // Scrollable content
+            Expanded(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: AppSpacing.md),
-                    Row(
+                    // Metrics Section
+                    _buildSectionLabel('METRICS'),
+                    const SizedBox(height: AppSpacing.sm),
+                    const DatabaseMetricsCard(),
+                    const SizedBox(height: AppSpacing.xxl),
+
+                    // Data Section
+                    SettingsSection(
+                      title: 'Data',
                       children: [
-                        GestureDetector(
-                          onTap: () => context.pop(),
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: AppColors.border),
-                            ),
-                            child: Icon(
-                              LucideIcons.chevronLeft,
-                              size: 20,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
+                        SettingsTile(
+                          title: 'Delete Database',
+                          description: 'Remove all data permanently',
+                          icon: LucideIcons.trash2,
+                          iconColor: AppColors.expense,
+                          onTap: managementState.isLoading
+                              ? null
+                              : () => _handleDeleteDatabase(context, ref),
                         ),
-                        const SizedBox(width: AppSpacing.md),
-                        Text('Database', style: AppTypography.h3),
+                        SettingsTile(
+                          title: 'Create Demo Database',
+                          description: 'Populate with sample data',
+                          icon: LucideIcons.sparkles,
+                          iconColor: AppColors.getAccentColor(11, intensity),
+                          onTap: managementState.isLoading
+                              ? null
+                              : () => _handleCreateDemoDatabase(context, ref),
+                        ),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.xxl),
+
+                    // Export Section
+                    SettingsSection(
+                      title: 'Export',
+                      children: [
+                        SettingsTile(
+                          title: 'Export SQLite',
+                          description: 'Database file format',
+                          icon: LucideIcons.database,
+                          iconColor: AppColors.getAccentColor(3, intensity),
+                          onTap: () => context.push('/settings/database/export-sqlite'),
+                        ),
+                        SettingsTile(
+                          title: 'Export CSV',
+                          description: 'Spreadsheet format',
+                          icon: LucideIcons.fileSpreadsheet,
+                          iconColor: AppColors.getAccentColor(7, intensity),
+                          onTap: () => context.push('/settings/database/export-csv'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+
+                    // Import Section
+                    SettingsSection(
+                      title: 'Import',
+                      children: [
+                        SettingsTile(
+                          title: 'Import SQLite',
+                          description: 'Restore from database file',
+                          icon: LucideIcons.databaseBackup,
+                          iconColor: AppColors.getAccentColor(5, intensity),
+                          onTap: importState.isLoading
+                              ? null
+                              : () => _handleImportSqlite(context, ref),
+                        ),
+                        SettingsTile(
+                          title: 'Import CSV',
+                          description: 'Import from spreadsheets',
+                          icon: LucideIcons.fileUp,
+                          iconColor: AppColors.getAccentColor(9, intensity),
+                          onTap: importState.isLoading
+                              ? null
+                              : () => _handleImportCsv(context, ref),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xxxl),
                   ],
                 ),
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  // Metrics Section
-                  _buildSectionLabel('METRICS'),
-                  const SizedBox(height: AppSpacing.sm),
-                  const DatabaseMetricsCard(),
-                  const SizedBox(height: AppSpacing.xxl),
-
-                  // Data Section
-                  SettingsSection(
-                    title: 'Data',
-                    children: [
-                      SettingsTile(
-                        title: 'Delete Database',
-                        description: 'Remove all data permanently',
-                        icon: LucideIcons.trash2,
-                        iconColor: AppColors.expense,
-                        onTap: managementState.isLoading
-                            ? null
-                            : () => _handleDeleteDatabase(context, ref),
-                      ),
-                      SettingsTile(
-                        title: 'Create Demo Database',
-                        description: 'Populate with sample data',
-                        icon: LucideIcons.sparkles,
-                        iconColor: AppColors.getAccentColor(11, intensity),
-                        onTap: managementState.isLoading
-                            ? null
-                            : () => _handleCreateDemoDatabase(context, ref),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
-
-                  // Export Section
-                  SettingsSection(
-                    title: 'Export',
-                    children: [
-                      SettingsTile(
-                        title: 'Export SQLite',
-                        description: 'Database file format',
-                        icon: LucideIcons.database,
-                        iconColor: AppColors.getAccentColor(3, intensity),
-                        onTap: () => context.push('/settings/database/export-sqlite'),
-                      ),
-                      SettingsTile(
-                        title: 'Export CSV',
-                        description: 'Spreadsheet format',
-                        icon: LucideIcons.fileSpreadsheet,
-                        iconColor: AppColors.getAccentColor(7, intensity),
-                        onTap: () => context.push('/settings/database/export-csv'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
-
-                  // Import Section
-                  SettingsSection(
-                    title: 'Import',
-                    children: [
-                      SettingsTile(
-                        title: 'Import SQLite',
-                        description: 'Restore from database file',
-                        icon: LucideIcons.databaseBackup,
-                        iconColor: AppColors.getAccentColor(5, intensity),
-                        onTap: importState.isLoading
-                            ? null
-                            : () => _handleImportSqlite(context, ref),
-                      ),
-                      SettingsTile(
-                        title: 'Import CSV',
-                        description: 'Import from spreadsheets',
-                        icon: LucideIcons.fileUp,
-                        iconColor: AppColors.getAccentColor(9, intensity),
-                        onTap: importState.isLoading
-                            ? null
-                            : () => _handleImportCsv(context, ref),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xxxl),
-                ]),
               ),
             ),
           ],

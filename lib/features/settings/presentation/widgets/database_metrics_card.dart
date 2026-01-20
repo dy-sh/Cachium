@@ -68,14 +68,14 @@ class DatabaseMetricsCard extends ConsumerWidget {
           _buildDivider(),
           _MetricRow(
             label: 'Created',
-            value: DateFormatter.formatFull(metrics.oldestRecord!),
+            value: '${DateFormatter.formatFull(metrics.oldestRecord!)} at ${DateFormatter.formatTime(metrics.oldestRecord!)}',
           ),
         ],
         if (metrics.newestRecord != null) ...[
           _buildDivider(),
           _MetricRow(
             label: 'Last Updated',
-            value: DateFormatter.formatFull(metrics.newestRecord!),
+            value: '${DateFormatter.formatFull(metrics.newestRecord!)} at ${DateFormatter.formatTime(metrics.newestRecord!)}',
           ),
         ],
       ],
