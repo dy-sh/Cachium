@@ -98,6 +98,8 @@ Key methods in `AppColors`:
 
 ## Database Management
 
+**IMPORTANT:** Do NOT create database migration logic when the schema changes. The app is in testing/development phase and not used in production. Simply increment `schemaVersion` in `app_database.dart` - the existing `MigrationStrategy` will recreate all tables automatically.
+
 The app includes comprehensive database import/export functionality accessible via Settings → Database.
 
 **Features:**
