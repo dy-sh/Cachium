@@ -1,0 +1,129 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:cryptography/cryptography.dart';
+
+import '../../../data/models/transaction_data.dart';
+import '../exceptions/security_exception.dart';
+import 'key_provider.dart';
+
+/// Service for encrypting and decrypting transaction data using AES-256-GCM.
+///
+/// The encrypted blob format is: [12-byte nonce][ciphertext][16-byte MAC]
+/// This format allows the nonce to be prepended and MAC appended automatically
+/// by the cryptography package's SecretBox.
+class EncryptionService {
+  final KeyProvider _keyProvider;
+  final AesGcm _algorithm;
+
+  EncryptionService(this._keyProvider) : _algorithm = AesGcm.with256bits();
+
+  /// Encrypts transaction data into a binary blob.
+  ///
+  /// Returns a Uint8List containing: nonce (12 bytes) + ciphertext + MAC (16 bytes)
+  Future<Uint8List> encrypt(TransactionData data) async {
+    final key = await _keyProvider.getKey();
+    final secretKey = SecretKey(key);
+
+    // Serialize to JSON then to bytes
+    final jsonString = jsonEncode(data.toJson());
+    final plaintext = utf8.encode(jsonString);
+
+    // Encrypt with AES-GCM (automatically generates nonce)
+    final secretBox = await _algorithm.encrypt(
+      plaintext,
+      secretKey: secretKey,
+    );
+
+    // Combine nonce + ciphertext + mac into single blob
+    final result = Uint8List(
+      secretBox.nonce.length + secretBox.cipherText.length + secretBox.mac.bytes.length,
+    );
+    var offset = 0;
+
+    // Copy nonce
+    result.setRange(offset, offset + secretBox.nonce.length, secretBox.nonce);
+    offset += secretBox.nonce.length;
+
+    // Copy ciphertext
+    result.setRange(offset, offset + secretBox.cipherText.length, secretBox.cipherText);
+    offset += secretBox.cipherText.length;
+
+    // Copy MAC
+    result.setRange(offset, offset + secretBox.mac.bytes.length, secretBox.mac.bytes);
+
+    return result;
+  }
+
+  /// Decrypts an encrypted blob back to transaction data.
+  ///
+  /// Performs integrity verification to ensure the decrypted data matches
+  /// the expected row metadata (id and dateMillis). This prevents blob-swapping
+  /// attacks where an attacker might swap encrypted blobs between rows.
+  ///
+  /// Throws [SecurityException] if integrity check fails.
+  /// Throws [SecretBoxAuthenticationError] if decryption fails (wrong key or tampered data).
+  Future<TransactionData> decrypt(
+    Uint8List encryptedBlob, {
+    required String expectedId,
+    required int expectedDateMillis,
+  }) async {
+    final key = await _keyProvider.getKey();
+    final secretKey = SecretKey(key);
+
+    // AES-GCM nonce is 12 bytes, MAC is 16 bytes
+    const nonceLength = 12;
+    const macLength = 16;
+
+    if (encryptedBlob.length < nonceLength + macLength) {
+      throw const FormatException('Encrypted blob is too short');
+    }
+
+    // Extract components
+    final nonce = encryptedBlob.sublist(0, nonceLength);
+    final cipherText = encryptedBlob.sublist(
+      nonceLength,
+      encryptedBlob.length - macLength,
+    );
+    final mac = Mac(encryptedBlob.sublist(encryptedBlob.length - macLength));
+
+    // Reconstruct SecretBox
+    final secretBox = SecretBox(
+      cipherText,
+      nonce: nonce,
+      mac: mac,
+    );
+
+    // Decrypt (will throw if MAC verification fails)
+    final plaintext = await _algorithm.decrypt(
+      secretBox,
+      secretKey: secretKey,
+    );
+
+    // Parse JSON
+    final jsonString = utf8.decode(plaintext);
+    final json = jsonDecode(jsonString) as Map<String, dynamic>;
+    final data = TransactionData.fromJson(json);
+
+    // Integrity check: verify decrypted data matches row metadata
+    if (data.id != expectedId) {
+      throw SecurityException(
+        rowId: expectedId,
+        fieldName: 'id',
+        expectedValue: expectedId,
+        actualValue: data.id,
+      );
+    }
+
+    if (data.dateMillis != expectedDateMillis) {
+      throw SecurityException(
+        rowId: expectedId,
+        fieldName: 'dateMillis',
+        expectedValue: expectedDateMillis.toString(),
+        actualValue: data.dateMillis.toString(),
+      );
+    }
+
+    return data;
+  }
+}

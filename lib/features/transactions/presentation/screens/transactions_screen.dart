@@ -22,7 +22,7 @@ class TransactionsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final groups = ref.watch(searchedTransactionsProvider);
+    final groupsAsync = ref.watch(searchedTransactionsProvider);
     final filter = ref.watch(transactionFilterProvider);
 
     return SafeArea(
@@ -121,40 +121,64 @@ class TransactionsScreen extends ConsumerWidget {
 
           // Transaction list
           Expanded(
-            child: groups.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          LucideIcons.receipt,
-                          color: AppColors.textTertiary,
-                          size: 48,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        Text(
-                          'No transactions found',
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
+            child: groupsAsync.when(
+              loading: () => const Center(
+                child: CircularProgressIndicator(),
+              ),
+              error: (error, stack) => Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      LucideIcons.alertCircle,
+                      color: AppColors.textTertiary,
+                      size: 48,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      'Error loading transactions',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              data: (groups) => groups.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            LucideIcons.receipt,
+                            color: AppColors.textTertiary,
+                            size: 48,
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: AppSpacing.md),
+                          Text(
+                            'No transactions found',
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: EdgeInsets.only(
+                        left: AppSpacing.screenPadding,
+                        right: AppSpacing.screenPadding,
+                        bottom: AppSpacing.bottomNavHeight + AppSpacing.lg,
+                      ),
+                      itemCount: groups.length,
+                      itemBuilder: (context, index) {
+                        return StaggeredListItem(
+                          index: index,
+                          child: _TransactionGroupWidget(group: groups[index]),
+                        );
+                      },
                     ),
-                  )
-                : ListView.builder(
-                    padding: EdgeInsets.only(
-                      left: AppSpacing.screenPadding,
-                      right: AppSpacing.screenPadding,
-                      bottom: AppSpacing.bottomNavHeight + AppSpacing.lg,
-                    ),
-                    itemCount: groups.length,
-                    itemBuilder: (context, index) {
-                      return StaggeredListItem(
-                        index: index,
-                        child: _TransactionGroupWidget(group: groups[index]),
-                      );
-                    },
-                  ),
+            ),
           ),
         ],
       ),

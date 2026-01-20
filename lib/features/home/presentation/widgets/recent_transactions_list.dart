@@ -16,10 +16,24 @@ class RecentTransactionsList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final transactions = ref.watch(recentTransactionsProvider);
+    final transactionsAsync = ref.watch(recentTransactionsProvider);
 
-    if (transactions.isEmpty) {
-      return Padding(
+    return transactionsAsync.when(
+      loading: () => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.xxl),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: const Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      ),
+      error: (error, stack) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
         child: Container(
           padding: const EdgeInsets.all(AppSpacing.xxl),
@@ -30,21 +44,44 @@ class RecentTransactionsList extends ConsumerWidget {
           ),
           child: Center(
             child: Text(
-              'No transactions yet',
+              'Error loading transactions',
               style: AppTypography.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
               ),
             ),
           ),
         ),
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-      child: Column(
-        children: transactions.map((tx) => _TransactionItem(transaction: tx)).toList(),
       ),
+      data: (transactions) {
+        if (transactions.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.xxl),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Center(
+                child: Text(
+                  'No transactions yet',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+          child: Column(
+            children: transactions.map((tx) => _TransactionItem(transaction: tx)).toList(),
+          ),
+        );
+      },
     );
   }
 }

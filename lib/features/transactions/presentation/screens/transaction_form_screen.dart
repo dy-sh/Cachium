@@ -149,11 +149,11 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                   child: FMPrimaryButton(
                     label: 'Save Transaction',
                     onPressed: formState.isValid
-                        ? () {
+                        ? () async {
                             // Save last used account
                             ref.read(settingsProvider.notifier).setLastUsedAccountId(formState.accountId);
 
-                            ref.read(transactionsProvider.notifier).addTransaction(
+                            await ref.read(transactionsProvider.notifier).addTransaction(
                                   amount: formState.amount,
                                   type: formState.type,
                                   categoryId: formState.categoryId!,
@@ -161,7 +161,9 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                                   date: formState.date,
                                   note: formState.note,
                                 );
-                            context.pop();
+                            if (context.mounted) {
+                              context.pop();
+                            }
                           }
                         : null,
                   ),
