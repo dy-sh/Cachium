@@ -8,7 +8,7 @@ Cachium is a Flutter mobile personal finance manager app with a dark theme desig
 
 **Tech Stack:** Flutter (Dart SDK ^3.9.0), Riverpod 2.5.1, GoRouter 14.2.0, Material Design 3
 
-**Key Dependencies:** lucide_icons (icons), google_fonts (typography), uuid (ID generation), intl (formatting)
+**Key Dependencies:** lucide_icons (icons), google_fonts (typography), uuid (ID generation), intl (formatting), share_plus (file sharing), file_picker (file selection), csv (CSV parsing), sqlite3 (raw SQLite operations)
 
 ## Common Commands
 
@@ -30,6 +30,7 @@ lib/
 ├── app.dart                  # CachiumApp widget, theme, routing config
 ├── core/
 │   ├── constants/            # AppColors, AppTypography, AppSpacing, AppRadius, AppAnimations
+│   ├── database/services/    # DatabaseMetricsService, DatabaseExportService, DatabaseImportService
 │   ├── providers/            # CrudNotifier base class for list management
 │   └── utils/                # currency_formatter, date_formatter, haptic_helper, page_transitions
 ├── data/demo/                # Demo data for development (demo_data.dart)
@@ -95,11 +96,35 @@ Key methods in `AppColors`:
 - Opacity helpers: `getBgOpacity()`, `getBorderOpacity()`
 - Color manipulation: `lighten()`, `darken()`, `withOpacity()`
 
+## Database Management
+
+The app includes comprehensive database import/export functionality accessible via Settings → Database.
+
+**Features:**
+- **Metrics Display:** Transaction/category/account counts with creation and last update timestamps
+- **Delete Database:** Confirmation dialog with optional "reset app settings" checkbox
+- **Create Demo Database:** Seeds sample data for testing
+- **Export SQLite/CSV:** With encryption toggle (encrypted blob or plaintext columns)
+- **Import SQLite/CSV:** Auto-detects format (encrypted vs plaintext) and re-encrypts on import
+
+**Key Services:**
+- `DatabaseMetricsService` - Queries counts and timestamps from all tables
+- `DatabaseExportService` - SQLite and CSV export with encryption options
+- `DatabaseImportService` - SQLite and CSV import with format detection
+
+**Routes:**
+- `/settings/database` - Main database settings page
+- `/settings/database/export-sqlite` - SQLite export options
+- `/settings/database/export-csv` - CSV export options
+
 ## Key Files
 
 - `lib/app.dart` - App setup and theme configuration
 - `lib/navigation/app_router.dart` - All routes (use `AppRoutes` constants)
 - `lib/core/constants/app_colors.dart` - Comprehensive color system (400+ lines)
 - `lib/core/providers/crud_notifier.dart` - Base class for CRUD operations
+- `lib/core/database/app_database.dart` - Drift database schema and operations
+- `lib/core/database/services/` - Database metrics, export, and import services
 - `lib/features/settings/data/models/app_settings.dart` - Settings model + ColorIntensity enum
+- `lib/features/settings/presentation/providers/database_providers.dart` - Database management providers
 - `lib/features/categories/data/models/category.dart` - Category with hierarchy support
