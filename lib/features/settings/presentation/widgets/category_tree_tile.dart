@@ -254,7 +254,7 @@ class DraggableCategoryTreeTile extends StatelessWidget {
   final bool isExpanded;
   final bool isTargetParent;
   final Color? targetParentColor;
-  final bool showDragPlaceholder; // Show placeholder at original position when dragging
+  final ValueNotifier<bool>? showDragPlaceholderNotifier; // Reactive placeholder visibility
   final VoidCallback? onTap;
   final VoidCallback? onExpandToggle;
   final Function(CategoryTreeNode)? onDragCompleted;
@@ -269,7 +269,7 @@ class DraggableCategoryTreeTile extends StatelessWidget {
     this.isExpanded = false,
     this.isTargetParent = false,
     this.targetParentColor,
-    this.showDragPlaceholder = true,
+    this.showDragPlaceholderNotifier,
     this.onTap,
     this.onExpandToggle,
     this.onDragCompleted,
@@ -324,9 +324,14 @@ class DraggableCategoryTreeTile extends StatelessWidget {
           ),
         ),
       ),
-      childWhenDragging: showDragPlaceholder
-          ? _buildDragPlaceholder(context)
-          : const SizedBox.shrink(),
+      childWhenDragging: showDragPlaceholderNotifier != null
+          ? ValueListenableBuilder<bool>(
+              valueListenable: showDragPlaceholderNotifier!,
+              builder: (context, show, child) {
+                return show ? _buildDragPlaceholder(context) : const SizedBox.shrink();
+              },
+            )
+          : _buildDragPlaceholder(context),
       onDragCompleted: () {
         onDragEnd?.call();
         onDragCompleted?.call(node);

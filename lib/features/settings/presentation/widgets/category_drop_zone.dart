@@ -10,6 +10,7 @@ class CategoryDropZone extends StatefulWidget {
   final ColorIntensity intensity;
   final bool Function(CategoryTreeNode) canAccept;
   final void Function(CategoryTreeNode) onAccept;
+  final void Function(bool isHovering)? onHoverChanged;
   final double? leftPadding;
 
   const CategoryDropZone({
@@ -18,6 +19,7 @@ class CategoryDropZone extends StatefulWidget {
     required this.intensity,
     required this.canAccept,
     required this.onAccept,
+    this.onHoverChanged,
     this.leftPadding,
   });
 
@@ -27,6 +29,7 @@ class CategoryDropZone extends StatefulWidget {
 
 class _CategoryDropZoneState extends State<CategoryDropZone> {
   bool _isHovering = false;
+  CategoryTreeNode? _hoveringNode;
 
   @override
   Widget build(BuildContext context) {
@@ -34,54 +37,55 @@ class _CategoryDropZoneState extends State<CategoryDropZone> {
       onWillAcceptWithDetails: (details) {
         final canAccept = widget.canAccept(details.data);
         if (canAccept && !_isHovering) {
-          setState(() => _isHovering = true);
+          setState(() {
+            _isHovering = true;
+            _hoveringNode = details.data;
+          });
+          widget.onHoverChanged?.call(true);
         }
         return canAccept;
       },
       onAcceptWithDetails: (details) {
-        setState(() => _isHovering = false);
+        setState(() {
+          _isHovering = false;
+          _hoveringNode = null;
+        });
+        widget.onHoverChanged?.call(false);
         widget.onAccept(details.data);
       },
       onLeave: (_) {
-        setState(() => _isHovering = false);
+        setState(() {
+          _isHovering = false;
+          _hoveringNode = null;
+        });
+        widget.onHoverChanged?.call(false);
       },
       builder: (context, candidateData, rejectedData) {
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+        final color = _hoveringNode?.category.getColor(widget.intensity) ?? AppColors.accentPrimary;
+
+        if (!_isHovering) {
+          // Invisible when not hovering - just a minimal hit target
+          return const SizedBox(height: 8);
+        }
+
+        // Show colored placeholder matching the dragged item
+        return Container(
+          height: 72,
           margin: EdgeInsets.only(
             left: widget.leftPadding ?? 0,
             bottom: AppSpacing.sm,
           ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
-          ),
           decoration: BoxDecoration(
-            color: _isHovering
-                ? AppColors.accentPrimary.withValues(alpha: 0.1)
-                : Colors.transparent,
+            color: color.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: _isHovering
-                  ? AppColors.accentPrimary
-                  : AppColors.border.withValues(alpha: 0.5),
-              width: _isHovering ? 2 : 1,
-              style: _isHovering ? BorderStyle.solid : BorderStyle.none,
-            ),
-          ),
-          child: AnimatedOpacity(
-            duration: const Duration(milliseconds: 200),
-            opacity: _isHovering ? 1.0 : 0.0,
-            child: Center(
-              child: Text(
-                widget.label,
-                style: AppTypography.bodySmall.copyWith(
-                  color: _isHovering
-                      ? AppColors.accentPrimary
-                      : AppColors.textTertiary,
-                ),
+            border: Border.all(color: color, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.3),
+                blurRadius: 8,
+                spreadRadius: 1,
               ),
-            ),
+            ],
           ),
         );
       },

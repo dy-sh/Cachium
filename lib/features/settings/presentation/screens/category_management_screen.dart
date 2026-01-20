@@ -36,6 +36,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
   CategoryTreeNode? _draggedNode;
   String? _currentTargetParentId; // Parent ID where item will be placed
   String? _hoverTargetNodeId; // Node ID we're currently hovering over
+  final ValueNotifier<bool> _showDragPlaceholderNotifier = ValueNotifier(true);
 
   static const _scrollAreaHeight = 80.0;
   static const _scrollSpeed = 25.0;
@@ -44,11 +45,13 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
   void dispose() {
     _scrollTimer?.cancel();
     _scrollController.dispose();
+    _showDragPlaceholderNotifier.dispose();
     super.dispose();
   }
 
   void _startDrag(CategoryTreeNode node) {
     _draggedNode = node;
+    _showDragPlaceholderNotifier.value = true; // Show placeholder at start
     _scrollTimer?.cancel();
     _scrollTimer = Timer.periodic(const Duration(milliseconds: 16), (_) {
       _performAutoScroll();
@@ -60,6 +63,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
     _scrollTimer?.cancel();
     _scrollTimer = null;
     _lastDragPosition = null;
+    _showDragPlaceholderNotifier.value = true; // Reset for next drag
     setState(() {
       _currentTargetParentId = null;
       _hoverTargetNodeId = null;
@@ -90,7 +94,15 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
         _currentTargetParentId = parentId;
         _hoverTargetNodeId = hoverNodeId;
       });
+      // Update placeholder visibility for the dragged item
+      _updateDragPlaceholderVisibility();
     }
+  }
+
+  void _updateDragPlaceholderVisibility() {
+    if (_draggedNode == null) return;
+    final show = _hoverTargetNodeId == null || _hoverTargetNodeId == _draggedNode!.category.id;
+    _showDragPlaceholderNotifier.value = show;
   }
 
   void _updateDragPosition(Offset globalPosition) {
@@ -341,13 +353,30 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
 
   Widget _buildRootDropZone(ColorIntensity intensity) {
     return CategoryDropZone(
-      label: 'Move to root level',
+      label: 'Move to start',
       intensity: intensity,
-      canAccept: (node) => node.category.parentId != null,
+      canAccept: (node) => true, // Accept any item
+      onHoverChanged: (isHovering) {
+        // Use a special marker to indicate hovering over root zone
+        setState(() {
+          _hoverTargetNodeId = isHovering ? '_root_drop_zone_' : null;
+        });
+        _updateDragPlaceholderVisibility();
+      },
       onAccept: (node) {
-        ref.read(categoriesProvider.notifier).updateParent(
+        final categories = ref.read(categoriesProvider);
+        // Find the first root item to insert before
+        final rootItems = categories
+            .where((c) => c.parentId == null && c.type == node.category.type && c.id != node.category.id)
+            .toList()
+          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
+        final insertBeforeId = rootItems.isNotEmpty ? rootItems.first.id : null;
+
+        ref.read(categoriesProvider.notifier).moveCategoryToPosition(
           node.category.id,
-          null,
+          null, // Root level
+          insertBeforeId,
         );
       },
     );
@@ -559,7 +588,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
         isExpanded: isExpanded,
         isTargetParent: isThisTargetParent,
         targetParentColor: targetColor,
-        showDragPlaceholder: _hoverTargetNodeId == null || _hoverTargetNodeId == node.category.id,
+        showDragPlaceholderNotifier: _showDragPlaceholderNotifier,
         onTap: () => _showEditModal(node.category),
         onExpandToggle: node.hasChildren
             ? () {
