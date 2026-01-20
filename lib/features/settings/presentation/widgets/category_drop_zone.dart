@@ -89,29 +89,19 @@ class _CategoryDropZoneState extends State<CategoryDropZone> {
   }
 }
 
-enum DropZone { none, top, center, bottom }
-
 class CategoryItemDropTarget extends StatefulWidget {
   final Widget child;
   final CategoryTreeNode targetNode;
-  final bool Function(CategoryTreeNode dragged, CategoryTreeNode target) canAcceptAsChild;
-  final bool Function(CategoryTreeNode dragged, CategoryTreeNode target) canAcceptBefore;
-  final bool Function(CategoryTreeNode dragged, CategoryTreeNode target) canAcceptAfter;
-  final void Function(CategoryTreeNode dragged, CategoryTreeNode target) onAcceptAsChild;
-  final void Function(CategoryTreeNode dragged, CategoryTreeNode target) onAcceptBefore;
-  final void Function(CategoryTreeNode dragged, CategoryTreeNode target) onAcceptAfter;
+  final bool Function(CategoryTreeNode dragged, CategoryTreeNode target, int depth) canAccept;
+  final void Function(CategoryTreeNode dragged, CategoryTreeNode target, int depth) onAccept;
   final Color? highlightColor;
 
   const CategoryItemDropTarget({
     super.key,
     required this.child,
     required this.targetNode,
-    required this.canAcceptAsChild,
-    required this.canAcceptBefore,
-    required this.canAcceptAfter,
-    required this.onAcceptAsChild,
-    required this.onAcceptBefore,
-    required this.onAcceptAfter,
+    required this.canAccept,
+    required this.onAccept,
     this.highlightColor,
   });
 
@@ -120,42 +110,27 @@ class CategoryItemDropTarget extends StatefulWidget {
 }
 
 class _CategoryItemDropTargetState extends State<CategoryItemDropTarget> {
-  DropZone _currentZone = DropZone.none;
+  bool _isHovering = false;
+  int _currentDepth = 0;
   final GlobalKey _key = GlobalKey();
 
   // Estimated height of the dragged feedback widget
   static const _feedbackHeight = 72.0;
+  static const _depthIndentation = 24.0;
 
-  DropZone _getZoneFromPosition(Offset globalPosition) {
+  int _getDepthFromPosition(Offset globalPosition, CategoryTreeNode draggedNode) {
     final box = _key.currentContext?.findRenderObject() as RenderBox?;
-    if (box == null) return DropZone.none;
+    if (box == null) return widget.targetNode.depth;
 
-    // Calculate center of the dragged item (offset is top-left of feedback)
-    final dragCenterGlobal = globalPosition + const Offset(0, _feedbackHeight / 2);
-    final localPosition = box.globalToLocal(dragCenterGlobal);
-    final height = box.size.height;
+    // Calculate depth from horizontal position
+    // The feedback's visual content is offset by the dragged node's original depth margin
+    final dragLeftLocal = box.globalToLocal(globalPosition);
+    final visualLeftLocal = dragLeftLocal.dx + (draggedNode.depth * _depthIndentation);
 
-    // Top 20% → insert before, Middle 60% → make child, Bottom 20% → insert after
-    if (localPosition.dy < height * 0.20) {
-      return DropZone.top;
-    } else if (localPosition.dy > height * 0.80) {
-      return DropZone.bottom;
-    } else {
-      return DropZone.center;
-    }
-  }
-
-  bool _canAcceptForZone(DropZone zone, CategoryTreeNode dragged) {
-    switch (zone) {
-      case DropZone.top:
-        return widget.canAcceptBefore(dragged, widget.targetNode);
-      case DropZone.center:
-        return widget.canAcceptAsChild(dragged, widget.targetNode);
-      case DropZone.bottom:
-        return widget.canAcceptAfter(dragged, widget.targetNode);
-      case DropZone.none:
-        return false;
-    }
+    // Round to nearest depth level for snapping behavior
+    // Min depth is 0 (root), max depth is target.depth + 1 (as child of target)
+    int rawDepth = (visualLeftLocal / _depthIndentation).round();
+    return rawDepth.clamp(0, widget.targetNode.depth + 1);
   }
 
   @override
@@ -164,128 +139,74 @@ class _CategoryItemDropTargetState extends State<CategoryItemDropTarget> {
 
     return DragTarget<CategoryTreeNode>(
       onWillAcceptWithDetails: (details) {
-        final zone = _getZoneFromPosition(details.offset);
-        final canAccept = _canAcceptForZone(zone, details.data);
+        final depth = _getDepthFromPosition(details.offset, details.data);
+        final canAccept = widget.canAccept(details.data, widget.targetNode, depth);
 
-        if (canAccept && _currentZone != zone) {
-          setState(() => _currentZone = zone);
-        } else if (!canAccept && _currentZone != DropZone.none) {
-          setState(() => _currentZone = DropZone.none);
+        if (canAccept && (!_isHovering || _currentDepth != depth)) {
+          setState(() {
+            _isHovering = true;
+            _currentDepth = depth;
+          });
+        } else if (!canAccept && _isHovering) {
+          setState(() => _isHovering = false);
         }
 
         return canAccept;
       },
       onAcceptWithDetails: (details) {
-        final zone = _currentZone;
-        setState(() => _currentZone = DropZone.none);
-
-        switch (zone) {
-          case DropZone.top:
-            widget.onAcceptBefore(details.data, widget.targetNode);
-            break;
-          case DropZone.center:
-            widget.onAcceptAsChild(details.data, widget.targetNode);
-            break;
-          case DropZone.bottom:
-            widget.onAcceptAfter(details.data, widget.targetNode);
-            break;
-          case DropZone.none:
-            break;
-        }
+        final depth = _currentDepth;
+        setState(() => _isHovering = false);
+        widget.onAccept(details.data, widget.targetNode, depth);
       },
       onLeave: (_) {
-        setState(() => _currentZone = DropZone.none);
+        setState(() => _isHovering = false);
       },
       onMove: (details) {
-        final zone = _getZoneFromPosition(details.offset);
-        final canAccept = _canAcceptForZone(zone, details.data);
-        final newZone = canAccept ? zone : DropZone.none;
+        final depth = _getDepthFromPosition(details.offset, details.data);
+        final canAccept = widget.canAccept(details.data, widget.targetNode, depth);
 
-        if (_currentZone != newZone) {
-          setState(() => _currentZone = newZone);
+        if (canAccept && (!_isHovering || _currentDepth != depth)) {
+          setState(() {
+            _isHovering = true;
+            _currentDepth = depth;
+          });
+        } else if (!canAccept && _isHovering) {
+          setState(() => _isHovering = false);
         }
       },
       builder: (context, candidateData, rejectedData) {
-        final isTopZone = _currentZone == DropZone.top;
-        final isCenterZone = _currentZone == DropZone.center;
-        final isBottomZone = _currentZone == DropZone.bottom;
+        final previewIndentation = _currentDepth * _depthIndentation;
 
         return Column(
           key: _key,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Top insertion indicator
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 100),
-              height: isTopZone ? 4 : 0,
-              margin: EdgeInsets.only(bottom: isTopZone ? 4 : 0),
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(2),
-                boxShadow: isTopZone
-                    ? [
-                        BoxShadow(
-                          color: color.withValues(alpha: 0.6),
-                          blurRadius: 8,
-                          spreadRadius: 1,
-                        ),
-                      ]
-                    : null,
-              ),
-            ),
-            // The actual item with highlight
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                widget.child,
-                // Overlay highlight for center zone (positioned to match tile's visual bounds)
-                if (isCenterZone)
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    bottom: AppSpacing.sm, // Account for tile's bottom margin
-                    child: IgnorePointer(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: color, width: 2),
-                          boxShadow: [
-                            BoxShadow(
-                              color: color.withValues(alpha: 0.4),
-                              blurRadius: 12,
-                              spreadRadius: 2,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+            // The actual item
+            widget.child,
+            // Preview placeholder showing where item will be inserted
+            if (_isHovering)
+              Transform.translate(
+                offset: Offset(0, -AppSpacing.sm),
+                child: Container(
+                  height: _feedbackHeight,
+                  margin: EdgeInsets.only(
+                    left: previewIndentation,
+                    bottom: AppSpacing.sm,
                   ),
-              ],
-            ),
-            // Bottom insertion indicator
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 100),
-              height: isBottomZone ? 4 : 0,
-              margin: EdgeInsets.only(
-                top: isBottomZone ? 0 : 0,
-                bottom: isBottomZone ? 4 : 0,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: color, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              transform: Matrix4.translationValues(0, isBottomZone ? -AppSpacing.sm : 0, 0),
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(2),
-                boxShadow: isBottomZone
-                    ? [
-                        BoxShadow(
-                          color: color.withValues(alpha: 0.6),
-                          blurRadius: 8,
-                          spreadRadius: 1,
-                        ),
-                      ]
-                    : null,
-              ),
-            ),
           ],
         );
       },

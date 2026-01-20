@@ -182,8 +182,10 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
                   if (index == treeNodes.length + 1) {
                     return _buildAddCategoryTile();
                   }
-                  final node = treeNodes[index - 1];
-                  return _buildTreeItem(node, intensity);
+                  final nodeIndex = index - 1;
+                  final node = treeNodes[nodeIndex];
+                  final prevNode = nodeIndex > 0 ? treeNodes[nodeIndex - 1] : null;
+                  return _buildTreeItem(node, prevNode, intensity);
                 },
               ),
             ),
@@ -237,7 +239,40 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
     );
   }
 
-  Widget _buildTreeItem(CategoryTreeNode node, ColorIntensity intensity) {
+  /// Get the parent ID for inserting at a given depth.
+  /// Uses prevNode to find the correct parent in the tree hierarchy.
+  String? _getParentForInsertionDepth(CategoryTreeNode? prevNode, int depth) {
+    if (depth == 0) return null;
+    if (prevNode == null) return null;
+
+    // If inserting deeper than prevNode, prevNode becomes the parent
+    if (depth == prevNode.depth + 1) {
+      return prevNode.category.id;
+    }
+
+    // If inserting at same level or shallower than prevNode,
+    // find the ancestor at depth-1
+    if (depth <= prevNode.depth) {
+      if (depth == 1) {
+        // Need root-level parent (depth 0) - get the root ancestor
+        final ancestors = ref.read(categoryAncestorsProvider(prevNode.category.id));
+        return ancestors.isNotEmpty ? ancestors.last.id : null;
+      } else {
+        // Need parent at depth-1
+        final ancestors = ref.read(categoryAncestorsProvider(prevNode.category.id));
+        // ancestors is [parent, grandparent, ..., root]
+        // We want ancestor at depth (depth-1), which is at index (prevNode.depth - depth)
+        final ancestorIndex = prevNode.depth - depth;
+        if (ancestorIndex >= 0 && ancestorIndex < ancestors.length) {
+          return ancestors[ancestorIndex].id;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  Widget _buildTreeItem(CategoryTreeNode node, CategoryTreeNode? prevNode, ColorIntensity intensity) {
     final isExpanded = _expandedIds.contains(node.category.id);
     final shouldShow = _shouldShowNode(node);
 
@@ -251,55 +286,57 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
     return CategoryItemDropTarget(
       targetNode: node,
       highlightColor: categoryColor,
-      canAcceptAsChild: (dragged, target) {
+      canAccept: (dragged, target, depth) {
         if (dragged.category.id == target.category.id) return false;
-        if (dragged.category.parentId == target.category.id) return false;
-        final descendants = CategoryTreeBuilder.getDescendantIds(
-          ref.read(categoriesProvider),
-          dragged.category.id,
-        );
-        if (descendants.contains(target.category.id)) return false;
+        // If inserting as child, check if that's allowed
+        if (depth == target.depth + 1) {
+          if (dragged.category.parentId == target.category.id) return false;
+          final descendants = CategoryTreeBuilder.getDescendantIds(
+            ref.read(categoriesProvider),
+            dragged.category.id,
+          );
+          if (descendants.contains(target.category.id)) return false;
+        }
         return true;
       },
-      canAcceptBefore: (dragged, target) {
-        if (dragged.category.id == target.category.id) return false;
-        return true;
-      },
-      canAcceptAfter: (dragged, target) {
-        if (dragged.category.id == target.category.id) return false;
-        return true;
-      },
-      onAcceptAsChild: (dragged, target) {
-        ref.read(categoriesProvider.notifier).updateParent(
-          dragged.category.id,
-          target.category.id,
-        );
-        setState(() {
-          _expandedIds.add(target.category.id);
-        });
-      },
-      onAcceptBefore: (dragged, target) {
-        ref.read(categoriesProvider.notifier).moveCategoryToPosition(
-          dragged.category.id,
-          target.category.parentId,
-          target.category.id,
-        );
-      },
-      onAcceptAfter: (dragged, target) {
-        // Find the next sibling to insert before, or null to insert at end
-        final categories = ref.read(categoriesProvider);
-        final siblings = categories
-            .where((c) => c.parentId == target.category.parentId && c.type == target.category.type)
-            .toList()
-          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-        final targetIndex = siblings.indexWhere((c) => c.id == target.category.id);
-        final nextSibling = targetIndex < siblings.length - 1 ? siblings[targetIndex + 1] : null;
+      onAccept: (dragged, target, depth) {
+        if (depth == target.depth + 1) {
+          // Insert as first child of target
+          ref.read(categoriesProvider.notifier).updateParent(
+            dragged.category.id,
+            target.category.id,
+          );
+          setState(() {
+            _expandedIds.add(target.category.id);
+          });
+        } else {
+          // Insert as sibling at the specified depth (after target)
+          final parentId = _getParentForInsertionDepth(node, depth);
 
-        ref.read(categoriesProvider.notifier).moveCategoryToPosition(
-          dragged.category.id,
-          target.category.parentId,
-          nextSibling?.id,
-        );
+          // Find the next sibling to insert before
+          final categories = ref.read(categoriesProvider);
+          final siblings = categories
+              .where((c) => c.parentId == parentId && c.type == target.category.type)
+              .toList()
+            ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
+          // Find the item at the target depth that we should insert after
+          String? insertBeforeId;
+          if (depth == target.depth) {
+            // Same level as target - insert after target
+            final targetIndex = siblings.indexWhere((c) => c.id == target.category.id);
+            if (targetIndex >= 0 && targetIndex < siblings.length - 1) {
+              insertBeforeId = siblings[targetIndex + 1].id;
+            }
+          }
+          // For shallower depths, insert at end of that level (insertBeforeId = null)
+
+          ref.read(categoriesProvider.notifier).moveCategoryToPosition(
+            dragged.category.id,
+            parentId,
+            insertBeforeId,
+          );
+        }
       },
       child: DraggableCategoryTreeTile(
         node: node,
