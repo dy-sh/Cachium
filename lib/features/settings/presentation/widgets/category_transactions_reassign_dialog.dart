@@ -284,7 +284,7 @@ class _CategoryTransactionsReassignScreenState
   }
 }
 
-class _CategoryReassignRow extends ConsumerWidget {
+class _CategoryReassignRow extends ConsumerStatefulWidget {
   final Category category;
   final int transactionCount;
   final ColorIntensity intensity;
@@ -302,14 +302,22 @@ class _CategoryReassignRow extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final categoryColor = category.getColor(intensity);
-    final bgOpacity = AppColors.getBgOpacity(intensity);
-    final txText = transactionCount == 1 ? 'transaction' : 'transactions';
-    final isDeleteSelected = selectedTargetId == null;
+  ConsumerState<_CategoryReassignRow> createState() => _CategoryReassignRowState();
+}
+
+class _CategoryReassignRowState extends ConsumerState<_CategoryReassignRow> {
+  final _dropdownKey = GlobalKey<CategoryDropdownState>();
+
+  @override
+  Widget build(BuildContext context) {
+    final categoryColor = widget.category.getColor(widget.intensity);
+    final bgOpacity = AppColors.getBgOpacity(widget.intensity);
+    final txText = widget.transactionCount == 1 ? 'transaction' : 'transactions';
+    final isDeleteSelected = widget.selectedTargetId == null;
+    final isMoveSelected = widget.selectedTargetId != null && widget.selectedTargetId!.isNotEmpty;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      margin: const EdgeInsets.only(bottom: AppSpacing.lg),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -330,7 +338,7 @@ class _CategoryReassignRow extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
-                  category.icon,
+                  widget.category.icon,
                   size: 20,
                   color: categoryColor,
                 ),
@@ -341,13 +349,13 @@ class _CategoryReassignRow extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      category.name,
+                      widget.category.name,
                       style: AppTypography.bodyMedium.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     Text(
-                      '$transactionCount $txText',
+                      '${widget.transactionCount} $txText',
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.textSecondary,
                       ),
@@ -359,65 +367,159 @@ class _CategoryReassignRow extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.md),
 
-          // Action buttons row
-          Row(
-            children: [
-              // Category dropdown/selector
-              Expanded(
-                child: _CategoryDropdown(
-                  categories: availableCategories,
-                  selectedCategoryId:
-                      (selectedTargetId != null && selectedTargetId!.isNotEmpty)
-                          ? selectedTargetId
-                          : null,
-                  intensity: intensity,
-                  onSelected: (categoryId) {
-                    onTargetSelected(categoryId);
-                  },
+          // Option 1: Move to another category
+          GestureDetector(
+            onTap: () {
+              // Show category picker when clicking "Move to"
+              if (widget.availableCategories.isNotEmpty) {
+                _dropdownKey.currentState?.showPicker();
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: isMoveSelected
+                    ? ref.watch(accentColorProvider).withOpacity(0.08)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isMoveSelected
+                      ? ref.watch(accentColorProvider).withOpacity(0.3)
+                      : Colors.transparent,
                 ),
               ),
-              const SizedBox(width: AppSpacing.sm),
-              // Delete button
-              GestureDetector(
-                onTap: () => onTargetSelected(null),
-                child: Container(
-                  height: 44,
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: isDeleteSelected
-                        ? AppColors.expense.withOpacity(0.15)
-                        : AppColors.surfaceLight,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: isDeleteSelected
-                          ? AppColors.expense.withOpacity(0.5)
-                          : AppColors.border,
+              child: Row(
+                children: [
+                  // Radio indicator
+                  Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isMoveSelected
+                            ? ref.watch(accentColorProvider)
+                            : AppColors.textTertiary,
+                        width: 2,
+                      ),
+                    ),
+                    child: isMoveSelected
+                        ? Center(
+                            child: Container(
+                              width: 10,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: ref.watch(accentColorProvider),
+                              ),
+                            ),
+                          )
+                        : null,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Icon(
+                    LucideIcons.folderInput,
+                    size: 16,
+                    color: isMoveSelected
+                        ? ref.watch(accentColorProvider)
+                        : AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    'Move to:',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: isMoveSelected
+                          ? ref.watch(accentColorProvider)
+                          : AppColors.textSecondary,
+                      fontWeight: isMoveSelected ? FontWeight.w600 : FontWeight.normal,
                     ),
                   ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        LucideIcons.trash2,
-                        size: 16,
-                        color:
-                            isDeleteSelected ? AppColors.expense : AppColors.textSecondary,
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Text(
-                        'Delete',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: isDeleteSelected
-                              ? AppColors.expense
-                              : AppColors.textSecondary,
-                          fontWeight:
-                              isDeleteSelected ? FontWeight.w600 : FontWeight.normal,
-                        ),
-                      ),
-                    ],
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: _CategoryDropdown(
+                      key: _dropdownKey,
+                      categories: widget.availableCategories,
+                      selectedCategoryId: isMoveSelected ? widget.selectedTargetId : null,
+                      intensity: widget.intensity,
+                      onSelected: (categoryId) {
+                        widget.onTargetSelected(categoryId);
+                      },
+                    ),
                   ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.sm),
+
+          // Option 2: Delete transactions
+          GestureDetector(
+            onTap: () => widget.onTargetSelected(null),
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: isDeleteSelected
+                    ? AppColors.expense.withOpacity(0.08)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isDeleteSelected
+                      ? AppColors.expense.withOpacity(0.3)
+                      : Colors.transparent,
                 ),
               ),
-            ],
+              child: Row(
+                children: [
+                  // Radio indicator
+                  Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isDeleteSelected
+                            ? AppColors.expense
+                            : AppColors.textTertiary,
+                        width: 2,
+                      ),
+                    ),
+                    child: isDeleteSelected
+                        ? Center(
+                            child: Container(
+                              width: 10,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: AppColors.expense,
+                              ),
+                            ),
+                          )
+                        : null,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Icon(
+                    LucideIcons.trash2,
+                    size: 16,
+                    color: isDeleteSelected
+                        ? AppColors.expense
+                        : AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Expanded(
+                    child: Text(
+                      'Delete transactions permanently',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: isDeleteSelected
+                            ? AppColors.expense
+                            : AppColors.textSecondary,
+                        fontWeight: isDeleteSelected ? FontWeight.w600 : FontWeight.normal,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -432,6 +534,7 @@ class _CategoryDropdown extends ConsumerStatefulWidget {
   final ValueChanged<String> onSelected;
 
   const _CategoryDropdown({
+    super.key,
     required this.categories,
     required this.selectedCategoryId,
     required this.intensity,
@@ -439,11 +542,11 @@ class _CategoryDropdown extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<_CategoryDropdown> createState() => _CategoryDropdownState();
+  ConsumerState<_CategoryDropdown> createState() => CategoryDropdownState();
 }
 
-class _CategoryDropdownState extends ConsumerState<_CategoryDropdown> {
-  void _showCategoryPicker() {
+class CategoryDropdownState extends ConsumerState<_CategoryDropdown> {
+  void showPicker() {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.surface,
@@ -475,7 +578,7 @@ class _CategoryDropdownState extends ConsumerState<_CategoryDropdown> {
     final bgOpacity = AppColors.getBgOpacity(widget.intensity);
 
     return GestureDetector(
-      onTap: widget.categories.isNotEmpty ? _showCategoryPicker : null,
+      onTap: widget.categories.isNotEmpty ? showPicker : null,
       child: Container(
         height: 44,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
