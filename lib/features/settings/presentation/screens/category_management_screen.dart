@@ -411,41 +411,67 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
         return true;
       },
       onAccept: (dragged, target, depth) {
+        final categories = ref.read(categoriesProvider);
+
         if (depth == target.depth + 1) {
-          // Insert as first child of target
-          ref.read(categoriesProvider.notifier).updateParent(
+          // Insert as FIRST child of target (placeholder shows right after target)
+          final existingChildren = categories
+              .where((c) => c.parentId == target.category.id && c.type == dragged.category.type)
+              .toList()
+            ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
+          // Insert before the first existing child to become the new first child
+          final insertBeforeId = existingChildren.isNotEmpty ? existingChildren.first.id : null;
+
+          ref.read(categoriesProvider.notifier).moveCategoryToPosition(
             dragged.category.id,
             target.category.id,
+            insertBeforeId,
           );
           setState(() {
             _expandedIds.add(target.category.id);
           });
         } else {
-          // Insert as sibling at the specified depth (after target)
-          final parentId = _getParentForInsertionDepth(node, depth);
+          // Insert as sibling at the specified depth, BEFORE the target (or target's ancestor)
+          // This matches user expectation: hovering over B at same depth = insert before B
+          String? insertBeforeCategoryId;
+          String? parentId;
 
-          // Find the next sibling to insert before
-          final categories = ref.read(categoriesProvider);
-          final siblings = categories
-              .where((c) => c.parentId == parentId && c.type == target.category.type)
-              .toList()
-            ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-
-          // Find the item at the target depth that we should insert after
-          String? insertBeforeId;
           if (depth == target.depth) {
-            // Same level as target - insert after target
-            final targetIndex = siblings.indexWhere((c) => c.id == target.category.id);
-            if (targetIndex >= 0 && targetIndex < siblings.length - 1) {
-              insertBeforeId = siblings[targetIndex + 1].id;
+            // Same level as target - insert right before target
+            insertBeforeCategoryId = target.category.id;
+            parentId = target.category.parentId;
+          } else {
+            // Shallower level - find target's ancestor at that depth and insert before it
+            final ancestors = ref.read(categoryAncestorsProvider(target.category.id));
+            // ancestors is [parent, grandparent, ..., root] with depths [target.depth-1, ..., 0]
+            if (depth == 0) {
+              // Insert at root level before the root ancestor
+              if (ancestors.isNotEmpty) {
+                insertBeforeCategoryId = ancestors.last.id;
+              } else {
+                insertBeforeCategoryId = target.category.id;
+              }
+              parentId = null;
+            } else {
+              // Find ancestor at the target depth
+              // Ancestor at depth D is at index (target.depth - D - 1)
+              final ancestorIndex = target.depth - depth - 1;
+              if (ancestorIndex >= 0 && ancestorIndex < ancestors.length) {
+                insertBeforeCategoryId = ancestors[ancestorIndex].id;
+                parentId = ancestors[ancestorIndex].parentId;
+              } else {
+                // Fallback
+                parentId = _getParentForInsertionDepth(target, depth);
+                insertBeforeCategoryId = target.category.id;
+              }
             }
           }
-          // For shallower depths, insert at end of that level (insertBeforeId = null)
 
           ref.read(categoriesProvider.notifier).moveCategoryToPosition(
             dragged.category.id,
             parentId,
-            insertBeforeId,
+            insertBeforeCategoryId,
           );
         }
       },
