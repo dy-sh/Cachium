@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/animations/haptic_helper.dart';
 import '../../../../core/constants/app_animations.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -16,6 +17,7 @@ class AccountSelector extends ConsumerStatefulWidget {
   final String? selectedId;
   final ValueChanged<String> onChanged;
   final int initialVisibleCount;
+  final VoidCallback? onCreatePressed;
 
   const AccountSelector({
     super.key,
@@ -23,6 +25,7 @@ class AccountSelector extends ConsumerStatefulWidget {
     this.selectedId,
     required this.onChanged,
     this.initialVisibleCount = 6,
+    this.onCreatePressed,
   });
 
   @override
@@ -35,6 +38,12 @@ class _AccountSelectorState extends ConsumerState<AccountSelector> {
   @override
   Widget build(BuildContext context) {
     final intensity = ref.watch(colorIntensityProvider);
+
+    // Show empty state if no accounts available
+    if (widget.accounts.isEmpty) {
+      return _buildEmptyState();
+    }
+
     final hasMore = widget.accounts.length > widget.initialVisibleCount;
     final displayAccounts = _showAll || !hasMore
         ? widget.accounts
@@ -84,6 +93,67 @@ class _AccountSelectorState extends ConsumerState<AccountSelector> {
           ),
         ],
       ],
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return GestureDetector(
+      onTap: widget.onCreatePressed,
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          borderRadius: AppRadius.mdAll,
+          color: AppColors.expense.withOpacity(0.08),
+          border: Border.all(
+            color: AppColors.expense.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppColors.expense.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                LucideIcons.walletCards,
+                size: 18,
+                color: AppColors.expense,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'No accounts available',
+                    style: AppTypography.labelMedium.copyWith(
+                      color: AppColors.expense,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Tap to create an account',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: AppColors.expense.withOpacity(0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              LucideIcons.chevronRight,
+              size: 18,
+              color: AppColors.expense.withOpacity(0.6),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

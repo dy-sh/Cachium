@@ -17,6 +17,7 @@ class CategorySelector extends ConsumerStatefulWidget {
   final String? selectedId;
   final ValueChanged<String> onChanged;
   final int initialVisibleCount;
+  final VoidCallback? onCreatePressed;
 
   const CategorySelector({
     super.key,
@@ -24,6 +25,7 @@ class CategorySelector extends ConsumerStatefulWidget {
     this.selectedId,
     required this.onChanged,
     this.initialVisibleCount = 9,
+    this.onCreatePressed,
   });
 
   @override
@@ -59,6 +61,11 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
   @override
   Widget build(BuildContext context) {
     final intensity = ref.watch(colorIntensityProvider);
+
+    // Show empty state if no categories available
+    if (widget.categories.isEmpty) {
+      return _buildEmptyState();
+    }
 
     final displayCategories = _getDisplayCategories();
     final hasMore = displayCategories.length > widget.initialVisibleCount;
@@ -122,6 +129,67 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
           ),
         ],
       ],
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return GestureDetector(
+      onTap: widget.onCreatePressed,
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          borderRadius: AppRadius.mdAll,
+          color: AppColors.expense.withOpacity(0.08),
+          border: Border.all(
+            color: AppColors.expense.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppColors.expense.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                LucideIcons.folderPlus,
+                size: 18,
+                color: AppColors.expense,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'No categories available',
+                    style: AppTypography.labelMedium.copyWith(
+                      color: AppColors.expense,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Tap to create a category',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: AppColors.expense.withOpacity(0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              LucideIcons.chevronRight,
+              size: 18,
+              color: AppColors.expense.withOpacity(0.6),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

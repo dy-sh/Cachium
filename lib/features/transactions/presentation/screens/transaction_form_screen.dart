@@ -11,6 +11,7 @@ import '../../../../design_system/components/layout/fm_form_header.dart';
 import '../../../../design_system/components/chips/fm_toggle_chip.dart';
 import '../../../../design_system/components/inputs/fm_amount_input.dart';
 import '../../../../design_system/components/inputs/fm_text_field.dart';
+import '../../../../navigation/app_router.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
@@ -157,6 +158,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                       onChanged: (id) {
                         ref.read(transactionFormProvider.notifier).setCategory(id);
                       },
+                      onCreatePressed: () => context.push(AppRoutes.categoryManagement),
                     ),
                     const SizedBox(height: AppSpacing.xxl),
 
@@ -168,6 +170,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                       onChanged: (id) {
                         ref.read(transactionFormProvider.notifier).setAccount(id);
                       },
+                      onCreatePressed: () => context.push(AppRoutes.accountForm),
                     ),
                     const SizedBox(height: AppSpacing.xxl),
 
