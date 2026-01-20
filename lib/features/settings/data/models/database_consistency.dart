@@ -22,12 +22,14 @@ class DatabaseConsistency {
   final int transactionsWithInvalidAccount;
   final int categoriesWithInvalidParent;
   final int accountsWithIncorrectBalance;
+  final int duplicateTransactions;
 
   const DatabaseConsistency({
     required this.transactionsWithInvalidCategory,
     required this.transactionsWithInvalidAccount,
     required this.categoriesWithInvalidParent,
     required this.accountsWithIncorrectBalance,
+    required this.duplicateTransactions,
   });
 
   bool get isConsistent => totalIssues == 0;
@@ -36,7 +38,8 @@ class DatabaseConsistency {
       transactionsWithInvalidCategory +
       transactionsWithInvalidAccount +
       categoriesWithInvalidParent +
-      accountsWithIncorrectBalance;
+      accountsWithIncorrectBalance +
+      duplicateTransactions;
 
   /// Returns all checks for display in the details popup.
   List<ConsistencyCheck> get allChecks => [
@@ -49,6 +52,11 @@ class DatabaseConsistency {
           label: 'Transactions with invalid account',
           count: transactionsWithInvalidAccount,
           icon: LucideIcons.wallet,
+        ),
+        ConsistencyCheck(
+          label: 'Duplicate transactions',
+          count: duplicateTransactions,
+          icon: LucideIcons.copy,
         ),
         ConsistencyCheck(
           label: 'Categories with invalid parent',

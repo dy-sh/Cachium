@@ -54,6 +54,21 @@ class DatabaseConsistencyService {
       }
     }
 
+    // Count duplicate transactions (same date/time and amount)
+    final Map<String, int> transactionKeys = {};
+    for (final tx in transactions) {
+      // Key is combination of date (milliseconds) and amount
+      final key = '${tx.date.millisecondsSinceEpoch}_${tx.amount}';
+      transactionKeys[key] = (transactionKeys[key] ?? 0) + 1;
+    }
+    // Count transactions that are duplicates (appear more than once)
+    int duplicateTransactions = 0;
+    for (final count in transactionKeys.values) {
+      if (count > 1) {
+        duplicateTransactions += count;
+      }
+    }
+
     // Count accounts with incorrect balance
     // Reuse the same logic from RecalculateBalancesNotifier
     final Map<String, double> accountDeltas = {};
@@ -78,6 +93,7 @@ class DatabaseConsistencyService {
       transactionsWithInvalidAccount: transactionsWithInvalidAccount,
       categoriesWithInvalidParent: categoriesWithInvalidParent,
       accountsWithIncorrectBalance: accountsWithIncorrectBalance,
+      duplicateTransactions: duplicateTransactions,
     );
   }
 }
