@@ -161,12 +161,26 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
 
     final transactionsToMove = currentState.where((t) => t.accountId == fromAccountId).toList();
 
+    if (transactionsToMove.isEmpty) return;
+
+    // Calculate total balance effect of all transactions
+    // Income = +amount, Expense = -amount
+    double totalEffect = 0;
+    for (final tx in transactionsToMove) {
+      if (tx.type == TransactionType.income) {
+        totalEffect += tx.amount;
+      } else {
+        totalEffect -= tx.amount;
+      }
+    }
+
+    // Update transactions in database
     for (final tx in transactionsToMove) {
       final updatedTx = tx.copyWith(accountId: toAccountId);
       await repo.updateTransaction(updatedTx);
     }
 
-    // Update local state
+    // Update local state for transactions
     state = state.whenData(
       (transactions) => transactions.map((t) {
         if (t.accountId == fromAccountId) {
@@ -175,6 +189,12 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
         return t;
       }).toList(),
     );
+
+    // Update account balances:
+    // Remove the effect from source account (reverse it)
+    await ref.read(accountsProvider.notifier).updateBalance(fromAccountId, -totalEffect);
+    // Add the effect to target account
+    await ref.read(accountsProvider.notifier).updateBalance(toAccountId, totalEffect);
   }
 
   /// Delete all transactions for a specific account
