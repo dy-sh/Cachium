@@ -36,7 +36,9 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
   CategoryTreeNode? _draggedNode;
   String? _currentTargetParentId; // Parent ID where item will be placed
   String? _hoverTargetNodeId; // Node ID we're currently hovering over
+  int? _currentHoverDepth; // Current depth when hovering
   final ValueNotifier<bool> _showDragPlaceholderNotifier = ValueNotifier(true);
+  final ValueNotifier<int> _previewDepthNotifier = ValueNotifier(0);
 
   static const _scrollAreaHeight = 80.0;
   static const _scrollSpeed = 25.0;
@@ -46,12 +48,14 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
     _scrollTimer?.cancel();
     _scrollController.dispose();
     _showDragPlaceholderNotifier.dispose();
+    _previewDepthNotifier.dispose();
     super.dispose();
   }
 
   void _startDrag(CategoryTreeNode node) {
     _draggedNode = node;
     _showDragPlaceholderNotifier.value = true; // Show placeholder at start
+    _previewDepthNotifier.value = node.depth; // Start with original depth
     _scrollTimer?.cancel();
     _scrollTimer = Timer.periodic(const Duration(milliseconds: 16), (_) {
       _performAutoScroll();
@@ -78,8 +82,10 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
       // Hover cleared
       parentId = null;
       hoverNodeId = null;
+      _currentHoverDepth = null;
     } else {
       hoverNodeId = targetNode.category.id;
+      _currentHoverDepth = depth;
       if (depth == targetNode.depth + 1) {
         // Inserting as child of target
         parentId = targetNode.category.id;
@@ -94,8 +100,13 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
         _currentTargetParentId = parentId;
         _hoverTargetNodeId = hoverNodeId;
       });
-      // Update placeholder visibility for the dragged item
+      // Update placeholder visibility and depth for the dragged item
       _updateDragPlaceholderVisibility();
+    }
+
+    // Update preview depth when hovering over the original item
+    if (_draggedNode != null && hoverNodeId == _draggedNode!.category.id && depth >= 0) {
+      _previewDepthNotifier.value = depth;
     }
   }
 
@@ -589,6 +600,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
         isTargetParent: isThisTargetParent,
         targetParentColor: targetColor,
         showDragPlaceholderNotifier: _showDragPlaceholderNotifier,
+        previewDepthNotifier: _previewDepthNotifier,
         onTap: () => _showEditModal(node.category),
         onExpandToggle: node.hasChildren
             ? () {

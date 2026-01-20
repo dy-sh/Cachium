@@ -255,6 +255,7 @@ class DraggableCategoryTreeTile extends StatelessWidget {
   final bool isTargetParent;
   final Color? targetParentColor;
   final ValueNotifier<bool>? showDragPlaceholderNotifier; // Reactive placeholder visibility
+  final ValueNotifier<int>? previewDepthNotifier; // Reactive depth for placeholder indentation
   final VoidCallback? onTap;
   final VoidCallback? onExpandToggle;
   final Function(CategoryTreeNode)? onDragCompleted;
@@ -270,6 +271,7 @@ class DraggableCategoryTreeTile extends StatelessWidget {
     this.isTargetParent = false,
     this.targetParentColor,
     this.showDragPlaceholderNotifier,
+    this.previewDepthNotifier,
     this.onTap,
     this.onExpandToggle,
     this.onDragCompleted,
@@ -278,11 +280,11 @@ class DraggableCategoryTreeTile extends StatelessWidget {
     this.onDragUpdate,
   });
 
-  Widget _buildDragPlaceholder(BuildContext context) {
+  Widget _buildDragPlaceholder(BuildContext context, int depth) {
     final categoryColor = node.category.getColor(intensity);
-    final indentation = node.depth * 24.0;
+    final indentation = depth * 24.0;
 
-    // Visible placeholder at original position
+    // Visible placeholder at original position with dynamic depth
     return Container(
       height: 72,
       margin: EdgeInsets.only(
@@ -324,14 +326,20 @@ class DraggableCategoryTreeTile extends StatelessWidget {
           ),
         ),
       ),
-      childWhenDragging: showDragPlaceholderNotifier != null
+      childWhenDragging: showDragPlaceholderNotifier != null && previewDepthNotifier != null
           ? ValueListenableBuilder<bool>(
               valueListenable: showDragPlaceholderNotifier!,
-              builder: (context, show, child) {
-                return show ? _buildDragPlaceholder(context) : const SizedBox.shrink();
+              builder: (context, show, _) {
+                if (!show) return const SizedBox.shrink();
+                return ValueListenableBuilder<int>(
+                  valueListenable: previewDepthNotifier!,
+                  builder: (context, depth, _) {
+                    return _buildDragPlaceholder(context, depth);
+                  },
+                );
               },
             )
-          : _buildDragPlaceholder(context),
+          : _buildDragPlaceholder(context, node.depth),
       onDragCompleted: () {
         onDragEnd?.call();
         onDragCompleted?.call(node);
