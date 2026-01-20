@@ -69,6 +69,7 @@ class Account {
   final String name;
   final AccountType type;
   final double balance;
+  final double initialBalance;
   final Color? customColor;
   final IconData? customIcon;
   final DateTime createdAt;
@@ -78,6 +79,7 @@ class Account {
     required this.name,
     required this.type,
     required this.balance,
+    required this.initialBalance,
     this.customColor,
     this.customIcon,
     required this.createdAt,
@@ -97,6 +99,7 @@ class Account {
     String? name,
     AccountType? type,
     double? balance,
+    double? initialBalance,
     Color? customColor,
     IconData? customIcon,
     DateTime? createdAt,
@@ -106,6 +109,7 @@ class Account {
       name: name ?? this.name,
       type: type ?? this.type,
       balance: balance ?? this.balance,
+      initialBalance: initialBalance ?? this.initialBalance,
       customColor: customColor ?? this.customColor,
       customIcon: customIcon ?? this.customIcon,
       createdAt: createdAt ?? this.createdAt,

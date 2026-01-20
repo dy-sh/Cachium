@@ -225,3 +225,133 @@ final databaseManagementProvider =
     NotifierProvider<DatabaseManagementNotifier, AsyncValue<void>>(() {
   return DatabaseManagementNotifier();
 });
+
+/// Result of balance recalculation for a single account.
+class BalanceChange {
+  final String accountId;
+  final String accountName;
+  final double oldBalance;
+  final double newBalance;
+  final double initialBalance;
+  final double transactionDelta;
+
+  const BalanceChange({
+    required this.accountId,
+    required this.accountName,
+    required this.oldBalance,
+    required this.newBalance,
+    required this.initialBalance,
+    required this.transactionDelta,
+  });
+
+  double get difference => newBalance - oldBalance;
+  bool get hasChanged => difference.abs() > 0.001;
+}
+
+/// Result of the recalculation preview.
+class RecalculatePreview {
+  final List<BalanceChange> changes;
+  final int totalAccounts;
+
+  const RecalculatePreview({
+    required this.changes,
+    required this.totalAccounts,
+  });
+
+  List<BalanceChange> get changedAccounts =>
+      changes.where((c) => c.hasChanged).toList();
+  int get changedCount => changedAccounts.length;
+  bool get hasChanges => changedCount > 0;
+}
+
+/// Provider for recalculating account balances from transaction history.
+class RecalculateBalancesNotifier extends Notifier<AsyncValue<RecalculatePreview?>> {
+  @override
+  AsyncValue<RecalculatePreview?> build() {
+    return const AsyncValue.data(null);
+  }
+
+  /// Calculate what changes would be made without applying them.
+  Future<RecalculatePreview?> calculatePreview() async {
+    state = const AsyncValue.loading();
+    try {
+      final accountRepo = ref.read(accountRepositoryProvider);
+      final transactionRepo = ref.read(transactionRepositoryProvider);
+
+      // Get all accounts and transactions
+      final accounts = await accountRepo.getAllAccounts();
+      final transactions = await transactionRepo.getAllTransactions();
+
+      // Group transactions by account
+      final Map<String, double> accountDeltas = {};
+      for (final tx in transactions) {
+        final delta = tx.type.name == 'income' ? tx.amount : -tx.amount;
+        accountDeltas[tx.accountId] = (accountDeltas[tx.accountId] ?? 0) + delta;
+      }
+
+      // Calculate changes for each account
+      final changes = <BalanceChange>[];
+      for (final account in accounts) {
+        final transactionDelta = accountDeltas[account.id] ?? 0;
+        final newBalance = account.initialBalance + transactionDelta;
+
+        changes.add(BalanceChange(
+          accountId: account.id,
+          accountName: account.name,
+          oldBalance: account.balance,
+          newBalance: newBalance,
+          initialBalance: account.initialBalance,
+          transactionDelta: transactionDelta,
+        ));
+      }
+
+      final preview = RecalculatePreview(
+        changes: changes,
+        totalAccounts: accounts.length,
+      );
+
+      state = AsyncValue.data(preview);
+      return preview;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      return null;
+    }
+  }
+
+  /// Apply the calculated changes.
+  Future<int> applyChanges() async {
+    final preview = state.valueOrNull;
+    if (preview == null) return 0;
+
+    try {
+      final accountRepo = ref.read(accountRepositoryProvider);
+      int updatedCount = 0;
+
+      for (final change in preview.changedAccounts) {
+        final account = (await accountRepo.getAllAccounts())
+            .firstWhere((a) => a.id == change.accountId);
+        final updatedAccount = account.copyWith(balance: change.newBalance);
+        await accountRepo.updateAccount(updatedAccount);
+        updatedCount++;
+      }
+
+      // Refresh accounts provider
+      ref.invalidate(accountsProvider);
+      ref.invalidate(databaseMetricsProvider);
+
+      state = const AsyncValue.data(null);
+      return updatedCount;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  void reset() {
+    state = const AsyncValue.data(null);
+  }
+}
+
+final recalculateBalancesProvider =
+    NotifierProvider<RecalculateBalancesNotifier, AsyncValue<RecalculatePreview?>>(() {
+  return RecalculateBalancesNotifier();
+});

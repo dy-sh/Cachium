@@ -8,6 +8,7 @@ class DemoData {
       name: 'Chase Checking',
       type: AccountType.bank,
       balance: 5420.50,
+      initialBalance: 5420.50,
       createdAt: DateTime.now().subtract(const Duration(days: 365)),
     ),
     Account(
@@ -15,6 +16,7 @@ class DemoData {
       name: 'Visa Platinum',
       type: AccountType.creditCard,
       balance: -1250.00,
+      initialBalance: -1250.00,
       createdAt: DateTime.now().subtract(const Duration(days: 300)),
     ),
     Account(
@@ -22,6 +24,7 @@ class DemoData {
       name: 'Cash',
       type: AccountType.cash,
       balance: 340.00,
+      initialBalance: 340.00,
       createdAt: DateTime.now().subtract(const Duration(days: 200)),
     ),
     Account(
@@ -29,6 +32,7 @@ class DemoData {
       name: 'Emergency Fund',
       type: AccountType.savings,
       balance: 12500.00,
+      initialBalance: 12500.00,
       createdAt: DateTime.now().subtract(const Duration(days: 180)),
     ),
     Account(
@@ -36,6 +40,7 @@ class DemoData {
       name: 'Fidelity 401k',
       type: AccountType.investment,
       balance: 45230.75,
+      initialBalance: 45230.75,
       createdAt: DateTime.now().subtract(const Duration(days: 150)),
     ),
     Account(
@@ -43,6 +48,7 @@ class DemoData {
       name: 'PayPal',
       type: AccountType.wallet,
       balance: 850.25,
+      initialBalance: 850.25,
       createdAt: DateTime.now().subtract(const Duration(days: 100)),
     ),
   ];

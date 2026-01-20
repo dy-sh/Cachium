@@ -33,6 +33,9 @@ mixin _$AccountData {
   /// Current balance
   double get balance => throw _privateConstructorUsedError;
 
+  /// Initial balance when account was created (for recalculation)
+  double get initialBalance => throw _privateConstructorUsedError;
+
   /// Custom color value (optional) - stored as int for serialization
   int? get customColorValue => throw _privateConstructorUsedError;
 
@@ -64,6 +67,7 @@ abstract class $AccountDataCopyWith<$Res> {
     String name,
     String type,
     double balance,
+    double initialBalance,
     int? customColorValue,
     int? customIconCodePoint,
     int createdAtMillis,
@@ -89,6 +93,7 @@ class _$AccountDataCopyWithImpl<$Res, $Val extends AccountData>
     Object? name = null,
     Object? type = null,
     Object? balance = null,
+    Object? initialBalance = null,
     Object? customColorValue = freezed,
     Object? customIconCodePoint = freezed,
     Object? createdAtMillis = null,
@@ -110,6 +115,10 @@ class _$AccountDataCopyWithImpl<$Res, $Val extends AccountData>
             balance: null == balance
                 ? _value.balance
                 : balance // ignore: cast_nullable_to_non_nullable
+                      as double,
+            initialBalance: null == initialBalance
+                ? _value.initialBalance
+                : initialBalance // ignore: cast_nullable_to_non_nullable
                       as double,
             customColorValue: freezed == customColorValue
                 ? _value.customColorValue
@@ -143,6 +152,7 @@ abstract class _$$AccountDataImplCopyWith<$Res>
     String name,
     String type,
     double balance,
+    double initialBalance,
     int? customColorValue,
     int? customIconCodePoint,
     int createdAtMillis,
@@ -167,6 +177,7 @@ class __$$AccountDataImplCopyWithImpl<$Res>
     Object? name = null,
     Object? type = null,
     Object? balance = null,
+    Object? initialBalance = null,
     Object? customColorValue = freezed,
     Object? customIconCodePoint = freezed,
     Object? createdAtMillis = null,
@@ -188,6 +199,10 @@ class __$$AccountDataImplCopyWithImpl<$Res>
         balance: null == balance
             ? _value.balance
             : balance // ignore: cast_nullable_to_non_nullable
+                  as double,
+        initialBalance: null == initialBalance
+            ? _value.initialBalance
+            : initialBalance // ignore: cast_nullable_to_non_nullable
                   as double,
         customColorValue: freezed == customColorValue
             ? _value.customColorValue
@@ -214,6 +229,7 @@ class _$AccountDataImpl implements _AccountData {
     required this.name,
     required this.type,
     required this.balance,
+    this.initialBalance = 0.0,
     this.customColorValue,
     this.customIconCodePoint,
     required this.createdAtMillis,
@@ -238,6 +254,11 @@ class _$AccountDataImpl implements _AccountData {
   @override
   final double balance;
 
+  /// Initial balance when account was created (for recalculation)
+  @override
+  @JsonKey()
+  final double initialBalance;
+
   /// Custom color value (optional) - stored as int for serialization
   @override
   final int? customColorValue;
@@ -252,7 +273,7 @@ class _$AccountDataImpl implements _AccountData {
 
   @override
   String toString() {
-    return 'AccountData(id: $id, name: $name, type: $type, balance: $balance, customColorValue: $customColorValue, customIconCodePoint: $customIconCodePoint, createdAtMillis: $createdAtMillis)';
+    return 'AccountData(id: $id, name: $name, type: $type, balance: $balance, initialBalance: $initialBalance, customColorValue: $customColorValue, customIconCodePoint: $customIconCodePoint, createdAtMillis: $createdAtMillis)';
   }
 
   @override
@@ -264,6 +285,8 @@ class _$AccountDataImpl implements _AccountData {
             (identical(other.name, name) || other.name == name) &&
             (identical(other.type, type) || other.type == type) &&
             (identical(other.balance, balance) || other.balance == balance) &&
+            (identical(other.initialBalance, initialBalance) ||
+                other.initialBalance == initialBalance) &&
             (identical(other.customColorValue, customColorValue) ||
                 other.customColorValue == customColorValue) &&
             (identical(other.customIconCodePoint, customIconCodePoint) ||
@@ -280,6 +303,7 @@ class _$AccountDataImpl implements _AccountData {
     name,
     type,
     balance,
+    initialBalance,
     customColorValue,
     customIconCodePoint,
     createdAtMillis,
@@ -305,6 +329,7 @@ abstract class _AccountData implements AccountData {
     required final String name,
     required final String type,
     required final double balance,
+    final double initialBalance,
     final int? customColorValue,
     final int? customIconCodePoint,
     required final int createdAtMillis,
@@ -328,6 +353,10 @@ abstract class _AccountData implements AccountData {
   /// Current balance
   @override
   double get balance;
+
+  /// Initial balance when account was created (for recalculation)
+  @override
+  double get initialBalance;
 
   /// Custom color value (optional) - stored as int for serialization
   @override

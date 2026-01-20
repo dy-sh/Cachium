@@ -693,7 +693,7 @@ Widget build(BuildContext context, WidgetRef ref) {
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        CREATE TRANSACTION                            │
+│                        CREATE TRANSACTION                           │
 └─────────────────────────────────────────────────────────────────────┘
 
 1. User fills form and taps "Save"

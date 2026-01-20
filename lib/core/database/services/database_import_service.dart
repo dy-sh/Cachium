@@ -266,6 +266,7 @@ class DatabaseImportService {
             'name': row['name'] as String,
             'type': row['type'] as String,
             'balance': row['balance'] as double,
+            'initialBalance': (row['initialBalance'] as num?)?.toDouble() ?? 0.0,
             'customColorValue': row['customColorValue'] as int?,
             'customIconCodePoint': row['customIconCodePoint'] as int?,
             'createdAtMillis': createdAt,
@@ -436,12 +437,14 @@ class DatabaseImportService {
         } else {
           final customColorValue = data['customColorValue'].toString();
           final customIconCodePoint = data['customIconCodePoint'].toString();
+          final initialBalanceStr = data['initialBalance']?.toString() ?? '0';
 
           final json = {
             'id': id,
             'name': data['name'].toString(),
             'type': data['type'].toString(),
             'balance': double.parse(data['balance'].toString()),
+            'initialBalance': initialBalanceStr.isEmpty ? 0.0 : double.parse(initialBalanceStr),
             'customColorValue': customColorValue.isEmpty ? null : int.parse(customColorValue),
             'customIconCodePoint': customIconCodePoint.isEmpty ? null : int.parse(customIconCodePoint),
             'createdAtMillis': createdAt,

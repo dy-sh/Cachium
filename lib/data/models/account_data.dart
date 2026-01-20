@@ -23,6 +23,9 @@ class AccountData with _$AccountData {
     /// Current balance
     required double balance,
 
+    /// Initial balance when account was created (for recalculation)
+    @Default(0.0) double initialBalance,
+
     /// Custom color value (optional) - stored as int for serialization
     int? customColorValue,
 

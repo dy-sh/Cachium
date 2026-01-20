@@ -26,6 +26,7 @@ class AccountRepository {
       name: account.name,
       type: account.type.name,
       balance: account.balance,
+      initialBalance: account.initialBalance,
       customColorValue: account.customColor?.value,
       customIconCodePoint: account.customIcon?.codePoint,
       createdAtMillis: account.createdAt.millisecondsSinceEpoch,
@@ -42,6 +43,7 @@ class AccountRepository {
         orElse: () => ui.AccountType.bank,
       ),
       balance: data.balance,
+      initialBalance: data.initialBalance,
       customColor: data.customColorValue != null
           ? Color(data.customColorValue!)
           : null,

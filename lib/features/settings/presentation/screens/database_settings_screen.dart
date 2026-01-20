@@ -10,6 +10,7 @@ import '../providers/database_providers.dart';
 import '../providers/settings_provider.dart';
 import '../widgets/database_metrics_card.dart';
 import '../widgets/delete_database_dialog.dart';
+import '../widgets/recalculate_preview_dialog.dart';
 import '../widgets/settings_section.dart';
 import '../widgets/settings_tile.dart';
 
@@ -21,6 +22,7 @@ class DatabaseSettingsScreen extends ConsumerWidget {
     final intensity = ref.watch(colorIntensityProvider);
     final managementState = ref.watch(databaseManagementProvider);
     final importState = ref.watch(importStateProvider);
+    final recalculateState = ref.watch(recalculateBalancesProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -95,6 +97,15 @@ class DatabaseSettingsScreen extends ConsumerWidget {
                           onTap: managementState.isLoading
                               ? null
                               : () => _handleCreateDemoDatabase(context, ref),
+                        ),
+                        SettingsTile(
+                          title: 'Recalculate Balances',
+                          description: 'Refresh from transaction history',
+                          icon: LucideIcons.calculator,
+                          iconColor: AppColors.getAccentColor(5, intensity),
+                          onTap: recalculateState.isLoading
+                              ? null
+                              : () => _handleRecalculateBalances(context, ref),
                         ),
                       ],
                     ),
@@ -241,6 +252,36 @@ class DatabaseSettingsScreen extends ConsumerWidget {
               success ? 'Demo database created' : 'Failed to create demo database',
             ),
             backgroundColor: success ? AppColors.income : AppColors.expense,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleRecalculateBalances(BuildContext context, WidgetRef ref) async {
+    // Calculate preview
+    final preview = await ref
+        .read(recalculateBalancesProvider.notifier)
+        .calculatePreview();
+
+    if (preview == null || !context.mounted) return;
+
+    // Show preview dialog
+    final shouldApply = await showRecalculatePreviewDialog(
+      context: context,
+      preview: preview,
+    );
+
+    if (shouldApply == true && context.mounted) {
+      final count = await ref
+          .read(recalculateBalancesProvider.notifier)
+          .applyChanges();
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Updated $count account${count == 1 ? '' : 's'}'),
+            backgroundColor: AppColors.income,
           ),
         );
       }

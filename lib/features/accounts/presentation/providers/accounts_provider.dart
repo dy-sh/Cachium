@@ -38,6 +38,7 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
       name: name,
       type: type,
       balance: initialBalance,
+      initialBalance: initialBalance,
       createdAt: DateTime.now(),
     );
 

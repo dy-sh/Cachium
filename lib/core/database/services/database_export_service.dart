@@ -150,6 +150,7 @@ class DatabaseExportService {
         name TEXT NOT NULL,
         type TEXT NOT NULL,
         balance REAL NOT NULL,
+        initialBalance REAL NOT NULL DEFAULT 0,
         customColorValue INTEGER,
         customIconCodePoint INTEGER
       )
@@ -271,8 +272,8 @@ class DatabaseExportService {
 
     final stmt = exportDb.prepare(
       '''INSERT INTO accounts
-         (id, createdAt, lastUpdatedAt, isDeleted, name, type, balance, customColorValue, customIconCodePoint)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+         (id, createdAt, lastUpdatedAt, isDeleted, name, type, balance, initialBalance, customColorValue, customIconCodePoint)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
     );
 
     for (final row in rows) {
@@ -285,6 +286,7 @@ class DatabaseExportService {
         json['name'] as String,
         json['type'] as String,
         (json['balance'] as num).toDouble(),
+        (json['initialBalance'] as num?)?.toDouble() ?? 0.0,
         json['customColorValue'] as int?,
         json['customIconCodePoint'] as int?,
       ]);
@@ -388,7 +390,7 @@ class DatabaseExportService {
     } else {
       csvData.add([
         'id', 'createdAt', 'lastUpdatedAt', 'isDeleted',
-        'name', 'type', 'balance', 'customColorValue', 'customIconCodePoint',
+        'name', 'type', 'balance', 'initialBalance', 'customColorValue', 'customIconCodePoint',
       ]);
 
       for (final row in rows) {
@@ -401,6 +403,7 @@ class DatabaseExportService {
           json['name'],
           json['type'],
           json['balance'],
+          json['initialBalance'] ?? 0.0,
           json['customColorValue'] ?? '',
           json['customIconCodePoint'] ?? '',
         ]);
