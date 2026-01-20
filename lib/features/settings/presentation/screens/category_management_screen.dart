@@ -34,6 +34,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
   Offset? _lastDragPosition;
   Timer? _scrollTimer;
   CategoryTreeNode? _draggedNode;
+  String? _currentTargetParentId; // Parent ID where item will be placed
 
   static const _scrollAreaHeight = 80.0;
   static const _scrollSpeed = 25.0;
@@ -58,6 +59,29 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
     _scrollTimer?.cancel();
     _scrollTimer = null;
     _lastDragPosition = null;
+    setState(() {
+      _currentTargetParentId = null;
+    });
+  }
+
+  void _handleHoverChanged(CategoryTreeNode targetNode, int depth) {
+    String? parentId;
+    if (depth < 0) {
+      // Hover cleared
+      parentId = null;
+    } else if (depth == targetNode.depth + 1) {
+      // Inserting as child of target
+      parentId = targetNode.category.id;
+    } else {
+      // Inserting as sibling - use existing logic
+      parentId = _getParentForInsertionDepth(targetNode, depth);
+    }
+
+    if (_currentTargetParentId != parentId) {
+      setState(() {
+        _currentTargetParentId = parentId;
+      });
+    }
   }
 
   void _updateDragPosition(Offset globalPosition) {
@@ -200,28 +224,109 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
   }
 
   Widget _buildReorderHint() {
-    return Padding(
+    final intensity = ref.watch(colorIntensityProvider);
+    final isDragging = _draggedNode != null;
+    final parentCategory = _currentTargetParentId != null
+        ? ref.watch(categoryByIdProvider(_currentTargetParentId!))
+        : null;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
       padding: EdgeInsets.only(
         top: AppSpacing.xs,
         bottom: MediaQuery.of(context).padding.bottom + AppSpacing.sm,
+        left: AppSpacing.md,
+        right: AppSpacing.md,
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            LucideIcons.gripVertical,
-            size: 12,
+      child: isDragging && parentCategory != null
+          ? _buildParentIndicator(parentCategory, intensity)
+          : isDragging
+              ? _buildRootLevelIndicator()
+              : _buildDefaultHint(),
+    );
+  }
+
+  Widget _buildDefaultHint() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          LucideIcons.gripVertical,
+          size: 12,
+          color: AppColors.textTertiary,
+        ),
+        const SizedBox(width: 4),
+        Text(
+          'Hold to reorder',
+          style: AppTypography.labelSmall.copyWith(
             color: AppColors.textTertiary,
           ),
-          const SizedBox(width: 4),
-          Text(
-            'Hold to reorder',
-            style: AppTypography.labelSmall.copyWith(
-              color: AppColors.textTertiary,
-            ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRootLevelIndicator() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          LucideIcons.home,
+          size: 14,
+          color: AppColors.textSecondary,
+        ),
+        const SizedBox(width: 6),
+        Text(
+          'Root level',
+          style: AppTypography.labelSmall.copyWith(
+            color: AppColors.textSecondary,
           ),
-        ],
-      ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildParentIndicator(Category parent, ColorIntensity intensity) {
+    final parentColor = parent.getColor(intensity);
+    final bgOpacity = AppColors.getBgOpacity(intensity);
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          'Inside',
+          style: AppTypography.labelSmall.copyWith(
+            color: AppColors.textTertiary,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: parentColor.withOpacity(bgOpacity),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: parentColor.withOpacity(0.3)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                parent.icon,
+                size: 14,
+                color: parentColor,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                parent.name,
+                style: AppTypography.labelSmall.copyWith(
+                  color: parentColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -283,9 +388,15 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
     final categoryColor = _draggedNode?.category.getColor(intensity) ??
                           node.category.getColor(intensity);
 
+    final isThisTargetParent = _currentTargetParentId != null &&
+        _currentTargetParentId == node.category.id;
+    final draggedCategory = _draggedNode?.category;
+    final targetColor = draggedCategory?.getColor(intensity);
+
     return CategoryItemDropTarget(
       targetNode: node,
       highlightColor: categoryColor,
+      onHoverChanged: _handleHoverChanged,
       canAccept: (dragged, target, depth) {
         if (dragged.category.id == target.category.id) return false;
         // If inserting as child, check if that's allowed
@@ -342,6 +453,8 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
         node: node,
         intensity: intensity,
         isExpanded: isExpanded,
+        isTargetParent: isThisTargetParent,
+        targetParentColor: targetColor,
         onTap: () => _showEditModal(node.category),
         onExpandToggle: node.hasChildren
             ? () {

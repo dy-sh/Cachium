@@ -94,6 +94,7 @@ class CategoryItemDropTarget extends StatefulWidget {
   final CategoryTreeNode targetNode;
   final bool Function(CategoryTreeNode dragged, CategoryTreeNode target, int depth) canAccept;
   final void Function(CategoryTreeNode dragged, CategoryTreeNode target, int depth) onAccept;
+  final void Function(CategoryTreeNode targetNode, int depth)? onHoverChanged;
   final Color? highlightColor;
 
   const CategoryItemDropTarget({
@@ -102,6 +103,7 @@ class CategoryItemDropTarget extends StatefulWidget {
     required this.targetNode,
     required this.canAccept,
     required this.onAccept,
+    this.onHoverChanged,
     this.highlightColor,
   });
 
@@ -133,6 +135,15 @@ class _CategoryItemDropTargetState extends State<CategoryItemDropTarget> {
     return rawDepth.clamp(0, widget.targetNode.depth + 1);
   }
 
+  void _notifyHoverChanged(int depth) {
+    widget.onHoverChanged?.call(widget.targetNode, depth);
+  }
+
+  void _notifyHoverCleared() {
+    // Pass a negative depth to indicate no hover
+    widget.onHoverChanged?.call(widget.targetNode, -1);
+  }
+
   @override
   Widget build(BuildContext context) {
     final color = widget.highlightColor ?? AppColors.accentPrimary;
@@ -147,8 +158,10 @@ class _CategoryItemDropTargetState extends State<CategoryItemDropTarget> {
             _isHovering = true;
             _currentDepth = depth;
           });
+          _notifyHoverChanged(depth);
         } else if (!canAccept && _isHovering) {
           setState(() => _isHovering = false);
+          _notifyHoverCleared();
         }
 
         return canAccept;
@@ -156,10 +169,12 @@ class _CategoryItemDropTargetState extends State<CategoryItemDropTarget> {
       onAcceptWithDetails: (details) {
         final depth = _currentDepth;
         setState(() => _isHovering = false);
+        _notifyHoverCleared();
         widget.onAccept(details.data, widget.targetNode, depth);
       },
       onLeave: (_) {
         setState(() => _isHovering = false);
+        _notifyHoverCleared();
       },
       onMove: (details) {
         final depth = _getDepthFromPosition(details.offset, details.data);
@@ -170,8 +185,10 @@ class _CategoryItemDropTargetState extends State<CategoryItemDropTarget> {
             _isHovering = true;
             _currentDepth = depth;
           });
+          _notifyHoverChanged(depth);
         } else if (!canAccept && _isHovering) {
           setState(() => _isHovering = false);
+          _notifyHoverCleared();
         }
       },
       builder: (context, candidateData, rejectedData) {
