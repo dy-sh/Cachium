@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:csv/csv.dart';
 import 'package:path_provider/path_provider.dart';
@@ -75,18 +76,20 @@ class DatabaseExportService {
   }
 
   /// Share the exported SQLite file.
-  Future<void> shareSqliteExport(String path) async {
+  Future<void> shareSqliteExport(String path, {Rect? sharePositionOrigin}) async {
     await Share.shareXFiles(
       [XFile(path)],
       subject: 'Cachium Database Export',
+      sharePositionOrigin: sharePositionOrigin ?? const Rect.fromLTWH(0, 0, 100, 100),
     );
   }
 
   /// Share the exported CSV files.
-  Future<void> shareCsvExport(List<String> paths) async {
+  Future<void> shareCsvExport(List<String> paths, {Rect? sharePositionOrigin}) async {
     await Share.shareXFiles(
       paths.map((p) => XFile(p)).toList(),
       subject: 'Cachium CSV Export',
+      sharePositionOrigin: sharePositionOrigin ?? const Rect.fromLTWH(0, 0, 100, 100),
     );
   }
 

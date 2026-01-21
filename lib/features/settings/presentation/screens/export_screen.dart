@@ -103,7 +103,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                           const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Text(
-                              'Encryption is recommended for security. Files can be imported regardless of this setting.',
+                              'Exported backup can be imported back to restore your data.',
                               style: AppTypography.bodySmall.copyWith(
                                 color: AppColors.textSecondary,
                               ),
@@ -120,7 +120,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                       children: [
                         SettingsToggleTile(
                           title: 'Encrypt data',
-                          description: 'Protects sensitive information',
+                          description: 'Protects sensitive information (recommended)',
                           value: _encryptionEnabled,
                           onChanged: (value) {
                             setState(() {
@@ -154,20 +154,33 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                             color: AppColors.expense.withOpacity(0.2),
                           ),
                         ),
-                        child: Row(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(
-                              LucideIcons.alertCircle,
-                              size: 20,
-                              color: AppColors.expense,
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: Text(
-                                'Export failed. Please try again.',
-                                style: AppTypography.bodySmall.copyWith(
+                            Row(
+                              children: [
+                                Icon(
+                                  LucideIcons.alertCircle,
+                                  size: 20,
                                   color: AppColors.expense,
                                 ),
+                                const SizedBox(width: AppSpacing.md),
+                                Expanded(
+                                  child: Text(
+                                    'Export failed',
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: AppColors.expense,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            Text(
+                              exportState.error.toString(),
+                              style: AppTypography.labelSmall.copyWith(
+                                color: AppColors.expense.withOpacity(0.8),
                               ),
                             ),
                           ],

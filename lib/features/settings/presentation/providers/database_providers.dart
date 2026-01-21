@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/services/database_consistency_service.dart';
@@ -97,6 +98,8 @@ class ExportStateNotifier extends Notifier<AsyncValue<String?>> {
       await service.shareSqliteExport(path);
       state = AsyncValue.data(path);
     } catch (e, st) {
+      debugPrint('Export to SQLite failed: $e');
+      debugPrint('Stack trace: $st');
       state = AsyncValue.error(e, st);
     }
   }
@@ -109,6 +112,8 @@ class ExportStateNotifier extends Notifier<AsyncValue<String?>> {
       await service.shareCsvExport(paths);
       state = AsyncValue.data(paths.first);
     } catch (e, st) {
+      debugPrint('Export to CSV failed: $e');
+      debugPrint('Stack trace: $st');
       state = AsyncValue.error(e, st);
     }
   }
