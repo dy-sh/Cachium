@@ -240,6 +240,45 @@ class DatabaseManagementNotifier extends Notifier<AsyncValue<void>> {
     }
   }
 
+  /// Resets the database and returns to the welcome screen.
+  /// This deletes all data and sets onboardingCompleted to false.
+  Future<bool> resetDatabase({bool resetSettings = false}) async {
+    state = const AsyncValue.loading();
+    try {
+      final db = ref.read(databaseProvider);
+
+      // Delete all data
+      await db.deleteAllData(includeSettings: resetSettings);
+
+      // Reset settings if requested, otherwise just reset onboardingCompleted
+      if (resetSettings) {
+        await ref.read(settingsProvider.notifier).reset();
+      }
+
+      // Set onboardingCompleted to false to show welcome screen
+      await ref.read(settingsProvider.notifier).setOnboardingCompleted(false);
+
+      // Invalidate all related providers to refresh UI
+      ref.invalidate(accountsProvider);
+      ref.invalidate(transactionsProvider);
+      ref.invalidate(categoriesProvider);
+      ref.invalidate(databaseMetricsProvider);
+      ref.invalidate(databaseConsistencyProvider);
+      ref.invalidate(shouldShowWelcomeProvider);
+
+      // Signal reset AFTER invalidating providers - this triggers _AppGate rebuild
+      // while shouldShowWelcomeProvider is in loading state
+      ref.read(isResettingDatabaseProvider.notifier).state = true;
+
+      state = const AsyncValue.data(null);
+      return true;
+    } catch (e, st) {
+      ref.read(isResettingDatabaseProvider.notifier).state = false;
+      state = AsyncValue.error(e, st);
+      return false;
+    }
+  }
+
   void reset() {
     state = const AsyncValue.data(null);
   }
@@ -379,4 +418,27 @@ class RecalculateBalancesNotifier extends Notifier<AsyncValue<RecalculatePreview
 final recalculateBalancesProvider =
     NotifierProvider<RecalculateBalancesNotifier, AsyncValue<RecalculatePreview?>>(() {
   return RecalculateBalancesNotifier();
+});
+
+/// Tracks whether a database reset is in progress.
+/// When true, _AppGate will wait for shouldShowWelcomeProvider to resolve
+/// instead of using cached values.
+final isResettingDatabaseProvider = StateProvider<bool>((ref) => false);
+
+/// Provider to determine if the welcome screen should be shown.
+/// Returns true if onboarding is not completed AND the database is empty.
+final shouldShowWelcomeProvider = FutureProvider<bool>((ref) async {
+  // Check if onboarding is completed
+  final onboardingCompleted = ref.watch(onboardingCompletedProvider);
+  if (onboardingCompleted) {
+    return false;
+  }
+
+  // Check if database is empty
+  final metrics = await ref.watch(databaseMetricsProvider.future);
+  final isEmpty = metrics.accountCount == 0 &&
+      metrics.categoryCount == 0 &&
+      metrics.transactionCount == 0;
+
+  return isEmpty;
 });

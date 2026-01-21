@@ -7,17 +7,6 @@ class CategoriesNotifier extends AsyncNotifier<List<Category>> {
   @override
   Future<List<Category>> build() async {
     final repo = ref.watch(categoryRepositoryProvider);
-
-    // Check if we have any categories in the database
-    final hasData = await repo.hasCategories();
-
-    if (!hasData) {
-      // Seed default categories on first run
-      await repo.seedDefaultCategories();
-      return List.from(DefaultCategories.all);
-    }
-
-    // Load existing categories from database
     return repo.getAllCategories();
   }
 

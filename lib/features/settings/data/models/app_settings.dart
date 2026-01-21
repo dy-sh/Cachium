@@ -73,6 +73,9 @@ class AppSettings {
   final StartScreen startScreen;
   final String? lastUsedAccountId;
 
+  // Onboarding
+  final bool onboardingCompleted;
+
   const AppSettings({
     this.colorIntensity = ColorIntensity.prism,
     this.accentColorIndex = 0,
@@ -87,6 +90,7 @@ class AppSettings {
     this.hapticFeedbackEnabled = true,
     this.startScreen = StartScreen.home,
     this.lastUsedAccountId,
+    this.onboardingCompleted = false,
   });
 
   String get effectiveCurrencySymbol {
@@ -114,6 +118,7 @@ class AppSettings {
     bool? hapticFeedbackEnabled,
     StartScreen? startScreen,
     String? lastUsedAccountId,
+    bool? onboardingCompleted,
   }) {
     return AppSettings(
       colorIntensity: colorIntensity ?? this.colorIntensity,
@@ -129,6 +134,7 @@ class AppSettings {
       hapticFeedbackEnabled: hapticFeedbackEnabled ?? this.hapticFeedbackEnabled,
       startScreen: startScreen ?? this.startScreen,
       lastUsedAccountId: lastUsedAccountId ?? this.lastUsedAccountId,
+      onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
     );
   }
 }

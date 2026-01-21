@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/providers/database_providers.dart';
-import '../../../../data/demo/demo_data.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../data/models/transaction.dart';
 
@@ -11,19 +10,6 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
   @override
   Future<List<Transaction>> build() async {
     final repo = ref.watch(transactionRepositoryProvider);
-
-    // Check if we have any transactions in the database
-    final hasData = await repo.hasTransactions();
-
-    if (!hasData) {
-      // Seed demo data on first run
-      for (final tx in DemoData.transactions) {
-        await repo.createTransaction(tx);
-      }
-      return List.from(DemoData.transactions);
-    }
-
-    // Load existing transactions from database
     return repo.getAllTransactions();
   }
 

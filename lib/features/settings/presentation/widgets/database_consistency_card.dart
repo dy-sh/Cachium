@@ -119,18 +119,30 @@ class _DatabaseConsistencyCardState
                               : AppColors.expense,
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'tap for details',
-                        style: AppTypography.labelSmall.copyWith(
-                          color: AppColors.textTertiary,
-                        ),
-                      ),
                     ],
                   ),
                 ),
+                // Details link
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'details',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Icon(
+                      LucideIcons.info,
+                      size: 14,
+                      color: AppColors.textTertiary,
+                    ),
+                  ],
+                ),
                 // Expand/collapse chevron (only if issues exist)
-                if (!consistency.isConsistent)
+                if (!consistency.isConsistent) ...[
+                  const SizedBox(width: AppSpacing.sm),
                   GestureDetector(
                     onTap: () {
                       setState(() {
@@ -148,6 +160,7 @@ class _DatabaseConsistencyCardState
                       ),
                     ),
                   ),
+                ],
               ],
             ),
           ),

@@ -108,6 +108,13 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     await _saveAndUpdate(current.copyWith(lastUsedAccountId: accountId));
   }
 
+  // Onboarding
+  Future<void> setOnboardingCompleted(bool completed) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    await _saveAndUpdate(current.copyWith(onboardingCompleted: completed));
+  }
+
   /// Refresh settings from database
   Future<void> refresh() async {
     final repo = ref.read(settingsRepositoryProvider);
@@ -185,4 +192,9 @@ final startScreenProvider = Provider<StartScreen>((ref) {
 final lastUsedAccountIdProvider = Provider<String?>((ref) {
   final settingsAsync = ref.watch(settingsProvider);
   return settingsAsync.valueOrNull?.lastUsedAccountId;
+});
+
+final onboardingCompletedProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.onboardingCompleted ?? false;
 });

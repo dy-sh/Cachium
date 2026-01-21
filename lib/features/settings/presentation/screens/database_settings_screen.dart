@@ -4,13 +4,14 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../providers/database_providers.dart';
 import '../providers/settings_provider.dart';
 import '../widgets/database_consistency_card.dart';
 import '../widgets/database_metrics_card.dart';
-import '../widgets/delete_database_dialog.dart';
+import '../widgets/reset_database_dialog.dart';
 import '../widgets/recalculate_preview_dialog.dart';
 import '../widgets/settings_section.dart';
 import '../widgets/settings_tile.dart';
@@ -91,42 +92,28 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
                     _buildSectionLabel('METRICS'),
                     const SizedBox(height: AppSpacing.sm),
                     const DatabaseMetricsCard(),
-                    const SizedBox(height: AppSpacing.md),
-                    const DatabaseConsistencyCard(),
                     const SizedBox(height: AppSpacing.xxl),
 
-                    // Data Section
-                    SettingsSection(
-                      title: 'Data',
-                      children: [
-                        SettingsTile(
-                          title: 'Delete Database',
-                          description: 'Remove all data permanently',
-                          icon: LucideIcons.trash2,
-                          iconColor: AppColors.expense,
-                          onTap: managementState.isLoading
-                              ? null
-                              : () => _handleDeleteDatabase(context),
-                        ),
-                        SettingsTile(
-                          title: 'Create Demo Database',
-                          description: 'Populate with sample data',
-                          icon: LucideIcons.sparkles,
-                          iconColor: AppColors.getAccentColor(11, intensity),
-                          onTap: managementState.isLoading
-                              ? null
-                              : () => _handleCreateDemoDatabase(context),
-                        ),
-                        SettingsTile(
-                          title: 'Recalculate Balances',
-                          description: 'Refresh from transaction history',
-                          icon: LucideIcons.calculator,
-                          iconColor: AppColors.getAccentColor(5, intensity),
-                          onTap: recalculateState.isLoading
-                              ? null
-                              : () => _handleRecalculateBalances(context),
-                        ),
-                      ],
+                    // Maintenance Section
+                    _buildSectionLabel('MAINTENANCE'),
+                    const SizedBox(height: AppSpacing.sm),
+                    const DatabaseConsistencyCard(),
+                    const SizedBox(height: AppSpacing.md),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: AppRadius.card,
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: SettingsTile(
+                        title: 'Recalculate Balances',
+                        description: 'Refresh from transaction history',
+                        icon: LucideIcons.calculator,
+                        iconColor: AppColors.getAccentColor(5, intensity),
+                        onTap: recalculateState.isLoading
+                            ? null
+                            : () => _handleRecalculateBalances(context),
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.xxl),
 
@@ -176,6 +163,31 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
                         ),
                       ],
                     ),
+                    const SizedBox(height: AppSpacing.xxl),
+
+                    // Reset Section
+                    SettingsSection(
+                      title: 'Reset',
+                      children: [
+                        SettingsTile(
+                          title: 'Reset Database',
+                          description: 'Delete all data and start fresh',
+                          icon: LucideIcons.refreshCcw,
+                          iconColor: AppColors.expense,
+                          onTap: managementState.isLoading
+                              ? null
+                              : () => _handleResetDatabase(context),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+                      child: Text(
+                        'Use Reset Database to clear all accounts, categories, and transactions. You can then choose to load demo data, default categories, or start empty.',
+                        style: AppTypography.bodySmall,
+                      ),
+                    ),
                     const SizedBox(height: AppSpacing.xxxl),
                   ],
                 ),
@@ -200,80 +212,23 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
     );
   }
 
-  Future<void> _handleDeleteDatabase(BuildContext context) async {
-    final result = await showDeleteDatabaseDialog(context: context);
+  Future<void> _handleResetDatabase(BuildContext context) async {
+    final result = await showResetDatabaseDialog(context: context);
 
     if (result != null && result.confirmed) {
       final success = await ref
           .read(databaseManagementProvider.notifier)
-          .deleteAllData(resetSettings: result.resetSettings);
+          .resetDatabase(resetSettings: result.resetSettings);
 
-      if (context.mounted) {
+      if (!success && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              success ? 'Database deleted successfully' : 'Failed to delete database',
-            ),
-            backgroundColor: success ? AppColors.income : AppColors.expense,
+          const SnackBar(
+            content: Text('Failed to reset database'),
+            backgroundColor: AppColors.expense,
           ),
         );
       }
-    }
-  }
-
-  Future<void> _handleCreateDemoDatabase(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Text('Create Demo Database?', style: AppTypography.h4),
-        content: Text(
-          'This will delete all existing data and create a new database with sample transactions, accounts, and categories.',
-          style: AppTypography.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(
-              'Cancel',
-              style: AppTypography.button.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(
-              'Create',
-              style: AppTypography.button.copyWith(
-                color: AppColors.accentPrimary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      final success = await ref
-          .read(databaseManagementProvider.notifier)
-          .createDemoDatabase();
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              success ? 'Demo database created' : 'Failed to create demo database',
-            ),
-            backgroundColor: success ? AppColors.income : AppColors.expense,
-          ),
-        );
-      }
+      // If successful, the welcome screen will be shown automatically
     }
   }
 

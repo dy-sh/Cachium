@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/providers/database_providers.dart';
-import '../../../../data/demo/demo_data.dart';
 import '../../data/models/account.dart';
 
 class AccountsNotifier extends AsyncNotifier<List<Account>> {
@@ -12,19 +11,6 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
   @override
   Future<List<Account>> build() async {
     final repo = ref.watch(accountRepositoryProvider);
-
-    // Check if we have any accounts in the database
-    final hasData = await repo.hasAccounts();
-
-    if (!hasData) {
-      // Seed demo data on first run
-      for (final account in DemoData.accounts) {
-        await repo.createAccount(account);
-      }
-      return List.from(DemoData.accounts);
-    }
-
-    // Load existing accounts from database
     return repo.getAllAccounts();
   }
 
