@@ -8,9 +8,37 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../core/providers/database_providers.dart';
 import '../../../../data/demo/demo_data.dart';
 import '../../../../design_system/design_system.dart';
+import '../../../../navigation/app_router.dart';
+import '../../../accounts/data/models/account.dart';
+import '../../../accounts/presentation/providers/accounts_provider.dart';
+import '../../../categories/presentation/providers/categories_provider.dart';
+import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/database_providers.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
+import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../widgets/welcome_option_card.dart';
+
+/// Default accounts created when selecting "Default Categories" option.
+class DefaultAccounts {
+  static List<Account> get all => [
+        Account(
+          id: 'default_cash',
+          name: 'Cash',
+          type: AccountType.cash,
+          balance: 0,
+          initialBalance: 0,
+          createdAt: DateTime.now(),
+        ),
+        Account(
+          id: 'default_credit_card',
+          name: 'Credit Card',
+          type: AccountType.creditCard,
+          balance: 0,
+          initialBalance: 0,
+          createdAt: DateTime.now(),
+        ),
+      ];
+}
 
 enum WelcomeOption { demo, defaultCategories, empty }
 
@@ -51,7 +79,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
           break;
 
         case WelcomeOption.defaultCategories:
-          // Only seed default categories
+          // Seed default accounts (Cash and Credit Card)
+          for (final account in DefaultAccounts.all) {
+            await accountRepo.createAccount(account);
+          }
+          // Seed default categories
           await categoryRepo.seedDefaultCategories();
           break;
 
@@ -63,12 +95,21 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       // Mark onboarding as completed
       await ref.read(settingsProvider.notifier).setOnboardingCompleted(true);
 
+      // Ensure we start at home screen after welcome
+      await ref.read(settingsProvider.notifier).setStartScreen(StartScreen.home);
+
       // Reset the resetting flag if it was set
       ref.read(isResettingDatabaseProvider.notifier).state = false;
 
-      // Invalidate providers to refresh UI
+      // Invalidate all data providers to reload from database
+      ref.invalidate(accountsProvider);
+      ref.invalidate(categoriesProvider);
+      ref.invalidate(transactionsProvider);
       ref.invalidate(databaseMetricsProvider);
       ref.invalidate(shouldShowWelcomeProvider);
+
+      // Invalidate router to create fresh instance starting at home
+      ref.invalidate(appRouterProvider);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -148,9 +189,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                   WelcomeOptionCard(
                     icon: LucideIcons.layoutGrid,
                     iconColor: AppColors.getAccentColor(3, intensity),
-                    title: 'Create Default Categories',
+                    title: 'Quick Start',
                     description:
-                        'Start with a ready-to-use set of income and expense categories. A great starting point.',
+                        'Create default categories and basic accounts (Cash, Credit Card). A great starting point.',
                     isLoading: _loadingOption == WelcomeOption.defaultCategories,
                     onTap: () => _handleOptionSelected(WelcomeOption.defaultCategories),
                   ),
@@ -166,7 +207,24 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                   ),
                 ],
               ),
-              const Spacer(flex: 3),
+              const Spacer(flex: 2),
+              // Hint
+              Text(
+                'To open this screen again:',
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textTertiary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'Settings → Database → Reset',
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textTertiary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const Spacer(flex: 1),
             ],
           ),
         ),
