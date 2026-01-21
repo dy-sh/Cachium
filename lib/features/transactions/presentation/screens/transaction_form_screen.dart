@@ -260,9 +260,10 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   }
 
   void _showDeleteConfirmation(BuildContext context) {
+    final parentContext = context;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
@@ -279,7 +280,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: Text(
               'Cancel',
               style: AppTypography.button.copyWith(
@@ -289,13 +290,13 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               final formState = ref.read(transactionFormProvider);
               if (formState.editingTransactionId != null) {
                 await ref.read(transactionsProvider.notifier)
                     .deleteTransaction(formState.editingTransactionId!);
-                if (mounted) {
-                  context.pop();
+                if (mounted && parentContext.mounted) {
+                  parentContext.pop();
                 }
               }
             },
