@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import '../../core/database/app_database.dart' as db;
 import '../../features/settings/data/models/app_settings.dart' as ui;
-import '../models/settings_data.dart';
+import '../encryption/settings_data.dart';
 
 /// Repository for managing app settings storage.
 ///

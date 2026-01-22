@@ -4,7 +4,7 @@ import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
 import '../../features/categories/data/models/category.dart' as ui;
-import '../models/category_data.dart';
+import '../encryption/category_data.dart';
 
 /// Repository for managing encrypted category storage.
 ///

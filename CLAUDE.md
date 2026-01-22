@@ -33,7 +33,10 @@ lib/
 │   ├── database/services/    # DatabaseMetricsService, DatabaseExportService, DatabaseImportService
 │   ├── providers/            # Database and repository providers
 │   └── utils/                # currency_formatter, date_formatter, haptic_helper, page_transitions
-├── data/demo/                # Demo data for development (demo_data.dart)
+├── data/
+│   ├── demo/                 # Demo data for development (demo_data.dart)
+│   ├── encryption/           # Internal DTOs for encryption (*_data.dart models)
+│   └── repositories/         # Repository classes for encrypted storage
 ├── design_system/            # Reusable UI components (barrel: design_system.dart)
 │   ├── components/           # fm_* prefixed components (buttons, cards, chips, inputs, etc.)
 │   ├── animations/           # Animation utilities

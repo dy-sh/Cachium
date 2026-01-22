@@ -7,9 +7,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:drift/drift.dart';
 import 'package:sqlite3/sqlite3.dart' as sql;
 
-import '../../../data/models/account_data.dart';
-import '../../../data/models/category_data.dart';
-import '../../../data/models/transaction_data.dart';
+import '../../../data/encryption/account_data.dart';
+import '../../../data/encryption/category_data.dart';
+import '../../../data/encryption/transaction_data.dart';
 import '../app_database.dart';
 import 'encryption_service.dart';
 

@@ -4,7 +4,7 @@ import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
 import '../../features/accounts/data/models/account.dart' as ui;
-import '../models/account_data.dart';
+import '../encryption/account_data.dart';
 
 /// Repository for managing encrypted account storage.
 ///

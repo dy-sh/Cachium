@@ -2,7 +2,7 @@ import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
 import '../../features/transactions/data/models/transaction.dart' as ui;
-import '../models/transaction_data.dart';
+import '../encryption/transaction_data.dart';
 
 /// Repository for managing encrypted transaction storage.
 ///

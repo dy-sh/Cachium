@@ -7,9 +7,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:sqlite3/sqlite3.dart' as sql;
 
-import '../../../data/models/account_data.dart';
-import '../../../data/models/category_data.dart';
-import '../../../data/models/transaction_data.dart';
+import '../../../data/encryption/account_data.dart';
+import '../../../data/encryption/category_data.dart';
+import '../../../data/encryption/transaction_data.dart';
 import '../../../features/settings/data/models/export_options.dart';
 import '../app_database.dart';
 import 'encryption_service.dart';
