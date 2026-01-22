@@ -69,6 +69,19 @@ class CategoryRepository {
     );
   }
 
+  /// Create or update a category (encrypt and upsert)
+  Future<void> upsertCategory(ui.Category category) async {
+    final data = _toData(category);
+    final encryptedBlob = await encryptionService.encryptJson(data.toJson());
+
+    await database.upsertCategory(
+      id: category.id,
+      sortOrder: category.sortOrder,
+      lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
+      encryptedBlob: encryptedBlob,
+    );
+  }
+
   /// Get a single category by ID (fetch, decrypt, verify)
   Future<ui.Category?> getCategory(String id) async {
     final row = await database.getCategory(id);
@@ -186,7 +199,7 @@ class CategoryRepository {
   Future<void> seedDefaultCategories() async {
     final defaults = ui.DefaultCategories.all;
     for (final category in defaults) {
-      await createCategory(category);
+      await upsertCategory(category);
     }
   }
 }

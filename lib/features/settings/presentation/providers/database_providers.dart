@@ -227,17 +227,17 @@ class DatabaseManagementNotifier extends Notifier<AsyncValue<void>> {
       // Delete existing data first
       await db.deleteAllData(includeSettings: false);
 
-      // Seed accounts
+      // Seed accounts (use upsert to handle duplicates)
       for (final account in DemoData.accounts) {
-        await accountRepo.createAccount(account);
+        await accountRepo.upsertAccount(account);
       }
 
-      // Seed categories (default categories)
+      // Seed categories (default categories - uses upsert internally)
       await categoryRepo.seedDefaultCategories();
 
-      // Seed transactions
+      // Seed transactions (use upsert to handle duplicates)
       for (final transaction in DemoData.transactions) {
-        await transactionRepo.createTransaction(transaction);
+        await transactionRepo.upsertTransaction(transaction);
       }
 
       // Invalidate all related providers to refresh UI

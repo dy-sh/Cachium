@@ -67,6 +67,19 @@ class AccountRepository {
     );
   }
 
+  /// Create or update an account (encrypt and upsert)
+  Future<void> upsertAccount(ui.Account account) async {
+    final data = _toData(account);
+    final encryptedBlob = await encryptionService.encryptJson(data.toJson());
+
+    await database.upsertAccount(
+      id: account.id,
+      createdAt: account.createdAt.millisecondsSinceEpoch,
+      lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
+      encryptedBlob: encryptedBlob,
+    );
+  }
+
   /// Get a single account by ID (fetch, decrypt, verify)
   Future<ui.Account?> getAccount(String id) async {
     final row = await database.getAccount(id);

@@ -60,6 +60,19 @@ class TransactionRepository {
     );
   }
 
+  /// Create or update a transaction (encrypt and upsert)
+  Future<void> upsertTransaction(ui.Transaction transaction) async {
+    final data = _toData(transaction);
+    final encryptedBlob = await encryptionService.encrypt(data);
+
+    await database.upsertTransaction(
+      id: transaction.id,
+      date: transaction.date.millisecondsSinceEpoch,
+      lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
+      encryptedBlob: encryptedBlob,
+    );
+  }
+
   /// Get a single transaction by ID (fetch, decrypt, verify)
   Future<ui.Transaction?> getTransaction(String id) async {
     final row = await database.getTransaction(id);

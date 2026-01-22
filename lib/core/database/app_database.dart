@@ -104,7 +104,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -134,6 +134,23 @@ class AppDatabase extends _$AppDatabase {
     required Uint8List encryptedBlob,
   }) async {
     await into(transactions).insert(
+      TransactionsCompanion.insert(
+        id: id,
+        date: date,
+        lastUpdatedAt: lastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+      ),
+    );
+  }
+
+  /// Insert or update a transaction row (upsert)
+  Future<void> upsertTransaction({
+    required String id,
+    required int date,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+  }) async {
+    await into(transactions).insertOnConflictUpdate(
       TransactionsCompanion.insert(
         id: id,
         date: date,
@@ -221,6 +238,23 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 
+  /// Insert or update an account row (upsert)
+  Future<void> upsertAccount({
+    required String id,
+    required int createdAt,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+  }) async {
+    await into(accounts).insertOnConflictUpdate(
+      AccountsCompanion.insert(
+        id: id,
+        createdAt: createdAt,
+        lastUpdatedAt: lastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+      ),
+    );
+  }
+
   /// Update an existing account row
   Future<void> updateAccount({
     required String id,
@@ -288,6 +322,23 @@ class AppDatabase extends _$AppDatabase {
     required Uint8List encryptedBlob,
   }) async {
     await into(categories).insert(
+      CategoriesCompanion.insert(
+        id: id,
+        sortOrder: sortOrder,
+        lastUpdatedAt: lastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+      ),
+    );
+  }
+
+  /// Insert or update a category row (upsert)
+  Future<void> upsertCategory({
+    required String id,
+    required int sortOrder,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+  }) async {
+    await into(categories).insertOnConflictUpdate(
       CategoriesCompanion.insert(
         id: id,
         sortOrder: sortOrder,
