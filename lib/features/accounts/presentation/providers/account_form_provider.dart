@@ -53,7 +53,7 @@ class AccountFormState {
   }
 }
 
-class AccountFormNotifier extends Notifier<AccountFormState> {
+class AccountFormNotifier extends AutoDisposeNotifier<AccountFormState> {
   @override
   AccountFormState build() {
     return const AccountFormState();
@@ -103,6 +103,6 @@ class AccountFormNotifier extends Notifier<AccountFormState> {
 }
 
 final accountFormProvider =
-    NotifierProvider<AccountFormNotifier, AccountFormState>(() {
+    AutoDisposeNotifierProvider<AccountFormNotifier, AccountFormState>(() {
   return AccountFormNotifier();
 });

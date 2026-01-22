@@ -13,7 +13,7 @@ import '../../../accounts/data/models/account.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/data/models/app_settings.dart';
-import '../../../settings/presentation/providers/database_providers.dart';
+import '../../../settings/presentation/providers/database_management_providers.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../widgets/welcome_option_card.dart';

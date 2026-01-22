@@ -9,7 +9,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/buttons/fm_primary_button.dart';
 import '../../data/models/export_options.dart';
-import '../providers/database_providers.dart';
+import '../providers/database_management_providers.dart';
 import '../widgets/settings_section.dart';
 import '../widgets/settings_toggle_tile.dart';
 

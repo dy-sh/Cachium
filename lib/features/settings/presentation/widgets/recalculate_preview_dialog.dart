@@ -6,7 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/utils/currency_formatter.dart';
-import '../providers/database_providers.dart';
+import '../providers/database_management_providers.dart';
 
 class RecalculatePreviewDialog extends ConsumerWidget {
   final RecalculatePreview preview;

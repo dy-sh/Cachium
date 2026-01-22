@@ -7,7 +7,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../data/models/database_metrics.dart';
-import '../providers/database_providers.dart';
+import '../providers/database_management_providers.dart';
 
 class DatabaseMetricsCard extends ConsumerWidget {
   const DatabaseMetricsCard({super.key});

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/constants/app_colors.dart';
-import 'features/settings/presentation/providers/database_providers.dart';
+import 'features/settings/presentation/providers/database_management_providers.dart';
 import 'features/welcome/presentation/screens/welcome_screen.dart';
 import 'navigation/app_router.dart';
 

@@ -7,7 +7,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
-import '../providers/database_providers.dart';
+import '../providers/database_management_providers.dart';
 import '../providers/settings_provider.dart';
 import '../widgets/database_consistency_card.dart';
 import '../widgets/database_metrics_card.dart';

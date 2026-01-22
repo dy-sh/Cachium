@@ -31,7 +31,7 @@ lib/
 ├── core/
 │   ├── constants/            # AppColors, AppTypography, AppSpacing, AppRadius, AppAnimations
 │   ├── database/services/    # DatabaseMetricsService, DatabaseExportService, DatabaseImportService
-│   ├── providers/            # CrudNotifier base class for list management
+│   ├── providers/            # Database and repository providers
 │   └── utils/                # currency_formatter, date_formatter, haptic_helper, page_transitions
 ├── data/demo/                # Demo data for development (demo_data.dart)
 ├── design_system/            # Reusable UI components (barrel: design_system.dart)
@@ -47,13 +47,16 @@ lib/
 
 ## State Management Patterns
 
-### Entity Lists (CrudNotifier)
+### Entity Lists (AsyncNotifier)
 ```dart
-class AccountsNotifier extends CrudNotifier<Account> {
-  @override String getId(Account item) => item.id;
-  @override List<Account> build() => List.from(DemoData.accounts);
+class AccountsNotifier extends AsyncNotifier<List<Account>> {
+  @override
+  Future<List<Account>> build() async {
+    final repository = ref.watch(accountRepositoryProvider);
+    return repository.getAllAccounts();
+  }
 }
-final accountsProvider = NotifierProvider<AccountsNotifier, List<Account>>(...);
+final accountsProvider = AsyncNotifierProvider<AccountsNotifier, List<Account>>(...);
 ```
 
 ### Settings (Immutable State)
@@ -124,9 +127,9 @@ The app includes comprehensive database import/export functionality accessible v
 - `lib/app.dart` - App setup and theme configuration
 - `lib/navigation/app_router.dart` - All routes (use `AppRoutes` constants)
 - `lib/core/constants/app_colors.dart` - Comprehensive color system (400+ lines)
-- `lib/core/providers/crud_notifier.dart` - Base class for CRUD operations
+- `lib/core/providers/database_providers.dart` - Core database and repository providers
 - `lib/core/database/app_database.dart` - Drift database schema and operations
 - `lib/core/database/services/` - Database metrics, export, and import services
 - `lib/features/settings/data/models/app_settings.dart` - Settings model + ColorIntensity enum
-- `lib/features/settings/presentation/providers/database_providers.dart` - Database management providers
+- `lib/features/settings/presentation/providers/database_management_providers.dart` - Database management providers
 - `lib/features/categories/data/models/category.dart` - Category with hierarchy support

@@ -10,7 +10,7 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/buttons/fm_primary_button.dart';
 import '../../../../design_system/components/layout/fm_form_header.dart';
 import '../../../../design_system/components/inputs/fm_text_field.dart';
-import '../../../settings/presentation/providers/database_providers.dart';
+import '../../../settings/presentation/providers/database_management_providers.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../settings/presentation/widgets/color_picker_grid.dart';
 import '../../../settings/presentation/widgets/recalculate_preview_dialog.dart';

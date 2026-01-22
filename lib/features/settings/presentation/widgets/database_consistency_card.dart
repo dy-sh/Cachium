@@ -7,7 +7,7 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../data/models/database_consistency.dart';
-import '../providers/database_providers.dart';
+import '../providers/database_management_providers.dart';
 import 'consistency_details_dialog.dart';
 
 class DatabaseConsistencyCard extends ConsumerStatefulWidget {

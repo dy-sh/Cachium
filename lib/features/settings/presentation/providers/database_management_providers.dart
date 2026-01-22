@@ -6,10 +6,9 @@ import '../../../../core/database/services/database_export_service.dart';
 import '../../../../core/database/services/database_import_service.dart';
 import '../../../../core/database/services/database_metrics_service.dart';
 import '../../../../core/providers/database_providers.dart';
+import '../../../../core/providers/provider_utils.dart';
 import '../../../../data/demo/demo_data.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
-import '../../../categories/presentation/providers/categories_provider.dart';
-import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../data/models/app_settings.dart';
 import '../../data/models/database_consistency.dart';
 import '../../data/models/database_metrics.dart';
@@ -143,12 +142,7 @@ class ImportStateNotifier extends Notifier<AsyncValue<ImportResult?>> {
       state = AsyncValue.data(result);
 
       // Invalidate all data providers to refresh UI
-      ref.invalidate(accountsProvider);
-      ref.invalidate(transactionsProvider);
-      ref.invalidate(categoriesProvider);
-      ref.invalidate(settingsProvider);
-      ref.invalidate(databaseMetricsProvider);
-      ref.invalidate(databaseConsistencyProvider);
+      invalidateAllDataProviders(ref);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -162,12 +156,7 @@ class ImportStateNotifier extends Notifier<AsyncValue<ImportResult?>> {
       state = AsyncValue.data(result);
 
       // Invalidate all data providers to refresh UI
-      ref.invalidate(accountsProvider);
-      ref.invalidate(transactionsProvider);
-      ref.invalidate(categoriesProvider);
-      ref.invalidate(settingsProvider);
-      ref.invalidate(databaseMetricsProvider);
-      ref.invalidate(databaseConsistencyProvider);
+      invalidateAllDataProviders(ref);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -203,11 +192,7 @@ class DatabaseManagementNotifier extends Notifier<AsyncValue<void>> {
       }
 
       // Invalidate all related providers to refresh UI
-      ref.invalidate(accountsProvider);
-      ref.invalidate(transactionsProvider);
-      ref.invalidate(categoriesProvider);
-      ref.invalidate(databaseMetricsProvider);
-      ref.invalidate(databaseConsistencyProvider);
+      invalidateEntityProviders(ref);
 
       state = const AsyncValue.data(null);
       return true;
@@ -247,11 +232,7 @@ class DatabaseManagementNotifier extends Notifier<AsyncValue<void>> {
       });
 
       // Invalidate all related providers to refresh UI
-      ref.invalidate(accountsProvider);
-      ref.invalidate(transactionsProvider);
-      ref.invalidate(categoriesProvider);
-      ref.invalidate(databaseMetricsProvider);
-      ref.invalidate(databaseConsistencyProvider);
+      invalidateEntityProviders(ref);
 
       state = const AsyncValue.data(null);
       return true;
@@ -292,12 +273,7 @@ class DatabaseManagementNotifier extends Notifier<AsyncValue<void>> {
       );
 
       // Invalidate all related providers to refresh UI
-      ref.invalidate(accountsProvider);
-      ref.invalidate(transactionsProvider);
-      ref.invalidate(categoriesProvider);
-      ref.invalidate(settingsProvider);
-      ref.invalidate(databaseMetricsProvider);
-      ref.invalidate(databaseConsistencyProvider);
+      invalidateAllDataProviders(ref);
       ref.invalidate(shouldShowWelcomeProvider);
 
       // Signal reset AFTER invalidating providers - this triggers _AppGate rebuild

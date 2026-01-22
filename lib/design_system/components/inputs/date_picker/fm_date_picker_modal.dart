@@ -10,6 +10,8 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../features/settings/presentation/providers/settings_provider.dart';
 import 'fm_calendar_grid.dart';
+import 'fm_date_picker_icon_button.dart';
+import 'fm_date_picker_navigation_button.dart';
 import 'fm_month_year_picker.dart';
 
 /// The main date picker modal widget.
@@ -284,7 +286,7 @@ class _FMDatePickerModalState extends ConsumerState<FMDatePickerModal> {
       children: [
         Text('Select Date', style: AppTypography.h3),
         if (_showMonthYearPicker)
-          _DatePickerIconButton(
+          FMDatePickerIconButton(
             icon: LucideIcons.x,
             accentColor: accentColor,
             onTap: () {
@@ -317,7 +319,7 @@ class _FMDatePickerModalState extends ConsumerState<FMDatePickerModal> {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              _DatePickerIconButton(
+              FMDatePickerIconButton(
                 icon: LucideIcons.keyboard,
                 isActive: _showTextInput,
                 accentColor: accentColor,
@@ -330,7 +332,7 @@ class _FMDatePickerModalState extends ConsumerState<FMDatePickerModal> {
                 },
               ),
               const SizedBox(width: AppSpacing.sm),
-              _DatePickerIconButton(
+              FMDatePickerIconButton(
                 icon: LucideIcons.x,
                 accentColor: accentColor,
                 onTap: () => Navigator.pop(context),
@@ -409,7 +411,7 @@ class _FMDatePickerModalState extends ConsumerState<FMDatePickerModal> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _DatePickerNavigationButton(
+        FMDatePickerNavigationButton(
           icon: LucideIcons.chevronLeft,
           onTap: _goToPreviousMonth,
         ),
@@ -453,7 +455,7 @@ class _FMDatePickerModalState extends ConsumerState<FMDatePickerModal> {
             ),
           ),
         ),
-        _DatePickerNavigationButton(
+        FMDatePickerNavigationButton(
           icon: LucideIcons.chevronRight,
           onTap: _goToNextMonth,
         ),
@@ -515,140 +517,6 @@ class _FMDatePickerModalState extends ConsumerState<FMDatePickerModal> {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Icon button used in the date picker header.
-class _DatePickerIconButton extends ConsumerStatefulWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-  final bool isActive;
-  final Color accentColor;
-
-  const _DatePickerIconButton({
-    required this.icon,
-    required this.onTap,
-    required this.accentColor,
-    this.isActive = false,
-  });
-
-  @override
-  ConsumerState<_DatePickerIconButton> createState() => _DatePickerIconButtonState();
-}
-
-class _DatePickerIconButtonState extends ConsumerState<_DatePickerIconButton> {
-  bool _isPressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final animationsEnabled = ref.watch(formAnimationsEnabledProvider);
-    final backgroundColor = widget.isActive
-        ? widget.accentColor
-        : _isPressed
-            ? AppColors.surfaceLight
-            : AppColors.background;
-
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _isPressed = true),
-      onTapUp: (_) {
-        setState(() => _isPressed = false);
-        widget.onTap();
-      },
-      onTapCancel: () => setState(() => _isPressed = false),
-      child: animationsEnabled
-          ? AnimatedContainer(
-              duration: AppAnimations.fast,
-              width: AppSpacing.calendarHeaderButtonSize,
-              height: AppSpacing.calendarHeaderButtonSize,
-              decoration: BoxDecoration(
-                color: backgroundColor,
-                borderRadius: AppRadius.smAll,
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Icon(
-                widget.icon,
-                size: 18,
-                color: widget.isActive ? AppColors.background : AppColors.textSecondary,
-              ),
-            )
-          : Container(
-              width: AppSpacing.calendarHeaderButtonSize,
-              height: AppSpacing.calendarHeaderButtonSize,
-              decoration: BoxDecoration(
-                color: backgroundColor,
-                borderRadius: AppRadius.smAll,
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Icon(
-                widget.icon,
-                size: 18,
-                color: widget.isActive ? AppColors.background : AppColors.textSecondary,
-              ),
-            ),
-    );
-  }
-}
-
-/// Navigation button for calendar month navigation.
-class _DatePickerNavigationButton extends ConsumerStatefulWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _DatePickerNavigationButton({
-    required this.icon,
-    required this.onTap,
-  });
-
-  @override
-  ConsumerState<_DatePickerNavigationButton> createState() => _DatePickerNavigationButtonState();
-}
-
-class _DatePickerNavigationButtonState extends ConsumerState<_DatePickerNavigationButton> {
-  bool _isPressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final animationsEnabled = ref.watch(formAnimationsEnabledProvider);
-    final backgroundColor = _isPressed ? AppColors.surfaceLight : AppColors.background;
-
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _isPressed = true),
-      onTapUp: (_) {
-        setState(() => _isPressed = false);
-        widget.onTap();
-      },
-      onTapCancel: () => setState(() => _isPressed = false),
-      child: animationsEnabled
-          ? AnimatedContainer(
-              duration: AppAnimations.fast,
-              width: AppSpacing.calendarHeaderButtonSize,
-              height: AppSpacing.calendarHeaderButtonSize,
-              decoration: BoxDecoration(
-                color: backgroundColor,
-                borderRadius: AppRadius.smAll,
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Icon(
-                widget.icon,
-                size: 18,
-                color: AppColors.textSecondary,
-              ),
-            )
-          : Container(
-              width: AppSpacing.calendarHeaderButtonSize,
-              height: AppSpacing.calendarHeaderButtonSize,
-              decoration: BoxDecoration(
-                color: backgroundColor,
-                borderRadius: AppRadius.smAll,
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Icon(
-                widget.icon,
-                size: 18,
-                color: AppColors.textSecondary,
-              ),
-            ),
     );
   }
 }
