@@ -7,6 +7,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:sqlite3/sqlite3.dart' as sql;
 
+import '../../../data/models/account_data.dart';
+import '../../../data/models/category_data.dart';
+import '../../../data/models/transaction_data.dart';
 import '../../../features/settings/data/models/export_options.dart';
 import '../app_database.dart';
 import 'encryption_service.dart';
@@ -36,11 +39,13 @@ class DatabaseExportService {
         await _exportTransactionsEncrypted(exportDb);
         await _exportAccountsEncrypted(exportDb);
         await _exportCategoriesEncrypted(exportDb);
+        await _exportSettingsEncrypted(exportDb);
       } else {
         await _createPlaintextSchema(exportDb);
         await _exportTransactionsPlaintext(exportDb);
         await _exportAccountsPlaintext(exportDb);
         await _exportCategoriesPlaintext(exportDb);
+        await _exportSettingsPlaintext(exportDb);
       }
       exportDb.dispose();
       return dbPath;
@@ -72,6 +77,10 @@ class DatabaseExportService {
     await _exportCategoriesToCsv(categoriesPath, options);
     paths.add(categoriesPath);
 
+    final settingsPath = '${exportDir.path}/app_settings.csv';
+    await _exportSettingsToCsv(settingsPath);
+    paths.add(settingsPath);
+
     return paths;
   }
 
@@ -100,29 +109,37 @@ class DatabaseExportService {
       CREATE TABLE transactions (
         id TEXT PRIMARY KEY,
         date INTEGER NOT NULL,
-        lastUpdatedAt INTEGER NOT NULL,
-        isDeleted INTEGER NOT NULL DEFAULT 0,
-        encryptedBlob BLOB NOT NULL
+        last_updated_at INTEGER NOT NULL,
+        is_deleted INTEGER NOT NULL DEFAULT 0,
+        encrypted_blob BLOB NOT NULL
       )
     ''');
 
     db.execute('''
       CREATE TABLE accounts (
         id TEXT PRIMARY KEY,
-        createdAt INTEGER NOT NULL,
-        lastUpdatedAt INTEGER NOT NULL,
-        isDeleted INTEGER NOT NULL DEFAULT 0,
-        encryptedBlob BLOB NOT NULL
+        created_at INTEGER NOT NULL,
+        last_updated_at INTEGER NOT NULL,
+        is_deleted INTEGER NOT NULL DEFAULT 0,
+        encrypted_blob BLOB NOT NULL
       )
     ''');
 
     db.execute('''
       CREATE TABLE categories (
         id TEXT PRIMARY KEY,
-        sortOrder INTEGER NOT NULL,
-        lastUpdatedAt INTEGER NOT NULL,
-        isDeleted INTEGER NOT NULL DEFAULT 0,
-        encryptedBlob BLOB NOT NULL
+        sort_order INTEGER NOT NULL,
+        last_updated_at INTEGER NOT NULL,
+        is_deleted INTEGER NOT NULL DEFAULT 0,
+        encrypted_blob BLOB NOT NULL
+      )
+    ''');
+
+    db.execute('''
+      CREATE TABLE app_settings (
+        id TEXT PRIMARY KEY,
+        last_updated_at INTEGER NOT NULL,
+        json_data TEXT NOT NULL
       )
     ''');
   }
@@ -132,47 +149,57 @@ class DatabaseExportService {
       CREATE TABLE transactions (
         id TEXT PRIMARY KEY,
         date INTEGER NOT NULL,
-        lastUpdatedAt INTEGER NOT NULL,
-        isDeleted INTEGER NOT NULL DEFAULT 0,
+        last_updated_at INTEGER NOT NULL,
+        is_deleted INTEGER NOT NULL DEFAULT 0,
         amount REAL NOT NULL,
-        categoryId TEXT NOT NULL,
-        accountId TEXT NOT NULL,
+        category_id TEXT NOT NULL,
+        account_id TEXT NOT NULL,
         type TEXT NOT NULL,
         note TEXT,
         currency TEXT NOT NULL DEFAULT 'USD',
-        createdAtMillis INTEGER NOT NULL
+        date_millis INTEGER NOT NULL,
+        created_at_millis INTEGER NOT NULL
       )
     ''');
 
     db.execute('''
       CREATE TABLE accounts (
         id TEXT PRIMARY KEY,
-        createdAt INTEGER NOT NULL,
-        lastUpdatedAt INTEGER NOT NULL,
-        isDeleted INTEGER NOT NULL DEFAULT 0,
+        created_at INTEGER NOT NULL,
+        last_updated_at INTEGER NOT NULL,
+        is_deleted INTEGER NOT NULL DEFAULT 0,
         name TEXT NOT NULL,
         type TEXT NOT NULL,
         balance REAL NOT NULL,
-        initialBalance REAL NOT NULL DEFAULT 0,
-        customColorValue INTEGER,
-        customIconCodePoint INTEGER
+        initial_balance REAL NOT NULL DEFAULT 0,
+        custom_color_value INTEGER,
+        custom_icon_code_point INTEGER,
+        created_at_millis INTEGER NOT NULL
       )
     ''');
 
     db.execute('''
       CREATE TABLE categories (
         id TEXT PRIMARY KEY,
-        sortOrder INTEGER NOT NULL,
-        lastUpdatedAt INTEGER NOT NULL,
-        isDeleted INTEGER NOT NULL DEFAULT 0,
+        sort_order INTEGER NOT NULL,
+        last_updated_at INTEGER NOT NULL,
+        is_deleted INTEGER NOT NULL DEFAULT 0,
         name TEXT NOT NULL,
-        iconCodePoint INTEGER NOT NULL,
-        iconFontFamily TEXT NOT NULL,
-        iconFontPackage TEXT,
-        colorIndex INTEGER NOT NULL,
+        icon_code_point INTEGER NOT NULL,
+        icon_font_family TEXT NOT NULL,
+        icon_font_package TEXT,
+        color_index INTEGER NOT NULL,
         type TEXT NOT NULL,
-        isCustom INTEGER NOT NULL DEFAULT 0,
-        parentId TEXT
+        is_custom INTEGER NOT NULL DEFAULT 0,
+        parent_id TEXT
+      )
+    ''');
+
+    db.execute('''
+      CREATE TABLE app_settings (
+        id TEXT PRIMARY KEY,
+        last_updated_at INTEGER NOT NULL,
+        json_data TEXT NOT NULL
       )
     ''');
   }
@@ -183,7 +210,7 @@ class DatabaseExportService {
     final rows = await database.select(database.transactions).get();
 
     final stmt = exportDb.prepare(
-      'INSERT INTO transactions (id, date, lastUpdatedAt, isDeleted, encryptedBlob) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO transactions (id, date, last_updated_at, is_deleted, encrypted_blob) VALUES (?, ?, ?, ?, ?)',
     );
 
     for (final row in rows) {
@@ -203,7 +230,7 @@ class DatabaseExportService {
     final rows = await database.select(database.accounts).get();
 
     final stmt = exportDb.prepare(
-      'INSERT INTO accounts (id, createdAt, lastUpdatedAt, isDeleted, encryptedBlob) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO accounts (id, created_at, last_updated_at, is_deleted, encrypted_blob) VALUES (?, ?, ?, ?, ?)',
     );
 
     for (final row in rows) {
@@ -223,7 +250,7 @@ class DatabaseExportService {
     final rows = await database.select(database.categories).get();
 
     final stmt = exportDb.prepare(
-      'INSERT INTO categories (id, sortOrder, lastUpdatedAt, isDeleted, encryptedBlob) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO categories (id, sort_order, last_updated_at, is_deleted, encrypted_blob) VALUES (?, ?, ?, ?, ?)',
     );
 
     for (final row in rows) {
@@ -246,24 +273,27 @@ class DatabaseExportService {
 
     final stmt = exportDb.prepare(
       '''INSERT INTO transactions
-         (id, date, lastUpdatedAt, isDeleted, amount, categoryId, accountId, type, note, currency, createdAtMillis)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+         (id, date, last_updated_at, is_deleted, amount, category_id, account_id, type, note, currency, date_millis, created_at_millis)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
     );
 
     for (final row in rows) {
       final json = await encryptionService.decryptJson(row.encryptedBlob);
+      final data = TransactionData.fromJson(json);
+
       stmt.execute([
         row.id,
         row.date,
         row.lastUpdatedAt,
         row.isDeleted ? 1 : 0,
-        (json['amount'] as num).toDouble(),
-        json['categoryId'] as String,
-        json['accountId'] as String,
-        json['type'] as String,
-        json['note'] as String?,
-        json['currency'] as String? ?? 'USD',
-        json['createdAtMillis'] as int,
+        data.amount,
+        data.categoryId,
+        data.accountId,
+        data.type,
+        data.note,
+        data.currency,
+        data.dateMillis,
+        data.createdAtMillis,
       ]);
     }
 
@@ -275,23 +305,26 @@ class DatabaseExportService {
 
     final stmt = exportDb.prepare(
       '''INSERT INTO accounts
-         (id, createdAt, lastUpdatedAt, isDeleted, name, type, balance, initialBalance, customColorValue, customIconCodePoint)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+         (id, created_at, last_updated_at, is_deleted, name, type, balance, initial_balance, custom_color_value, custom_icon_code_point, created_at_millis)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
     );
 
     for (final row in rows) {
       final json = await encryptionService.decryptJson(row.encryptedBlob);
+      final data = AccountData.fromJson(json);
+
       stmt.execute([
         row.id,
         row.createdAt,
         row.lastUpdatedAt,
         row.isDeleted ? 1 : 0,
-        json['name'] as String,
-        json['type'] as String,
-        (json['balance'] as num).toDouble(),
-        (json['initialBalance'] as num?)?.toDouble() ?? 0.0,
-        json['customColorValue'] as int?,
-        json['customIconCodePoint'] as int?,
+        data.name,
+        data.type,
+        data.balance,
+        data.initialBalance,
+        data.customColorValue,
+        data.customIconCodePoint,
+        data.createdAtMillis,
       ]);
     }
 
@@ -303,29 +336,56 @@ class DatabaseExportService {
 
     final stmt = exportDb.prepare(
       '''INSERT INTO categories
-         (id, sortOrder, lastUpdatedAt, isDeleted, name, iconCodePoint, iconFontFamily, iconFontPackage, colorIndex, type, isCustom, parentId)
+         (id, sort_order, last_updated_at, is_deleted, name, icon_code_point, icon_font_family, icon_font_package, color_index, type, is_custom, parent_id)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
     );
 
     for (final row in rows) {
       final json = await encryptionService.decryptJson(row.encryptedBlob);
+      final data = CategoryData.fromJson(json);
+
       stmt.execute([
         row.id,
         row.sortOrder,
         row.lastUpdatedAt,
         row.isDeleted ? 1 : 0,
-        json['name'] as String,
-        json['iconCodePoint'] as int,
-        json['iconFontFamily'] as String,
-        json['iconFontPackage'] as String?,
-        json['colorIndex'] as int,
-        json['type'] as String,
-        (json['isCustom'] as bool? ?? false) ? 1 : 0,
-        json['parentId'] as String?,
+        data.name,
+        data.iconCodePoint,
+        data.iconFontFamily,
+        data.iconFontPackage,
+        data.colorIndex,
+        data.type,
+        data.isCustom ? 1 : 0,
+        data.parentId,
       ]);
     }
 
     stmt.dispose();
+  }
+
+  // AppSettings export methods
+
+  Future<void> _exportSettingsEncrypted(sql.Database exportDb) async {
+    final rows = await database.select(database.appSettings).get();
+
+    final stmt = exportDb.prepare(
+      'INSERT INTO app_settings (id, last_updated_at, json_data) VALUES (?, ?, ?)',
+    );
+
+    for (final row in rows) {
+      stmt.execute([
+        row.id,
+        row.lastUpdatedAt,
+        row.jsonData,
+      ]);
+    }
+
+    stmt.dispose();
+  }
+
+  Future<void> _exportSettingsPlaintext(sql.Database exportDb) async {
+    // Settings are stored as plaintext JSON in both formats
+    await _exportSettingsEncrypted(exportDb);
   }
 
   // CSV export methods
@@ -335,7 +395,7 @@ class DatabaseExportService {
     final List<List<dynamic>> csvData = [];
 
     if (options.encryptionEnabled) {
-      csvData.add(['id', 'date', 'lastUpdatedAt', 'isDeleted', 'encryptedBlob']);
+      csvData.add(['id', 'date', 'last_updated_at', 'is_deleted', 'encrypted_blob']);
 
       for (final row in rows) {
         csvData.add([
@@ -348,24 +408,27 @@ class DatabaseExportService {
       }
     } else {
       csvData.add([
-        'id', 'date', 'lastUpdatedAt', 'isDeleted',
-        'amount', 'categoryId', 'accountId', 'type', 'note', 'currency', 'createdAtMillis',
+        'id', 'date', 'last_updated_at', 'is_deleted',
+        'amount', 'category_id', 'account_id', 'type', 'note', 'currency', 'date_millis', 'created_at_millis',
       ]);
 
       for (final row in rows) {
         final json = await encryptionService.decryptJson(row.encryptedBlob);
+        final data = TransactionData.fromJson(json);
+
         csvData.add([
           row.id,
           row.date,
           row.lastUpdatedAt,
           row.isDeleted ? 1 : 0,
-          json['amount'],
-          json['categoryId'],
-          json['accountId'],
-          json['type'],
-          json['note'] ?? '',
-          json['currency'] ?? 'USD',
-          json['createdAtMillis'],
+          data.amount,
+          data.categoryId,
+          data.accountId,
+          data.type,
+          data.note ?? '',
+          data.currency,
+          data.dateMillis,
+          data.createdAtMillis,
         ]);
       }
     }
@@ -379,7 +442,7 @@ class DatabaseExportService {
     final List<List<dynamic>> csvData = [];
 
     if (options.encryptionEnabled) {
-      csvData.add(['id', 'createdAt', 'lastUpdatedAt', 'isDeleted', 'encryptedBlob']);
+      csvData.add(['id', 'created_at', 'last_updated_at', 'is_deleted', 'encrypted_blob']);
 
       for (final row in rows) {
         csvData.add([
@@ -392,23 +455,26 @@ class DatabaseExportService {
       }
     } else {
       csvData.add([
-        'id', 'createdAt', 'lastUpdatedAt', 'isDeleted',
-        'name', 'type', 'balance', 'initialBalance', 'customColorValue', 'customIconCodePoint',
+        'id', 'created_at', 'last_updated_at', 'is_deleted',
+        'name', 'type', 'balance', 'initial_balance', 'custom_color_value', 'custom_icon_code_point', 'created_at_millis',
       ]);
 
       for (final row in rows) {
         final json = await encryptionService.decryptJson(row.encryptedBlob);
+        final data = AccountData.fromJson(json);
+
         csvData.add([
           row.id,
           row.createdAt,
           row.lastUpdatedAt,
           row.isDeleted ? 1 : 0,
-          json['name'],
-          json['type'],
-          json['balance'],
-          json['initialBalance'] ?? 0.0,
-          json['customColorValue'] ?? '',
-          json['customIconCodePoint'] ?? '',
+          data.name,
+          data.type,
+          data.balance,
+          data.initialBalance,
+          data.customColorValue ?? '',
+          data.customIconCodePoint ?? '',
+          data.createdAtMillis,
         ]);
       }
     }
@@ -422,7 +488,7 @@ class DatabaseExportService {
     final List<List<dynamic>> csvData = [];
 
     if (options.encryptionEnabled) {
-      csvData.add(['id', 'sortOrder', 'lastUpdatedAt', 'isDeleted', 'encryptedBlob']);
+      csvData.add(['id', 'sort_order', 'last_updated_at', 'is_deleted', 'encrypted_blob']);
 
       for (final row in rows) {
         csvData.add([
@@ -435,28 +501,48 @@ class DatabaseExportService {
       }
     } else {
       csvData.add([
-        'id', 'sortOrder', 'lastUpdatedAt', 'isDeleted',
-        'name', 'iconCodePoint', 'iconFontFamily', 'iconFontPackage',
-        'colorIndex', 'type', 'isCustom', 'parentId',
+        'id', 'sort_order', 'last_updated_at', 'is_deleted',
+        'name', 'icon_code_point', 'icon_font_family', 'icon_font_package',
+        'color_index', 'type', 'is_custom', 'parent_id',
       ]);
 
       for (final row in rows) {
         final json = await encryptionService.decryptJson(row.encryptedBlob);
+        final data = CategoryData.fromJson(json);
+
         csvData.add([
           row.id,
           row.sortOrder,
           row.lastUpdatedAt,
           row.isDeleted ? 1 : 0,
-          json['name'],
-          json['iconCodePoint'],
-          json['iconFontFamily'],
-          json['iconFontPackage'] ?? '',
-          json['colorIndex'],
-          json['type'],
-          (json['isCustom'] as bool? ?? false) ? 1 : 0,
-          json['parentId'] ?? '',
+          data.name,
+          data.iconCodePoint,
+          data.iconFontFamily,
+          data.iconFontPackage ?? '',
+          data.colorIndex,
+          data.type,
+          data.isCustom ? 1 : 0,
+          data.parentId ?? '',
         ]);
       }
+    }
+
+    final csv = const ListToCsvConverter().convert(csvData);
+    await File(path).writeAsString(csv);
+  }
+
+  Future<void> _exportSettingsToCsv(String path) async {
+    final rows = await database.select(database.appSettings).get();
+    final List<List<dynamic>> csvData = [];
+
+    csvData.add(['id', 'last_updated_at', 'json_data']);
+
+    for (final row in rows) {
+      csvData.add([
+        row.id,
+        row.lastUpdatedAt,
+        row.jsonData,
+      ]);
     }
 
     final csv = const ListToCsvConverter().convert(csvData);

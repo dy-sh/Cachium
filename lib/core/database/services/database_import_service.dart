@@ -7,6 +7,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:drift/drift.dart';
 import 'package:sqlite3/sqlite3.dart' as sql;
 
+import '../../../data/models/account_data.dart';
+import '../../../data/models/category_data.dart';
+import '../../../data/models/transaction_data.dart';
 import '../app_database.dart';
 import 'encryption_service.dart';
 
@@ -15,16 +18,18 @@ class ImportResult {
   final int transactionsImported;
   final int accountsImported;
   final int categoriesImported;
+  final int settingsImported;
   final List<String> errors;
 
   const ImportResult({
     required this.transactionsImported,
     required this.accountsImported,
     required this.categoriesImported,
+    this.settingsImported = 0,
     this.errors = const [],
   });
 
-  int get totalImported => transactionsImported + accountsImported + categoriesImported;
+  int get totalImported => transactionsImported + accountsImported + categoriesImported + settingsImported;
   bool get hasErrors => errors.isNotEmpty;
 }
 
@@ -89,6 +94,7 @@ class DatabaseImportService {
     int transactionsImported = 0;
     int accountsImported = 0;
     int categoriesImported = 0;
+    int settingsImported = 0;
 
     try {
       // Detect format by checking for encryptedBlob column
@@ -120,6 +126,14 @@ class DatabaseImportService {
           errors,
         );
       }
+
+      // Import settings
+      if (_tableExists(importDb, 'app_settings')) {
+        settingsImported = await _importSettingsFromSqlite(
+          importDb,
+          errors,
+        );
+      }
     } finally {
       importDb.dispose();
     }
@@ -128,6 +142,7 @@ class DatabaseImportService {
       transactionsImported: transactionsImported,
       accountsImported: accountsImported,
       categoriesImported: categoriesImported,
+      settingsImported: settingsImported,
       errors: errors,
     );
   }
@@ -139,6 +154,7 @@ class DatabaseImportService {
     int transactionsImported = 0;
     int accountsImported = 0;
     int categoriesImported = 0;
+    int settingsImported = 0;
 
     for (final path in paths) {
       final fileName = path.split('/').last.toLowerCase();
@@ -149,6 +165,8 @@ class DatabaseImportService {
         accountsImported += await _importAccountsFromCsv(path, errors);
       } else if (fileName.contains('categor')) {
         categoriesImported += await _importCategoriesFromCsv(path, errors);
+      } else if (fileName.contains('settings')) {
+        settingsImported += await _importSettingsFromCsv(path, errors);
       }
     }
 
@@ -156,6 +174,7 @@ class DatabaseImportService {
       transactionsImported: transactionsImported,
       accountsImported: accountsImported,
       categoriesImported: categoriesImported,
+      settingsImported: settingsImported,
       errors: errors,
     );
   }
@@ -177,7 +196,8 @@ class DatabaseImportService {
 
     final result = db.select("PRAGMA table_info($tableName)");
     for (final row in result) {
-      if (row['name'] == 'encryptedBlob') {
+      // Check for both snake_case (actual DB) and camelCase (old exports)
+      if (row['name'] == 'encrypted_blob' || row['name'] == 'encryptedBlob') {
         return true;
       }
     }
@@ -198,28 +218,29 @@ class DatabaseImportService {
       try {
         final id = row['id'] as String;
         final date = row['date'] as int;
-        final lastUpdatedAt = row['lastUpdatedAt'] as int;
-        final isDeleted = (row['isDeleted'] as int) == 1;
+        // Handle both snake_case (actual DB) and camelCase (old exports)
+        final lastUpdatedAt = (row['last_updated_at'] ?? row['lastUpdatedAt']) as int;
+        final isDeleted = ((row['is_deleted'] ?? row['isDeleted']) as int) == 1;
 
         Uint8List encryptedBlob;
 
         if (isEncrypted) {
-          // Already encrypted, use directly
-          encryptedBlob = row['encryptedBlob'] as Uint8List;
+          // Already encrypted, use directly (handle both naming conventions)
+          encryptedBlob = (row['encrypted_blob'] ?? row['encryptedBlob']) as Uint8List;
         } else {
-          // Plaintext format, need to encrypt
-          final json = {
-            'id': id,
-            'amount': row['amount'] as double,
-            'categoryId': row['categoryId'] as String,
-            'accountId': row['accountId'] as String,
-            'type': row['type'] as String,
-            'note': row['note'] as String?,
-            'currency': row['currency'] as String? ?? 'USD',
-            'dateMillis': date,
-            'createdAtMillis': row['createdAtMillis'] as int,
-          };
-          encryptedBlob = await encryptionService.encryptJson(json);
+          // Plaintext format, need to encrypt using TransactionData model
+          final data = TransactionData(
+            id: id,
+            amount: ((row['amount']) as num).toDouble(),
+            categoryId: (row['category_id'] ?? row['categoryId']) as String,
+            accountId: (row['account_id'] ?? row['accountId']) as String,
+            type: row['type'] as String,
+            note: row['note'] as String?,
+            currency: row['currency'] as String? ?? 'USD',
+            dateMillis: (row['date_millis'] ?? row['dateMillis'] ?? date) as int,
+            createdAtMillis: (row['created_at_millis'] ?? row['createdAtMillis']) as int,
+          );
+          encryptedBlob = await encryptionService.encryptJson(data.toJson());
         }
 
         // Insert or update in database
@@ -252,26 +273,28 @@ class DatabaseImportService {
     for (final row in rows) {
       try {
         final id = row['id'] as String;
-        final createdAt = row['createdAt'] as int;
-        final lastUpdatedAt = row['lastUpdatedAt'] as int;
-        final isDeleted = (row['isDeleted'] as int) == 1;
+        // Handle both snake_case and camelCase
+        final createdAt = (row['created_at'] ?? row['createdAt']) as int;
+        final lastUpdatedAt = (row['last_updated_at'] ?? row['lastUpdatedAt']) as int;
+        final isDeleted = ((row['is_deleted'] ?? row['isDeleted']) as int) == 1;
 
         Uint8List encryptedBlob;
 
         if (isEncrypted) {
-          encryptedBlob = row['encryptedBlob'] as Uint8List;
+          encryptedBlob = (row['encrypted_blob'] ?? row['encryptedBlob']) as Uint8List;
         } else {
-          final json = {
-            'id': id,
-            'name': row['name'] as String,
-            'type': row['type'] as String,
-            'balance': row['balance'] as double,
-            'initialBalance': (row['initialBalance'] as num?)?.toDouble() ?? 0.0,
-            'customColorValue': row['customColorValue'] as int?,
-            'customIconCodePoint': row['customIconCodePoint'] as int?,
-            'createdAtMillis': createdAt,
-          };
-          encryptedBlob = await encryptionService.encryptJson(json);
+          // Plaintext format, need to encrypt using AccountData model
+          final data = AccountData(
+            id: id,
+            name: row['name'] as String,
+            type: row['type'] as String,
+            balance: (row['balance'] as num).toDouble(),
+            initialBalance: ((row['initial_balance'] ?? row['initialBalance']) as num?)?.toDouble() ?? 0.0,
+            customColorValue: (row['custom_color_value'] ?? row['customColorValue']) as int?,
+            customIconCodePoint: (row['custom_icon_code_point'] ?? row['customIconCodePoint']) as int?,
+            createdAtMillis: (row['created_at_millis'] ?? row['createdAtMillis'] ?? createdAt) as int,
+          );
+          encryptedBlob = await encryptionService.encryptJson(data.toJson());
         }
 
         await database.into(database.accounts).insertOnConflictUpdate(
@@ -303,28 +326,30 @@ class DatabaseImportService {
     for (final row in rows) {
       try {
         final id = row['id'] as String;
-        final sortOrder = row['sortOrder'] as int;
-        final lastUpdatedAt = row['lastUpdatedAt'] as int;
-        final isDeleted = (row['isDeleted'] as int) == 1;
+        // Handle both snake_case and camelCase
+        final sortOrder = (row['sort_order'] ?? row['sortOrder']) as int;
+        final lastUpdatedAt = (row['last_updated_at'] ?? row['lastUpdatedAt']) as int;
+        final isDeleted = ((row['is_deleted'] ?? row['isDeleted']) as int) == 1;
 
         Uint8List encryptedBlob;
 
         if (isEncrypted) {
-          encryptedBlob = row['encryptedBlob'] as Uint8List;
+          encryptedBlob = (row['encrypted_blob'] ?? row['encryptedBlob']) as Uint8List;
         } else {
-          final json = {
-            'id': id,
-            'name': row['name'] as String,
-            'iconCodePoint': row['iconCodePoint'] as int,
-            'iconFontFamily': row['iconFontFamily'] as String,
-            'iconFontPackage': row['iconFontPackage'] as String?,
-            'colorIndex': row['colorIndex'] as int,
-            'type': row['type'] as String,
-            'isCustom': (row['isCustom'] as int) == 1,
-            'parentId': row['parentId'] as String?,
-            'sortOrder': sortOrder,
-          };
-          encryptedBlob = await encryptionService.encryptJson(json);
+          // Plaintext format, need to encrypt using CategoryData model
+          final data = CategoryData(
+            id: id,
+            name: row['name'] as String,
+            iconCodePoint: (row['icon_code_point'] ?? row['iconCodePoint']) as int,
+            iconFontFamily: (row['icon_font_family'] ?? row['iconFontFamily']) as String,
+            iconFontPackage: (row['icon_font_package'] ?? row['iconFontPackage']) as String?,
+            colorIndex: (row['color_index'] ?? row['colorIndex']) as int,
+            type: row['type'] as String,
+            isCustom: ((row['is_custom'] ?? row['isCustom']) as int) == 1,
+            parentId: (row['parent_id'] ?? row['parentId']) as String?,
+            sortOrder: sortOrder,
+          );
+          encryptedBlob = await encryptionService.encryptJson(data.toJson());
         }
 
         await database.into(database.categories).insertOnConflictUpdate(
@@ -355,7 +380,7 @@ class DatabaseImportService {
     if (rows.isEmpty) return 0;
 
     final headers = rows.first.map((e) => e.toString()).toList();
-    final hasEncryptedBlob = headers.contains('encryptedBlob');
+    final hasEncryptedBlob = headers.contains('encrypted_blob') || headers.contains('encryptedBlob');
 
     for (int i = 1; i < rows.length; i++) {
       try {
@@ -367,26 +392,28 @@ class DatabaseImportService {
 
         final id = data['id'].toString();
         final date = int.parse(data['date'].toString());
-        final lastUpdatedAt = int.parse(data['lastUpdatedAt'].toString());
-        final isDeleted = data['isDeleted'].toString() == '1';
+        // Handle both snake_case and camelCase
+        final lastUpdatedAt = int.parse((data['last_updated_at'] ?? data['lastUpdatedAt']).toString());
+        final isDeleted = (data['is_deleted'] ?? data['isDeleted']).toString() == '1';
 
         Uint8List encryptedBlob;
 
         if (hasEncryptedBlob) {
-          encryptedBlob = base64Decode(data['encryptedBlob'].toString());
+          encryptedBlob = base64Decode((data['encrypted_blob'] ?? data['encryptedBlob']).toString());
         } else {
-          final json = {
-            'id': id,
-            'amount': double.parse(data['amount'].toString()),
-            'categoryId': data['categoryId'].toString(),
-            'accountId': data['accountId'].toString(),
-            'type': data['type'].toString(),
-            'note': data['note'].toString().isEmpty ? null : data['note'].toString(),
-            'currency': data['currency']?.toString() ?? 'USD',
-            'dateMillis': date,
-            'createdAtMillis': int.parse(data['createdAtMillis'].toString()),
-          };
-          encryptedBlob = await encryptionService.encryptJson(json);
+          // Plaintext format, need to encrypt using TransactionData model
+          final transactionData = TransactionData(
+            id: id,
+            amount: double.parse(data['amount'].toString()),
+            categoryId: (data['category_id'] ?? data['categoryId']).toString(),
+            accountId: (data['account_id'] ?? data['accountId']).toString(),
+            type: data['type'].toString(),
+            note: data['note'].toString().isEmpty ? null : data['note'].toString(),
+            currency: data['currency']?.toString() ?? 'USD',
+            dateMillis: int.parse((data['date_millis'] ?? data['dateMillis'] ?? date).toString()),
+            createdAtMillis: int.parse((data['created_at_millis'] ?? data['createdAtMillis']).toString()),
+          );
+          encryptedBlob = await encryptionService.encryptJson(transactionData.toJson());
         }
 
         await database.into(database.transactions).insertOnConflictUpdate(
@@ -415,7 +442,7 @@ class DatabaseImportService {
     if (rows.isEmpty) return 0;
 
     final headers = rows.first.map((e) => e.toString()).toList();
-    final hasEncryptedBlob = headers.contains('encryptedBlob');
+    final hasEncryptedBlob = headers.contains('encrypted_blob') || headers.contains('encryptedBlob');
 
     for (int i = 1; i < rows.length; i++) {
       try {
@@ -426,30 +453,32 @@ class DatabaseImportService {
         }
 
         final id = data['id'].toString();
-        final createdAt = int.parse(data['createdAt'].toString());
-        final lastUpdatedAt = int.parse(data['lastUpdatedAt'].toString());
-        final isDeleted = data['isDeleted'].toString() == '1';
+        // Handle both snake_case and camelCase
+        final createdAt = int.parse((data['created_at'] ?? data['createdAt']).toString());
+        final lastUpdatedAt = int.parse((data['last_updated_at'] ?? data['lastUpdatedAt']).toString());
+        final isDeleted = (data['is_deleted'] ?? data['isDeleted']).toString() == '1';
 
         Uint8List encryptedBlob;
 
         if (hasEncryptedBlob) {
-          encryptedBlob = base64Decode(data['encryptedBlob'].toString());
+          encryptedBlob = base64Decode((data['encrypted_blob'] ?? data['encryptedBlob']).toString());
         } else {
-          final customColorValue = data['customColorValue'].toString();
-          final customIconCodePoint = data['customIconCodePoint'].toString();
-          final initialBalanceStr = data['initialBalance']?.toString() ?? '0';
+          // Plaintext format, need to encrypt using AccountData model
+          final customColorValue = (data['custom_color_value'] ?? data['customColorValue']).toString();
+          final customIconCodePoint = (data['custom_icon_code_point'] ?? data['customIconCodePoint']).toString();
+          final initialBalanceStr = (data['initial_balance'] ?? data['initialBalance'])?.toString() ?? '0';
 
-          final json = {
-            'id': id,
-            'name': data['name'].toString(),
-            'type': data['type'].toString(),
-            'balance': double.parse(data['balance'].toString()),
-            'initialBalance': initialBalanceStr.isEmpty ? 0.0 : double.parse(initialBalanceStr),
-            'customColorValue': customColorValue.isEmpty ? null : int.parse(customColorValue),
-            'customIconCodePoint': customIconCodePoint.isEmpty ? null : int.parse(customIconCodePoint),
-            'createdAtMillis': createdAt,
-          };
-          encryptedBlob = await encryptionService.encryptJson(json);
+          final accountData = AccountData(
+            id: id,
+            name: data['name'].toString(),
+            type: data['type'].toString(),
+            balance: double.parse(data['balance'].toString()),
+            initialBalance: initialBalanceStr.isEmpty ? 0.0 : double.parse(initialBalanceStr),
+            customColorValue: customColorValue.isEmpty ? null : int.parse(customColorValue),
+            customIconCodePoint: customIconCodePoint.isEmpty ? null : int.parse(customIconCodePoint),
+            createdAtMillis: int.parse((data['created_at_millis'] ?? data['createdAtMillis'] ?? createdAt).toString()),
+          );
+          encryptedBlob = await encryptionService.encryptJson(accountData.toJson());
         }
 
         await database.into(database.accounts).insertOnConflictUpdate(
@@ -478,7 +507,7 @@ class DatabaseImportService {
     if (rows.isEmpty) return 0;
 
     final headers = rows.first.map((e) => e.toString()).toList();
-    final hasEncryptedBlob = headers.contains('encryptedBlob');
+    final hasEncryptedBlob = headers.contains('encrypted_blob') || headers.contains('encryptedBlob');
 
     for (int i = 1; i < rows.length; i++) {
       try {
@@ -489,31 +518,33 @@ class DatabaseImportService {
         }
 
         final id = data['id'].toString();
-        final sortOrder = int.parse(data['sortOrder'].toString());
-        final lastUpdatedAt = int.parse(data['lastUpdatedAt'].toString());
-        final isDeleted = data['isDeleted'].toString() == '1';
+        // Handle both snake_case and camelCase
+        final sortOrder = int.parse((data['sort_order'] ?? data['sortOrder']).toString());
+        final lastUpdatedAt = int.parse((data['last_updated_at'] ?? data['lastUpdatedAt']).toString());
+        final isDeleted = (data['is_deleted'] ?? data['isDeleted']).toString() == '1';
 
         Uint8List encryptedBlob;
 
         if (hasEncryptedBlob) {
-          encryptedBlob = base64Decode(data['encryptedBlob'].toString());
+          encryptedBlob = base64Decode((data['encrypted_blob'] ?? data['encryptedBlob']).toString());
         } else {
-          final iconFontPackage = data['iconFontPackage'].toString();
-          final parentId = data['parentId'].toString();
+          // Plaintext format, need to encrypt using CategoryData model
+          final iconFontPackage = (data['icon_font_package'] ?? data['iconFontPackage']).toString();
+          final parentId = (data['parent_id'] ?? data['parentId']).toString();
 
-          final json = {
-            'id': id,
-            'name': data['name'].toString(),
-            'iconCodePoint': int.parse(data['iconCodePoint'].toString()),
-            'iconFontFamily': data['iconFontFamily'].toString(),
-            'iconFontPackage': iconFontPackage.isEmpty ? null : iconFontPackage,
-            'colorIndex': int.parse(data['colorIndex'].toString()),
-            'type': data['type'].toString(),
-            'isCustom': data['isCustom'].toString() == '1',
-            'parentId': parentId.isEmpty ? null : parentId,
-            'sortOrder': sortOrder,
-          };
-          encryptedBlob = await encryptionService.encryptJson(json);
+          final categoryData = CategoryData(
+            id: id,
+            name: data['name'].toString(),
+            iconCodePoint: int.parse((data['icon_code_point'] ?? data['iconCodePoint']).toString()),
+            iconFontFamily: (data['icon_font_family'] ?? data['iconFontFamily']).toString(),
+            iconFontPackage: iconFontPackage.isEmpty ? null : iconFontPackage,
+            colorIndex: int.parse((data['color_index'] ?? data['colorIndex']).toString()),
+            type: data['type'].toString(),
+            isCustom: (data['is_custom'] ?? data['isCustom']).toString() == '1',
+            parentId: parentId.isEmpty ? null : parentId,
+            sortOrder: sortOrder,
+          );
+          encryptedBlob = await encryptionService.encryptJson(categoryData.toJson());
         }
 
         await database.into(database.categories).insertOnConflictUpdate(
@@ -528,6 +559,76 @@ class DatabaseImportService {
         count++;
       } catch (e) {
         errors.add('Failed to import category row $i: $e');
+      }
+    }
+
+    return count;
+  }
+
+  // AppSettings import methods
+
+  Future<int> _importSettingsFromSqlite(
+    sql.Database importDb,
+    List<String> errors,
+  ) async {
+    int count = 0;
+    final rows = importDb.select('SELECT * FROM app_settings');
+
+    for (final row in rows) {
+      try {
+        final id = row['id'] as String;
+        // Handle both snake_case and camelCase
+        final lastUpdatedAt = (row['last_updated_at'] ?? row['lastUpdatedAt']) as int;
+        final jsonData = (row['json_data'] ?? row['jsonData']) as String;
+
+        await database.into(database.appSettings).insertOnConflictUpdate(
+          AppSettingsCompanion(
+            id: Value(id),
+            lastUpdatedAt: Value(lastUpdatedAt),
+            jsonData: Value(jsonData),
+          ),
+        );
+        count++;
+      } catch (e) {
+        errors.add('Failed to import settings: $e');
+      }
+    }
+
+    return count;
+  }
+
+  Future<int> _importSettingsFromCsv(String path, List<String> errors) async {
+    int count = 0;
+    final content = await File(path).readAsString();
+    final rows = const CsvToListConverter().convert(content);
+
+    if (rows.isEmpty) return 0;
+
+    final headers = rows.first.map((e) => e.toString()).toList();
+
+    for (int i = 1; i < rows.length; i++) {
+      try {
+        final row = rows[i];
+        final Map<String, dynamic> data = {};
+        for (int j = 0; j < headers.length; j++) {
+          data[headers[j]] = row[j];
+        }
+
+        final id = data['id'].toString();
+        // Handle both snake_case and camelCase
+        final lastUpdatedAt = int.parse((data['last_updated_at'] ?? data['lastUpdatedAt']).toString());
+        final jsonData = (data['json_data'] ?? data['jsonData']).toString();
+
+        await database.into(database.appSettings).insertOnConflictUpdate(
+          AppSettingsCompanion(
+            id: Value(id),
+            lastUpdatedAt: Value(lastUpdatedAt),
+            jsonData: Value(jsonData),
+          ),
+        );
+        count++;
+      } catch (e) {
+        errors.add('Failed to import settings row $i: $e');
       }
     }
 
