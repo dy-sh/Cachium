@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -29,6 +30,7 @@ class CategoryManagementScreen extends ConsumerStatefulWidget {
 }
 
 class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScreen> {
+  final _uuid = const Uuid();
   int _selectedTypeIndex = 1; // 0 = Income, 1 = Expense
   final Set<String> _expandedIds = {};
   final ScrollController _scrollController = ScrollController();
@@ -695,7 +697,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
                 : siblings.map((c) => c.sortOrder).reduce((a, b) => a > b ? a : b) + 1;
 
             final category = Category(
-              id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
+              id: _uuid.v4(),
               name: name,
               icon: icon,
               colorIndex: colorIndex,
@@ -762,7 +764,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
                 : siblings.map((c) => c.sortOrder).reduce((a, b) => a > b ? a : b) + 1;
 
             final category = Category(
-              id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
+              id: _uuid.v4(),
               name: name,
               icon: icon,
               colorIndex: colorIndex,

@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -60,6 +61,7 @@ class CategoryTransactionsReassignScreen extends ConsumerStatefulWidget {
 
 class _CategoryTransactionsReassignScreenState
     extends ConsumerState<CategoryTransactionsReassignScreen> {
+  final _uuid = const Uuid();
   // Maps categoryId -> targetCategoryId (null means "delete transactions", empty string means "not selected")
   final Map<String, String?> _decisions = {};
 
@@ -104,7 +106,7 @@ class _CategoryTransactionsReassignScreenState
                     1;
 
             final category = Category(
-              id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
+              id: _uuid.v4(),
               name: name,
               icon: icon,
               colorIndex: colorIndex,
