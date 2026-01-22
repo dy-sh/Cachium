@@ -121,7 +121,17 @@ class AppDatabase extends _$AppDatabase {
       );
 
   static QueryExecutor _openConnection() {
-    return driftDatabase(name: 'cachium_db');
+    return driftDatabase(
+      name: 'cachium_db',
+      native: DriftNativeOptions(
+        setup: (database) {
+          // Enable WAL mode for concurrent reads/writes
+          database.execute('PRAGMA journal_mode=WAL');
+          // Set busy timeout to 5 seconds to wait for locks instead of failing immediately
+          database.execute('PRAGMA busy_timeout=5000');
+        },
+      ),
+    );
   }
 
   // CRUD operations for transactions
