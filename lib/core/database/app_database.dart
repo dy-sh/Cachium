@@ -150,13 +150,14 @@ class AppDatabase extends _$AppDatabase {
     required int lastUpdatedAt,
     required Uint8List encryptedBlob,
   }) async {
-    await into(transactions).insertOnConflictUpdate(
+    await into(transactions).insert(
       TransactionsCompanion.insert(
         id: id,
         date: date,
         lastUpdatedAt: lastUpdatedAt,
         encryptedBlob: encryptedBlob,
       ),
+      mode: InsertMode.insertOrReplace,
     );
   }
 
@@ -245,13 +246,14 @@ class AppDatabase extends _$AppDatabase {
     required int lastUpdatedAt,
     required Uint8List encryptedBlob,
   }) async {
-    await into(accounts).insertOnConflictUpdate(
+    await into(accounts).insert(
       AccountsCompanion.insert(
         id: id,
         createdAt: createdAt,
         lastUpdatedAt: lastUpdatedAt,
         encryptedBlob: encryptedBlob,
       ),
+      mode: InsertMode.insertOrReplace,
     );
   }
 
@@ -338,13 +340,14 @@ class AppDatabase extends _$AppDatabase {
     required int lastUpdatedAt,
     required Uint8List encryptedBlob,
   }) async {
-    await into(categories).insertOnConflictUpdate(
+    await into(categories).insert(
       CategoriesCompanion.insert(
         id: id,
         sortOrder: sortOrder,
         lastUpdatedAt: lastUpdatedAt,
         encryptedBlob: encryptedBlob,
       ),
+      mode: InsertMode.insertOrReplace,
     );
   }
 
@@ -460,11 +463,13 @@ class AppDatabase extends _$AppDatabase {
 
   /// Delete all data from the database
   Future<void> deleteAllData({bool includeSettings = false}) async {
-    await deleteAllTransactions();
-    await deleteAllAccounts();
-    await deleteAllCategories();
-    if (includeSettings) {
-      await deleteAllSettings();
-    }
+    await transaction(() async {
+      await deleteAllTransactions();
+      await deleteAllAccounts();
+      await deleteAllCategories();
+      if (includeSettings) {
+        await deleteAllSettings();
+      }
+    });
   }
 }

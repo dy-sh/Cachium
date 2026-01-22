@@ -22,7 +22,7 @@ import '../widgets/welcome_option_card.dart';
 class DefaultAccounts {
   static List<Account> get all => [
         Account(
-          id: 'default_cash',
+          id: 'a0b1c2d3-e4f5-4a6b-7c8d-9e0f1a2b3c4d',
           name: 'Cash',
           type: AccountType.cash,
           balance: 0,
@@ -30,7 +30,7 @@ class DefaultAccounts {
           createdAt: DateTime.now(),
         ),
         Account(
-          id: 'default_credit_card',
+          id: 'b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e',
           name: 'Credit Card',
           type: AccountType.creditCard,
           balance: 0,
@@ -60,37 +60,41 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     });
 
     try {
+      final db = ref.read(databaseProvider);
       final accountRepo = ref.read(accountRepositoryProvider);
       final categoryRepo = ref.read(categoryRepositoryProvider);
       final transactionRepo = ref.read(transactionRepositoryProvider);
 
-      switch (option) {
-        case WelcomeOption.demo:
-          // Seed accounts
-          for (final account in DemoData.accounts) {
-            await accountRepo.createAccount(account);
-          }
-          // Seed default categories
-          await categoryRepo.seedDefaultCategories();
-          // Seed transactions
-          for (final transaction in DemoData.transactions) {
-            await transactionRepo.createTransaction(transaction);
-          }
-          break;
+      // Wrap all database operations in a transaction to prevent locking
+      await db.transaction(() async {
+        switch (option) {
+          case WelcomeOption.demo:
+            // Seed accounts
+            for (final account in DemoData.accounts) {
+              await accountRepo.upsertAccount(account);
+            }
+            // Seed default categories
+            await categoryRepo.seedDefaultCategories();
+            // Seed transactions
+            for (final transaction in DemoData.transactions) {
+              await transactionRepo.upsertTransaction(transaction);
+            }
+            break;
 
-        case WelcomeOption.defaultCategories:
-          // Seed default accounts (Cash and Credit Card)
-          for (final account in DefaultAccounts.all) {
-            await accountRepo.createAccount(account);
-          }
-          // Seed default categories
-          await categoryRepo.seedDefaultCategories();
-          break;
+          case WelcomeOption.defaultCategories:
+            // Seed default accounts (Cash and Credit Card)
+            for (final account in DefaultAccounts.all) {
+              await accountRepo.upsertAccount(account);
+            }
+            // Seed default categories
+            await categoryRepo.seedDefaultCategories();
+            break;
 
-        case WelcomeOption.empty:
-          // Do nothing - start with empty database
-          break;
-      }
+          case WelcomeOption.empty:
+            // Do nothing - start with empty database
+            break;
+        }
+      });
 
       // Mark onboarding as completed
       await ref.read(settingsProvider.notifier).setOnboardingCompleted(true);

@@ -403,15 +403,17 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
 
         if (targetAccount == null) return;
 
-        // Move transactions then delete account
-        await ref.read(transactionsProvider.notifier)
-            .moveTransactionsToAccount(account.id, targetAccount.id);
-        await ref.read(accountsProvider.notifier).deleteAccount(account.id);
+        // Move transactions then delete account (atomic operation)
+        await ref.read(accountsProvider.notifier)
+            .deleteAccountMovingTransactions(account.id, targetAccount.id);
+        // Refresh transactions provider
+        ref.invalidate(transactionsProvider);
       } else if (action == DeleteAccountAction.deleteWithTransactions) {
-        // Delete all transactions then delete account
-        await ref.read(transactionsProvider.notifier)
-            .deleteTransactionsForAccount(account.id);
-        await ref.read(accountsProvider.notifier).deleteAccount(account.id);
+        // Delete all transactions then delete account (atomic operation)
+        await ref.read(accountsProvider.notifier)
+            .deleteAccountWithTransactions(account.id);
+        // Refresh transactions provider
+        ref.invalidate(transactionsProvider);
       }
     } else {
       // No transactions, show simple confirmation

@@ -22,6 +22,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     String? note,
   }) async {
     final repo = ref.read(transactionRepositoryProvider);
+    final db = ref.read(databaseProvider);
 
     final transaction = Transaction(
       id: _uuid.v4(),
@@ -34,19 +35,23 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
       createdAt: DateTime.now(),
     );
 
-    // Save to encrypted database
-    await repo.createTransaction(transaction);
+    // Wrap in database transaction to prevent locking issues
+    await db.transaction(() async {
+      // Save to encrypted database
+      await repo.createTransaction(transaction);
+
+      // Update account balance
+      final balanceChange = type == TransactionType.income ? amount : -amount;
+      await ref.read(accountsProvider.notifier).updateBalance(accountId, balanceChange);
+    });
 
     // Update local state
     state = state.whenData((transactions) => [transaction, ...transactions]);
-
-    // Update account balance
-    final balanceChange = type == TransactionType.income ? amount : -amount;
-    await ref.read(accountsProvider.notifier).updateBalance(accountId, balanceChange);
   }
 
   Future<void> updateTransaction(Transaction transaction) async {
     final repo = ref.read(transactionRepositoryProvider);
+    final db = ref.read(databaseProvider);
 
     // Get original transaction to calculate balance difference
     final currentState = state.valueOrNull;
@@ -57,48 +62,51 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     // Calculate balance adjustments
     final sameAccount = originalTransaction.accountId == transaction.accountId;
 
-    if (sameAccount) {
-      // Same account: calculate net difference
-      // Original effect: income = +amount, expense = -amount
-      // New effect: income = +amount, expense = -amount
-      // Net change = new effect - original effect
-      final originalEffect = originalTransaction.type == TransactionType.income
-          ? originalTransaction.amount
-          : -originalTransaction.amount;
-      final newEffect = transaction.type == TransactionType.income
-          ? transaction.amount
-          : -transaction.amount;
-      final netChange = newEffect - originalEffect;
+    // Wrap in database transaction to prevent locking issues
+    await db.transaction(() async {
+      if (sameAccount) {
+        // Same account: calculate net difference
+        // Original effect: income = +amount, expense = -amount
+        // New effect: income = +amount, expense = -amount
+        // Net change = new effect - original effect
+        final originalEffect = originalTransaction.type == TransactionType.income
+            ? originalTransaction.amount
+            : -originalTransaction.amount;
+        final newEffect = transaction.type == TransactionType.income
+            ? transaction.amount
+            : -transaction.amount;
+        final netChange = newEffect - originalEffect;
 
-      if (netChange != 0) {
+        if (netChange != 0) {
+          await ref.read(accountsProvider.notifier).updateBalance(
+                transaction.accountId,
+                netChange,
+              );
+        }
+      } else {
+        // Different accounts: reverse from original, apply to new
+        // First, reverse the original transaction's effect
+        final originalBalanceChange = originalTransaction.type == TransactionType.income
+            ? -originalTransaction.amount
+            : originalTransaction.amount;
+        await ref.read(accountsProvider.notifier).updateBalance(
+              originalTransaction.accountId,
+              originalBalanceChange,
+            );
+
+        // Then, apply the new transaction's effect
+        final newBalanceChange = transaction.type == TransactionType.income
+            ? transaction.amount
+            : -transaction.amount;
         await ref.read(accountsProvider.notifier).updateBalance(
               transaction.accountId,
-              netChange,
+              newBalanceChange,
             );
       }
-    } else {
-      // Different accounts: reverse from original, apply to new
-      // First, reverse the original transaction's effect
-      final originalBalanceChange = originalTransaction.type == TransactionType.income
-          ? -originalTransaction.amount
-          : originalTransaction.amount;
-      await ref.read(accountsProvider.notifier).updateBalance(
-            originalTransaction.accountId,
-            originalBalanceChange,
-          );
 
-      // Then, apply the new transaction's effect
-      final newBalanceChange = transaction.type == TransactionType.income
-          ? transaction.amount
-          : -transaction.amount;
-      await ref.read(accountsProvider.notifier).updateBalance(
-            transaction.accountId,
-            newBalanceChange,
-          );
-    }
-
-    // Update in encrypted database
-    await repo.updateTransaction(transaction);
+      // Update in encrypted database
+      await repo.updateTransaction(transaction);
+    });
 
     // Update local state
     state = state.whenData(
@@ -109,6 +117,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
 
   Future<void> deleteTransaction(String id) async {
     final repo = ref.read(transactionRepositoryProvider);
+    final db = ref.read(databaseProvider);
 
     // Get transaction before deleting for balance reversal
     final currentState = state.valueOrNull;
@@ -116,21 +125,24 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
 
     final transaction = currentState.firstWhere((t) => t.id == id);
 
-    // Soft delete in database
-    await repo.deleteTransaction(id);
+    // Wrap in database transaction to prevent locking issues
+    await db.transaction(() async {
+      // Soft delete in database
+      await repo.deleteTransaction(id);
+
+      // Reverse the balance change
+      final balanceChange =
+          transaction.type == TransactionType.income ? -transaction.amount : transaction.amount;
+      await ref.read(accountsProvider.notifier).updateBalance(
+            transaction.accountId,
+            balanceChange,
+          );
+    });
 
     // Update local state
     state = state.whenData(
       (transactions) => transactions.where((t) => t.id != id).toList(),
     );
-
-    // Reverse the balance change
-    final balanceChange =
-        transaction.type == TransactionType.income ? -transaction.amount : transaction.amount;
-    await ref.read(accountsProvider.notifier).updateBalance(
-          transaction.accountId,
-          balanceChange,
-        );
   }
 
   /// Refresh transactions from database
@@ -142,6 +154,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
   /// Move all transactions from one account to another
   Future<void> moveTransactionsToAccount(String fromAccountId, String toAccountId) async {
     final repo = ref.read(transactionRepositoryProvider);
+    final db = ref.read(databaseProvider);
     final currentState = state.valueOrNull;
     if (currentState == null) return;
 
@@ -160,11 +173,20 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
       }
     }
 
-    // Update transactions in database
-    for (final tx in transactionsToMove) {
-      final updatedTx = tx.copyWith(accountId: toAccountId);
-      await repo.updateTransaction(updatedTx);
-    }
+    // Wrap in database transaction to prevent locking issues
+    await db.transaction(() async {
+      // Update transactions in database
+      for (final tx in transactionsToMove) {
+        final updatedTx = tx.copyWith(accountId: toAccountId);
+        await repo.updateTransaction(updatedTx);
+      }
+
+      // Update account balances:
+      // Remove the effect from source account (reverse it)
+      await ref.read(accountsProvider.notifier).updateBalance(fromAccountId, -totalEffect);
+      // Add the effect to target account
+      await ref.read(accountsProvider.notifier).updateBalance(toAccountId, totalEffect);
+    });
 
     // Update local state for transactions
     state = state.whenData(
@@ -175,25 +197,23 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
         return t;
       }).toList(),
     );
-
-    // Update account balances:
-    // Remove the effect from source account (reverse it)
-    await ref.read(accountsProvider.notifier).updateBalance(fromAccountId, -totalEffect);
-    // Add the effect to target account
-    await ref.read(accountsProvider.notifier).updateBalance(toAccountId, totalEffect);
   }
 
   /// Delete all transactions for a specific account
   Future<void> deleteTransactionsForAccount(String accountId) async {
     final repo = ref.read(transactionRepositoryProvider);
+    final db = ref.read(databaseProvider);
     final currentState = state.valueOrNull;
     if (currentState == null) return;
 
     final transactionsToDelete = currentState.where((t) => t.accountId == accountId).toList();
 
-    for (final tx in transactionsToDelete) {
-      await repo.deleteTransaction(tx.id);
-    }
+    // Wrap in database transaction to prevent locking issues
+    await db.transaction(() async {
+      for (final tx in transactionsToDelete) {
+        await repo.deleteTransaction(tx.id);
+      }
+    });
 
     // Update local state
     state = state.whenData(
@@ -204,6 +224,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
   /// Move all transactions from one category to another
   Future<void> moveTransactionsToCategory(String fromCategoryId, String toCategoryId) async {
     final repo = ref.read(transactionRepositoryProvider);
+    final db = ref.read(databaseProvider);
     final currentState = state.valueOrNull;
     if (currentState == null) return;
 
@@ -211,11 +232,14 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
 
     if (transactionsToMove.isEmpty) return;
 
-    // Update transactions in database
-    for (final tx in transactionsToMove) {
-      final updatedTx = tx.copyWith(categoryId: toCategoryId);
-      await repo.updateTransaction(updatedTx);
-    }
+    // Wrap in database transaction to prevent locking issues
+    await db.transaction(() async {
+      // Update transactions in database
+      for (final tx in transactionsToMove) {
+        final updatedTx = tx.copyWith(categoryId: toCategoryId);
+        await repo.updateTransaction(updatedTx);
+      }
+    });
 
     // Update local state for transactions
     state = state.whenData(
@@ -231,23 +255,27 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
   /// Delete all transactions for a specific category and reverse account balances
   Future<void> deleteTransactionsForCategory(String categoryId) async {
     final repo = ref.read(transactionRepositoryProvider);
+    final db = ref.read(databaseProvider);
     final currentState = state.valueOrNull;
     if (currentState == null) return;
 
     final transactionsToDelete = currentState.where((t) => t.categoryId == categoryId).toList();
 
-    // Delete each transaction and reverse its balance effect
-    for (final tx in transactionsToDelete) {
-      await repo.deleteTransaction(tx.id);
+    // Wrap in database transaction to prevent locking issues
+    await db.transaction(() async {
+      // Delete each transaction and reverse its balance effect
+      for (final tx in transactionsToDelete) {
+        await repo.deleteTransaction(tx.id);
 
-      // Reverse the balance change
-      final balanceChange =
-          tx.type == TransactionType.income ? -tx.amount : tx.amount;
-      await ref.read(accountsProvider.notifier).updateBalance(
-            tx.accountId,
-            balanceChange,
-          );
-    }
+        // Reverse the balance change
+        final balanceChange =
+            tx.type == TransactionType.income ? -tx.amount : tx.amount;
+        await ref.read(accountsProvider.notifier).updateBalance(
+              tx.accountId,
+              balanceChange,
+            );
+      }
+    });
 
     // Update local state
     state = state.whenData(

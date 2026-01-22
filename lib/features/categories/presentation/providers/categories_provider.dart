@@ -99,31 +99,40 @@ class CategoriesNotifier extends AsyncNotifier<List<Category>> {
         .toList()
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
-    int newSortOrder;
-    if (insertBeforeCategoryId == null) {
-      // Insert at end
-      newSortOrder = siblings.isEmpty ? 0 : siblings.last.sortOrder + 1;
-    } else {
-      // Find the target position
-      final targetIndex = siblings.indexWhere((c) => c.id == insertBeforeCategoryId);
-      if (targetIndex == -1) {
+    final db = ref.read(databaseProvider);
+    final repo = ref.read(categoryRepositoryProvider);
+
+    // Wrap in transaction to prevent locking
+    await db.transaction(() async {
+      int newSortOrder;
+      if (insertBeforeCategoryId == null) {
+        // Insert at end
         newSortOrder = siblings.isEmpty ? 0 : siblings.last.sortOrder + 1;
       } else {
-        newSortOrder = siblings[targetIndex].sortOrder;
-        // Shift all items at and after target position
-        for (int i = targetIndex; i < siblings.length; i++) {
-          final sibling = siblings[i];
-          await updateCategory(sibling.copyWith(sortOrder: sibling.sortOrder + 1));
+        // Find the target position
+        final targetIndex = siblings.indexWhere((c) => c.id == insertBeforeCategoryId);
+        if (targetIndex == -1) {
+          newSortOrder = siblings.isEmpty ? 0 : siblings.last.sortOrder + 1;
+        } else {
+          newSortOrder = siblings[targetIndex].sortOrder;
+          // Shift all items at and after target position
+          for (int i = targetIndex; i < siblings.length; i++) {
+            final sibling = siblings[i];
+            await repo.updateCategory(sibling.copyWith(sortOrder: sibling.sortOrder + 1));
+          }
         }
       }
-    }
 
-    final updated = category.copyWith(
-      parentId: targetParentId,
-      clearParentId: targetParentId == null,
-      sortOrder: newSortOrder,
-    );
-    await updateCategory(updated);
+      final updated = category.copyWith(
+        parentId: targetParentId,
+        clearParentId: targetParentId == null,
+        sortOrder: newSortOrder,
+      );
+      await repo.updateCategory(updated);
+    });
+
+    // Refresh state from database
+    await refresh();
   }
 
   Future<void> promoteChildren(String parentId) async {
@@ -133,6 +142,8 @@ class CategoriesNotifier extends AsyncNotifier<List<Category>> {
     final parent = categories.firstWhere((c) => c.id == parentId);
     final children = categories.where((c) => c.parentId == parentId).toList();
 
+    if (children.isEmpty) return;
+
     final rootSiblings = categories
         .where((c) => c.parentId == parent.parentId && c.type == parent.type)
         .toList();
@@ -140,14 +151,23 @@ class CategoriesNotifier extends AsyncNotifier<List<Category>> {
         ? 0
         : rootSiblings.map((c) => c.sortOrder).reduce((a, b) => a > b ? a : b) + 1;
 
-    for (final child in children) {
-      final updated = child.copyWith(
-        parentId: parent.parentId,
-        clearParentId: parent.parentId == null,
-        sortOrder: nextSortOrder++,
-      );
-      await updateCategory(updated);
-    }
+    final db = ref.read(databaseProvider);
+    final repo = ref.read(categoryRepositoryProvider);
+
+    // Wrap in transaction to prevent locking
+    await db.transaction(() async {
+      for (final child in children) {
+        final updated = child.copyWith(
+          parentId: parent.parentId,
+          clearParentId: parent.parentId == null,
+          sortOrder: nextSortOrder++,
+        );
+        await repo.updateCategory(updated);
+      }
+    });
+
+    // Refresh state from database
+    await refresh();
   }
 
   Future<void> deleteWithChildren(String id) async {
@@ -155,16 +175,59 @@ class CategoriesNotifier extends AsyncNotifier<List<Category>> {
     if (categories == null) return;
 
     final descendants = CategoryTreeBuilder.getDescendantIds(categories, id);
+    final db = ref.read(databaseProvider);
+    final repo = ref.read(categoryRepositoryProvider);
 
-    for (final descendantId in descendants.reversed) {
-      await deleteCategory(descendantId);
-    }
-    await deleteCategory(id);
+    // Wrap in transaction to prevent locking
+    await db.transaction(() async {
+      for (final descendantId in descendants.reversed) {
+        await repo.deleteCategory(descendantId);
+      }
+      await repo.deleteCategory(id);
+    });
+
+    // Update local state
+    final allIdsToRemove = {...descendants, id};
+    state = state.whenData(
+      (cats) => cats.where((c) => !allIdsToRemove.contains(c.id)).toList(),
+    );
   }
 
   Future<void> deleteCategoryPromotingChildren(String id) async {
-    await promoteChildren(id);
-    await deleteCategory(id);
+    final categories = state.valueOrNull;
+    if (categories == null) return;
+
+    final parent = categories.firstWhere((c) => c.id == id);
+    final children = categories.where((c) => c.parentId == id).toList();
+
+    final rootSiblings = categories
+        .where((c) => c.parentId == parent.parentId && c.type == parent.type)
+        .toList();
+    var nextSortOrder = rootSiblings.isEmpty
+        ? 0
+        : rootSiblings.map((c) => c.sortOrder).reduce((a, b) => a > b ? a : b) + 1;
+
+    final db = ref.read(databaseProvider);
+    final repo = ref.read(categoryRepositoryProvider);
+
+    // Wrap in transaction to prevent locking
+    await db.transaction(() async {
+      // Promote children first
+      for (final child in children) {
+        final updated = child.copyWith(
+          parentId: parent.parentId,
+          clearParentId: parent.parentId == null,
+          sortOrder: nextSortOrder++,
+        );
+        await repo.updateCategory(updated);
+      }
+
+      // Then delete the parent
+      await repo.deleteCategory(id);
+    });
+
+    // Refresh state from database
+    await refresh();
   }
 
   /// Refresh categories from database

@@ -10,6 +10,7 @@ import '../../../../data/demo/demo_data.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
+import '../../data/models/app_settings.dart';
 import '../../data/models/database_consistency.dart';
 import '../../data/models/database_metrics.dart';
 import '../../data/models/export_options.dart';
@@ -224,21 +225,26 @@ class DatabaseManagementNotifier extends Notifier<AsyncValue<void>> {
       final categoryRepo = ref.read(categoryRepositoryProvider);
       final transactionRepo = ref.read(transactionRepositoryProvider);
 
-      // Delete existing data first
-      await db.deleteAllData(includeSettings: false);
+      // Wrap all database operations in a transaction to prevent locking
+      await db.transaction(() async {
+        // Delete existing data first
+        await db.deleteAllTransactions();
+        await db.deleteAllAccounts();
+        await db.deleteAllCategories();
 
-      // Seed accounts (use upsert to handle duplicates)
-      for (final account in DemoData.accounts) {
-        await accountRepo.upsertAccount(account);
-      }
+        // Seed accounts (use upsert to handle duplicates)
+        for (final account in DemoData.accounts) {
+          await accountRepo.upsertAccount(account);
+        }
 
-      // Seed categories (default categories - uses upsert internally)
-      await categoryRepo.seedDefaultCategories();
+        // Seed categories (default categories - uses upsert internally)
+        await categoryRepo.seedDefaultCategories();
 
-      // Seed transactions (use upsert to handle duplicates)
-      for (final transaction in DemoData.transactions) {
-        await transactionRepo.upsertTransaction(transaction);
-      }
+        // Seed transactions (use upsert to handle duplicates)
+        for (final transaction in DemoData.transactions) {
+          await transactionRepo.upsertTransaction(transaction);
+        }
+      });
 
       // Invalidate all related providers to refresh UI
       ref.invalidate(accountsProvider);
@@ -261,22 +267,35 @@ class DatabaseManagementNotifier extends Notifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
     try {
       final db = ref.read(databaseProvider);
+      final settingsRepo = ref.read(settingsRepositoryProvider);
 
-      // Delete all data
-      await db.deleteAllData(includeSettings: resetSettings);
+      // Wrap all database operations in a single transaction
+      await db.transaction(() async {
+        // Delete all entity data
+        await db.deleteAllTransactions();
+        await db.deleteAllAccounts();
+        await db.deleteAllCategories();
 
-      // Reset settings if requested, otherwise just reset onboardingCompleted
-      if (resetSettings) {
-        await ref.read(settingsProvider.notifier).reset();
-      }
+        if (resetSettings) {
+          await db.deleteAllSettings();
+        }
+      });
 
-      // Set onboardingCompleted to false to show welcome screen
-      await ref.read(settingsProvider.notifier).setOnboardingCompleted(false);
+      // Save settings with onboardingCompleted = false
+      // Do this outside the transaction to avoid conflicts
+      final currentSettings = await settingsRepo.loadSettings();
+      final newSettings = (currentSettings ?? const AppSettings()).copyWith(
+        onboardingCompleted: false,
+      );
+      await settingsRepo.saveSettings(
+        resetSettings ? const AppSettings() : newSettings,
+      );
 
       // Invalidate all related providers to refresh UI
       ref.invalidate(accountsProvider);
       ref.invalidate(transactionsProvider);
       ref.invalidate(categoriesProvider);
+      ref.invalidate(settingsProvider);
       ref.invalidate(databaseMetricsProvider);
       ref.invalidate(databaseConsistencyProvider);
       ref.invalidate(shouldShowWelcomeProvider);
