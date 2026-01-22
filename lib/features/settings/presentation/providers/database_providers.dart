@@ -140,7 +140,12 @@ class ImportStateNotifier extends Notifier<AsyncValue<ImportResult?>> {
       final service = ref.read(databaseImportServiceProvider);
       final result = await service.pickAndImportSqlite();
       state = AsyncValue.data(result);
-      // Refresh metrics and consistency after import
+
+      // Invalidate all data providers to refresh UI
+      ref.invalidate(accountsProvider);
+      ref.invalidate(transactionsProvider);
+      ref.invalidate(categoriesProvider);
+      ref.invalidate(settingsProvider);
       ref.invalidate(databaseMetricsProvider);
       ref.invalidate(databaseConsistencyProvider);
     } catch (e, st) {
@@ -154,7 +159,12 @@ class ImportStateNotifier extends Notifier<AsyncValue<ImportResult?>> {
       final service = ref.read(databaseImportServiceProvider);
       final result = await service.pickAndImportCsv();
       state = AsyncValue.data(result);
-      // Refresh metrics and consistency after import
+
+      // Invalidate all data providers to refresh UI
+      ref.invalidate(accountsProvider);
+      ref.invalidate(transactionsProvider);
+      ref.invalidate(categoriesProvider);
+      ref.invalidate(settingsProvider);
       ref.invalidate(databaseMetricsProvider);
       ref.invalidate(databaseConsistencyProvider);
     } catch (e, st) {
