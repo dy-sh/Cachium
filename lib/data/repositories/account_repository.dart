@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
-import '../../core/database/exceptions/security_exception.dart';
 import '../../features/accounts/data/models/account.dart' as ui;
 import '../models/account_data.dart';
 
@@ -57,7 +56,7 @@ class AccountRepository {
   /// Create a new account (encrypt and insert)
   Future<void> createAccount(ui.Account account) async {
     final data = _toData(account);
-    final encryptedBlob = await encryptionService.encryptJson(data.toJson());
+    final encryptedBlob = await encryptionService.encryptAccount(data);
 
     await database.insertAccount(
       id: account.id,
@@ -70,7 +69,7 @@ class AccountRepository {
   /// Create or update an account (encrypt and upsert)
   Future<void> upsertAccount(ui.Account account) async {
     final data = _toData(account);
-    final encryptedBlob = await encryptionService.encryptJson(data.toJson());
+    final encryptedBlob = await encryptionService.encryptAccount(data);
 
     await database.upsertAccount(
       id: account.id,
@@ -85,27 +84,11 @@ class AccountRepository {
     final row = await database.getAccount(id);
     if (row == null) return null;
 
-    final json = await encryptionService.decryptJson(row.encryptedBlob);
-    final data = AccountData.fromJson(json);
-
-    // Integrity check: verify decrypted data matches row metadata
-    if (data.id != row.id) {
-      throw SecurityException(
-        rowId: row.id,
-        fieldName: 'id',
-        expectedValue: row.id,
-        actualValue: data.id,
-      );
-    }
-
-    if (data.createdAtMillis != row.createdAt) {
-      throw SecurityException(
-        rowId: row.id,
-        fieldName: 'createdAtMillis',
-        expectedValue: row.createdAt.toString(),
-        actualValue: data.createdAtMillis.toString(),
-      );
-    }
+    final data = await encryptionService.decryptAccount(
+      row.encryptedBlob,
+      expectedId: row.id,
+      expectedCreatedAtMillis: row.createdAt,
+    );
 
     return _toAccount(data);
   }
@@ -116,28 +99,11 @@ class AccountRepository {
     final accounts = <ui.Account>[];
 
     for (final row in rows) {
-      final json = await encryptionService.decryptJson(row.encryptedBlob);
-      final data = AccountData.fromJson(json);
-
-      // Integrity check
-      if (data.id != row.id) {
-        throw SecurityException(
-          rowId: row.id,
-          fieldName: 'id',
-          expectedValue: row.id,
-          actualValue: data.id,
-        );
-      }
-
-      if (data.createdAtMillis != row.createdAt) {
-        throw SecurityException(
-          rowId: row.id,
-          fieldName: 'createdAtMillis',
-          expectedValue: row.createdAt.toString(),
-          actualValue: data.createdAtMillis.toString(),
-        );
-      }
-
+      final data = await encryptionService.decryptAccount(
+        row.encryptedBlob,
+        expectedId: row.id,
+        expectedCreatedAtMillis: row.createdAt,
+      );
       accounts.add(_toAccount(data));
     }
 
@@ -147,7 +113,7 @@ class AccountRepository {
   /// Update an existing account (re-encrypt and update)
   Future<void> updateAccount(ui.Account account) async {
     final data = _toData(account);
-    final encryptedBlob = await encryptionService.encryptJson(data.toJson());
+    final encryptedBlob = await encryptionService.encryptAccount(data);
 
     await database.updateAccount(
       id: account.id,
@@ -173,15 +139,17 @@ class AccountRepository {
       final accounts = <ui.Account>[];
 
       for (final row in rows) {
-        final json = await encryptionService.decryptJson(row.encryptedBlob);
-        final data = AccountData.fromJson(json);
-
-        // Integrity check
-        if (data.id != row.id || data.createdAtMillis != row.createdAt) {
-          continue; // Skip corrupted rows in stream
+        try {
+          final data = await encryptionService.decryptAccount(
+            row.encryptedBlob,
+            expectedId: row.id,
+            expectedCreatedAtMillis: row.createdAt,
+          );
+          accounts.add(_toAccount(data));
+        } catch (_) {
+          // Skip corrupted rows in stream
+          continue;
         }
-
-        accounts.add(_toAccount(data));
       }
 
       return accounts;

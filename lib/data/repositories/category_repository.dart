@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
-import '../../core/database/exceptions/security_exception.dart';
 import '../../features/categories/data/models/category.dart' as ui;
 import '../models/category_data.dart';
 
@@ -59,7 +58,7 @@ class CategoryRepository {
   /// Create a new category (encrypt and insert)
   Future<void> createCategory(ui.Category category) async {
     final data = _toData(category);
-    final encryptedBlob = await encryptionService.encryptJson(data.toJson());
+    final encryptedBlob = await encryptionService.encryptCategory(data);
 
     await database.insertCategory(
       id: category.id,
@@ -72,7 +71,7 @@ class CategoryRepository {
   /// Create or update a category (encrypt and upsert)
   Future<void> upsertCategory(ui.Category category) async {
     final data = _toData(category);
-    final encryptedBlob = await encryptionService.encryptJson(data.toJson());
+    final encryptedBlob = await encryptionService.encryptCategory(data);
 
     await database.upsertCategory(
       id: category.id,
@@ -87,27 +86,11 @@ class CategoryRepository {
     final row = await database.getCategory(id);
     if (row == null) return null;
 
-    final json = await encryptionService.decryptJson(row.encryptedBlob);
-    final data = CategoryData.fromJson(json);
-
-    // Integrity check: verify decrypted data matches row metadata
-    if (data.id != row.id) {
-      throw SecurityException(
-        rowId: row.id,
-        fieldName: 'id',
-        expectedValue: row.id,
-        actualValue: data.id,
-      );
-    }
-
-    if (data.sortOrder != row.sortOrder) {
-      throw SecurityException(
-        rowId: row.id,
-        fieldName: 'sortOrder',
-        expectedValue: row.sortOrder.toString(),
-        actualValue: data.sortOrder.toString(),
-      );
-    }
+    final data = await encryptionService.decryptCategory(
+      row.encryptedBlob,
+      expectedId: row.id,
+      expectedSortOrder: row.sortOrder,
+    );
 
     return _toCategory(data);
   }
@@ -118,28 +101,11 @@ class CategoryRepository {
     final categories = <ui.Category>[];
 
     for (final row in rows) {
-      final json = await encryptionService.decryptJson(row.encryptedBlob);
-      final data = CategoryData.fromJson(json);
-
-      // Integrity check
-      if (data.id != row.id) {
-        throw SecurityException(
-          rowId: row.id,
-          fieldName: 'id',
-          expectedValue: row.id,
-          actualValue: data.id,
-        );
-      }
-
-      if (data.sortOrder != row.sortOrder) {
-        throw SecurityException(
-          rowId: row.id,
-          fieldName: 'sortOrder',
-          expectedValue: row.sortOrder.toString(),
-          actualValue: data.sortOrder.toString(),
-        );
-      }
-
+      final data = await encryptionService.decryptCategory(
+        row.encryptedBlob,
+        expectedId: row.id,
+        expectedSortOrder: row.sortOrder,
+      );
       categories.add(_toCategory(data));
     }
 
@@ -149,7 +115,7 @@ class CategoryRepository {
   /// Update an existing category (re-encrypt and update)
   Future<void> updateCategory(ui.Category category) async {
     final data = _toData(category);
-    final encryptedBlob = await encryptionService.encryptJson(data.toJson());
+    final encryptedBlob = await encryptionService.encryptCategory(data);
 
     await database.updateCategory(
       id: category.id,
@@ -175,15 +141,17 @@ class CategoryRepository {
       final categories = <ui.Category>[];
 
       for (final row in rows) {
-        final json = await encryptionService.decryptJson(row.encryptedBlob);
-        final data = CategoryData.fromJson(json);
-
-        // Integrity check - skip corrupted rows in stream
-        if (data.id != row.id || data.sortOrder != row.sortOrder) {
+        try {
+          final data = await encryptionService.decryptCategory(
+            row.encryptedBlob,
+            expectedId: row.id,
+            expectedSortOrder: row.sortOrder,
+          );
+          categories.add(_toCategory(data));
+        } catch (_) {
+          // Skip corrupted rows in stream
           continue;
         }
-
-        categories.add(_toCategory(data));
       }
 
       return categories;

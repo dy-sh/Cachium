@@ -3,6 +3,8 @@ import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
 
+import '../../../data/models/account_data.dart';
+import '../../../data/models/category_data.dart';
 import '../../../data/models/transaction_data.dart';
 import '../exceptions/security_exception.dart';
 import 'key_provider.dart';
@@ -135,6 +137,96 @@ class EncryptionService {
         fieldName: 'dateMillis',
         expectedValue: expectedDateMillis.toString(),
         actualValue: data.dateMillis.toString(),
+      );
+    }
+
+    return data;
+  }
+
+  /// Encrypts account data into a binary blob.
+  ///
+  /// Returns a Uint8List containing: nonce (12 bytes) + ciphertext + MAC (16 bytes)
+  Future<Uint8List> encryptAccount(AccountData data) async {
+    return encryptJson(data.toJson());
+  }
+
+  /// Decrypts an encrypted blob back to account data.
+  ///
+  /// Performs integrity verification to ensure the decrypted data matches
+  /// the expected row metadata (id and createdAtMillis). This prevents blob-swapping
+  /// attacks where an attacker might swap encrypted blobs between rows.
+  ///
+  /// Throws [SecurityException] if integrity check fails.
+  /// Throws [SecretBoxAuthenticationError] if decryption fails (wrong key or tampered data).
+  Future<AccountData> decryptAccount(
+    Uint8List encryptedBlob, {
+    required String expectedId,
+    required int expectedCreatedAtMillis,
+  }) async {
+    final json = await decryptJson(encryptedBlob);
+    final data = AccountData.fromJson(json);
+
+    // Integrity check: verify decrypted data matches row metadata
+    if (data.id != expectedId) {
+      throw SecurityException(
+        rowId: expectedId,
+        fieldName: 'id',
+        expectedValue: expectedId,
+        actualValue: data.id,
+      );
+    }
+
+    if (data.createdAtMillis != expectedCreatedAtMillis) {
+      throw SecurityException(
+        rowId: expectedId,
+        fieldName: 'createdAtMillis',
+        expectedValue: expectedCreatedAtMillis.toString(),
+        actualValue: data.createdAtMillis.toString(),
+      );
+    }
+
+    return data;
+  }
+
+  /// Encrypts category data into a binary blob.
+  ///
+  /// Returns a Uint8List containing: nonce (12 bytes) + ciphertext + MAC (16 bytes)
+  Future<Uint8List> encryptCategory(CategoryData data) async {
+    return encryptJson(data.toJson());
+  }
+
+  /// Decrypts an encrypted blob back to category data.
+  ///
+  /// Performs integrity verification to ensure the decrypted data matches
+  /// the expected row metadata (id and sortOrder). This prevents blob-swapping
+  /// attacks where an attacker might swap encrypted blobs between rows.
+  ///
+  /// Throws [SecurityException] if integrity check fails.
+  /// Throws [SecretBoxAuthenticationError] if decryption fails (wrong key or tampered data).
+  Future<CategoryData> decryptCategory(
+    Uint8List encryptedBlob, {
+    required String expectedId,
+    required int expectedSortOrder,
+  }) async {
+    final json = await decryptJson(encryptedBlob);
+    final data = CategoryData.fromJson(json);
+
+    // Integrity check: verify decrypted data matches row metadata
+    if (data.id != expectedId) {
+      throw SecurityException(
+        rowId: expectedId,
+        fieldName: 'id',
+        expectedValue: expectedId,
+        actualValue: data.id,
+      );
+    }
+
+    if (data.sortOrder != expectedSortOrder) {
+      throw SecurityException(
+        rowId: expectedId,
+        fieldName: 'sortOrder',
+        expectedValue: expectedSortOrder.toString(),
+        actualValue: data.sortOrder.toString(),
       );
     }
 
