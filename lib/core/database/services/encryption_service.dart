@@ -6,7 +6,7 @@ import 'package:cryptography/cryptography.dart';
 import '../../../data/models/account_data.dart';
 import '../../../data/models/category_data.dart';
 import '../../../data/models/transaction_data.dart';
-import '../exceptions/security_exception.dart';
+import '../../exceptions/security_exception.dart';
 import 'key_provider.dart';
 
 /// Service for encrypting and decrypting data using AES-256-GCM.

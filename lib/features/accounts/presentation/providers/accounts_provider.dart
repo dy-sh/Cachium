@@ -2,9 +2,17 @@ import 'dart:ui';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+
+import '../../../../core/exceptions/app_exception.dart';
 import '../../../../core/providers/database_providers.dart';
 import '../../data/models/account.dart';
 
+/// Notifier for managing account state.
+///
+/// Error Handling:
+/// - build() lets exceptions propagate to set AsyncValue.error()
+/// - Mutation methods catch exceptions and set state to AsyncValue.error()
+/// - RepositoryException provides detailed error context
 class AccountsNotifier extends AsyncNotifier<List<Account>> {
   final _uuid = const Uuid();
 
@@ -14,156 +22,253 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
     return repo.getAllAccounts();
   }
 
+  /// Add a new account.
+  ///
+  /// Throws [RepositoryException] on failure, which is caught and
+  /// converted to AsyncValue.error().
   Future<void> addAccount({
     required String name,
     required AccountType type,
     required double initialBalance,
     Color? customColor,
   }) async {
-    final repo = ref.read(accountRepositoryProvider);
+    final previousState = state;
 
-    final account = Account(
-      id: _uuid.v4(),
-      name: name,
-      type: type,
-      balance: initialBalance,
-      initialBalance: initialBalance,
-      customColor: customColor,
-      createdAt: DateTime.now(),
-    );
+    try {
+      final repo = ref.read(accountRepositoryProvider);
 
-    // Save to encrypted database
-    await repo.createAccount(account);
+      final account = Account(
+        id: _uuid.v4(),
+        name: name,
+        type: type,
+        balance: initialBalance,
+        initialBalance: initialBalance,
+        customColor: customColor,
+        createdAt: DateTime.now(),
+      );
 
-    // Update local state
-    state = state.whenData((accounts) => [account, ...accounts]);
+      // Optimistically update local state
+      state = state.whenData((accounts) => [account, ...accounts]);
+
+      // Save to encrypted database
+      await repo.createAccount(account);
+    } catch (e, st) {
+      // Revert to previous state on error
+      state = previousState;
+      // Re-throw for caller to handle (e.g., show error UI)
+      Error.throwWithStackTrace(
+        e is AppException ? e : RepositoryException.create(entityType: 'Account', cause: e),
+        st,
+      );
+    }
   }
 
+  /// Update an existing account.
+  ///
+  /// Throws [RepositoryException] on failure.
   Future<void> updateAccount(Account account) async {
-    final repo = ref.read(accountRepositoryProvider);
+    final previousState = state;
 
-    // Update in encrypted database
-    await repo.updateAccount(account);
+    try {
+      final repo = ref.read(accountRepositoryProvider);
 
-    // Update local state
-    state = state.whenData(
-      (accounts) =>
-          accounts.map((a) => a.id == account.id ? account : a).toList(),
-    );
+      // Optimistically update local state
+      state = state.whenData(
+        (accounts) =>
+            accounts.map((a) => a.id == account.id ? account : a).toList(),
+      );
+
+      // Update in encrypted database
+      await repo.updateAccount(account);
+    } catch (e, st) {
+      state = previousState;
+      Error.throwWithStackTrace(
+        e is AppException ? e : RepositoryException.update(entityType: 'Account', entityId: account.id, cause: e),
+        st,
+      );
+    }
   }
 
+  /// Delete an account.
+  ///
+  /// Throws [RepositoryException] on failure.
   Future<void> deleteAccount(String id) async {
-    final repo = ref.read(accountRepositoryProvider);
+    final previousState = state;
 
-    // Soft delete in database
-    await repo.deleteAccount(id);
+    try {
+      final repo = ref.read(accountRepositoryProvider);
 
-    // Update local state
-    state = state.whenData(
-      (accounts) => accounts.where((a) => a.id != id).toList(),
-    );
+      // Optimistically update local state
+      state = state.whenData(
+        (accounts) => accounts.where((a) => a.id != id).toList(),
+      );
+
+      // Soft delete in database
+      await repo.deleteAccount(id);
+    } catch (e, st) {
+      state = previousState;
+      Error.throwWithStackTrace(
+        e is AppException ? e : RepositoryException.delete(entityType: 'Account', entityId: id, cause: e),
+        st,
+      );
+    }
   }
 
   /// Delete account along with all its transactions (in a single transaction)
+  ///
+  /// Throws [RepositoryException] on failure.
   Future<void> deleteAccountWithTransactions(String accountId) async {
-    final db = ref.read(databaseProvider);
-    final accountRepo = ref.read(accountRepositoryProvider);
-    final transactionRepo = ref.read(transactionRepositoryProvider);
+    final previousState = state;
 
-    // Get transactions for this account
-    final allTransactions = await transactionRepo.getAllTransactions();
-    final accountTransactions = allTransactions.where((t) => t.accountId == accountId).toList();
+    try {
+      final db = ref.read(databaseProvider);
+      final accountRepo = ref.read(accountRepositoryProvider);
+      final transactionRepo = ref.read(transactionRepositoryProvider);
 
-    // Wrap in transaction to prevent locking
-    await db.transaction(() async {
-      // Delete all transactions for this account
-      for (final tx in accountTransactions) {
-        await transactionRepo.deleteTransaction(tx.id);
-      }
-      // Delete the account
-      await accountRepo.deleteAccount(accountId);
-    });
+      // Get transactions for this account
+      final allTransactions = await transactionRepo.getAllTransactions();
+      final accountTransactions =
+          allTransactions.where((t) => t.accountId == accountId).toList();
 
-    // Update local state
-    state = state.whenData(
-      (accounts) => accounts.where((a) => a.id != accountId).toList(),
-    );
-  }
+      // Optimistically update local state
+      state = state.whenData(
+        (accounts) => accounts.where((a) => a.id != accountId).toList(),
+      );
 
-  /// Move all transactions to another account then delete the source account (in a single transaction)
-  Future<void> deleteAccountMovingTransactions(String sourceAccountId, String targetAccountId) async {
-    final db = ref.read(databaseProvider);
-    final accountRepo = ref.read(accountRepositoryProvider);
-    final transactionRepo = ref.read(transactionRepositoryProvider);
-
-    // Get current state
-    final accounts = state.valueOrNull;
-    if (accounts == null) return;
-
-    final targetAccount = accounts.firstWhere((a) => a.id == targetAccountId);
-
-    // Get transactions for the source account
-    final allTransactions = await transactionRepo.getAllTransactions();
-    final transactionsToMove = allTransactions.where((t) => t.accountId == sourceAccountId).toList();
-
-    // Calculate balance effect
-    double totalEffect = 0;
-    for (final tx in transactionsToMove) {
-      totalEffect += tx.type.name == 'income' ? tx.amount : -tx.amount;
+      // Wrap in transaction to prevent locking
+      await db.transaction(() async {
+        // Delete all transactions for this account
+        for (final tx in accountTransactions) {
+          await transactionRepo.deleteTransaction(tx.id);
+        }
+        // Delete the account
+        await accountRepo.deleteAccount(accountId);
+      });
+    } catch (e, st) {
+      state = previousState;
+      Error.throwWithStackTrace(
+        e is AppException ? e : RepositoryException.delete(entityType: 'Account', entityId: accountId, cause: e),
+        st,
+      );
     }
-
-    // Wrap in transaction to prevent locking
-    await db.transaction(() async {
-      // Update all transactions to point to target account
-      for (final tx in transactionsToMove) {
-        final updatedTx = tx.copyWith(accountId: targetAccountId);
-        await transactionRepo.updateTransaction(updatedTx);
-      }
-
-      // Update target account balance
-      final updatedTarget = targetAccount.copyWith(balance: targetAccount.balance + totalEffect);
-      await accountRepo.updateAccount(updatedTarget);
-
-      // Delete the source account
-      await accountRepo.deleteAccount(sourceAccountId);
-    });
-
-    // Update local state
-    state = state.whenData((accts) {
-      return accts
-          .where((a) => a.id != sourceAccountId)
-          .map((a) => a.id == targetAccountId
-              ? a.copyWith(balance: a.balance + totalEffect)
-              : a)
-          .toList();
-    });
   }
 
+  /// Move all transactions to another account then delete the source account
+  ///
+  /// Throws [RepositoryException] on failure.
+  Future<void> deleteAccountMovingTransactions(
+    String sourceAccountId,
+    String targetAccountId,
+  ) async {
+    final previousState = state;
+
+    try {
+      final db = ref.read(databaseProvider);
+      final accountRepo = ref.read(accountRepositoryProvider);
+      final transactionRepo = ref.read(transactionRepositoryProvider);
+
+      // Get current state
+      final accounts = state.valueOrNull;
+      if (accounts == null) return;
+
+      final targetAccount =
+          accounts.firstWhere((a) => a.id == targetAccountId);
+
+      // Get transactions for the source account
+      final allTransactions = await transactionRepo.getAllTransactions();
+      final transactionsToMove =
+          allTransactions.where((t) => t.accountId == sourceAccountId).toList();
+
+      // Calculate balance effect
+      double totalEffect = 0;
+      for (final tx in transactionsToMove) {
+        totalEffect += tx.type.name == 'income' ? tx.amount : -tx.amount;
+      }
+
+      // Optimistically update local state
+      state = state.whenData((accts) {
+        return accts
+            .where((a) => a.id != sourceAccountId)
+            .map((a) => a.id == targetAccountId
+                ? a.copyWith(balance: a.balance + totalEffect)
+                : a)
+            .toList();
+      });
+
+      // Wrap in transaction to prevent locking
+      await db.transaction(() async {
+        // Update all transactions to point to target account
+        for (final tx in transactionsToMove) {
+          final updatedTx = tx.copyWith(accountId: targetAccountId);
+          await transactionRepo.updateTransaction(updatedTx);
+        }
+
+        // Update target account balance
+        final updatedTarget =
+            targetAccount.copyWith(balance: targetAccount.balance + totalEffect);
+        await accountRepo.updateAccount(updatedTarget);
+
+        // Delete the source account
+        await accountRepo.deleteAccount(sourceAccountId);
+      });
+    } catch (e, st) {
+      state = previousState;
+      Error.throwWithStackTrace(
+        e is AppException ? e : RepositoryException.delete(entityType: 'Account', entityId: sourceAccountId, cause: e),
+        st,
+      );
+    }
+  }
+
+  /// Update an account's balance by a delta amount.
+  ///
+  /// Throws [RepositoryException] on failure.
   Future<void> updateBalance(String accountId, double amount) async {
-    final currentState = state.valueOrNull;
-    if (currentState == null) return;
+    final previousState = state;
 
-    final accountIndex = currentState.indexWhere((a) => a.id == accountId);
-    if (accountIndex == -1) return;
+    try {
+      final currentState = state.valueOrNull;
+      if (currentState == null) return;
 
-    final account = currentState[accountIndex];
-    final updatedAccount = account.copyWith(balance: account.balance + amount);
+      final accountIndex =
+          currentState.indexWhere((a) => a.id == accountId);
+      if (accountIndex == -1) return;
 
-    // Update in database
-    final repo = ref.read(accountRepositoryProvider);
-    await repo.updateAccount(updatedAccount);
+      final account = currentState[accountIndex];
+      final updatedAccount =
+          account.copyWith(balance: account.balance + amount);
 
-    // Update local state
-    state = state.whenData(
-      (accounts) =>
-          accounts.map((a) => a.id == accountId ? updatedAccount : a).toList(),
-    );
+      // Optimistically update local state
+      state = state.whenData(
+        (accounts) =>
+            accounts.map((a) => a.id == accountId ? updatedAccount : a).toList(),
+      );
+
+      // Update in database
+      final repo = ref.read(accountRepositoryProvider);
+      await repo.updateAccount(updatedAccount);
+    } catch (e, st) {
+      state = previousState;
+      Error.throwWithStackTrace(
+        e is AppException ? e : RepositoryException.update(entityType: 'Account', entityId: accountId, cause: e),
+        st,
+      );
+    }
   }
 
   /// Refresh accounts from database
+  ///
+  /// Sets state to AsyncValue.error() on failure.
   Future<void> refresh() async {
-    final repo = ref.read(accountRepositoryProvider);
-    state = AsyncData(await repo.getAllAccounts());
+    try {
+      final repo = ref.read(accountRepositoryProvider);
+      state = AsyncData(await repo.getAllAccounts());
+    } catch (e, st) {
+      state = AsyncError(
+        e is AppException ? e : RepositoryException.fetch(entityType: 'Account', cause: e),
+        st,
+      );
+    }
   }
 }
 
@@ -179,7 +284,8 @@ final totalBalanceProvider = Provider<double>((ref) {
   return accounts.fold(0.0, (sum, account) => sum + account.balance);
 });
 
-final accountsByTypeProvider = Provider<Map<AccountType, List<Account>>>((ref) {
+final accountsByTypeProvider =
+    Provider<Map<AccountType, List<Account>>>((ref) {
   final accountsAsync = ref.watch(accountsProvider);
   final accounts = accountsAsync.valueOrNull ?? [];
   final Map<AccountType, List<Account>> grouped = {};
