@@ -1,2 +1,2 @@
 // Re-export from the new modular structure
-export 'date_picker/fm_date_picker.dart';
+export 'date_picker/date_picker.dart';

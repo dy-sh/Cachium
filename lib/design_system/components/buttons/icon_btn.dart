@@ -5,7 +5,7 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../mixins/tap_scale_mixin.dart';
 
-class FMIconButton extends StatefulWidget {
+class IconBtn extends StatefulWidget {
   final IconData icon;
   final VoidCallback? onPressed;
   final Color? iconColor;
@@ -13,7 +13,7 @@ class FMIconButton extends StatefulWidget {
   final double size;
   final bool showBorder;
 
-  const FMIconButton({
+  const IconBtn({
     super.key,
     required this.icon,
     this.onPressed,
@@ -24,10 +24,10 @@ class FMIconButton extends StatefulWidget {
   });
 
   @override
-  State<FMIconButton> createState() => _FMIconButtonState();
+  State<IconBtn> createState() => _FMIconButtonState();
 }
 
-class _FMIconButtonState extends State<FMIconButton>
+class _FMIconButtonState extends State<IconBtn>
     with SingleTickerProviderStateMixin, TapScaleMixin {
   @override
   double get tapScale => AppAnimations.tapScaleLarge;

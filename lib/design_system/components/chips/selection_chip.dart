@@ -8,7 +8,7 @@ import '../../../core/constants/app_typography.dart';
 import '../../../features/settings/presentation/providers/settings_provider.dart';
 import '../../mixins/tap_scale_mixin.dart';
 
-class FMChip extends ConsumerStatefulWidget {
+class SelectionChip extends ConsumerStatefulWidget {
   final String label;
   final bool isSelected;
   final VoidCallback? onTap;
@@ -16,7 +16,7 @@ class FMChip extends ConsumerStatefulWidget {
   final IconData? icon;
   final Color? iconColor;
 
-  const FMChip({
+  const SelectionChip({
     super.key,
     required this.label,
     this.isSelected = false,
@@ -27,10 +27,10 @@ class FMChip extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<FMChip> createState() => _FMChipState();
+  ConsumerState<SelectionChip> createState() => _FMChipState();
 }
 
-class _FMChipState extends ConsumerState<FMChip>
+class _FMChipState extends ConsumerState<SelectionChip>
     with SingleTickerProviderStateMixin, TapScaleMixin {
   @override
   double get tapScale => AppAnimations.tapScaleSmall;

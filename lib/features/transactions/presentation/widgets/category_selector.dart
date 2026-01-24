@@ -123,7 +123,7 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
 
     // Show empty state if no categories available
     if (widget.categories.isEmpty) {
-      return FMEmptyState(
+      return EmptyState(
         icon: LucideIcons.folderPlus,
         title: 'No categories available',
         subtitle: 'Tap to create a category',
@@ -332,7 +332,7 @@ class _CategoryChip extends StatelessWidget {
     final categoryColor = category.getColor(intensity);
     final bgOpacity = AppColors.getBgOpacity(intensity);
 
-    return FMSelectableCard(
+    return SelectableCard(
       isSelected: isSelected,
       color: categoryColor,
       bgOpacity: bgOpacity,

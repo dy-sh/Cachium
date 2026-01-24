@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
-import '../../../../design_system/components/buttons/fm_close_button.dart';
+import '../../../../design_system/components/buttons/circular_button.dart';
 import '../../../../design_system/animations/staggered_list.dart';
 import '../../../../navigation/app_router.dart';
 import '../widgets/account_preview_list.dart';
@@ -45,7 +45,7 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                FMCloseButton.add(
+                CircularButton.add(
                   onTap: () => context.push(AppRoutes.transactionForm),
                 ),
               ],

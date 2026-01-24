@@ -88,7 +88,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            FMFormHeader(
+            FormHeader(
               title: isEditing ? 'Edit Account' : 'New Account',
               onClose: () => context.pop(),
               trailing: isEditing
@@ -116,7 +116,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    FMTextField(
+                    InputField(
                       key: ValueKey('name_${formState.editingAccountId}'),
                       label: 'Account Name',
                       hint: 'Enter account name...',
@@ -151,7 +151,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                     const SizedBox(height: AppSpacing.xxl),
 
                     if (!isEditing) ...[
-                      FMTextField(
+                      InputField(
                         label: 'Initial Balance',
                         hint: '0.00',
                         controller: _balanceController,
@@ -173,7 +173,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                       ),
                     ] else ...[
                       // Initial balance (editable in edit mode)
-                      FMTextField(
+                      InputField(
                         key: ValueKey('initial_balance_${formState.editingAccountId}'),
                         label: 'Initial Balance',
                         hint: '0.00',
@@ -297,7 +297,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                 right: AppSpacing.screenPadding,
                 bottom: MediaQuery.of(context).padding.bottom + AppSpacing.md,
               ),
-              child: FMPrimaryButton(
+              child: PrimaryButton(
                 label: isEditing ? 'Save Changes' : 'Create Account',
                 onPressed: formState.isValid
                     ? () async {

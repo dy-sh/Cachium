@@ -7,13 +7,13 @@ import '../../../core/constants/app_typography.dart';
 /// A reusable screen header with title and optional action button.
 ///
 /// Used at the top of main screens like Accounts and Transactions.
-class FMScreenHeader extends StatelessWidget {
+class ScreenHeader extends StatelessWidget {
   final String title;
   final VoidCallback? onActionPressed;
   final IconData actionIcon;
   final Color? actionIconColor;
 
-  const FMScreenHeader({
+  const ScreenHeader({
     super.key,
     required this.title,
     this.onActionPressed,

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 
-class FMLoadingIndicator extends StatefulWidget {
+class LoadingIndicator extends StatefulWidget {
   final Color? color;
   final double dotSize;
   final double spacing;
 
-  const FMLoadingIndicator({
+  const LoadingIndicator({
     super.key,
     this.color,
     this.dotSize = 6.0,
@@ -14,10 +14,10 @@ class FMLoadingIndicator extends StatefulWidget {
   });
 
   @override
-  State<FMLoadingIndicator> createState() => _FMLoadingIndicatorState();
+  State<LoadingIndicator> createState() => _FMLoadingIndicatorState();
 }
 
-class _FMLoadingIndicatorState extends State<FMLoadingIndicator>
+class _FMLoadingIndicatorState extends State<LoadingIndicator>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
@@ -93,21 +93,21 @@ class _FMLoadingIndicatorState extends State<FMLoadingIndicator>
   }
 }
 
-class FMLoadingDots extends StatefulWidget {
+class LoadingDots extends StatefulWidget {
   final Color? color;
   final double size;
 
-  const FMLoadingDots({
+  const LoadingDots({
     super.key,
     this.color,
     this.size = 20.0,
   });
 
   @override
-  State<FMLoadingDots> createState() => _FMLoadingDotsState();
+  State<LoadingDots> createState() => _FMLoadingDotsState();
 }
 
-class _FMLoadingDotsState extends State<FMLoadingDots>
+class _FMLoadingDotsState extends State<LoadingDots>
     with TickerProviderStateMixin {
   late List<AnimationController> _controllers;
   late List<Animation<double>> _animations;

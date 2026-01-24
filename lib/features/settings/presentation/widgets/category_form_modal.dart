@@ -5,8 +5,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
-import '../../../../design_system/components/buttons/fm_primary_button.dart';
-import '../../../../design_system/components/layout/fm_form_header.dart';
+import '../../../../design_system/components/buttons/primary_button.dart';
+import '../../../../design_system/components/layout/form_header.dart';
 import '../../../categories/data/models/category.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../data/models/app_settings.dart';
@@ -113,7 +113,7 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
         child: Column(
           children: [
             // Header
-            FMFormHeader(
+            FormHeader(
               title: isEditing ? 'Edit Category' : 'New Category',
               onClose: () => Navigator.pop(context),
               trailing: isEditing && widget.onDelete != null
@@ -323,7 +323,7 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
                             ),
                           ),
                         )
-                      : FMPrimaryButton(
+                      : PrimaryButton(
                           label: isEditing ? 'Save Changes' : 'Create Category',
                           onPressed: _isValid && !isDuplicateName
                               ? () {

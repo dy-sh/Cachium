@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../core/constants/app_colors.dart';
-import '../design_system/components/layout/fm_bottom_nav_bar.dart';
+import '../design_system/components/layout/bottom_nav_bar.dart';
 import 'app_router.dart';
 
 class NavigationShell extends StatelessWidget {
@@ -50,10 +50,10 @@ class NavigationShell extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: child,
-      bottomNavigationBar: FMBottomNavBar(
+      bottomNavigationBar: BottomNavBar(
         currentIndex: _getCurrentIndex(context),
         onTap: (index) => _onTap(context, index),
-        items: FMBottomNavBar.defaultItems,
+        items: BottomNavBar.defaultItems,
       ),
     );
   }

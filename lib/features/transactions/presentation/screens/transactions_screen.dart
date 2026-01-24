@@ -29,7 +29,7 @@ class TransactionsScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: AppSpacing.lg),
-          FMScreenHeader(
+          ScreenHeader(
             title: 'Transactions',
             onActionPressed: () => context.push(AppRoutes.transactionForm),
             actionIconColor: ref.watch(accentColorProvider),
@@ -79,7 +79,7 @@ class TransactionsScreen extends ConsumerWidget {
             child: Builder(
               builder: (context) {
                 final intensity = ref.watch(colorIntensityProvider);
-                return FMToggleChip(
+                return ToggleChip(
                   options: const ['All', 'Income', 'Expense'],
                   selectedIndex: filter.index,
                   colors: [

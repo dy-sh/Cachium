@@ -4,12 +4,12 @@ import '../../../core/constants/app_animations.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../features/settings/presentation/providers/settings_provider.dart';
 
-class FMSwitch extends ConsumerWidget {
+class Toggle extends ConsumerWidget {
   final bool value;
   final ValueChanged<bool>? onChanged;
   final Color? activeColor;
 
-  const FMSwitch({
+  const Toggle({
     super.key,
     required this.value,
     this.onChanged,

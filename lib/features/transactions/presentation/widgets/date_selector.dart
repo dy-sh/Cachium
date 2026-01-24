@@ -7,7 +7,7 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/utils/date_formatter.dart';
-import '../../../../design_system/components/inputs/fm_date_picker.dart';
+import '../../../../design_system/components/inputs/date_picker.dart';
 
 /// A widget for selecting a date and time with quick options.
 class DateSelector extends StatelessWidget {

@@ -8,13 +8,13 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../features/settings/presentation/providers/settings_provider.dart';
 
 /// Month and year selection picker used in the date picker modal.
-class FMMonthYearPicker extends ConsumerWidget {
+class MonthYearPicker extends ConsumerWidget {
   final DateTime displayedMonth;
   final DateTime firstDate;
   final DateTime lastDate;
   final void Function(int year, int month) onMonthYearSelected;
 
-  const FMMonthYearPicker({
+  const MonthYearPicker({
     super.key,
     required this.displayedMonth,
     required this.firstDate,

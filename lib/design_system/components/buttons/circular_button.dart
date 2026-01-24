@@ -6,7 +6,7 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../features/settings/presentation/providers/settings_provider.dart';
 
 /// A standardized close button used in form screens and modals.
-class FMCloseButton extends ConsumerWidget {
+class CircularButton extends ConsumerWidget {
   final VoidCallback onTap;
   final IconData icon;
   final Color? iconColor;
@@ -14,7 +14,7 @@ class FMCloseButton extends ConsumerWidget {
   final double size;
   final bool useAccentColor;
 
-  const FMCloseButton({
+  const CircularButton({
     super.key,
     required this.onTap,
     this.icon = LucideIcons.x,
@@ -25,18 +25,18 @@ class FMCloseButton extends ConsumerWidget {
   });
 
   /// Factory constructor for a close button that navigates back.
-  factory FMCloseButton.pop(BuildContext context, {IconData? icon}) {
-    return FMCloseButton(
+  factory CircularButton.pop(BuildContext context, {IconData? icon}) {
+    return CircularButton(
       onTap: () => Navigator.of(context).pop(),
       icon: icon ?? LucideIcons.x,
     );
   }
 
   /// Factory constructor for a plus/add button that uses accent color.
-  factory FMCloseButton.add({
+  factory CircularButton.add({
     required VoidCallback onTap,
   }) {
-    return FMCloseButton(
+    return CircularButton(
       onTap: onTap,
       icon: LucideIcons.plus,
       useAccentColor: true,

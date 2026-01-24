@@ -38,7 +38,7 @@ lib/
 │   ├── encryption/           # Internal DTOs for encryption (*_data.dart models)
 │   └── repositories/         # Repository classes for encrypted storage
 ├── design_system/            # Reusable UI components (barrel: design_system.dart)
-│   ├── components/           # fm_* prefixed components (buttons, cards, chips, inputs, etc.)
+│   ├── components/           # Semantic-named components (buttons, cards, chips, inputs, etc.)
 │   ├── animations/           # Animation utilities
 │   └── mixins/               # TapScaleMixin and other mixins
 ├── features/                 # Feature modules (accounts, categories, home, settings, transactions)
@@ -83,7 +83,7 @@ class AccountFormNotifier extends Notifier<AccountFormState> { ... }
 
 ## Key Conventions
 
-- **Design system prefix:** All design system components use `fm_` prefix (e.g., `fm_button.dart`)
+- **Design system naming:** Components use semantic, purpose-driven names without prefixes. Examples: `PrimaryButton`, `Surface` (customizable container), `InputField`, `PageLayout`, `DatePicker`, `SelectionChip`, `CircularButton`. Names are chosen to be descriptive and avoid conflicts with Flutter Material widgets through semantic alternatives.
 - **Model equality:** Models implement `==` and `hashCode` based on `id` only
 - **CopyWith pattern:** All models use copyWith() for immutable updates
 - **Enum extensions:** All enums have extensions for `displayName`, `color` (from AppColors), `icon` (IconData)
@@ -92,9 +92,9 @@ class AccountFormNotifier extends Notifier<AccountFormState> { ... }
 
 ## Notifications
 
-**IMPORTANT:** Do NOT use Flutter's `SnackBar` or `ScaffoldMessenger`. Use the custom `FMNotification` system instead.
+**IMPORTANT:** Do NOT use Flutter's `SnackBar` or `ScaffoldMessenger`. Use the custom `Notification` system instead.
 
-The app uses a custom notification system (`lib/design_system/components/feedback/fm_notification.dart`) that appears from the top with slide + fade animation, matching the app's dark theme.
+The app uses a custom notification system (`lib/design_system/components/feedback/notification.dart`) that appears from the top with slide + fade animation, matching the app's dark theme.
 
 **Notification Types:**
 - `success` - green, checkmark icon
@@ -165,4 +165,4 @@ The app includes comprehensive database import/export functionality accessible v
 - `lib/features/settings/data/models/app_settings.dart` - Settings model + ColorIntensity enum
 - `lib/features/settings/presentation/providers/database_management_providers.dart` - Database management providers
 - `lib/features/categories/data/models/category.dart` - Category with hierarchy support
-- `lib/design_system/components/feedback/fm_notification.dart` - Custom notification system (replaces SnackBar)
+- `lib/design_system/components/feedback/notification.dart` - Custom notification system (replaces SnackBar)

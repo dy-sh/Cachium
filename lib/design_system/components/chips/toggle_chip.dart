@@ -7,13 +7,13 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../features/settings/presentation/providers/settings_provider.dart';
 
-class FMToggleChip extends ConsumerWidget {
+class ToggleChip extends ConsumerWidget {
   final List<String> options;
   final int selectedIndex;
   final ValueChanged<int>? onChanged;
   final List<Color>? colors;
 
-  const FMToggleChip({
+  const ToggleChip({
     super.key,
     required this.options,
     required this.selectedIndex,

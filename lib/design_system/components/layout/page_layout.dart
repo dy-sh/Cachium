@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 
-class FMScaffold extends StatelessWidget {
+class PageLayout extends StatelessWidget {
   final Widget body;
   final Widget? floatingActionButton;
   final String? title;
@@ -12,7 +12,7 @@ class FMScaffold extends StatelessWidget {
   final EdgeInsets? padding;
   final bool extendBody;
 
-  const FMScaffold({
+  const PageLayout({
     super.key,
     required this.body,
     this.floatingActionButton,

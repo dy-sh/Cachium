@@ -133,7 +133,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                     const SizedBox(height: AppSpacing.xxl),
 
                     // Export button
-                    FMPrimaryButton(
+                    PrimaryButton(
                       label: 'Export',
                       onPressed: exportState.isLoading
                           ? null

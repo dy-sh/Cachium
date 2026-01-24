@@ -8,14 +8,14 @@ import '../../../../features/settings/presentation/providers/settings_provider.d
 import '../../../mixins/tap_scale_mixin.dart';
 
 /// A single day cell in the calendar grid.
-class FMDayCell extends ConsumerStatefulWidget {
+class DayCell extends ConsumerStatefulWidget {
   final int day;
   final bool isSelected;
   final bool isToday;
   final bool isDisabled;
   final VoidCallback onTap;
 
-  const FMDayCell({
+  const DayCell({
     super.key,
     required this.day,
     required this.isSelected,
@@ -25,10 +25,10 @@ class FMDayCell extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<FMDayCell> createState() => _FMDayCellState();
+  ConsumerState<DayCell> createState() => _FMDayCellState();
 }
 
-class _FMDayCellState extends ConsumerState<FMDayCell>
+class _FMDayCellState extends ConsumerState<DayCell>
     with SingleTickerProviderStateMixin, TapScaleMixin {
   @override
   double get tapScale => AppAnimations.tapScaleLarge;

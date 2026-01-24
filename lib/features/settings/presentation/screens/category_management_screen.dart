@@ -9,8 +9,8 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
-import '../../../../design_system/components/buttons/fm_icon_button.dart';
-import '../../../../design_system/components/chips/fm_toggle_chip.dart';
+import '../../../../design_system/components/buttons/icon_btn.dart';
+import '../../../../design_system/components/chips/toggle_chip.dart';
 import '../../../categories/data/models/category.dart';
 import '../../../categories/data/models/category_tree_node.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
@@ -191,7 +191,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
                   const SizedBox(height: AppSpacing.lg),
                   Row(
                     children: [
-                      FMIconButton(
+                      IconBtn(
                         icon: LucideIcons.arrowLeft,
                         onPressed: () => context.pop(),
                       ),
@@ -221,7 +221,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
                   const SizedBox(height: AppSpacing.xl),
                   // Type toggle
                   Center(
-                    child: FMToggleChip(
+                    child: ToggleChip(
                       options: const ['Income', 'Expense'],
                       selectedIndex: _selectedTypeIndex,
                       colors: [

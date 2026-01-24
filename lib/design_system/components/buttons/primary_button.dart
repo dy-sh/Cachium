@@ -8,9 +8,9 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../features/settings/presentation/providers/settings_provider.dart';
 import '../../mixins/tap_scale_mixin.dart';
-import '../feedback/fm_loading_indicator.dart';
+import '../feedback/loading_indicator.dart';
 
-class FMPrimaryButton extends ConsumerStatefulWidget {
+class PrimaryButton extends ConsumerStatefulWidget {
   final String label;
   final VoidCallback? onPressed;
   final bool isLoading;
@@ -20,7 +20,7 @@ class FMPrimaryButton extends ConsumerStatefulWidget {
   final IconData? icon;
   final bool useAccentColor;
 
-  const FMPrimaryButton({
+  const PrimaryButton({
     super.key,
     required this.label,
     this.onPressed,
@@ -33,10 +33,10 @@ class FMPrimaryButton extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<FMPrimaryButton> createState() => _FMPrimaryButtonState();
+  ConsumerState<PrimaryButton> createState() => _FMPrimaryButtonState();
 }
 
-class _FMPrimaryButtonState extends ConsumerState<FMPrimaryButton>
+class _FMPrimaryButtonState extends ConsumerState<PrimaryButton>
     with SingleTickerProviderStateMixin, TapScaleMixin {
   @override
   double get tapScale => AppAnimations.tapScaleDefault;
@@ -79,7 +79,7 @@ class _FMPrimaryButtonState extends ConsumerState<FMPrimaryButton>
             ),
             child: Center(
               child: widget.isLoading
-                  ? FMLoadingDots(
+                  ? LoadingDots(
                       color: txtColor,
                       size: 24,
                     )

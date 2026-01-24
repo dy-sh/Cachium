@@ -7,37 +7,31 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../features/settings/presentation/providers/settings_provider.dart';
 
-/// Icon button used in the date picker header.
-class FMDatePickerIconButton extends ConsumerStatefulWidget {
+/// Navigation button for calendar month navigation.
+class DatePickerNavigationButton extends ConsumerStatefulWidget {
   final IconData icon;
   final VoidCallback onTap;
-  final bool isActive;
-  final Color accentColor;
 
-  const FMDatePickerIconButton({
+  const DatePickerNavigationButton({
     super.key,
     required this.icon,
     required this.onTap,
-    required this.accentColor,
-    this.isActive = false,
   });
 
   @override
-  ConsumerState<FMDatePickerIconButton> createState() =>
-      _FMDatePickerIconButtonState();
+  ConsumerState<DatePickerNavigationButton> createState() =>
+      _FMDatePickerNavigationButtonState();
 }
 
-class _FMDatePickerIconButtonState extends ConsumerState<FMDatePickerIconButton> {
+class _FMDatePickerNavigationButtonState
+    extends ConsumerState<DatePickerNavigationButton> {
   bool _isPressed = false;
 
   @override
   Widget build(BuildContext context) {
     final animationsEnabled = ref.watch(formAnimationsEnabledProvider);
-    final backgroundColor = widget.isActive
-        ? widget.accentColor
-        : _isPressed
-            ? AppColors.surfaceLight
-            : AppColors.background;
+    final backgroundColor =
+        _isPressed ? AppColors.surfaceLight : AppColors.background;
 
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
@@ -59,9 +53,7 @@ class _FMDatePickerIconButtonState extends ConsumerState<FMDatePickerIconButton>
               child: Icon(
                 widget.icon,
                 size: 18,
-                color: widget.isActive
-                    ? AppColors.background
-                    : AppColors.textSecondary,
+                color: AppColors.textSecondary,
               ),
             )
           : Container(
@@ -75,9 +67,7 @@ class _FMDatePickerIconButtonState extends ConsumerState<FMDatePickerIconButton>
               child: Icon(
                 widget.icon,
                 size: 18,
-                color: widget.isActive
-                    ? AppColors.background
-                    : AppColors.textSecondary,
+                color: AppColors.textSecondary,
               ),
             ),
     );

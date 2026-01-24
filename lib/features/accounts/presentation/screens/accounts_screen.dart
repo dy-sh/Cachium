@@ -29,7 +29,7 @@ class AccountsScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: AppSpacing.lg),
-          FMScreenHeader(
+          ScreenHeader(
             title: 'Accounts',
             onActionPressed: () => context.push(AppRoutes.accountForm),
             actionIconColor: ref.watch(accentColorProvider),

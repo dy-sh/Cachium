@@ -8,7 +8,7 @@ import '../../../core/constants/app_spacing.dart';
 ///
 /// Displays an icon and content with a gradient background when selected,
 /// or a solid surface background when not selected.
-class FMSelectableCard extends StatelessWidget {
+class SelectableCard extends StatelessWidget {
   final bool isSelected;
   final Color color;
   final double bgOpacity;
@@ -30,7 +30,7 @@ class FMSelectableCard extends StatelessWidget {
   /// Defaults to [AppColors.background].
   final Color? selectedIconColor;
 
-  const FMSelectableCard({
+  const SelectableCard({
     super.key,
     required this.isSelected,
     required this.color,

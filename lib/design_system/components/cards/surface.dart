@@ -7,7 +7,7 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../features/settings/presentation/providers/settings_provider.dart';
 import '../../mixins/tap_scale_mixin.dart';
 
-class FMCard extends ConsumerStatefulWidget {
+class Surface extends ConsumerStatefulWidget {
   final Widget child;
   final bool isSelected;
   final Color? borderColor;
@@ -17,7 +17,7 @@ class FMCard extends ConsumerStatefulWidget {
   final double? width;
   final double? height;
 
-  const FMCard({
+  const Surface({
     super.key,
     required this.child,
     this.isSelected = false,
@@ -30,10 +30,10 @@ class FMCard extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<FMCard> createState() => _FMCardState();
+  ConsumerState<Surface> createState() => _FMCardState();
 }
 
-class _FMCardState extends ConsumerState<FMCard>
+class _FMCardState extends ConsumerState<Surface>
     with SingleTickerProviderStateMixin, TapScaleMixin {
   @override
   double get tapScale => AppAnimations.tapScaleCard;

@@ -3,17 +3,17 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/date_formatter.dart';
-import 'fm_day_cell.dart';
+import 'day_cell.dart';
 
 /// Builds a month grid for the calendar.
-class FMCalendarGrid extends StatelessWidget {
+class CalendarGrid extends StatelessWidget {
   final DateTime month;
   final DateTime selectedDate;
   final DateTime firstDate;
   final DateTime lastDate;
   final ValueChanged<DateTime> onDateSelected;
 
-  const FMCalendarGrid({
+  const CalendarGrid({
     super.key,
     required this.month,
     required this.selectedDate,
@@ -51,7 +51,7 @@ class FMCalendarGrid extends StatelessWidget {
       final isDisabled = date.isBefore(firstDate) || date.isAfter(lastDate);
 
       allCells.add(
-        FMDayCell(
+        DayCell(
           day: day,
           isSelected: isSelected,
           isToday: isToday,
@@ -88,8 +88,8 @@ class FMCalendarGrid extends StatelessWidget {
 }
 
 /// Week day labels row for the calendar.
-class FMWeekDayLabels extends StatelessWidget {
-  const FMWeekDayLabels({super.key});
+class WeekDayLabels extends StatelessWidget {
+  const WeekDayLabels({super.key});
 
   static const _weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 

@@ -8,14 +8,14 @@ import '../../../core/constants/app_typography.dart';
 /// A reusable empty state component for displaying when no items are available.
 ///
 /// Shows an icon, title, subtitle, and optional tap action with a chevron indicator.
-class FMEmptyState extends StatelessWidget {
+class EmptyState extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
   final VoidCallback? onTap;
   final Color? color;
 
-  const FMEmptyState({
+  const EmptyState({
     super.key,
     required this.icon,
     required this.title,

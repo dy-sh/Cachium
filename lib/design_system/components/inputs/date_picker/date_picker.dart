@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../features/settings/presentation/providers/settings_provider.dart';
-import 'fm_date_picker_modal.dart';
+import 'date_picker_modal.dart';
 
-export 'fm_calendar_grid.dart';
-export 'fm_date_picker_modal.dart';
-export 'fm_day_cell.dart';
-export 'fm_month_year_picker.dart';
+export 'calendar_grid.dart';
+export 'date_picker_modal.dart';
+export 'day_cell.dart';
+export 'month_year_picker.dart';
 
 /// Shows a custom modal date picker.
 ///
@@ -33,7 +33,7 @@ Future<DateTime?> showFMDatePicker({
             alignment: Alignment.bottomCenter,
             child: Material(
               color: Colors.transparent,
-              child: FMDatePickerModal(
+              child: DatePickerModal(
                 initialDate: initialDate,
                 firstDate: firstDate ?? DateTime(2000),
                 lastDate: lastDate ?? DateTime.now().add(const Duration(days: 365)),
@@ -49,7 +49,7 @@ Future<DateTime?> showFMDatePicker({
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (context) => FMDatePickerModal(
+    builder: (context) => DatePickerModal(
       initialDate: initialDate,
       firstDate: firstDate ?? DateTime(2000),
       lastDate: lastDate ?? DateTime.now().add(const Duration(days: 365)),

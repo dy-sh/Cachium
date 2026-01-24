@@ -7,11 +7,11 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
-import '../../../../design_system/components/buttons/fm_primary_button.dart';
-import '../../../../design_system/components/layout/fm_form_header.dart';
-import '../../../../design_system/components/chips/fm_toggle_chip.dart';
-import '../../../../design_system/components/inputs/fm_amount_input.dart';
-import '../../../../design_system/components/inputs/fm_text_field.dart';
+import '../../../../design_system/components/buttons/primary_button.dart';
+import '../../../../design_system/components/layout/form_header.dart';
+import '../../../../design_system/components/chips/toggle_chip.dart';
+import '../../../../design_system/components/inputs/amount_input.dart';
+import '../../../../design_system/components/inputs/input_field.dart';
 import '../../../../navigation/app_router.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
@@ -102,7 +102,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            FMFormHeader(
+            FormHeader(
               title: isEditing ? 'Edit Transaction' : 'New Transaction',
               onClose: () => context.pop(),
               trailing: isEditing
@@ -131,7 +131,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Center(
-                      child: FMToggleChip(
+                      child: ToggleChip(
                         options: const ['Income', 'Expense'],
                         selectedIndex: isIncome ? 0 : 1,
                         colors: [
@@ -147,7 +147,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                     ),
                     const SizedBox(height: AppSpacing.xxl),
 
-                    FMAmountInput(
+                    AmountInput(
                       key: ValueKey('amount_${formState.editingTransactionId}'),
                       initialValue: formState.amount > 0 ? formState.amount : null,
                       transactionType: formState.type.name,
@@ -190,7 +190,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                     ),
                     const SizedBox(height: AppSpacing.xxl),
 
-                    FMTextField(
+                    InputField(
                       key: ValueKey('note_${formState.editingTransactionId}'),
                       label: 'Note (optional)',
                       hint: 'Add a note...',
@@ -224,7 +224,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                     top: AppSpacing.md,
                     bottom: MediaQuery.of(context).padding.bottom + AppSpacing.md,
                   ),
-                  child: FMPrimaryButton(
+                  child: PrimaryButton(
                     label: isEditing ? 'Save Changes' : 'Save Transaction',
                     onPressed: formState.canSave
                         ? () async {

@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
-import '../chips/fm_chip.dart';
+import '../chips/selection_chip.dart';
 
-class FMInlineSelectorItem<T> {
+class InlineSelectorItem<T> {
   final T value;
   final String label;
   final IconData? icon;
   final Color? color;
 
-  const FMInlineSelectorItem({
+  const InlineSelectorItem({
     required this.value,
     required this.label,
     this.icon,
@@ -18,14 +18,14 @@ class FMInlineSelectorItem<T> {
   });
 }
 
-class FMInlineSelector<T> extends StatelessWidget {
+class InlineSelector<T> extends StatelessWidget {
   final String? label;
-  final List<FMInlineSelectorItem<T>> items;
+  final List<InlineSelectorItem<T>> items;
   final T? selectedValue;
   final ValueChanged<T>? onChanged;
   final EdgeInsets? padding;
 
-  const FMInlineSelector({
+  const InlineSelector({
     super.key,
     this.label,
     required this.items,
@@ -61,7 +61,7 @@ class FMInlineSelector<T> extends StatelessWidget {
               final item = items[index];
               final isSelected = item.value == selectedValue;
 
-              return FMChip(
+              return SelectionChip(
                 label: item.label,
                 icon: item.icon,
                 iconColor: item.color,

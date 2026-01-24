@@ -7,13 +7,13 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../features/settings/presentation/providers/settings_provider.dart';
 
-class FMAmountInput extends ConsumerStatefulWidget {
+class AmountInput extends ConsumerStatefulWidget {
   final double? initialValue;
   final ValueChanged<double>? onChanged;
   final String transactionType;
   final bool autofocus;
 
-  const FMAmountInput({
+  const AmountInput({
     super.key,
     this.initialValue,
     this.onChanged,
@@ -22,10 +22,10 @@ class FMAmountInput extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<FMAmountInput> createState() => _FMAmountInputState();
+  ConsumerState<AmountInput> createState() => _FMAmountInputState();
 }
 
-class _FMAmountInputState extends ConsumerState<FMAmountInput> {
+class _FMAmountInputState extends ConsumerState<AmountInput> {
   late TextEditingController _controller;
   late FocusNode _focusNode;
   bool _isFocused = false;
@@ -41,7 +41,7 @@ class _FMAmountInputState extends ConsumerState<FMAmountInput> {
   }
 
   @override
-  void didUpdateWidget(FMAmountInput oldWidget) {
+  void didUpdateWidget(AmountInput oldWidget) {
     super.didUpdateWidget(oldWidget);
     // Update controller when initialValue changes (for edit mode)
     // Skip if focused - user is actively typing

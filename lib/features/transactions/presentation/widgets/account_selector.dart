@@ -41,7 +41,7 @@ class _AccountSelectorState extends ConsumerState<AccountSelector> {
 
     // Show empty state if no accounts available
     if (widget.accounts.isEmpty) {
-      return FMEmptyState(
+      return EmptyState(
         icon: LucideIcons.walletCards,
         title: 'No accounts available',
         subtitle: 'Tap to create an account',
@@ -121,7 +121,7 @@ class _AccountCard extends StatelessWidget {
     final accountColor = account.getColorWithIntensity(intensity);
     final bgOpacity = AppColors.getBgOpacity(intensity);
 
-    return FMSelectableCard(
+    return SelectableCard(
       isSelected: isSelected,
       color: accountColor,
       bgOpacity: bgOpacity,

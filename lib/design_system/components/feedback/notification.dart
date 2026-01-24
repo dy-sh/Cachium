@@ -47,14 +47,14 @@ extension FMNotificationTypeExtension on FMNotificationType {
 
 /// A notification widget matching the Cachium design system.
 /// Appears from the top with slide + fade animation.
-class FMNotification extends StatefulWidget {
+class Notification extends StatefulWidget {
   final String message;
   final FMNotificationType type;
   final Duration duration;
   final VoidCallback? onDismiss;
   final bool showCloseButton;
 
-  const FMNotification({
+  const Notification({
     super.key,
     required this.message,
     this.type = FMNotificationType.info,
@@ -64,10 +64,10 @@ class FMNotification extends StatefulWidget {
   });
 
   @override
-  State<FMNotification> createState() => _FMNotificationState();
+  State<Notification> createState() => _FMNotificationState();
 }
 
-class _FMNotificationState extends State<FMNotification>
+class _FMNotificationState extends State<Notification>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _slideAnimation;
@@ -214,11 +214,11 @@ class _FMNotificationState extends State<FMNotification>
 }
 
 /// Manages showing notifications as overlays.
-class FMNotificationOverlay {
-  static final FMNotificationOverlay _instance = FMNotificationOverlay._();
-  static FMNotificationOverlay get instance => _instance;
+class NotificationOverlay {
+  static final NotificationOverlay _instance = NotificationOverlay._();
+  static NotificationOverlay get instance => _instance;
 
-  FMNotificationOverlay._();
+  NotificationOverlay._();
 
   OverlayEntry? _currentEntry;
   final List<_NotificationItem> _queue = [];
@@ -261,7 +261,7 @@ class FMNotificationOverlay {
         right: 0,
         child: Material(
           color: Colors.transparent,
-          child: FMNotification(
+          child: Notification(
             message: item.message,
             type: item.type,
             duration: item.duration,
@@ -347,22 +347,22 @@ extension FMNotificationContext on BuildContext {
     FMNotificationType type = FMNotificationType.info,
     Duration duration = const Duration(seconds: 3),
   }) {
-    FMNotificationOverlay.instance.show(this, message, type: type, duration: duration);
+    NotificationOverlay.instance.show(this, message, type: type, duration: duration);
   }
 
   void showSuccessNotification(String message, {Duration? duration}) {
-    FMNotificationOverlay.instance.success(this, message, duration: duration);
+    NotificationOverlay.instance.success(this, message, duration: duration);
   }
 
   void showErrorNotification(String message, {Duration? duration}) {
-    FMNotificationOverlay.instance.error(this, message, duration: duration);
+    NotificationOverlay.instance.error(this, message, duration: duration);
   }
 
   void showWarningNotification(String message, {Duration? duration}) {
-    FMNotificationOverlay.instance.warning(this, message, duration: duration);
+    NotificationOverlay.instance.warning(this, message, duration: duration);
   }
 
   void showInfoNotification(String message, {Duration? duration}) {
-    FMNotificationOverlay.instance.info(this, message, duration: duration);
+    NotificationOverlay.instance.info(this, message, duration: duration);
   }
 }

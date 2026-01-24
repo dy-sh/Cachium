@@ -8,7 +8,7 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../features/settings/presentation/providers/settings_provider.dart';
 
-class FMTextField extends ConsumerStatefulWidget {
+class InputField extends ConsumerStatefulWidget {
   final String? label;
   final String? hint;
   final String? initialValue;
@@ -25,7 +25,7 @@ class FMTextField extends ConsumerStatefulWidget {
   final String? errorText;
   final bool showClearButton;
 
-  const FMTextField({
+  const InputField({
     super.key,
     this.label,
     this.hint,
@@ -45,10 +45,10 @@ class FMTextField extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<FMTextField> createState() => _FMTextFieldState();
+  ConsumerState<InputField> createState() => _FMTextFieldState();
 }
 
-class _FMTextFieldState extends ConsumerState<FMTextField>
+class _FMTextFieldState extends ConsumerState<InputField>
     with SingleTickerProviderStateMixin {
   late TextEditingController _controller;
   late FocusNode _focusNode;
@@ -77,7 +77,7 @@ class _FMTextFieldState extends ConsumerState<FMTextField>
   }
 
   @override
-  void didUpdateWidget(FMTextField oldWidget) {
+  void didUpdateWidget(InputField oldWidget) {
     super.didUpdateWidget(oldWidget);
     // Trigger shake animation when error appears
     if (widget.errorText != null &&

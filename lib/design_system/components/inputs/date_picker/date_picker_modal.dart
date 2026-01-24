@@ -9,18 +9,18 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../features/settings/presentation/providers/settings_provider.dart';
-import 'fm_calendar_grid.dart';
-import 'fm_date_picker_icon_button.dart';
-import 'fm_date_picker_navigation_button.dart';
-import 'fm_month_year_picker.dart';
+import 'calendar_grid.dart';
+import 'date_picker_icon_button.dart';
+import 'date_picker_navigation_button.dart';
+import 'month_year_picker.dart';
 
 /// The main date picker modal widget.
-class FMDatePickerModal extends ConsumerStatefulWidget {
+class DatePickerModal extends ConsumerStatefulWidget {
   final DateTime initialDate;
   final DateTime firstDate;
   final DateTime lastDate;
 
-  const FMDatePickerModal({
+  const DatePickerModal({
     super.key,
     required this.initialDate,
     required this.firstDate,
@@ -28,10 +28,10 @@ class FMDatePickerModal extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<FMDatePickerModal> createState() => _FMDatePickerModalState();
+  ConsumerState<DatePickerModal> createState() => _FMDatePickerModalState();
 }
 
-class _FMDatePickerModalState extends ConsumerState<FMDatePickerModal> {
+class _FMDatePickerModalState extends ConsumerState<DatePickerModal> {
   late DateTime _selectedDate;
   late DateTime _displayedMonth;
   late TextEditingController _textController;
@@ -252,7 +252,7 @@ class _FMDatePickerModalState extends ConsumerState<FMDatePickerModal> {
                 const SizedBox(height: AppSpacing.lg),
               ],
               if (_showMonthYearPicker)
-                FMMonthYearPicker(
+                MonthYearPicker(
                   displayedMonth: _displayedMonth,
                   firstDate: widget.firstDate,
                   lastDate: widget.lastDate,
@@ -286,7 +286,7 @@ class _FMDatePickerModalState extends ConsumerState<FMDatePickerModal> {
       children: [
         Text('Select Date', style: AppTypography.h3),
         if (_showMonthYearPicker)
-          FMDatePickerIconButton(
+          DatePickerIconButton(
             icon: LucideIcons.x,
             accentColor: accentColor,
             onTap: () {
@@ -319,7 +319,7 @@ class _FMDatePickerModalState extends ConsumerState<FMDatePickerModal> {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              FMDatePickerIconButton(
+              DatePickerIconButton(
                 icon: LucideIcons.keyboard,
                 isActive: _showTextInput,
                 accentColor: accentColor,
@@ -332,7 +332,7 @@ class _FMDatePickerModalState extends ConsumerState<FMDatePickerModal> {
                 },
               ),
               const SizedBox(width: AppSpacing.sm),
-              FMDatePickerIconButton(
+              DatePickerIconButton(
                 icon: LucideIcons.x,
                 accentColor: accentColor,
                 onTap: () => Navigator.pop(context),
@@ -395,7 +395,7 @@ class _FMDatePickerModalState extends ConsumerState<FMDatePickerModal> {
       children: [
         _buildCalendarHeader(accentColor),
         const SizedBox(height: AppSpacing.md),
-        const FMWeekDayLabels(),
+        const WeekDayLabels(),
         const SizedBox(height: AppSpacing.sm),
         _buildCalendarPageView(),
       ],
@@ -411,7 +411,7 @@ class _FMDatePickerModalState extends ConsumerState<FMDatePickerModal> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        FMDatePickerNavigationButton(
+        DatePickerNavigationButton(
           icon: LucideIcons.chevronLeft,
           onTap: _goToPreviousMonth,
         ),
@@ -455,7 +455,7 @@ class _FMDatePickerModalState extends ConsumerState<FMDatePickerModal> {
             ),
           ),
         ),
-        FMDatePickerNavigationButton(
+        DatePickerNavigationButton(
           icon: LucideIcons.chevronRight,
           onTap: _goToNextMonth,
         ),
@@ -479,7 +479,7 @@ class _FMDatePickerModalState extends ConsumerState<FMDatePickerModal> {
             (index + widget.firstDate.month - 1) % 12 + 1,
             1,
           );
-          return FMCalendarGrid(
+          return CalendarGrid(
             month: month,
             selectedDate: _selectedDate,
             firstDate: widget.firstDate,

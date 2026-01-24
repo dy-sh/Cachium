@@ -8,8 +8,8 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
-import '../../../../design_system/components/buttons/fm_primary_button.dart';
-import '../../../../design_system/components/layout/fm_form_header.dart';
+import '../../../../design_system/components/buttons/primary_button.dart';
+import '../../../../design_system/components/layout/form_header.dart';
 import '../../../categories/data/models/category.dart';
 import '../../../categories/data/models/category_tree_node.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
@@ -148,7 +148,7 @@ class _CategoryTransactionsReassignScreenState
         child: Column(
           children: [
             // Header
-            FMFormHeader(
+            FormHeader(
               title: 'Reassign Transactions',
               onClose: () => Navigator.pop(context, null),
             ),
@@ -270,7 +270,7 @@ class _CategoryTransactionsReassignScreenState
                       ),
                       const SizedBox(width: AppSpacing.md),
                       Expanded(
-                        child: FMPrimaryButton(
+                        child: PrimaryButton(
                           label: 'Confirm',
                           onPressed: _allDecisionsMade ? _confirm : null,
                         ),

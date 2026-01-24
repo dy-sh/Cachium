@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
-import '../../../../design_system/components/inputs/fm_switch.dart';
+import '../../../../design_system/components/inputs/toggle.dart';
 
 class SettingsToggleTile extends StatelessWidget {
   final String title;
@@ -73,7 +73,7 @@ class SettingsToggleTile extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
-            FMSwitch(
+            Toggle(
               value: value,
               onChanged: onChanged,
               activeColor: activeColor,

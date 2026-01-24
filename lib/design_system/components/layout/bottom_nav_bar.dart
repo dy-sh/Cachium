@@ -8,13 +8,13 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../features/settings/presentation/providers/settings_provider.dart';
 
-class FMBottomNavItem {
+class BottomNavItem {
   final IconData icon;
   final IconData activeIcon;
   final String label;
   final int? badgeCount;
 
-  const FMBottomNavItem({
+  const BottomNavItem({
     required this.icon,
     required this.activeIcon,
     required this.label,
@@ -22,35 +22,35 @@ class FMBottomNavItem {
   });
 }
 
-class FMBottomNavBar extends ConsumerStatefulWidget {
+class BottomNavBar extends ConsumerStatefulWidget {
   final int currentIndex;
   final ValueChanged<int>? onTap;
-  final List<FMBottomNavItem> items;
+  final List<BottomNavItem> items;
 
-  const FMBottomNavBar({
+  const BottomNavBar({
     super.key,
     required this.currentIndex,
     this.onTap,
     required this.items,
   });
 
-  static List<FMBottomNavItem> get defaultItems => [
-        const FMBottomNavItem(
+  static List<BottomNavItem> get defaultItems => [
+        const BottomNavItem(
           icon: LucideIcons.home,
           activeIcon: LucideIcons.home,
           label: 'Home',
         ),
-        const FMBottomNavItem(
+        const BottomNavItem(
           icon: LucideIcons.arrowLeftRight,
           activeIcon: LucideIcons.arrowLeftRight,
           label: 'Transactions',
         ),
-        const FMBottomNavItem(
+        const BottomNavItem(
           icon: LucideIcons.wallet,
           activeIcon: LucideIcons.wallet,
           label: 'Accounts',
         ),
-        const FMBottomNavItem(
+        const BottomNavItem(
           icon: LucideIcons.settings,
           activeIcon: LucideIcons.settings,
           label: 'Settings',
@@ -58,10 +58,10 @@ class FMBottomNavBar extends ConsumerStatefulWidget {
       ];
 
   @override
-  ConsumerState<FMBottomNavBar> createState() => _FMBottomNavBarState();
+  ConsumerState<BottomNavBar> createState() => _FMBottomNavBarState();
 }
 
-class _FMBottomNavBarState extends ConsumerState<FMBottomNavBar> {
+class _FMBottomNavBarState extends ConsumerState<BottomNavBar> {
   @override
   Widget build(BuildContext context) {
     final accentColor = ref.watch(accentColorProvider);
@@ -99,7 +99,7 @@ class _FMBottomNavBarState extends ConsumerState<FMBottomNavBar> {
 }
 
 class _NavItem extends ConsumerStatefulWidget {
-  final FMBottomNavItem item;
+  final BottomNavItem item;
   final bool isSelected;
   final Color accentColor;
   final VoidCallback onTap;
