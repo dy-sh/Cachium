@@ -11,6 +11,7 @@ import '../providers/database_management_providers.dart';
 import '../providers/settings_provider.dart';
 import '../widgets/database_consistency_card.dart';
 import '../widgets/database_metrics_card.dart';
+import '../widgets/import_database_dialog.dart';
 import '../widgets/reset_database_dialog.dart';
 import '../widgets/recalculate_preview_dialog.dart';
 import '../widgets/settings_section.dart';
@@ -263,7 +264,18 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
   }
 
   Future<void> _handleImportSqlite(BuildContext context) async {
-    await ref.read(importStateProvider.notifier).importFromSqlite();
+    // Step 1: Pick file first
+    final filePath = await ref.read(importStateProvider.notifier).pickSqliteFile();
+
+    if (filePath == null || !context.mounted) return;
+
+    // Step 2: Show confirmation dialog after file is selected
+    final confirmed = await showImportDatabaseDialog(context: context);
+
+    if (confirmed != true || !context.mounted) return;
+
+    // Step 3: Clear existing data and import
+    await ref.read(importStateProvider.notifier).clearAndImportFromSqlite(filePath);
 
     final importResult = ref.read(importStateProvider);
 

@@ -43,8 +43,9 @@ class DatabaseImportService {
     required this.encryptionService,
   });
 
-  /// Pick and import a SQLite database file.
-  Future<ImportResult?> pickAndImportSqlite() async {
+  /// Pick a SQLite database file and return its path.
+  /// Returns null if the user cancels the file picker.
+  Future<String?> pickSqliteFile() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.any,
       allowMultiple: false,
@@ -54,11 +55,28 @@ class DatabaseImportService {
       return null;
     }
 
-    final path = result.files.first.path;
+    return result.files.first.path;
+  }
+
+  /// Pick and import a SQLite database file.
+  Future<ImportResult?> pickAndImportSqlite() async {
+    final path = await pickSqliteFile();
     if (path == null) {
       return null;
     }
 
+    return importFromSqlite(path);
+  }
+
+  /// Clear all existing data and import from a SQLite database file.
+  Future<ImportResult> clearAndImportFromSqlite(String path) async {
+    // Clear all existing data first
+    await database.deleteAllTransactions();
+    await database.deleteAllAccounts();
+    await database.deleteAllCategories();
+    await database.deleteAllSettings();
+
+    // Then import from the file
     return importFromSqlite(path);
   }
 

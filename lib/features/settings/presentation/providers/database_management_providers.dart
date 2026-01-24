@@ -134,6 +134,28 @@ class ImportStateNotifier extends Notifier<AsyncValue<ImportResult?>> {
     return const AsyncValue.data(null);
   }
 
+  /// Pick a SQLite file and return its path.
+  /// Returns null if the user cancels the file picker.
+  Future<String?> pickSqliteFile() async {
+    final service = ref.read(databaseImportServiceProvider);
+    return service.pickSqliteFile();
+  }
+
+  /// Clear all existing data and import from the given SQLite file path.
+  Future<void> clearAndImportFromSqlite(String path) async {
+    state = const AsyncValue.loading();
+    try {
+      final service = ref.read(databaseImportServiceProvider);
+      final result = await service.clearAndImportFromSqlite(path);
+      state = AsyncValue.data(result);
+
+      // Invalidate all data providers to refresh UI
+      invalidateAllDataProviders(ref);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
   Future<void> importFromSqlite() async {
     state = const AsyncValue.loading();
     try {
