@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/buttons/fm_icon_button.dart';
@@ -388,7 +389,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
         _updateDragPlaceholderVisibility();
       },
       onAccept: (node) {
-        final categories = ref.read(categoriesProvider).valueOrNull ?? [];
+        final categories = ref.read(categoriesProvider).valueOrEmpty;
         // Find the first root item to insert before
         final rootItems = categories
             .where((c) => c.parentId == null && c.type == node.category.type && c.id != node.category.id)
@@ -471,7 +472,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
         if (depth == target.depth + 1) {
           if (dragged.category.parentId == target.category.id) return false;
           final descendants = CategoryTreeBuilder.getDescendantIds(
-            ref.read(categoriesProvider).valueOrNull ?? [],
+            ref.read(categoriesProvider).valueOrEmpty,
             dragged.category.id,
           );
           if (descendants.contains(target.category.id)) return false;
@@ -479,7 +480,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
         return true;
       },
       onAccept: (dragged, target, depth) {
-        final categories = ref.read(categoriesProvider).valueOrNull ?? [];
+        final categories = ref.read(categoriesProvider).valueOrEmpty;
 
         // Handle dropping on same item (changing parent only, or cancel move)
         if (dragged.category.id == target.category.id) {
@@ -665,7 +666,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
   bool _shouldShowNode(CategoryTreeNode node) {
     if (node.depth == 0) return true;
 
-    final categories = ref.read(categoriesProvider).valueOrNull ?? [];
+    final categories = ref.read(categoriesProvider).valueOrEmpty;
     String? currentParentId = node.category.parentId;
 
     while (currentParentId != null) {
@@ -688,7 +689,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
         builder: (context) => CategoryFormModal(
           type: _selectedType,
           onSave: (name, icon, colorIndex, parentId) {
-            final categories = ref.read(categoriesProvider).valueOrNull ?? [];
+            final categories = ref.read(categoriesProvider).valueOrEmpty;
             final siblings = categories
                 .where((c) => c.parentId == parentId && c.type == _selectedType)
                 .toList();
@@ -754,7 +755,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
           type: parentCategory.type,
           initialParentId: parentCategory.id,
           onSave: (name, icon, colorIndex, parentId) {
-            final categories = ref.read(categoriesProvider).valueOrNull ?? [];
+            final categories = ref.read(categoriesProvider).valueOrEmpty;
             final effectiveParentId = parentId ?? parentCategory.id;
             final siblings = categories
                 .where((c) => c.parentId == effectiveParentId && c.type == parentCategory.type)
@@ -803,7 +804,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
         promoteChildren = true;
         categoryIdsToDelete = [category.id];
       } else if (action == DeleteCategoryAction.deleteAll) {
-        final categories = ref.read(categoriesProvider).valueOrNull ?? [];
+        final categories = ref.read(categoriesProvider).valueOrEmpty;
         final descendantIds = CategoryTreeBuilder.getDescendantIds(categories, category.id);
         categoryIdsToDelete = [category.id, ...descendantIds];
       }

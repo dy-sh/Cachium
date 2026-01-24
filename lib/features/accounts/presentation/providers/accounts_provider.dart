@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/exceptions/app_exception.dart';
+import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/providers/database_providers.dart';
 import '../../data/models/account.dart';
 
@@ -287,7 +288,7 @@ final totalBalanceProvider = Provider<double>((ref) {
 final accountsByTypeProvider =
     Provider<Map<AccountType, List<Account>>>((ref) {
   final accountsAsync = ref.watch(accountsProvider);
-  final accounts = accountsAsync.valueOrNull ?? [];
+  final accounts = accountsAsync.valueOrEmpty;
   final Map<AccountType, List<Account>> grouped = {};
 
   for (final account in accounts) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -96,14 +97,14 @@ class TotalBalanceCard extends ConsumerWidget {
   }
 
   double _getAssets(WidgetRef ref) {
-    final accounts = ref.watch(accountsProvider).valueOrNull ?? [];
+    final accounts = ref.watch(accountsProvider).valueOrEmpty;
     return accounts
         .where((a) => a.balance > 0)
         .fold(0.0, (sum, a) => sum + a.balance);
   }
 
   double _getLiabilities(WidgetRef ref) {
-    final accounts = ref.watch(accountsProvider).valueOrNull ?? [];
+    final accounts = ref.watch(accountsProvider).valueOrEmpty;
     return accounts
         .where((a) => a.balance < 0)
         .fold(0.0, (sum, a) => sum + a.balance.abs());

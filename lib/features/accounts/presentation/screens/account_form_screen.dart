@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_animations.dart';
+import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -374,7 +375,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
       if (action == DeleteAccountAction.moveTransactions) {
         // Show account picker
         final accountsAsync = ref.read(accountsProvider);
-        final accounts = accountsAsync.valueOrNull ?? [];
+        final accounts = accountsAsync.valueOrEmpty;
         final availableAccounts = accounts.where((a) => a.id != account.id).toList();
 
         if (availableAccounts.isEmpty) {
@@ -444,7 +445,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
 
     // Get all transactions for this account
     final transactionsAsync = ref.read(transactionsProvider);
-    final transactions = transactionsAsync.valueOrNull ?? [];
+    final transactions = transactionsAsync.valueOrEmpty;
     final accountTransactions = transactions.where((t) => t.accountId == account.id);
 
     // Calculate transaction delta

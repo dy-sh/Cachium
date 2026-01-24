@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/buttons/fm_primary_button.dart';
@@ -79,7 +80,7 @@ class _CategoryTransactionsReassignScreenState
   }
 
   List<Category> _getAvailableCategories() {
-    final allCategories = ref.read(categoriesProvider).valueOrNull ?? [];
+    final allCategories = ref.read(categoriesProvider).valueOrEmpty;
     final deletingIds = widget.categoriesToDelete.map((c) => c.id).toSet();
 
     return allCategories
@@ -95,7 +96,7 @@ class _CategoryTransactionsReassignScreenState
         builder: (context) => CategoryFormModal(
           type: widget.categoryType,
           onSave: (name, icon, colorIndex, parentId) {
-            final categories = ref.read(categoriesProvider).valueOrNull ?? [];
+            final categories = ref.read(categoriesProvider).valueOrEmpty;
             final siblings = categories
                 .where(
                     (c) => c.parentId == parentId && c.type == widget.categoryType)

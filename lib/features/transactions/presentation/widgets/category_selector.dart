@@ -7,10 +7,83 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../design_system/design_system.dart';
 import '../../../categories/data/models/category.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
+
+/// Encapsulates category tree navigation state.
+///
+/// Manages the navigation stack for drilling into category hierarchies,
+/// tracking which parent category is being viewed and the path back to root.
+class CategoryNavigationState {
+  final List<String> _navigationStack = [];
+  String? _viewingParentId;
+  bool _showAll = false;
+
+  String? get viewingParentId => _viewingParentId;
+  bool get showAll => _showAll;
+  bool get isAtRoot => _viewingParentId == null;
+
+  /// Initialize navigation to show a selected category's parent level.
+  void initializeFor(List<Category> categories, String? selectedId, List<Category> ancestors) {
+    if (selectedId == null || categories.isEmpty) return;
+
+    final selectedCategory = categories.firstWhere(
+      (c) => c.id == selectedId,
+      orElse: () => categories.first,
+    );
+
+    if (selectedCategory.parentId != null) {
+      _navigationStack.addAll(ancestors.map((c) => c.id));
+      _viewingParentId = selectedCategory.parentId;
+    }
+  }
+
+  /// Navigate into a category to view its children.
+  void navigateTo(String categoryId) {
+    _navigationStack.add(categoryId);
+    _viewingParentId = categoryId;
+    _showAll = false;
+  }
+
+  /// Navigate back to the previous level.
+  void navigateBack() {
+    if (_navigationStack.isNotEmpty) {
+      _navigationStack.removeLast();
+      _viewingParentId = _navigationStack.isNotEmpty ? _navigationStack.last : null;
+    } else {
+      _viewingParentId = null;
+    }
+    _showAll = false;
+  }
+
+  /// Toggle show all categories.
+  void toggleShowAll() {
+    _showAll = !_showAll;
+  }
+
+  /// Get the name of the previous parent in the navigation stack.
+  String getPreviousParentName(List<Category> categories) {
+    if (_navigationStack.length < 2) return 'All Categories';
+
+    final previousParentId = _navigationStack[_navigationStack.length - 2];
+    final previousParent = categories.firstWhere(
+      (c) => c.id == previousParentId,
+      orElse: () => categories.first,
+    );
+    return previousParent.name;
+  }
+
+  /// Get categories to display at the current navigation level.
+  List<Category> getDisplayCategories(List<Category> categories) {
+    final filtered = _viewingParentId == null
+        ? categories.where((c) => c.parentId == null)
+        : categories.where((c) => c.parentId == _viewingParentId);
+    return filtered.toList()..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+  }
+}
 
 class CategorySelector extends ConsumerStatefulWidget {
   final List<Category> categories;
@@ -33,28 +106,14 @@ class CategorySelector extends ConsumerStatefulWidget {
 }
 
 class _CategorySelectorState extends ConsumerState<CategorySelector> {
-  bool _showAll = false;
-  String? _viewingParentId;
-  final List<String> _navigationStack = [];
+  final _navState = CategoryNavigationState();
 
   @override
   void initState() {
     super.initState();
-    if (widget.selectedId != null) {
-      _initializeViewingState();
-    }
-  }
-
-  void _initializeViewingState() {
-    final selectedCategory = widget.categories.firstWhere(
-      (c) => c.id == widget.selectedId,
-      orElse: () => widget.categories.first,
-    );
-
-    if (selectedCategory.parentId != null) {
+    if (widget.selectedId != null && widget.categories.isNotEmpty) {
       final ancestors = ref.read(categoryAncestorsProvider(widget.selectedId!));
-      _navigationStack.addAll(ancestors.map((c) => c.id));
-      _viewingParentId = selectedCategory.parentId;
+      _navState.initializeFor(widget.categories, widget.selectedId, ancestors);
     }
   }
 
@@ -64,12 +123,17 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
 
     // Show empty state if no categories available
     if (widget.categories.isEmpty) {
-      return _buildEmptyState();
+      return FMEmptyState(
+        icon: LucideIcons.folderPlus,
+        title: 'No categories available',
+        subtitle: 'Tap to create a category',
+        onTap: widget.onCreatePressed,
+      );
     }
 
-    final displayCategories = _getDisplayCategories();
+    final displayCategories = _navState.getDisplayCategories(widget.categories);
     final hasMore = displayCategories.length > widget.initialVisibleCount;
-    final visibleCategories = _showAll || !hasMore
+    final visibleCategories = _navState.showAll || !hasMore
         ? displayCategories
         : displayCategories.take(widget.initialVisibleCount).toList();
 
@@ -77,13 +141,13 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Navigation header when viewing children
-        if (_viewingParentId != null) ...[
+        if (!_navState.isAtRoot) ...[
           _buildNavigationHeader(intensity),
           const SizedBox(height: AppSpacing.sm),
         ],
 
         // Selected parent indicator
-        if (_viewingParentId != null) ...[
+        if (!_navState.isAtRoot) ...[
           _buildSelectedParentIndicator(intensity),
           const SizedBox(height: AppSpacing.sm),
         ],
@@ -119,9 +183,9 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
         if (hasMore) ...[
           const SizedBox(height: AppSpacing.sm),
           GestureDetector(
-            onTap: () => setState(() => _showAll = !_showAll),
+            onTap: () => setState(() => _navState.toggleShowAll()),
             child: Text(
-              _showAll ? 'Show Less' : 'Show All',
+              _navState.showAll ? 'Show Less' : 'Show All',
               style: AppTypography.labelSmall.copyWith(
                 color: AppColors.accentPrimary,
               ),
@@ -132,109 +196,24 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
     );
   }
 
-  Widget _buildEmptyState() {
-    return GestureDetector(
-      onTap: widget.onCreatePressed,
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          borderRadius: AppRadius.mdAll,
-          color: AppColors.expense.withOpacity(0.08),
-          border: Border.all(
-            color: AppColors.expense.withOpacity(0.3),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: AppColors.expense.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                LucideIcons.folderPlus,
-                size: 18,
-                color: AppColors.expense,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'No categories available',
-                    style: AppTypography.labelMedium.copyWith(
-                      color: AppColors.expense,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Tap to create a category',
-                    style: AppTypography.labelSmall.copyWith(
-                      color: AppColors.expense.withOpacity(0.7),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              LucideIcons.chevronRight,
-              size: 18,
-              color: AppColors.expense.withOpacity(0.6),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  List<Category> _getDisplayCategories() {
-    if (_viewingParentId == null) {
-      return widget.categories
-          .where((c) => c.parentId == null)
-          .toList()
-        ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-    } else {
-      return widget.categories
-          .where((c) => c.parentId == _viewingParentId)
-          .toList()
-        ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-    }
-  }
-
   void _handleCategoryTap(Category category, bool hasChildren) {
     HapticHelper.lightImpact();
-
     widget.onChanged(category.id);
 
     if (hasChildren) {
-      setState(() {
-        _navigationStack.add(category.id);
-        _viewingParentId = category.id;
-        _showAll = false;
-      });
+      setState(() => _navState.navigateTo(category.id));
     }
   }
 
   void _navigateBack() {
     HapticHelper.lightImpact();
-    setState(() {
-      if (_navigationStack.isNotEmpty) {
-        _navigationStack.removeLast();
-        _viewingParentId = _navigationStack.isNotEmpty ? _navigationStack.last : null;
-      } else {
-        _viewingParentId = null;
-      }
-      _showAll = false;
-    });
+    setState(() => _navState.navigateBack());
   }
 
   Widget _buildNavigationHeader(ColorIntensity intensity) {
+    final backLabel = _navState.getPreviousParentName(widget.categories);
+    final isAtTop = backLabel == 'All Categories';
+
     return GestureDetector(
       onTap: _navigateBack,
       behavior: HitTestBehavior.opaque,
@@ -249,9 +228,7 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
             ),
             const SizedBox(width: AppSpacing.xs),
             Text(
-              _navigationStack.length > 1
-                  ? 'Back to ${_getPreviousParentName()}'
-                  : 'Back to All Categories',
+              isAtTop ? 'Back to All Categories' : 'Back to $backLabel',
               style: AppTypography.labelSmall.copyWith(
                 color: AppColors.accentPrimary,
               ),
@@ -262,24 +239,13 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
     );
   }
 
-  String _getPreviousParentName() {
-    if (_navigationStack.length < 2) return 'All Categories';
-
-    final previousParentId = _navigationStack[_navigationStack.length - 2];
-    final previousParent = widget.categories.firstWhere(
-      (c) => c.id == previousParentId,
-      orElse: () => widget.categories.first,
-    );
-    return previousParent.name;
-  }
-
   Widget _buildSelectedParentIndicator(ColorIntensity intensity) {
     final parentCategory = widget.categories.firstWhere(
-      (c) => c.id == _viewingParentId,
+      (c) => c.id == _navState.viewingParentId,
       orElse: () => widget.categories.first,
     );
 
-    final isParentSelected = widget.selectedId == _viewingParentId;
+    final isParentSelected = widget.selectedId == _navState.viewingParentId;
     final categoryColor = parentCategory.getColor(intensity);
     final bgOpacity = AppColors.getBgOpacity(intensity);
 
@@ -366,71 +332,27 @@ class _CategoryChip extends StatelessWidget {
     final categoryColor = category.getColor(intensity);
     final bgOpacity = AppColors.getBgOpacity(intensity);
 
-    return GestureDetector(
+    return FMSelectableCard(
+      isSelected: isSelected,
+      color: categoryColor,
+      bgOpacity: bgOpacity,
+      icon: category.icon,
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: AppAnimations.normal,
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.xs,
+      content: Text(
+        category.name,
+        style: AppTypography.labelSmall.copyWith(
+          color: isSelected ? categoryColor : AppColors.textPrimary,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
         ),
-        decoration: BoxDecoration(
-          borderRadius: AppRadius.smAll,
-          gradient: isSelected
-              ? LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    categoryColor.withOpacity(bgOpacity * 0.4),
-                    categoryColor.withOpacity(bgOpacity * 0.2),
-                  ],
-                )
-              : null,
-          color: isSelected ? null : AppColors.surface,
-          border: Border.all(
-            color: isSelected ? categoryColor : AppColors.border,
-            width: isSelected ? 1.5 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? categoryColor.withOpacity(0.9)
-                    : AppColors.surfaceLight,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Icon(
-                category.icon,
-                size: 12,
-                color: isSelected ? AppColors.background : AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            Expanded(
-              child: Text(
-                category.name,
-                style: AppTypography.labelSmall.copyWith(
-                  color: isSelected ? categoryColor : AppColors.textPrimary,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            if (hasChildren) ...[
-              const SizedBox(width: 2),
-              Icon(
-                LucideIcons.chevronRight,
-                size: 12,
-                color: isSelected ? categoryColor : AppColors.textTertiary,
-              ),
-            ],
-          ],
-        ),
+        overflow: TextOverflow.ellipsis,
       ),
+      trailing: hasChildren
+          ? Icon(
+              LucideIcons.chevronRight,
+              size: 12,
+              color: isSelected ? categoryColor : AppColors.textTertiary,
+            )
+          : null,
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/buttons/fm_primary_button.dart';
@@ -72,7 +73,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     final incomeCategories = ref.watch(incomeCategoriesProvider);
     final expenseCategories = ref.watch(expenseCategoriesProvider);
     final accountsAsync = ref.watch(accountsProvider);
-    final accounts = accountsAsync.valueOrNull ?? [];
+    final accounts = accountsAsync.valueOrEmpty;
     final intensity = ref.watch(colorIntensityProvider);
 
     final categories = formState.type == TransactionType.income

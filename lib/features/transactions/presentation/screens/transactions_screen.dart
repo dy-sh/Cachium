@@ -8,8 +8,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
-import '../../../../design_system/animations/staggered_list.dart';
-import '../../../../design_system/components/chips/fm_toggle_chip.dart';
+import '../../../../design_system/design_system.dart';
 import '../../../../navigation/app_router.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
@@ -30,31 +29,10 @@ class TransactionsScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: AppSpacing.lg),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Transactions', style: AppTypography.h2),
-                GestureDetector(
-                  onTap: () => context.push(AppRoutes.transactionForm),
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Icon(
-                      LucideIcons.plus,
-                      color: ref.watch(accentColorProvider),
-                      size: 20,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          FMScreenHeader(
+            title: 'Transactions',
+            onActionPressed: () => context.push(AppRoutes.transactionForm),
+            actionIconColor: ref.watch(accentColorProvider),
           ),
           const SizedBox(height: AppSpacing.lg),
 

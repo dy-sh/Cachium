@@ -23,6 +23,7 @@ export 'components/chips/fm_chip.dart';
 export 'components/chips/fm_toggle_chip.dart';
 
 // Feedback
+export 'components/feedback/fm_empty_state.dart';
 export 'components/feedback/fm_loading_indicator.dart';
 
 // Inputs
@@ -35,9 +36,11 @@ export 'components/inputs/fm_text_field.dart';
 export 'components/layout/fm_bottom_nav_bar.dart';
 export 'components/layout/fm_form_header.dart';
 export 'components/layout/fm_scaffold.dart';
+export 'components/layout/fm_screen_header.dart';
 
 // Selection
 export 'components/selection/fm_inline_selector.dart';
+export 'components/selection/fm_selectable_card.dart';
 
 // Mixins
 export 'mixins/tap_scale_mixin.dart';

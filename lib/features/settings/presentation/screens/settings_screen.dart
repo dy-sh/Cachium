@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/animations/staggered_list.dart';
@@ -17,7 +18,7 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final categoriesAsync = ref.watch(categoriesProvider);
-    final categories = categoriesAsync.valueOrNull ?? [];
+    final categories = categoriesAsync.valueOrEmpty;
     final customCategoryCount = categories.where((c) => c.isCustom).length;
     final intensity = ref.watch(colorIntensityProvider);
 

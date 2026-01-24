@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/utils/currency_formatter.dart';
-import '../../../../design_system/animations/animated_counter.dart';
-import '../../../../design_system/animations/staggered_list.dart';
+import '../../../../design_system/design_system.dart';
 import '../../../../navigation/app_router.dart';
 import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
@@ -31,31 +29,10 @@ class AccountsScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: AppSpacing.lg),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Accounts', style: AppTypography.h2),
-                GestureDetector(
-                  onTap: () => context.push(AppRoutes.accountForm),
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Icon(
-                      LucideIcons.plus,
-                      color: ref.watch(accentColorProvider),
-                      size: 20,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          FMScreenHeader(
+            title: 'Accounts',
+            onActionPressed: () => context.push(AppRoutes.accountForm),
+            actionIconColor: ref.watch(accentColorProvider),
           ),
           const SizedBox(height: AppSpacing.lg),
 

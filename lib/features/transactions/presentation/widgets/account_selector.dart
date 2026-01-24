@@ -4,9 +4,9 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/animations/haptic_helper.dart';
 import '../../../../core/constants/app_animations.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../design_system/design_system.dart';
 import '../../../accounts/data/models/account.dart';
 import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
@@ -41,7 +41,12 @@ class _AccountSelectorState extends ConsumerState<AccountSelector> {
 
     // Show empty state if no accounts available
     if (widget.accounts.isEmpty) {
-      return _buildEmptyState();
+      return FMEmptyState(
+        icon: LucideIcons.walletCards,
+        title: 'No accounts available',
+        subtitle: 'Tap to create an account',
+        onTap: widget.onCreatePressed,
+      );
     }
 
     final hasMore = widget.accounts.length > widget.initialVisibleCount;
@@ -96,66 +101,6 @@ class _AccountSelectorState extends ConsumerState<AccountSelector> {
     );
   }
 
-  Widget _buildEmptyState() {
-    return GestureDetector(
-      onTap: widget.onCreatePressed,
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          borderRadius: AppRadius.mdAll,
-          color: AppColors.expense.withOpacity(0.08),
-          border: Border.all(
-            color: AppColors.expense.withOpacity(0.3),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: AppColors.expense.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                LucideIcons.walletCards,
-                size: 18,
-                color: AppColors.expense,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'No accounts available',
-                    style: AppTypography.labelMedium.copyWith(
-                      color: AppColors.expense,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Tap to create an account',
-                    style: AppTypography.labelSmall.copyWith(
-                      color: AppColors.expense.withOpacity(0.7),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              LucideIcons.chevronRight,
-              size: 18,
-              color: AppColors.expense.withOpacity(0.6),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _AccountCard extends StatelessWidget {
@@ -176,77 +121,35 @@ class _AccountCard extends StatelessWidget {
     final accountColor = account.getColorWithIntensity(intensity);
     final bgOpacity = AppColors.getBgOpacity(intensity);
 
-    return GestureDetector(
+    return FMSelectableCard(
+      isSelected: isSelected,
+      color: accountColor,
+      bgOpacity: bgOpacity,
+      icon: account.icon,
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: AppAnimations.normal,
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.xs,
-        ),
-        decoration: BoxDecoration(
-          borderRadius: AppRadius.smAll,
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isSelected
-                ? [
-                    accountColor.withOpacity(bgOpacity * 0.4),
-                    accountColor.withOpacity(bgOpacity * 0.2),
-                  ]
-                : [
-                    AppColors.surface,
-                    AppColors.surface,
-                  ],
-          ),
-          border: Border.all(
-            color: isSelected ? accountColor : AppColors.border,
-            width: isSelected ? 1.5 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? accountColor.withOpacity(0.9)
-                    : accountColor.withOpacity(0.6),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Icon(
-                account.icon,
-                size: 12,
-                color: AppColors.background,
-              ),
+      unselectedIconBgColor: accountColor.withOpacity(0.6),
+      unselectedIconColor: AppColors.background,
+      selectedIconColor: AppColors.background,
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            account.name,
+            style: AppTypography.labelSmall.copyWith(
+              color: isSelected ? accountColor : AppColors.textPrimary,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
             ),
-            const SizedBox(width: AppSpacing.xs),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    account.name,
-                    style: AppTypography.labelSmall.copyWith(
-                      color: isSelected ? accountColor : AppColors.textPrimary,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    '\$${account.balance.toStringAsFixed(0)}',
-                    style: AppTypography.labelSmall.copyWith(
-                      color: AppColors.textSecondary.withOpacity(0.7),
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
-              ),
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(
+            '\$${account.balance.toStringAsFixed(0)}',
+            style: AppTypography.labelSmall.copyWith(
+              color: AppColors.textSecondary.withOpacity(0.7),
+              fontSize: 10,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../categories/data/models/category.dart';
@@ -68,7 +69,7 @@ class _ParentCategoryPickerState extends ConsumerState<ParentCategoryPicker> {
   Widget build(BuildContext context) {
     final intensity = ref.watch(colorIntensityProvider);
     final categoriesAsync = ref.watch(categoriesProvider);
-    final categories = categoriesAsync.valueOrNull ?? [];
+    final categories = categoriesAsync.valueOrEmpty;
     final filteredCategories = categories.where((c) => c.type == widget.type).toList();
     final tree = CategoryTreeBuilder.buildTree(filteredCategories);
 
