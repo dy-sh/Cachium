@@ -269,12 +269,24 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
 
     if (filePath == null || !context.mounted) return;
 
-    // Step 2: Show confirmation dialog after file is selected
-    final confirmed = await showImportDatabaseDialog(context: context);
+    // Step 2: Get metrics from both databases
+    final currentMetrics = await ref.read(databaseMetricsProvider.future);
+    final importMetrics = ref.read(importStateProvider.notifier).getMetricsFromFile(filePath);
+    final fileName = filePath.split('/').last;
+
+    if (!context.mounted) return;
+
+    // Step 3: Show confirmation dialog with metrics
+    final confirmed = await showImportDatabaseDialog(
+      context: context,
+      currentMetrics: currentMetrics,
+      importMetrics: importMetrics,
+      fileName: fileName,
+    );
 
     if (confirmed != true || !context.mounted) return;
 
-    // Step 3: Clear existing data and import
+    // Step 4: Clear existing data and import
     await ref.read(importStateProvider.notifier).clearAndImportFromSqlite(filePath);
 
     final importResult = ref.read(importStateProvider);

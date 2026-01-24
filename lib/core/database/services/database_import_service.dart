@@ -10,6 +10,7 @@ import 'package:sqlite3/sqlite3.dart' as sql;
 import '../../../data/encryption/account_data.dart';
 import '../../../data/encryption/category_data.dart';
 import '../../../data/encryption/transaction_data.dart';
+import '../../../features/settings/data/models/database_metrics.dart';
 import '../app_database.dart';
 import 'encryption_service.dart';
 
@@ -102,6 +103,115 @@ class DatabaseImportService {
     }
 
     return importFromCsv(paths);
+  }
+
+  /// Check if a table uses snake_case column naming (vs camelCase).
+  bool _usesSnakeCase(sql.Database db, String tableName) {
+    if (!_tableExists(db, tableName)) return true;
+    final result = db.select("PRAGMA table_info($tableName)");
+    for (final row in result) {
+      final colName = row['name'] as String;
+      if (colName == 'is_deleted') return true;
+      if (colName == 'isDeleted') return false;
+    }
+    return true; // Default to snake_case
+  }
+
+  /// Get metrics from an external SQLite database file.
+  DatabaseMetrics getMetricsFromSqliteFile(String path) {
+    final importDb = sql.sqlite3.open(path);
+
+    try {
+      int transactionCount = 0;
+      int categoryCount = 0;
+      int accountCount = 0;
+      DateTime? oldestRecord;
+      DateTime? newestRecord;
+
+      // Count transactions
+      if (_tableExists(importDb, 'transactions')) {
+        final snakeCase = _usesSnakeCase(importDb, 'transactions');
+        final isDeletedCol = snakeCase ? 'is_deleted' : 'isDeleted';
+        final lastUpdatedCol = snakeCase ? 'last_updated_at' : 'lastUpdatedAt';
+
+        final result = importDb.select(
+          'SELECT COUNT(*) as count FROM transactions WHERE $isDeletedCol = 0',
+        );
+        if (result.isNotEmpty) {
+          transactionCount = result.first['count'] as int? ?? 0;
+        }
+
+        // Get oldest transaction date
+        final oldestResult = importDb.select(
+          'SELECT MIN(date) as oldest FROM transactions WHERE $isDeletedCol = 0',
+        );
+        if (oldestResult.isNotEmpty && oldestResult.first['oldest'] != null) {
+          oldestRecord = DateTime.fromMillisecondsSinceEpoch(
+            oldestResult.first['oldest'] as int,
+          );
+        }
+
+        // Get newest lastUpdatedAt
+        final newestResult = importDb.select(
+          'SELECT MAX($lastUpdatedCol) as newest FROM transactions',
+        );
+        if (newestResult.isNotEmpty && newestResult.first['newest'] != null) {
+          newestRecord = DateTime.fromMillisecondsSinceEpoch(
+            newestResult.first['newest'] as int,
+          );
+        }
+      }
+
+      // Count categories
+      if (_tableExists(importDb, 'categories')) {
+        final snakeCase = _usesSnakeCase(importDb, 'categories');
+        final isDeletedCol = snakeCase ? 'is_deleted' : 'isDeleted';
+
+        final result = importDb.select(
+          'SELECT COUNT(*) as count FROM categories WHERE $isDeletedCol = 0',
+        );
+        if (result.isNotEmpty) {
+          categoryCount = result.first['count'] as int? ?? 0;
+        }
+      }
+
+      // Count accounts
+      if (_tableExists(importDb, 'accounts')) {
+        final snakeCase = _usesSnakeCase(importDb, 'accounts');
+        final isDeletedCol = snakeCase ? 'is_deleted' : 'isDeleted';
+        final createdAtCol = snakeCase ? 'created_at' : 'createdAt';
+
+        final result = importDb.select(
+          'SELECT COUNT(*) as count FROM accounts WHERE $isDeletedCol = 0',
+        );
+        if (result.isNotEmpty) {
+          accountCount = result.first['count'] as int? ?? 0;
+        }
+
+        // Check for older account creation dates
+        final accountOldestResult = importDb.select(
+          'SELECT MIN($createdAtCol) as oldest FROM accounts WHERE $isDeletedCol = 0',
+        );
+        if (accountOldestResult.isNotEmpty && accountOldestResult.first['oldest'] != null) {
+          final accountOldest = DateTime.fromMillisecondsSinceEpoch(
+            accountOldestResult.first['oldest'] as int,
+          );
+          if (oldestRecord == null || accountOldest.isBefore(oldestRecord)) {
+            oldestRecord = accountOldest;
+          }
+        }
+      }
+
+      return DatabaseMetrics(
+        transactionCount: transactionCount,
+        categoryCount: categoryCount,
+        accountCount: accountCount,
+        oldestRecord: oldestRecord,
+        newestRecord: newestRecord,
+      );
+    } finally {
+      importDb.dispose();
+    }
   }
 
   /// Import data from a SQLite database file.

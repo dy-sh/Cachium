@@ -141,6 +141,12 @@ class ImportStateNotifier extends Notifier<AsyncValue<ImportResult?>> {
     return service.pickSqliteFile();
   }
 
+  /// Get metrics from an external SQLite file.
+  DatabaseMetrics getMetricsFromFile(String path) {
+    final service = ref.read(databaseImportServiceProvider);
+    return service.getMetricsFromSqliteFile(path);
+  }
+
   /// Clear all existing data and import from the given SQLite file path.
   Future<void> clearAndImportFromSqlite(String path) async {
     state = const AsyncValue.loading();
