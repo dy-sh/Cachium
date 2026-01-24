@@ -80,11 +80,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.transactionForm,
-        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
-          state,
-          const TransactionFormScreen(),
-          animationsEnabled: ref.read(formAnimationsEnabledProvider),
-        ),
+        pageBuilder: (context, state) {
+          final type = state.uri.queryParameters['type'];
+          return PageTransitions.buildSlideLeftTransition(
+            state,
+            TransactionFormScreen(initialType: type),
+            animationsEnabled: ref.read(formAnimationsEnabledProvider),
+          );
+        },
       ),
       GoRoute(
         path: AppRoutes.transactionEdit,

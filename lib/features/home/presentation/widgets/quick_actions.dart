@@ -10,8 +10,6 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/mixins/tap_scale_mixin.dart';
 import '../../../../navigation/app_router.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
-import '../../../transactions/data/models/transaction.dart';
-import '../../../transactions/presentation/providers/transaction_form_provider.dart';
 
 class QuickActions extends ConsumerWidget {
   const QuickActions({super.key});
@@ -30,9 +28,7 @@ class QuickActions extends ConsumerWidget {
             icon: LucideIcons.arrowDownLeft,
             color: incomeColor,
             onTap: () {
-              ref.read(transactionFormProvider.notifier).reset();
-              ref.read(transactionFormProvider.notifier).setType(TransactionType.income);
-              context.push(AppRoutes.transactionForm);
+              context.push('${AppRoutes.transactionForm}?type=income');
             },
           ),
         ),
@@ -43,9 +39,7 @@ class QuickActions extends ConsumerWidget {
             icon: LucideIcons.arrowUpRight,
             color: expenseColor,
             onTap: () {
-              ref.read(transactionFormProvider.notifier).reset();
-              ref.read(transactionFormProvider.notifier).setType(TransactionType.expense);
-              context.push(AppRoutes.transactionForm);
+              context.push('${AppRoutes.transactionForm}?type=expense');
             },
           ),
         ),

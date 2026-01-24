@@ -25,8 +25,9 @@ import '../widgets/date_selector.dart';
 
 class TransactionFormScreen extends ConsumerStatefulWidget {
   final String? transactionId;
+  final String? initialType;
 
-  const TransactionFormScreen({super.key, this.transactionId});
+  const TransactionFormScreen({super.key, this.transactionId, this.initialType});
 
   @override
   ConsumerState<TransactionFormScreen> createState() => _TransactionFormScreenState();
@@ -66,6 +67,19 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _initializeForEdit();
         if (mounted) setState(() {});
+      });
+    }
+
+    // Initialize form with initial type if provided
+    if (widget.initialType != null && !_initialized && widget.transactionId == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final type = widget.initialType == 'income'
+            ? TransactionType.income
+            : TransactionType.expense;
+        ref.read(transactionFormProvider.notifier).reset();
+        ref.read(transactionFormProvider.notifier).setType(type);
+        if (mounted) setState(() {});
+        _initialized = true;
       });
     }
 
@@ -118,15 +132,15 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                   children: [
                     Center(
                       child: FMToggleChip(
-                        options: const ['Expense', 'Income'],
-                        selectedIndex: isIncome ? 1 : 0,
+                        options: const ['Income', 'Expense'],
+                        selectedIndex: isIncome ? 0 : 1,
                         colors: [
-                          AppColors.getTransactionColor('expense', intensity),
                           AppColors.getTransactionColor('income', intensity),
+                          AppColors.getTransactionColor('expense', intensity),
                         ],
                         onChanged: (index) {
                           ref.read(transactionFormProvider.notifier).setType(
-                                index == 1 ? TransactionType.income : TransactionType.expense,
+                                index == 0 ? TransactionType.income : TransactionType.expense,
                               );
                         },
                       ),
