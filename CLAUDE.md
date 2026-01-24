@@ -22,6 +22,15 @@ flutter build apk            # Android build
 flutter build ios            # iOS build
 ```
 
+## Git Workflow
+
+**IMPORTANT:** Do NOT create git commits. The user will handle all git operations manually.
+
+- NEVER run `git commit` or `git add` commands
+- NEVER use the `--commit` flag with scripts
+- Focus on making code changes only
+- Let the user review and commit changes themselves
+
 ## Architecture
 
 ```
