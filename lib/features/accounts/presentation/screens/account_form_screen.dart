@@ -8,9 +8,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
-import '../../../../design_system/components/buttons/fm_primary_button.dart';
-import '../../../../design_system/components/layout/fm_form_header.dart';
-import '../../../../design_system/components/inputs/fm_text_field.dart';
+import '../../../../design_system/design_system.dart';
 import '../../../settings/presentation/providers/database_management_providers.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../settings/presentation/widgets/color_picker_grid.dart';
@@ -381,14 +379,8 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
         if (availableAccounts.isEmpty) {
           // Can't move, show error
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'No other accounts available to move transactions to',
-                  style: AppTypography.bodySmall.copyWith(color: AppColors.textPrimary),
-                ),
-                backgroundColor: AppColors.surface,
-              ),
+            context.showWarningNotification(
+              'No other accounts available to move transactions to',
             );
           }
           return;
@@ -487,12 +479,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
       ref.read(accountFormProvider.notifier).setTransactionDelta(transactionDelta);
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Balance updated'),
-            backgroundColor: AppColors.income,
-          ),
-        );
+        context.showSuccessNotification('Balance updated');
       }
     }
   }

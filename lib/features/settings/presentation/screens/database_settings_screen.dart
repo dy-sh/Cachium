@@ -7,6 +7,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../design_system/design_system.dart';
 import '../providers/database_management_providers.dart';
 import '../providers/settings_provider.dart';
 import '../widgets/database_consistency_card.dart';
@@ -222,12 +223,7 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
           .resetDatabase(resetSettings: result.resetSettings);
 
       if (!success && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to reset database'),
-            backgroundColor: AppColors.expense,
-          ),
-        );
+        context.showErrorNotification('Failed to reset database');
       }
       // If successful, the welcome screen will be shown automatically
     }
@@ -253,11 +249,8 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
           .applyChanges();
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Updated $count account${count == 1 ? '' : 's'}'),
-            backgroundColor: AppColors.income,
-          ),
+        context.showSuccessNotification(
+          'Updated $count account${count == 1 ? '' : 's'}',
         );
       }
     }
@@ -295,23 +288,19 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
       importResult.whenOrNull(
         data: (result) {
           if (result != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Imported ${result.totalImported} records${result.hasErrors ? ' with errors' : ''}',
-                ),
-                backgroundColor: result.hasErrors ? AppColors.yellow : AppColors.income,
-              ),
-            );
+            if (result.hasErrors) {
+              context.showWarningNotification(
+                'Imported ${result.totalImported} records with errors',
+              );
+            } else {
+              context.showSuccessNotification(
+                'Imported ${result.totalImported} records',
+              );
+            }
           }
         },
         error: (error, _) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Import failed: $error'),
-              backgroundColor: AppColors.expense,
-            ),
-          );
+          context.showErrorNotification('Import failed: $error');
         },
       );
     }
@@ -326,23 +315,19 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
       importResult.whenOrNull(
         data: (result) {
           if (result != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Imported ${result.totalImported} records${result.hasErrors ? ' with errors' : ''}',
-                ),
-                backgroundColor: result.hasErrors ? AppColors.yellow : AppColors.income,
-              ),
-            );
+            if (result.hasErrors) {
+              context.showWarningNotification(
+                'Imported ${result.totalImported} records with errors',
+              );
+            } else {
+              context.showSuccessNotification(
+                'Imported ${result.totalImported} records',
+              );
+            }
           }
         },
         error: (error, _) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Import failed: $error'),
-              backgroundColor: AppColors.expense,
-            ),
-          );
+          context.showErrorNotification('Import failed: $error');
         },
       );
     }

@@ -25,6 +25,7 @@ export 'components/chips/fm_toggle_chip.dart';
 // Feedback
 export 'components/feedback/fm_empty_state.dart';
 export 'components/feedback/fm_loading_indicator.dart';
+export 'components/feedback/fm_notification.dart';
 
 // Inputs
 export 'components/inputs/fm_amount_input.dart';

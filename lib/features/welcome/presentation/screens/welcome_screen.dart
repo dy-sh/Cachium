@@ -116,12 +116,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       ref.invalidate(appRouterProvider);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Setup failed: $e'),
-            backgroundColor: AppColors.expense,
-          ),
-        );
+        context.showErrorNotification('Setup failed: $e');
       }
     } finally {
       if (mounted) {

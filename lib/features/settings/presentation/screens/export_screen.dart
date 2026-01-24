@@ -7,7 +7,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
-import '../../../../design_system/components/buttons/fm_primary_button.dart';
+import '../../../../design_system/design_system.dart';
 import '../../data/models/export_options.dart';
 import '../providers/database_management_providers.dart';
 import '../widgets/settings_section.dart';
@@ -212,12 +212,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
     final state = ref.read(exportStateProvider);
 
     if (context.mounted && state.hasValue && state.value != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Export ready for sharing'),
-          backgroundColor: AppColors.income,
-        ),
-      );
+      context.showSuccessNotification('Export ready for sharing');
     }
   }
 }

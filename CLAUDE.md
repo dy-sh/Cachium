@@ -90,6 +90,35 @@ class AccountFormNotifier extends Notifier<AccountFormState> { ... }
 - **Hierarchical categories:** Categories support `parentId` for nesting; `DefaultCategories` provides presets
 - **Account customization:** Accounts support `customColor` and `customIcon` overrides via `getColorWithIntensity()`
 
+## Notifications
+
+**IMPORTANT:** Do NOT use Flutter's `SnackBar` or `ScaffoldMessenger`. Use the custom `FMNotification` system instead.
+
+The app uses a custom notification system (`lib/design_system/components/feedback/fm_notification.dart`) that appears from the top with slide + fade animation, matching the app's dark theme.
+
+**Notification Types:**
+- `success` - green, checkmark icon
+- `error` - red, X icon
+- `warning` - yellow, alert triangle icon
+- `info` - cyan, info icon
+
+**Usage via BuildContext extension:**
+```dart
+context.showSuccessNotification('Operation completed');
+context.showErrorNotification('Something went wrong');
+context.showWarningNotification('Check this out');
+context.showInfoNotification('FYI...');
+
+// With custom duration
+context.showSuccessNotification('Done', duration: Duration(seconds: 5));
+```
+
+**Features:**
+- Appears from top with animation
+- Swipe up to dismiss
+- Auto-dismisses after duration (default: 3s for success/warning/info, 4s for error)
+- Queues multiple notifications
+
 ## Color System
 
 ColorIntensity enum (`prism`/`zen`/`pastel`/`neon`/`vintage`) defined in `app_settings.dart` drives visual appearance globally.
@@ -136,3 +165,4 @@ The app includes comprehensive database import/export functionality accessible v
 - `lib/features/settings/data/models/app_settings.dart` - Settings model + ColorIntensity enum
 - `lib/features/settings/presentation/providers/database_management_providers.dart` - Database management providers
 - `lib/features/categories/data/models/category.dart` - Category with hierarchy support
+- `lib/design_system/components/feedback/fm_notification.dart` - Custom notification system (replaces SnackBar)
