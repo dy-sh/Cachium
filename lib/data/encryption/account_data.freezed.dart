@@ -42,7 +42,8 @@ mixin _$AccountData {
   /// Custom icon code point (optional)
   int? get customIconCodePoint => throw _privateConstructorUsedError;
 
-  /// Duplicated for integrity check - must match row createdAt
+  /// Matches the database createdAt field for integrity verification during import.
+  /// Not exported as a separate CSV column to avoid duplication.
   int get createdAtMillis => throw _privateConstructorUsedError;
 
   /// Serializes this AccountData to a JSON map.
@@ -267,7 +268,8 @@ class _$AccountDataImpl implements _AccountData {
   @override
   final int? customIconCodePoint;
 
-  /// Duplicated for integrity check - must match row createdAt
+  /// Matches the database createdAt field for integrity verification during import.
+  /// Not exported as a separate CSV column to avoid duplication.
   @override
   final int createdAtMillis;
 
@@ -366,7 +368,8 @@ abstract class _AccountData implements AccountData {
   @override
   int? get customIconCodePoint;
 
-  /// Duplicated for integrity check - must match row createdAt
+  /// Matches the database createdAt field for integrity verification during import.
+  /// Not exported as a separate CSV column to avoid duplication.
   @override
   int get createdAtMillis;
 

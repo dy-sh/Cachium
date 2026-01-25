@@ -144,16 +144,23 @@ class AppearanceSettingsScreen extends ConsumerWidget {
     final palettes = [
       (ColorIntensity.prism, 'Prism', 'Vivid, refracted spectrum'),
       (ColorIntensity.zen, 'Zen', 'Soft, peaceful tones'),
-      (ColorIntensity.pastel, 'Pastel', 'Light, calming colors'),
       (ColorIntensity.neon, 'Neon', 'Electric, ultra-vibrant'),
-      (ColorIntensity.vintage, 'Vintage', 'Retro, warm, nostalgic'),
     ];
 
     return Column(
       children: palettes.map((palette) {
         final (intensity, name, description) = palette;
         final isSelected = settings.colorIntensity == intensity;
-        final previewColors = AppColors.getCategoryColors(intensity).take(6).toList();
+        // Pick 6 distinct colors spread across the color wheel (60° apart)
+        final accentOptions = AppColors.getAccentOptions(intensity);
+        final previewColors = [
+          accentOptions[1],   // red (0°)
+          accentOptions[5],   // yellow (60°)
+          accentOptions[9],   // green (120°)
+          accentOptions[13],  // cyan (180°)
+          accentOptions[17],  // blue (240°)
+          accentOptions[21],  // magenta (300°)
+        ];
 
         return GestureDetector(
           onTap: () {

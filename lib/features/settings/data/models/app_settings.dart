@@ -15,9 +15,7 @@ enum DateFormatOption {
 enum ColorIntensity {
   prism,
   zen,
-  pastel,
   neon,
-  vintage,
 }
 
 enum StartScreen {

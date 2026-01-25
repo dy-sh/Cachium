@@ -24,7 +24,7 @@ mixin _$SettingsData {
   /// Fixed ID - always 'app_settings'
   String get id => throw _privateConstructorUsedError;
 
-  /// Color intensity: 'prism', 'zen', 'pastel', 'neon', 'vintage'
+  /// Color intensity: 'prism', 'zen', 'neon'
   String get colorIntensity => throw _privateConstructorUsedError;
 
   /// Accent color index
@@ -339,7 +339,7 @@ class _$SettingsDataImpl implements _SettingsData {
   @JsonKey()
   final String id;
 
-  /// Color intensity: 'prism', 'zen', 'pastel', 'neon', 'vintage'
+  /// Color intensity: 'prism', 'zen', 'neon'
   @override
   @JsonKey()
   final String colorIntensity;
@@ -500,7 +500,7 @@ abstract class _SettingsData implements SettingsData {
   @override
   String get id;
 
-  /// Color intensity: 'prism', 'zen', 'pastel', 'neon', 'vintage'
+  /// Color intensity: 'prism', 'zen', 'neon'
   @override
   String get colorIntensity;
 

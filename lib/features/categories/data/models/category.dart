@@ -31,7 +31,7 @@ class Category {
 
   /// Returns the color for this category based on the current palette.
   Color getColor(ColorIntensity palette) {
-    final colors = AppColors.getCategoryColors(palette);
+    final colors = AppColors.getAccentOptions(palette);
     return colors[colorIndex.clamp(0, colors.length - 1)];
   }
 

@@ -134,10 +134,10 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                       builder: (context) {
                         // Calculate custom color for the type grid
                         final intensity = ref.watch(colorIntensityProvider);
-                        final accountColors = AppColors.getCategoryColors(intensity);
+                        final accentColors = AppColors.getAccentOptions(intensity);
                         Color? customColor;
                         if (formState.customColorIndex != null) {
-                          customColor = accountColors[formState.customColorIndex!.clamp(0, accountColors.length - 1)];
+                          customColor = accentColors[formState.customColorIndex!.clamp(0, accentColors.length - 1)];
                         }
                         return _AccountTypeGrid(
                           selectedType: formState.type,
@@ -303,9 +303,9 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                     ? () async {
                         // Get custom color if set
                         final intensity = ref.read(colorIntensityProvider);
-                        final accountColors = AppColors.getCategoryColors(intensity);
+                        final accentColors = AppColors.getAccentOptions(intensity);
                         final customColor = formState.customColorIndex != null
-                            ? accountColors[formState.customColorIndex!.clamp(0, accountColors.length - 1)]
+                            ? accentColors[formState.customColorIndex!.clamp(0, accentColors.length - 1)]
                             : null;
 
                         if (isEditing) {
@@ -486,7 +486,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
 
   Widget _buildColorPicker(WidgetRef ref, AccountFormState formState) {
     final intensity = ref.watch(colorIntensityProvider);
-    final accountColors = AppColors.getCategoryColors(intensity); // Use category colors palette
+    final accentColors = AppColors.getAccentOptions(intensity);
 
     // Get the default type color if available
     final defaultColor = formState.type != null
@@ -501,14 +501,14 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
     bool hasCustomColor = formState.hasCustomColor;
 
     if (formState.customColorIndex != null) {
-      selectedColor = accountColors[formState.customColorIndex!.clamp(0, accountColors.length - 1)];
+      selectedColor = accentColors[formState.customColorIndex!.clamp(0, accentColors.length - 1)];
     } else if (formState.originalCustomColor != null) {
       // Try to find the original color in the palette
-      final originalColorIndex = accountColors.indexWhere(
+      final originalColorIndex = accentColors.indexWhere(
         (c) => c.value == formState.originalCustomColor!.value,
       );
       if (originalColorIndex != -1) {
-        selectedColor = accountColors[originalColorIndex];
+        selectedColor = accentColors[originalColorIndex];
         hasCustomColor = true;
       } else {
         selectedColor = defaultColor;
@@ -541,12 +541,12 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
         ),
         const SizedBox(height: AppSpacing.sm),
         ColorPickerGrid(
-          colors: accountColors,
-          selectedColor: selectedColor ?? accountColors[0],
-          crossAxisCount: 6,
-          itemSize: 40,
+          colors: accentColors,
+          selectedColor: selectedColor ?? accentColors[0],
+          crossAxisCount: 8,
+          itemSize: 36,
           onColorSelected: (color) {
-            final index = accountColors.indexOf(color);
+            final index = accentColors.indexOf(color);
             if (index != -1) {
               ref.read(accountFormProvider.notifier).setCustomColorIndex(index);
             }

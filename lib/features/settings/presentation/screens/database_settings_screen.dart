@@ -136,14 +136,14 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
                           title: 'Export SQLite',
                           description: 'Database file format',
                           icon: LucideIcons.database,
-                          iconColor: AppColors.getAccentColor(3, intensity),
+                          iconColor: AppColors.getAccentColor(17, intensity), // blue - database
                           onTap: () => context.push('/settings/database/export-sqlite'),
                         ),
                         SettingsTile(
                           title: 'Export CSV',
                           description: 'Spreadsheet format',
                           icon: LucideIcons.fileSpreadsheet,
-                          iconColor: AppColors.getAccentColor(7, intensity),
+                          iconColor: AppColors.getAccentColor(9, intensity), // green - spreadsheet
                           onTap: () => context.push('/settings/database/export-csv'),
                         ),
                       ],
@@ -158,7 +158,7 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
                           title: 'Import SQLite',
                           description: 'Restore from database file',
                           icon: LucideIcons.databaseBackup,
-                          iconColor: AppColors.getAccentColor(5, intensity),
+                          iconColor: AppColors.getAccentColor(17, intensity), // blue - database
                           onTap: _loadingAction != null
                               ? null
                               : () => _handleImportSqlite(context),
@@ -168,7 +168,7 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
                           title: 'Import CSV',
                           description: 'Import from spreadsheets',
                           icon: LucideIcons.fileUp,
-                          iconColor: AppColors.getAccentColor(9, intensity),
+                          iconColor: AppColors.getAccentColor(9, intensity), // green - spreadsheet
                           onTap: _loadingAction != null
                               ? null
                               : () => _handleImportCsv(context),
@@ -178,7 +178,7 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
                           title: 'CSV Import (External)',
                           description: 'Import from other apps',
                           icon: LucideIcons.fileInput,
-                          iconColor: AppColors.getAccentColor(1, intensity),
+                          iconColor: AppColors.getAccentColor(11, intensity), // jade - external/third-party
                           onTap: _loadingAction != null
                               ? null
                               : () => context.push(AppRoutes.csvImport),

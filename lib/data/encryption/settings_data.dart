@@ -14,7 +14,7 @@ class SettingsData with _$SettingsData {
     /// Fixed ID - always 'app_settings'
     @Default('app_settings') String id,
 
-    /// Color intensity: 'prism', 'zen', 'pastel', 'neon', 'vintage'
+    /// Color intensity: 'prism', 'zen', 'neon'
     @Default('prism') String colorIntensity,
 
     /// Accent color index

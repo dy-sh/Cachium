@@ -99,8 +99,8 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
   Widget build(BuildContext context) {
     final isEditing = widget.category != null;
     final intensity = ref.watch(colorIntensityProvider);
-    final categoryColors = AppColors.getCategoryColors(intensity);
-    final selectedColor = categoryColors[_selectedColorIndex.clamp(0, categoryColors.length - 1)];
+    final accentColors = AppColors.getAccentOptions(intensity);
+    final selectedColor = accentColors[_selectedColorIndex.clamp(0, accentColors.length - 1)];
     final categoryName = _nameController.text.trim();
 
     final isDuplicateName = categoryName.isNotEmpty && ref.watch(
@@ -245,12 +245,12 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
                     Text('Color', style: AppTypography.labelMedium),
                     const SizedBox(height: AppSpacing.sm),
                     ColorPickerGrid(
-                      colors: categoryColors,
+                      colors: accentColors,
                       selectedColor: selectedColor,
-                      crossAxisCount: 6,
-                      itemSize: 40,
+                      crossAxisCount: 8,
+                      itemSize: 36,
                       onColorSelected: (color) {
-                        final index = categoryColors.indexOf(color);
+                        final index = accentColors.indexOf(color);
                         if (index != -1) {
                           setState(() => _selectedColorIndex = index);
                         }

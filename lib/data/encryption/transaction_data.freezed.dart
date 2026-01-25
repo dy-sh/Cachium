@@ -42,10 +42,12 @@ mixin _$TransactionData {
   /// Currency code (default: USD)
   String get currency => throw _privateConstructorUsedError;
 
-  /// Duplicated for integrity check - must match row date
+  /// Matches the database date field for integrity verification during import.
+  /// Not exported as a separate CSV column to avoid duplication.
   int get dateMillis => throw _privateConstructorUsedError;
 
-  /// When the transaction was created
+  /// When the transaction was created (internal metadata only).
+  /// Not exported as a separate CSV column to avoid duplication.
   int get createdAtMillis => throw _privateConstructorUsedError;
 
   /// Serializes this TransactionData to a JSON map.
@@ -283,11 +285,13 @@ class _$TransactionDataImpl implements _TransactionData {
   @JsonKey()
   final String currency;
 
-  /// Duplicated for integrity check - must match row date
+  /// Matches the database date field for integrity verification during import.
+  /// Not exported as a separate CSV column to avoid duplication.
   @override
   final int dateMillis;
 
-  /// When the transaction was created
+  /// When the transaction was created (internal metadata only).
+  /// Not exported as a separate CSV column to avoid duplication.
   @override
   final int createdAtMillis;
 
@@ -393,11 +397,13 @@ abstract class _TransactionData implements TransactionData {
   @override
   String get currency;
 
-  /// Duplicated for integrity check - must match row date
+  /// Matches the database date field for integrity verification during import.
+  /// Not exported as a separate CSV column to avoid duplication.
   @override
   int get dateMillis;
 
-  /// When the transaction was created
+  /// When the transaction was created (internal metadata only).
+  /// Not exported as a separate CSV column to avoid duplication.
   @override
   int get createdAtMillis;
 

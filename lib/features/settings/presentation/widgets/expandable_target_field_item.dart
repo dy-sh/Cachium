@@ -13,10 +13,10 @@ import '../../data/models/field_mapping_options.dart';
 import '../providers/flexible_csv_import_providers.dart';
 import 'field_options_panel.dart';
 
-/// Color index for Category FK field (cyan).
-const int categoryColorIndex = 1;
-/// Color index for Account FK field (orange).
-const int accountColorIndex = 15;
+/// Color index for Category FK field (cyan - index 13).
+const int categoryColorIndex = 13;
+/// Color index for Account FK field (orange - index 3).
+const int accountColorIndex = 3;
 
 /// Get the color for a foreign key type.
 Color getForeignKeyColor(String foreignKey, ColorIntensity intensity) {
@@ -25,13 +25,16 @@ Color getForeignKeyColor(String foreignKey, ColorIntensity intensity) {
 }
 
 /// Get a distinct color for regular field badges.
-/// Uses only PRIMARY colors from each family for maximum distinction.
-/// Indices: red(9), yellow(11), green(7), cornflower(3), purple(13), pink(17), royalBlue(4)
+/// New 24-color palette indices (15° spacing on color wheel):
+///   0: white, 1: red, 2: vermilion, 3: orange*, 4: amber, 5: yellow, 6: chartreuse,
+///   7: lime, 8: harlequin, 9: green, 10: emerald, 11: jade, 12: aquamarine,
+///   13: cyan*, 14: sky, 15: azure, 16: cerulean, 17: blue, 18: indigo,
+///   19: violet, 20: purple, 21: magenta, 22: fuchsia, 23: rose
+/// (* = reserved for FK fields: cyan for Category, orange for Account)
 Color getFieldBadgeColor(int badgeNumber, ColorIntensity intensity) {
-  // Only use the main/primary color from each distinct family:
-  // red, yellow, green, blue, purple, pink, royalBlue (darker blue)
-  // This ensures each color is from a completely different hue family
-  const distinctIndices = [9, 11, 7, 3, 13, 17, 4, 14, 12, 8];
+  // Pick colors ~45° apart for max distinction, avoiding cyan(13) and orange(3):
+  // red(1), yellow(5), green(9), blue(17), purple(20), fuchsia(22), azure(15), indigo(18), lime(7), rose(23)
+  const distinctIndices = [1, 5, 9, 17, 20, 22, 15, 18, 7, 23];
   final index = distinctIndices[(badgeNumber - 1) % distinctIndices.length];
   return AppColors.getAccentColor(index, intensity);
 }
