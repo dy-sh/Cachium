@@ -25,6 +25,39 @@ Both SQLite and CSV exports support the same encryption toggle:
 - Provides human-readable backups
 - Still requires physical access to device to export
 
+### Deleted Records Handling
+
+The app uses soft-delete (`isDeleted` flag) rather than hard-delete. Export behavior differs by format:
+
+| Export Type | Deleted Records | `is_deleted` Column |
+|-------------|-----------------|---------------------|
+| SQLite (encrypted) | Included | Yes |
+| SQLite (plaintext) | Included | Yes |
+| CSV (encrypted) | Included | Yes |
+| CSV (plaintext) | **Skipped** | **No** |
+
+**Why skip deleted records in plaintext CSV?**
+
+1. **User intent**: Plaintext CSV is for spreadsheet analysis or migration to other apps. Users expect to see their active data, not soft-deleted records they've already removed.
+
+2. **Cleaner output**: No confusing `is_deleted=0` column that's always the same value.
+
+3. **Sync is separate**: The app's sync architecture uses `enc_event_log` (append-only log in Supabase), not file exports. Skipping deleted records in CSV doesn't affect sync.
+
+4. **Full backup still available**: Users who need complete data (including deleted records) can use:
+   - SQLite export (encrypted or plaintext) - includes all records
+   - CSV encrypted export - includes all records
+
+**When deleted records matter:**
+
+| Use Case | Need Deleted? | Recommended Export |
+|----------|---------------|-------------------|
+| Spreadsheet analysis | No | CSV plaintext |
+| Migration to other apps | No | CSV plaintext |
+| Fresh restore/backup | No | CSV plaintext |
+| Full forensic backup | Yes | SQLite (any) |
+| Manual merge with existing data | Maybe | SQLite plaintext |
+
 ### Export Services Architecture
 
 ```
@@ -84,12 +117,31 @@ bool _hasEncryptedBlob(Database db, String tableName) {
 
 ### CSV Export Details
 
-CSV export creates 3 separate files:
+CSV export creates 4 separate files:
 - `transactions.csv`
 - `accounts.csv`
 - `categories.csv`
+- `app_settings.csv`
 
 Each follows the same encryption toggle logic. For encrypted format, the `encryptedBlob` is Base64-encoded.
+
+**Plaintext CSV columns** (encryption OFF, deleted records excluded):
+
+| File | Columns |
+|------|---------|
+| transactions.csv | `id, date, last_updated_at, amount, category_id, account_id, type, note, currency` |
+| accounts.csv | `id, created_at, last_updated_at, name, type, balance, initial_balance, custom_color_value, custom_icon_code_point` |
+| categories.csv | `id, sort_order, last_updated_at, name, icon_code_point, icon_font_family, icon_font_package, color_index, type, is_custom, parent_id` |
+| app_settings.csv | `id, last_updated_at, json_data` |
+
+**Encrypted CSV columns** (encryption ON, all records included):
+
+| File | Columns |
+|------|---------|
+| transactions.csv | `id, date, last_updated_at, is_deleted, encrypted_blob` |
+| accounts.csv | `id, created_at, last_updated_at, is_deleted, encrypted_blob` |
+| categories.csv | `id, sort_order, last_updated_at, is_deleted, encrypted_blob` |
+| app_settings.csv | `id, last_updated_at, json_data` |
 
 ### Database Management Operations
 

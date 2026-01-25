@@ -391,10 +391,11 @@ class DatabaseExportService {
   // CSV export methods
 
   Future<void> _exportTransactionsToCsv(String path, ExportOptions options) async {
-    final rows = await database.select(database.transactions).get();
     final List<List<dynamic>> csvData = [];
 
     if (options.encryptionEnabled) {
+      // Encrypted: include all records (including deleted) for full backup
+      final rows = await database.select(database.transactions).get();
       csvData.add(['id', 'date', 'last_updated_at', 'is_deleted', 'encrypted_blob']);
 
       for (final row in rows) {
@@ -407,8 +408,12 @@ class DatabaseExportService {
         ]);
       }
     } else {
+      // Plaintext: skip deleted records for cleaner export
+      final rows = await (database.select(database.transactions)
+            ..where((t) => t.isDeleted.equals(false)))
+          .get();
       csvData.add([
-        'id', 'date', 'last_updated_at', 'is_deleted', 'amount', 'category_id', 'account_id', 'type', 'note', 'currency',
+        'id', 'date', 'last_updated_at', 'amount', 'category_id', 'account_id', 'type', 'note', 'currency',
       ]);
 
       for (final row in rows) {
@@ -419,7 +424,6 @@ class DatabaseExportService {
           row.id,
           row.date,
           row.lastUpdatedAt,
-          row.isDeleted ? 1 : 0,
           data.amount,
           data.categoryId,
           data.accountId,
@@ -435,10 +439,11 @@ class DatabaseExportService {
   }
 
   Future<void> _exportAccountsToCsv(String path, ExportOptions options) async {
-    final rows = await database.select(database.accounts).get();
     final List<List<dynamic>> csvData = [];
 
     if (options.encryptionEnabled) {
+      // Encrypted: include all records (including deleted) for full backup
+      final rows = await database.select(database.accounts).get();
       csvData.add(['id', 'created_at', 'last_updated_at', 'is_deleted', 'encrypted_blob']);
 
       for (final row in rows) {
@@ -451,8 +456,12 @@ class DatabaseExportService {
         ]);
       }
     } else {
+      // Plaintext: skip deleted records for cleaner export
+      final rows = await (database.select(database.accounts)
+            ..where((a) => a.isDeleted.equals(false)))
+          .get();
       csvData.add([
-        'id', 'created_at', 'last_updated_at', 'is_deleted', 'name', 'type', 'balance', 'initial_balance', 'custom_color_value', 'custom_icon_code_point',
+        'id', 'created_at', 'last_updated_at', 'name', 'type', 'balance', 'initial_balance', 'custom_color_value', 'custom_icon_code_point',
       ]);
 
       for (final row in rows) {
@@ -463,7 +472,6 @@ class DatabaseExportService {
           row.id,
           row.createdAt,
           row.lastUpdatedAt,
-          row.isDeleted ? 1 : 0,
           data.name,
           data.type,
           data.balance,
@@ -479,10 +487,11 @@ class DatabaseExportService {
   }
 
   Future<void> _exportCategoriesToCsv(String path, ExportOptions options) async {
-    final rows = await database.select(database.categories).get();
     final List<List<dynamic>> csvData = [];
 
     if (options.encryptionEnabled) {
+      // Encrypted: include all records (including deleted) for full backup
+      final rows = await database.select(database.categories).get();
       csvData.add(['id', 'sort_order', 'last_updated_at', 'is_deleted', 'encrypted_blob']);
 
       for (final row in rows) {
@@ -495,8 +504,12 @@ class DatabaseExportService {
         ]);
       }
     } else {
+      // Plaintext: skip deleted records for cleaner export
+      final rows = await (database.select(database.categories)
+            ..where((c) => c.isDeleted.equals(false)))
+          .get();
       csvData.add([
-        'id', 'sort_order', 'last_updated_at', 'is_deleted', 'name', 'icon_code_point', 'icon_font_family', 'icon_font_package', 'color_index', 'type', 'is_custom', 'parent_id',
+        'id', 'sort_order', 'last_updated_at', 'name', 'icon_code_point', 'icon_font_family', 'icon_font_package', 'color_index', 'type', 'is_custom', 'parent_id',
       ]);
 
       for (final row in rows) {
@@ -507,7 +520,6 @@ class DatabaseExportService {
           row.id,
           row.sortOrder,
           row.lastUpdatedAt,
-          row.isDeleted ? 1 : 0,
           data.name,
           data.iconCodePoint,
           data.iconFontFamily,
