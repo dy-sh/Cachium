@@ -6,9 +6,8 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
-import '../../../accounts/data/models/account.dart';
+import '../../../../design_system/components/chips/selection_chip.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
-import '../../../categories/data/models/category.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../data/models/app_settings.dart';
 import '../../data/models/field_mapping_options.dart';
@@ -301,27 +300,44 @@ class _EntityPickerButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (foreignKey == 'category') {
-      return _buildCategoryPicker(context, ref);
+      return _buildCategoryChips(ref);
     } else {
-      return _buildAccountPicker(context, ref);
+      return _buildAccountChips(ref);
     }
   }
 
-  Widget _buildCategoryPicker(BuildContext context, WidgetRef ref) {
+  Widget _buildCategoryChips(WidgetRef ref) {
     final categoriesAsync = ref.watch(categoriesProvider);
 
     return categoriesAsync.when(
       data: (categories) {
-        final selected = selectedEntityId != null
-            ? categories.where((c) => c.id == selectedEntityId).firstOrNull
-            : null;
+        if (categories.isEmpty) {
+          return Text(
+            'No categories available',
+            style: AppTypography.labelSmall.copyWith(
+              color: AppColors.textTertiary,
+            ),
+          );
+        }
 
-        return _buildPickerButton(
-          context: context,
-          icon: selected?.icon ?? LucideIcons.tag,
-          label: selected?.name ?? 'Select Category...',
-          isSelected: selected != null,
-          onTap: () => _showCategoryPicker(context, categories),
+        return SizedBox(
+          height: 36,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: categories.length,
+            separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.xs),
+            itemBuilder: (context, index) {
+              final category = categories[index];
+              final isSelected = category.id == selectedEntityId;
+
+              return SelectionChip(
+                label: category.name,
+                icon: category.icon,
+                isSelected: isSelected,
+                onTap: () => onSelect(category.id),
+              );
+            },
+          ),
         );
       },
       loading: () => const SizedBox(
@@ -332,21 +348,38 @@ class _EntityPickerButton extends ConsumerWidget {
     );
   }
 
-  Widget _buildAccountPicker(BuildContext context, WidgetRef ref) {
+  Widget _buildAccountChips(WidgetRef ref) {
     final accountsAsync = ref.watch(accountsProvider);
 
     return accountsAsync.when(
       data: (accounts) {
-        final selected = selectedEntityId != null
-            ? accounts.where((a) => a.id == selectedEntityId).firstOrNull
-            : null;
+        if (accounts.isEmpty) {
+          return Text(
+            'No accounts available',
+            style: AppTypography.labelSmall.copyWith(
+              color: AppColors.textTertiary,
+            ),
+          );
+        }
 
-        return _buildPickerButton(
-          context: context,
-          icon: selected?.icon ?? LucideIcons.wallet,
-          label: selected?.name ?? 'Select Account...',
-          isSelected: selected != null,
-          onTap: () => _showAccountPicker(context, accounts),
+        return SizedBox(
+          height: 36,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: accounts.length,
+            separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.xs),
+            itemBuilder: (context, index) {
+              final account = accounts[index];
+              final isSelected = account.id == selectedEntityId;
+
+              return SelectionChip(
+                label: account.name,
+                icon: account.icon,
+                isSelected: isSelected,
+                onTap: () => onSelect(account.id),
+              );
+            },
+          ),
         );
       },
       loading: () => const SizedBox(
@@ -354,182 +387,6 @@ class _EntityPickerButton extends ConsumerWidget {
         child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
       ),
       error: (_, __) => Text('Error', style: AppTypography.labelSmall),
-    );
-  }
-
-  Widget _buildPickerButton({
-    required BuildContext context,
-    required IconData icon,
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    final accentColor = getForeignKeyColor(foreignKey, intensity);
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.xs + 2,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? accentColor.withValues(alpha: 0.1)
-              : AppColors.surface,
-          borderRadius: AppRadius.input,
-          border: Border.all(
-            color: isSelected ? accentColor : AppColors.border,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              size: 16,
-              color: isSelected ? accentColor : AppColors.textTertiary,
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            Expanded(
-              child: Text(
-                label,
-                style: AppTypography.bodySmall.copyWith(
-                  color: isSelected ? accentColor : AppColors.textSecondary,
-                  fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            Icon(
-              LucideIcons.chevronDown,
-              size: 16,
-              color: AppColors.textTertiary,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showCategoryPicker(BuildContext context, List<Category> categories) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                child: Text('Select Category', style: AppTypography.h4),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: categories.length,
-                  itemBuilder: (context, index) {
-                    final category = categories[index];
-                    final isSelected = category.id == selectedEntityId;
-                    return ListTile(
-                      leading: Icon(
-                        category.icon,
-                        color: isSelected
-                            ? AppColors.income
-                            : AppColors.textSecondary,
-                      ),
-                      title: Text(
-                        category.name,
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: isSelected
-                              ? AppColors.income
-                              : AppColors.textPrimary,
-                          fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.normal,
-                        ),
-                      ),
-                      trailing: isSelected
-                          ? Icon(LucideIcons.check, color: AppColors.income)
-                          : null,
-                      onTap: () {
-                        onSelect(category.id);
-                        Navigator.pop(context);
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _showAccountPicker(BuildContext context, List<Account> accounts) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                child: Text('Select Account', style: AppTypography.h4),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: accounts.length,
-                  itemBuilder: (context, index) {
-                    final account = accounts[index];
-                    final isSelected = account.id == selectedEntityId;
-                    return ListTile(
-                      leading: Icon(
-                        account.icon,
-                        color: isSelected
-                            ? AppColors.income
-                            : AppColors.textSecondary,
-                      ),
-                      title: Text(
-                        account.name,
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: isSelected
-                              ? AppColors.income
-                              : AppColors.textPrimary,
-                          fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.normal,
-                        ),
-                      ),
-                      trailing: isSelected
-                          ? Icon(LucideIcons.check, color: AppColors.income)
-                          : null,
-                      onTap: () {
-                        onSelect(account.id);
-                        Navigator.pop(context);
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 }
