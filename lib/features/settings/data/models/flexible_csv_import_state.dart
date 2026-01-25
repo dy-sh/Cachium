@@ -1,5 +1,6 @@
 import '../../../accounts/data/models/account.dart';
 import '../../../categories/data/models/category.dart';
+import 'field_mapping_options.dart';
 import 'flexible_csv_import_config.dart';
 import 'import_preset.dart';
 
@@ -94,16 +95,15 @@ class FlexibleCsvImportState {
   final Map<String, Account> existingAccountsByName;
   final Map<String, Account> existingAccountsById;
 
-  /// Use the same category/account for all imported transactions.
-  final bool useSameCategoryForAll;
-  final bool useSameAccountForAll;
-
-  /// Selected entities when using "same for all" option.
-  final String? defaultCategoryId;
-  final String? defaultAccountId;
-
   /// Currently selected CSV column in the two-panel mapping view.
   final String? selectedCsvColumn;
+
+  /// Currently expanded foreign key ('category' or 'account').
+  final String? expandedForeignKey;
+
+  /// Foreign key configurations for transactions.
+  final ForeignKeyConfig categoryConfig;
+  final ForeignKeyConfig accountConfig;
 
   const FlexibleCsvImportState({
     this.step = ImportWizardStep.selectType,
@@ -118,11 +118,10 @@ class FlexibleCsvImportState {
     this.existingCategoriesById = const {},
     this.existingAccountsByName = const {},
     this.existingAccountsById = const {},
-    this.useSameCategoryForAll = false,
-    this.useSameAccountForAll = false,
-    this.defaultCategoryId,
-    this.defaultAccountId,
     this.selectedCsvColumn,
+    this.expandedForeignKey,
+    this.categoryConfig = const ForeignKeyConfig(),
+    this.accountConfig = const ForeignKeyConfig(),
   });
 
   FlexibleCsvImportState copyWith({
@@ -142,14 +141,12 @@ class FlexibleCsvImportState {
     Map<String, Category>? existingCategoriesById,
     Map<String, Account>? existingAccountsByName,
     Map<String, Account>? existingAccountsById,
-    bool? useSameCategoryForAll,
-    bool? useSameAccountForAll,
-    String? defaultCategoryId,
-    bool clearDefaultCategoryId = false,
-    String? defaultAccountId,
-    bool clearDefaultAccountId = false,
     String? selectedCsvColumn,
     bool clearSelectedCsvColumn = false,
+    String? expandedForeignKey,
+    bool clearExpandedForeignKey = false,
+    ForeignKeyConfig? categoryConfig,
+    ForeignKeyConfig? accountConfig,
   }) {
     return FlexibleCsvImportState(
       step: step ?? this.step,
@@ -170,18 +167,14 @@ class FlexibleCsvImportState {
       existingAccountsByName:
           existingAccountsByName ?? this.existingAccountsByName,
       existingAccountsById: existingAccountsById ?? this.existingAccountsById,
-      useSameCategoryForAll:
-          useSameCategoryForAll ?? this.useSameCategoryForAll,
-      useSameAccountForAll: useSameAccountForAll ?? this.useSameAccountForAll,
-      defaultCategoryId: clearDefaultCategoryId
-          ? null
-          : (defaultCategoryId ?? this.defaultCategoryId),
-      defaultAccountId: clearDefaultAccountId
-          ? null
-          : (defaultAccountId ?? this.defaultAccountId),
       selectedCsvColumn: clearSelectedCsvColumn
           ? null
           : (selectedCsvColumn ?? this.selectedCsvColumn),
+      expandedForeignKey: clearExpandedForeignKey
+          ? null
+          : (expandedForeignKey ?? this.expandedForeignKey),
+      categoryConfig: categoryConfig ?? this.categoryConfig,
+      accountConfig: accountConfig ?? this.accountConfig,
     );
   }
 
@@ -192,29 +185,10 @@ class FlexibleCsvImportState {
     final fields = ImportFieldDefinitions.getFieldsForType(entityType!);
     final mappings = config!.fieldMappings;
 
-    // For transactions, check category/account are resolved
+    // For transactions, check category/account configs are valid
     if (entityType == ImportEntityType.transaction) {
-      // Category: either "use same for all" with selection, or has name/id mapped
-      if (useSameCategoryForAll) {
-        if (defaultCategoryId == null) return false;
-      } else {
-        final categoryIdMapping = mappings['categoryId'];
-        final categoryNameMapping = mappings['categoryName'];
-        final hasCategoryMapping = (categoryIdMapping?.csvColumn != null) ||
-            (categoryNameMapping?.csvColumn != null);
-        if (!hasCategoryMapping) return false;
-      }
-
-      // Account: either "use same for all" with selection, or has name/id mapped
-      if (useSameAccountForAll) {
-        if (defaultAccountId == null) return false;
-      } else {
-        final accountIdMapping = mappings['accountId'];
-        final accountNameMapping = mappings['accountName'];
-        final hasAccountMapping = (accountIdMapping?.csvColumn != null) ||
-            (accountNameMapping?.csvColumn != null);
-        if (!hasAccountMapping) return false;
-      }
+      if (!categoryConfig.isValid) return false;
+      if (!accountConfig.isValid) return false;
     }
 
     // Check other required fields are mapped or have a valid strategy

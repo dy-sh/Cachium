@@ -8,6 +8,7 @@ import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/data/models/category.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
+import '../../data/models/field_mapping_options.dart';
 import '../../data/models/flexible_csv_import_config.dart';
 import '../../data/models/flexible_csv_import_state.dart';
 import '../../data/models/import_preset.dart';
@@ -276,36 +277,132 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
     );
   }
 
-  /// Toggle "use same category for all" option.
-  void setUseSameCategoryForAll(bool value) {
-    state = state.copyWith(
-      useSameCategoryForAll: value,
-      clearDefaultCategoryId: !value,
-    );
+  /// Toggle the expanded state of a foreign key ('category' or 'account').
+  void toggleExpandedForeignKey(String? foreignKey) {
+    if (state.expandedForeignKey == foreignKey) {
+      state = state.copyWith(clearExpandedForeignKey: true);
+    } else {
+      state = state.copyWith(expandedForeignKey: foreignKey);
+    }
   }
 
-  /// Toggle "use same account for all" option.
-  void setUseSameAccountForAll(bool value) {
-    state = state.copyWith(
-      useSameAccountForAll: value,
-      clearDefaultAccountId: !value,
-    );
+  /// Update the category FK config.
+  void updateCategoryConfig(ForeignKeyConfig config) {
+    state = state.copyWith(categoryConfig: config);
   }
 
-  /// Set the default category for "same for all" option.
-  void setDefaultCategory(String? categoryId) {
-    state = state.copyWith(
-      defaultCategoryId: categoryId,
-      clearDefaultCategoryId: categoryId == null,
-    );
+  /// Update the account FK config.
+  void updateAccountConfig(ForeignKeyConfig config) {
+    state = state.copyWith(accountConfig: config);
   }
 
-  /// Set the default account for "same for all" option.
-  void setDefaultAccount(String? accountId) {
-    state = state.copyWith(
-      defaultAccountId: accountId,
-      clearDefaultAccountId: accountId == null,
-    );
+  /// Set the resolution mode for a foreign key.
+  void setForeignKeyMode(String foreignKey, ForeignKeyResolutionMode mode) {
+    if (foreignKey == 'category') {
+      state = state.copyWith(
+        categoryConfig: state.categoryConfig.copyWith(
+          mode: mode,
+          clearSelectedEntityId: mode != ForeignKeyResolutionMode.useSameForAll,
+        ),
+      );
+    } else if (foreignKey == 'account') {
+      state = state.copyWith(
+        accountConfig: state.accountConfig.copyWith(
+          mode: mode,
+          clearSelectedEntityId: mode != ForeignKeyResolutionMode.useSameForAll,
+        ),
+      );
+    }
+  }
+
+  /// Set the selected entity for "use same for all" mode.
+  void setForeignKeyEntity(String foreignKey, String? entityId) {
+    if (foreignKey == 'category') {
+      state = state.copyWith(
+        categoryConfig: state.categoryConfig.copyWith(
+          selectedEntityId: entityId,
+          clearSelectedEntityId: entityId == null,
+        ),
+      );
+    } else if (foreignKey == 'account') {
+      state = state.copyWith(
+        accountConfig: state.accountConfig.copyWith(
+          selectedEntityId: entityId,
+          clearSelectedEntityId: entityId == null,
+        ),
+      );
+    }
+  }
+
+  /// Connect selected CSV column to a FK sub-field (name or id).
+  void connectToForeignKeyField(String foreignKey, String subField) {
+    if (state.selectedCsvColumn == null) return;
+
+    final csvColumn = state.selectedCsvColumn!;
+
+    // Also clear this column from regular field mappings
+    if (state.config != null) {
+      final newMappings = Map<String, FieldMapping>.from(state.config!.fieldMappings);
+      for (final entry in newMappings.entries) {
+        if (entry.value.csvColumn == csvColumn) {
+          newMappings[entry.key] = entry.value.copyWith(clearCsvColumn: true);
+        }
+      }
+      state = state.copyWith(
+        config: state.config!.copyWith(fieldMappings: newMappings),
+      );
+    }
+
+    if (foreignKey == 'category') {
+      if (subField == 'name') {
+        state = state.copyWith(
+          categoryConfig: state.categoryConfig.copyWith(nameColumn: csvColumn),
+          clearSelectedCsvColumn: true,
+        );
+      } else if (subField == 'id') {
+        state = state.copyWith(
+          categoryConfig: state.categoryConfig.copyWith(idColumn: csvColumn),
+          clearSelectedCsvColumn: true,
+        );
+      }
+    } else if (foreignKey == 'account') {
+      if (subField == 'name') {
+        state = state.copyWith(
+          accountConfig: state.accountConfig.copyWith(nameColumn: csvColumn),
+          clearSelectedCsvColumn: true,
+        );
+      } else if (subField == 'id') {
+        state = state.copyWith(
+          accountConfig: state.accountConfig.copyWith(idColumn: csvColumn),
+          clearSelectedCsvColumn: true,
+        );
+      }
+    }
+  }
+
+  /// Clear a FK sub-field mapping.
+  void clearForeignKeyField(String foreignKey, String subField) {
+    if (foreignKey == 'category') {
+      if (subField == 'name') {
+        state = state.copyWith(
+          categoryConfig: state.categoryConfig.copyWith(clearNameColumn: true),
+        );
+      } else if (subField == 'id') {
+        state = state.copyWith(
+          categoryConfig: state.categoryConfig.copyWith(clearIdColumn: true),
+        );
+      }
+    } else if (foreignKey == 'account') {
+      if (subField == 'name') {
+        state = state.copyWith(
+          accountConfig: state.accountConfig.copyWith(clearNameColumn: true),
+        );
+      } else if (subField == 'id') {
+        state = state.copyWith(
+          accountConfig: state.accountConfig.copyWith(clearIdColumn: true),
+        );
+      }
+    }
   }
 
   /// Generate preview of parsed data.
@@ -315,16 +412,25 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
     state = state.copyWith(isLoading: true, clearError: true);
 
     try {
+      // Build config with FK column mappings
+      final configWithFkMappings = _buildConfigWithFkMappings();
+
+      // Determine if using "same for all" mode
+      final useSameCategoryForAll =
+          state.categoryConfig.mode == ForeignKeyResolutionMode.useSameForAll;
+      final useSameAccountForAll =
+          state.accountConfig.mode == ForeignKeyResolutionMode.useSameForAll;
+
       final parseResult = await _service.parseAndValidate(
-        state.config!,
+        configWithFkMappings,
         state.existingCategoriesById,
         state.existingCategoriesByName,
         state.existingAccountsById,
         state.existingAccountsByName,
-        state.useSameCategoryForAll,
-        state.useSameAccountForAll,
-        state.defaultCategoryId,
-        state.defaultAccountId,
+        useSameCategoryForAll,
+        useSameAccountForAll,
+        state.categoryConfig.selectedEntityId,
+        state.accountConfig.selectedEntityId,
       );
 
       state = state.copyWith(
@@ -341,6 +447,47 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
       );
       return false;
     }
+  }
+
+  /// Build config with FK column mappings from the consolidated configs.
+  FlexibleCsvImportConfig _buildConfigWithFkMappings() {
+    if (state.config == null) return state.config!;
+
+    final newMappings = Map<String, FieldMapping>.from(state.config!.fieldMappings);
+
+    // Apply category config
+    if (state.categoryConfig.mode == ForeignKeyResolutionMode.mapFromCsv) {
+      if (state.categoryConfig.nameColumn != null) {
+        newMappings['categoryName'] = FieldMapping(
+          fieldKey: 'categoryName',
+          csvColumn: state.categoryConfig.nameColumn,
+        );
+      }
+      if (state.categoryConfig.idColumn != null) {
+        newMappings['categoryId'] = FieldMapping(
+          fieldKey: 'categoryId',
+          csvColumn: state.categoryConfig.idColumn,
+        );
+      }
+    }
+
+    // Apply account config
+    if (state.accountConfig.mode == ForeignKeyResolutionMode.mapFromCsv) {
+      if (state.accountConfig.nameColumn != null) {
+        newMappings['accountName'] = FieldMapping(
+          fieldKey: 'accountName',
+          csvColumn: state.accountConfig.nameColumn,
+        );
+      }
+      if (state.accountConfig.idColumn != null) {
+        newMappings['accountId'] = FieldMapping(
+          fieldKey: 'accountId',
+          csvColumn: state.accountConfig.idColumn,
+        );
+      }
+    }
+
+    return state.config!.copyWith(fieldMappings: newMappings);
   }
 
   /// Go back to column mapping from preview.
@@ -421,6 +568,24 @@ final selectedCsvColumnProvider = Provider<String?>((ref) {
 final connectionBadgesProvider = Provider<Map<String, int>>((ref) {
   final state = ref.watch(flexibleCsvImportProvider);
   return state.connectionBadges;
+});
+
+/// Provider for the currently expanded foreign key ('category' or 'account').
+final expandedForeignKeyProvider = Provider<String?>((ref) {
+  final state = ref.watch(flexibleCsvImportProvider);
+  return state.expandedForeignKey;
+});
+
+/// Provider for category FK config.
+final categoryConfigProvider = Provider<ForeignKeyConfig>((ref) {
+  final state = ref.watch(flexibleCsvImportProvider);
+  return state.categoryConfig;
+});
+
+/// Provider for account FK config.
+final accountConfigProvider = Provider<ForeignKeyConfig>((ref) {
+  final state = ref.watch(flexibleCsvImportProvider);
+  return state.accountConfig;
 });
 
 /// Provider for mapping progress (mapped count / total required).

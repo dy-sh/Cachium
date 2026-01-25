@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
@@ -17,8 +18,11 @@ class CsvColumnListItem extends StatelessWidget {
   /// Whether this column is currently selected.
   final bool isSelected;
 
-  /// The badge number if this column is mapped (null if unmapped).
+  /// The badge number if this column is mapped to a regular field (null if unmapped).
   final int? connectionBadge;
+
+  /// Whether this column is mapped to a foreign key field (Category/Account).
+  final bool isFkMapped;
 
   /// Callback when the item is tapped.
   final VoidCallback onTap;
@@ -32,14 +36,17 @@ class CsvColumnListItem extends StatelessWidget {
     required this.sampleValues,
     required this.isSelected,
     this.connectionBadge,
+    this.isFkMapped = false,
     required this.onTap,
     required this.intensity,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isMapped = connectionBadge != null;
-    final accentColor = _getBadgeColor(connectionBadge, intensity);
+    final isMapped = connectionBadge != null || isFkMapped;
+    final accentColor = isFkMapped
+        ? AppColors.getAccentColor(0, intensity)
+        : _getBadgeColor(connectionBadge, intensity);
 
     return GestureDetector(
       onTap: onTap,
@@ -95,11 +102,17 @@ class CsvColumnListItem extends StatelessWidget {
                 ],
               ),
             ),
-            // Badge
-            if (isMapped)
+            // Badge or FK indicator
+            if (connectionBadge != null)
               _ConnectionBadge(
                 number: connectionBadge!,
                 intensity: intensity,
+              )
+            else if (isFkMapped)
+              Icon(
+                LucideIcons.link,
+                size: 16,
+                color: accentColor,
               ),
           ],
         ),
