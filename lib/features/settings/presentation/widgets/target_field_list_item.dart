@@ -67,15 +67,13 @@ class TargetFieldListItem extends StatelessWidget {
         decoration: BoxDecoration(
           color: isMapped
               ? fieldColor.withValues(alpha: 0.08)
-              : canReceiveMapping
-                  ? fieldColor.withValues(alpha: 0.05)
-                  : AppColors.surface,
+              : AppColors.surface,
           borderRadius: AppRadius.card,
           border: Border.all(
             color: isMapped
                 ? fieldColor.withValues(alpha: 0.5)
                 : canReceiveMapping
-                    ? fieldColor.withValues(alpha: 0.3)
+                    ? AppColors.textTertiary
                     : AppColors.border,
             width: isMapped || canReceiveMapping ? 2 : 1,
           ),
@@ -132,7 +130,7 @@ class TargetFieldListItem extends StatelessWidget {
               Icon(
                 LucideIcons.plus,
                 size: 18,
-                color: fieldColor.withValues(alpha: 0.6),
+                color: AppColors.textTertiary,
               ),
           ],
         ),
