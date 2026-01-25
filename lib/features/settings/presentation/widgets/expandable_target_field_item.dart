@@ -169,7 +169,7 @@ class ExpandableForeignKeyItem extends ConsumerWidget {
               border: Border.all(
                 color: isConfigured
                     ? accentColor.withValues(alpha: isDimmed ? 0.2 : 0.4)
-                    : AppColors.border.withValues(alpha: 0.6),
+                    : AppColors.textTertiary.withValues(alpha: 0.5),
                 width: 1,
               ),
             ),
