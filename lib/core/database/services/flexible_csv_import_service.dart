@@ -226,8 +226,13 @@ class FlexibleCsvImportService {
           );
           if (categoryResult.id != null) {
             parsedValues['categoryId'] = categoryResult.id;
+          } else if (categoryResult.idToCreate != null) {
+            // Create with specific ID (from categoryId field)
+            categoriesToCreate.add('ID:${categoryResult.idToCreate}:${categoryResult.nameToCreate}');
+            parsedValues['categoryId'] = categoryResult.idToCreate;
           } else if (categoryResult.nameToCreate != null) {
-            categoriesToCreate.add(categoryResult.nameToCreate!);
+            // Create with generated ID (from categoryName field)
+            categoriesToCreate.add('NAME:${categoryResult.nameToCreate}');
             parsedValues['categoryId'] = 'CREATE:${categoryResult.nameToCreate}';
           } else {
             errors.add('No category specified');
@@ -245,8 +250,13 @@ class FlexibleCsvImportService {
           );
           if (accountResult.id != null) {
             parsedValues['accountId'] = accountResult.id;
+          } else if (accountResult.idToCreate != null) {
+            // Create with specific ID (from accountId field)
+            accountsToCreate.add('ID:${accountResult.idToCreate}:${accountResult.nameToCreate}');
+            parsedValues['accountId'] = accountResult.idToCreate;
           } else if (accountResult.nameToCreate != null) {
-            accountsToCreate.add(accountResult.nameToCreate!);
+            // Create with generated ID (from accountName field)
+            accountsToCreate.add('NAME:${accountResult.nameToCreate}');
             parsedValues['accountId'] = 'CREATE:${accountResult.nameToCreate}';
           } else {
             errors.add('No account specified');
@@ -296,7 +306,8 @@ class FlexibleCsvImportService {
   }
 
   /// Resolve category from row values (categoryId or categoryName).
-  ({String? id, String? nameToCreate}) _resolveCategoryFromRow(
+  /// Returns: id (existing or to use for creation), idToCreate (if we need to create with specific ID), nameToCreate (name for new entity)
+  ({String? id, String? idToCreate, String? nameToCreate}) _resolveCategoryFromRow(
     Map<String, dynamic> values,
     Map<String, Category> categoriesById,
     Map<String, Category> categoriesByName,
@@ -306,10 +317,10 @@ class FlexibleCsvImportService {
     if (categoryIdValue != null) {
       final id = categoryIdValue.toString();
       if (categoriesById.containsKey(id)) {
-        return (id: id, nameToCreate: null);
+        return (id: id, idToCreate: null, nameToCreate: null);
       }
-      // ID not found, treat as name to create
-      return (id: null, nameToCreate: id);
+      // ID not found - create with this specific ID (use ID as temp name, will be updated when categories are imported)
+      return (id: null, idToCreate: id, nameToCreate: 'Imported ($id)');
     }
 
     // Try categoryName
@@ -319,17 +330,18 @@ class FlexibleCsvImportService {
       final normalized = name.toLowerCase().trim();
       final existing = categoriesByName[normalized];
       if (existing != null) {
-        return (id: existing.id, nameToCreate: null);
+        return (id: existing.id, idToCreate: null, nameToCreate: null);
       }
-      // Name not found, will create
-      return (id: null, nameToCreate: name);
+      // Name not found, will create with generated ID
+      return (id: null, idToCreate: null, nameToCreate: name);
     }
 
-    return (id: null, nameToCreate: null);
+    return (id: null, idToCreate: null, nameToCreate: null);
   }
 
   /// Resolve account from row values (accountId or accountName).
-  ({String? id, String? nameToCreate}) _resolveAccountFromRow(
+  /// Returns: id (existing or to use for creation), idToCreate (if we need to create with specific ID), nameToCreate (name for new entity)
+  ({String? id, String? idToCreate, String? nameToCreate}) _resolveAccountFromRow(
     Map<String, dynamic> values,
     Map<String, Account> accountsById,
     Map<String, Account> accountsByName,
@@ -339,10 +351,10 @@ class FlexibleCsvImportService {
     if (accountIdValue != null) {
       final id = accountIdValue.toString();
       if (accountsById.containsKey(id)) {
-        return (id: id, nameToCreate: null);
+        return (id: id, idToCreate: null, nameToCreate: null);
       }
-      // ID not found, treat as name to create
-      return (id: null, nameToCreate: id);
+      // ID not found - create with this specific ID (use ID as temp name, will be updated when accounts are imported)
+      return (id: null, idToCreate: id, nameToCreate: 'Imported ($id)');
     }
 
     // Try accountName
@@ -352,13 +364,13 @@ class FlexibleCsvImportService {
       final normalized = name.toLowerCase().trim();
       final existing = accountsByName[normalized];
       if (existing != null) {
-        return (id: existing.id, nameToCreate: null);
+        return (id: existing.id, idToCreate: null, nameToCreate: null);
       }
-      // Name not found, will create
-      return (id: null, nameToCreate: name);
+      // Name not found, will create with generated ID
+      return (id: null, idToCreate: null, nameToCreate: name);
     }
 
-    return (id: null, nameToCreate: null);
+    return (id: null, idToCreate: null, nameToCreate: null);
   }
 
   /// Parse a string value to the appropriate Dart type.
@@ -501,10 +513,28 @@ class FlexibleCsvImportService {
     final errors = <String>[];
 
     // Create missing categories first
+    // Format: "ID:uuid:name" (create with specific ID) or "NAME:name" (create with generated ID)
     final newCategories = <String, String>{}; // name -> id
-    for (final name in categoriesToCreate) {
+    for (final entry in categoriesToCreate) {
       try {
-        final id = _uuid.v4();
+        String id;
+        String name;
+
+        if (entry.startsWith('ID:')) {
+          // Create with specific ID: "ID:uuid:name"
+          final parts = entry.substring(3).split(':');
+          id = parts[0];
+          name = parts.length > 1 ? parts.sublist(1).join(':') : id;
+        } else if (entry.startsWith('NAME:')) {
+          // Create with generated ID: "NAME:name"
+          id = _uuid.v4();
+          name = entry.substring(5);
+        } else {
+          // Legacy format: just name
+          id = _uuid.v4();
+          name = entry;
+        }
+
         final category = Category(
           id: id,
           name: name,
@@ -514,19 +544,37 @@ class FlexibleCsvImportService {
           isCustom: true,
           sortOrder: 0,
         );
-        await categoryRepository.createCategory(category);
+        await categoryRepository.upsertCategory(category);
         newCategories[name.toLowerCase()] = id;
         categoriesCreated++;
       } catch (e) {
-        errors.add('Failed to create category "$name": $e');
+        errors.add('Failed to create category "$entry": $e');
       }
     }
 
     // Create missing accounts
+    // Format: "ID:uuid:name" (create with specific ID) or "NAME:name" (create with generated ID)
     final newAccounts = <String, String>{}; // name -> id
-    for (final name in accountsToCreate) {
+    for (final entry in accountsToCreate) {
       try {
-        final id = _uuid.v4();
+        String id;
+        String name;
+
+        if (entry.startsWith('ID:')) {
+          // Create with specific ID: "ID:uuid:name"
+          final parts = entry.substring(3).split(':');
+          id = parts[0];
+          name = parts.length > 1 ? parts.sublist(1).join(':') : id;
+        } else if (entry.startsWith('NAME:')) {
+          // Create with generated ID: "NAME:name"
+          id = _uuid.v4();
+          name = entry.substring(5);
+        } else {
+          // Legacy format: just name
+          id = _uuid.v4();
+          name = entry;
+        }
+
         final account = Account(
           id: id,
           name: name,
@@ -535,11 +583,11 @@ class FlexibleCsvImportService {
           initialBalance: 0,
           createdAt: DateTime.now(),
         );
-        await accountRepository.createAccount(account);
+        await accountRepository.upsertAccount(account);
         newAccounts[name.toLowerCase()] = id;
         accountsCreated++;
       } catch (e) {
-        errors.add('Failed to create account "$name": $e');
+        errors.add('Failed to create account "$entry": $e');
       }
     }
 
