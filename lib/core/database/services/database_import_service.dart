@@ -62,8 +62,8 @@ class DatabaseImportService {
   /// Pick a SQLite database file and return its path.
   /// Returns FilePickResult with path, error, or cancelled state.
   Future<FilePickResult> pickSqliteFile() async {
-    // Use FileType.any because FileType.custom doesn't work reliably
-    // for .db files on iOS/macOS. We validate the file after selection.
+    // Use FileType.any because iOS/macOS doesn't properly support
+    // filtering for .db files. We validate the file after selection.
     final result = await FilePicker.platform.pickFiles(
       type: FileType.any,
       allowMultiple: false,
