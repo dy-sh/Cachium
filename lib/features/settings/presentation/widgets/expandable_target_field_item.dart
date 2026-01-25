@@ -13,9 +13,9 @@ import '../../data/models/field_mapping_options.dart';
 import '../providers/flexible_csv_import_providers.dart';
 import 'field_options_panel.dart';
 
-/// Color index for Category FK field (cyan - distinctly blue).
+/// Color index for Category FK field (cyan).
 const int categoryColorIndex = 1;
-/// Color index for Account FK field (orange - distinctly warm).
+/// Color index for Account FK field (orange).
 const int accountColorIndex = 15;
 
 /// Get the color for a foreign key type.
@@ -25,11 +25,13 @@ Color getForeignKeyColor(String foreignKey, ColorIntensity intensity) {
 }
 
 /// Get a distinct color for regular field badges.
-/// Uses colors that contrast with FK colors: green, red, yellow, purple, pink.
+/// Uses only PRIMARY colors from each family for maximum distinction.
+/// Indices: red(9), yellow(11), green(7), cornflower(3), purple(13), pink(17), royalBlue(4)
 Color getFieldBadgeColor(int badgeNumber, ColorIntensity intensity) {
-  // Skip blue (1-6) and orange (15-16) since those are used for FKs
-  // Use: green(7), red(9), yellow(11), purple(13), pink(17)
-  const distinctIndices = [7, 9, 11, 13, 17, 8, 10, 12, 14, 18];
+  // Only use the main/primary color from each distinct family:
+  // red, yellow, green, blue, purple, pink, royalBlue (darker blue)
+  // This ensures each color is from a completely different hue family
+  const distinctIndices = [9, 11, 7, 3, 13, 17, 4, 14, 12, 8];
   final index = distinctIndices[(badgeNumber - 1) % distinctIndices.length];
   return AppColors.getAccentColor(index, intensity);
 }
