@@ -96,7 +96,7 @@ class CsvColumnListItem extends StatelessWidget {
                     ? mappedColor.withValues(alpha: isDimmed ? 0.2 : 0.5)
                     : isAvailable
                         ? AppColors.textSecondary
-                        : AppColors.border,
+                        : AppColors.textTertiary.withValues(alpha: 0.5),
             width: 1,
           ),
         ),

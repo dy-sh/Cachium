@@ -42,7 +42,7 @@ class ForeignKeyOptionsPanel extends ConsumerWidget {
     final isConfigured = config.isValid;
     final borderColor = isConfigured
         ? accentColor.withValues(alpha: 0.4)
-        : AppColors.border;
+        : AppColors.textTertiary.withValues(alpha: 0.5);
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.sm),
@@ -176,7 +176,7 @@ class ForeignKeyOptionsPanel extends ConsumerWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: isSelected ? accentColor : AppColors.border,
+                color: isSelected ? AppColors.textPrimary : AppColors.textTertiary,
                 width: 1,
               ),
             ),
@@ -187,7 +187,7 @@ class ForeignKeyOptionsPanel extends ConsumerWidget {
                       height: 8,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: accentColor,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   )
@@ -198,7 +198,7 @@ class ForeignKeyOptionsPanel extends ConsumerWidget {
             label,
             style: AppTypography.bodySmall.copyWith(
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-              color: isSelected ? accentColor : AppColors.textPrimary,
+              color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
             ),
           ),
         ],
@@ -249,7 +249,7 @@ class _MappableSubField extends StatelessWidget {
                 ? accentColor.withValues(alpha: 0.5)
                 : isSelected
                     ? accentColor
-                    : AppColors.border,
+                    : AppColors.textTertiary.withValues(alpha: 0.5),
             width: 1,
           ),
         ),
