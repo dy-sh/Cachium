@@ -27,22 +27,6 @@ enum MissingFieldStrategy {
   const MissingFieldStrategy(this.displayName);
 }
 
-/// How to resolve foreign key references (category/account IDs in transactions).
-enum ForeignKeyMatchStrategy {
-  /// Value is expected to be a UUID, look up by ID. Creates if not found.
-  byId('Match by ID', 'CSV contains UUIDs. Creates new if not found.'),
-
-  /// Value is a name, look up by name (case-insensitive). Creates if not found.
-  byName('Match by Name', 'CSV contains names like "Food". Creates new if not found.'),
-
-  /// Use a pre-selected default entity for all rows.
-  useDefault('Use Default', 'Use a single category/account for all imported rows.');
-
-  final String displayName;
-  final String description;
-  const ForeignKeyMatchStrategy(this.displayName, this.description);
-}
-
 /// Type of data for a field.
 enum FieldType {
   string,
@@ -91,22 +75,14 @@ class FieldMapping {
   /// Strategy for handling missing values.
   final MissingFieldStrategy missingStrategy;
 
-  /// Strategy for resolving foreign keys.
-  final ForeignKeyMatchStrategy? fkStrategy;
-
   /// Default value to use (for useDefault strategy).
   final dynamic defaultValue;
-
-  /// Default entity ID for foreign key useDefault strategy.
-  final String? defaultEntityId;
 
   const FieldMapping({
     required this.fieldKey,
     this.csvColumn,
     this.missingStrategy = MissingFieldStrategy.skip,
-    this.fkStrategy,
     this.defaultValue,
-    this.defaultEntityId,
   });
 
   FieldMapping copyWith({
@@ -114,19 +90,13 @@ class FieldMapping {
     String? csvColumn,
     bool clearCsvColumn = false,
     MissingFieldStrategy? missingStrategy,
-    ForeignKeyMatchStrategy? fkStrategy,
     dynamic defaultValue,
-    String? defaultEntityId,
-    bool clearDefaultEntityId = false,
   }) {
     return FieldMapping(
       fieldKey: fieldKey ?? this.fieldKey,
       csvColumn: clearCsvColumn ? null : (csvColumn ?? this.csvColumn),
       missingStrategy: missingStrategy ?? this.missingStrategy,
-      fkStrategy: fkStrategy ?? this.fkStrategy,
       defaultValue: defaultValue ?? this.defaultValue,
-      defaultEntityId:
-          clearDefaultEntityId ? null : (defaultEntityId ?? this.defaultEntityId),
     );
   }
 }
@@ -340,21 +310,35 @@ class ImportFieldDefinitions {
     ),
     AppFieldDefinition(
       key: 'categoryId',
-      displayName: 'Category',
+      displayName: 'Category ID',
       type: FieldType.string,
-      isRequired: true,
       isForeignKey: true,
       foreignKeyEntity: 'category',
-      description: 'Category ID or name',
+      description: 'Category UUID (if you have IDs)',
+    ),
+    AppFieldDefinition(
+      key: 'categoryName',
+      displayName: 'Category Name',
+      type: FieldType.string,
+      isForeignKey: true,
+      foreignKeyEntity: 'category',
+      description: 'Category name for lookup/creation',
     ),
     AppFieldDefinition(
       key: 'accountId',
-      displayName: 'Account',
+      displayName: 'Account ID',
       type: FieldType.string,
-      isRequired: true,
       isForeignKey: true,
       foreignKeyEntity: 'account',
-      description: 'Account ID or name',
+      description: 'Account UUID (if you have IDs)',
+    ),
+    AppFieldDefinition(
+      key: 'accountName',
+      displayName: 'Account Name',
+      type: FieldType.string,
+      isForeignKey: true,
+      foreignKeyEntity: 'account',
+      description: 'Account name for lookup/creation',
     ),
     AppFieldDefinition(
       key: 'date',

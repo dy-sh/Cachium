@@ -18,8 +18,6 @@ class FieldMappingTile extends ConsumerWidget {
   final List<String> sampleValues;
   final ValueChanged<String?> onColumnChanged;
   final ValueChanged<MissingFieldStrategy>? onStrategyChanged;
-  final ValueChanged<ForeignKeyMatchStrategy>? onFkStrategyChanged;
-  final bool showFkOptions;
 
   const FieldMappingTile({
     super.key,
@@ -29,8 +27,6 @@ class FieldMappingTile extends ConsumerWidget {
     required this.sampleValues,
     required this.onColumnChanged,
     this.onStrategyChanged,
-    this.onFkStrategyChanged,
-    this.showFkOptions = true,
   });
 
   @override
@@ -45,7 +41,7 @@ class FieldMappingTile extends ConsumerWidget {
         color: AppColors.surface,
         borderRadius: AppRadius.card,
         border: Border.all(
-          color: isMapped ? accentColor.withOpacity(0.3) : AppColors.border,
+          color: isMapped ? accentColor.withValues(alpha: 0.3) : AppColors.border,
         ),
       ),
       child: Column(
@@ -66,33 +62,13 @@ class FieldMappingTile extends ConsumerWidget {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      if (field.isRequired) ...[
+                      if (field.isRequired && !field.isForeignKey) ...[
                         const SizedBox(width: 4),
                         Text(
                           '*',
                           style: AppTypography.bodyMedium.copyWith(
                             color: AppColors.expense,
                             fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                      if (field.isForeignKey) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.cyan.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            'FK',
-                            style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.cyan,
-                              fontSize: 10,
-                            ),
                           ),
                         ),
                       ],
@@ -148,7 +124,7 @@ class FieldMappingTile extends ConsumerWidget {
               padding: const EdgeInsets.only(
                 left: AppSpacing.md,
                 right: AppSpacing.md,
-                bottom: AppSpacing.sm,
+                bottom: AppSpacing.md,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,27 +163,6 @@ class FieldMappingTile extends ConsumerWidget {
               child: _buildIdStrategyChip(),
             ),
           ],
-
-          // FK strategy selector
-          if (showFkOptions && field.isForeignKey && isMapped && onFkStrategyChanged != null) ...[
-            Divider(color: AppColors.border, height: 1),
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Match by',
-                    style: AppTypography.labelSmall.copyWith(
-                      color: AppColors.textTertiary,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  _buildFkStrategySelector(intensity),
-                ],
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -218,7 +173,7 @@ class FieldMappingTile extends ConsumerWidget {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: AppColors.income.withOpacity(0.15),
+          color: AppColors.income.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -241,7 +196,7 @@ class FieldMappingTile extends ConsumerWidget {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: AppColors.cyan.withOpacity(0.15),
+          color: AppColors.cyan.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -264,7 +219,7 @@ class FieldMappingTile extends ConsumerWidget {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: AppColors.yellow.withOpacity(0.15),
+          color: AppColors.yellow.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
@@ -280,7 +235,7 @@ class FieldMappingTile extends ConsumerWidget {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: AppColors.textTertiary.withOpacity(0.15),
+          color: AppColors.textTertiary.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
@@ -295,7 +250,7 @@ class FieldMappingTile extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.expense.withOpacity(0.15),
+        color: AppColors.expense.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
@@ -353,9 +308,9 @@ class FieldMappingTile extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.cyan.withOpacity(0.1),
+        color: AppColors.cyan.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.cyan.withOpacity(0.3)),
+        border: Border.all(color: AppColors.cyan.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -372,75 +327,6 @@ class FieldMappingTile extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildFkStrategySelector(ColorIntensity intensity) {
-    final strategies = [
-      ForeignKeyMatchStrategy.byName,
-      ForeignKeyMatchStrategy.byId,
-      ForeignKeyMatchStrategy.useDefault,
-    ];
-
-    return Column(
-      children: strategies.map((strategy) {
-        final isSelected = mapping.fkStrategy == strategy;
-        return Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-          child: GestureDetector(
-            onTap: () => onFkStrategyChanged?.call(strategy),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppColors.getAccentColor(0, intensity).withOpacity(0.1)
-                    : AppColors.background,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: isSelected
-                      ? AppColors.getAccentColor(0, intensity)
-                      : AppColors.border,
-                  width: isSelected ? 2 : 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          strategy.displayName,
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: isSelected
-                                ? AppColors.getAccentColor(0, intensity)
-                                : AppColors.textPrimary,
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          strategy.description,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.textTertiary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (isSelected)
-                    Icon(
-                      LucideIcons.check,
-                      size: 18,
-                      color: AppColors.getAccentColor(0, intensity),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        );
-      }).toList(),
     );
   }
 }

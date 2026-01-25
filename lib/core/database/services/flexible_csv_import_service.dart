@@ -78,9 +78,6 @@ class FlexibleCsvImportService {
             : (field.defaultValue != null
                 ? MissingFieldStrategy.useDefault
                 : MissingFieldStrategy.skip),
-        fkStrategy: field.isForeignKey
-            ? ForeignKeyMatchStrategy.byName
-            : null,
         defaultValue: field.defaultValue,
       );
     }
@@ -116,9 +113,13 @@ class FlexibleCsvImportService {
       case 'amount':
         return ['value', 'sum', 'price', 'cost', 'total'];
       case 'categoryId':
-        return ['category', 'cat', 'category_name', 'cat_id'];
+        return ['category_id', 'cat_id'];
+      case 'categoryName':
+        return ['category', 'cat', 'category_name', 'cat_name'];
       case 'accountId':
-        return ['account', 'acc', 'account_name', 'acc_id'];
+        return ['account_id', 'acc_id'];
+      case 'accountName':
+        return ['account', 'acc', 'account_name', 'acc_name'];
       case 'date':
         return ['transaction_date', 'txn_date', 'datetime', 'timestamp'];
       case 'note':
@@ -149,6 +150,8 @@ class FlexibleCsvImportService {
     Map<String, Category> categoriesByName,
     Map<String, Account> accountsById,
     Map<String, Account> accountsByName,
+    bool useSameCategoryForAll,
+    bool useSameAccountForAll,
     String? defaultCategoryId,
     String? defaultAccountId,
   ) async {
@@ -182,7 +185,7 @@ class FlexibleCsvImportService {
 
         // Handle missing values
         if (rawValue == null || rawValue.toString().trim().isEmpty || rawValue.toString() == 'null') {
-          if (field.isRequired) {
+          if (field.isRequired && !field.isForeignKey) {
             if (field.isId && mapping.missingStrategy == MissingFieldStrategy.generateId) {
               parsedValues[field.key] = _uuid.v4();
             } else if (mapping.missingStrategy == MissingFieldStrategy.useDefault && field.defaultValue != null) {
@@ -204,43 +207,68 @@ class FlexibleCsvImportService {
             field.key,
           );
 
-          // Handle foreign key resolution
-          if (field.isForeignKey && parsed != null) {
-            final resolvedId = _resolveForeignKey(
-              parsed.toString(),
-              field.foreignKeyEntity!,
-              mapping.fkStrategy ?? ForeignKeyMatchStrategy.byName,
-              categoriesById,
-              categoriesByName,
-              accountsById,
-              accountsByName,
-              defaultCategoryId,
-              defaultAccountId,
-            );
-
-            if (resolvedId == null) {
-              // For byName and byId strategies, create if not found
-              if (mapping.fkStrategy == ForeignKeyMatchStrategy.byName ||
-                  mapping.fkStrategy == ForeignKeyMatchStrategy.byId) {
-                // Track for creation
-                if (field.foreignKeyEntity == 'category') {
-                  categoriesToCreate.add(parsed.toString());
-                } else if (field.foreignKeyEntity == 'account') {
-                  accountsToCreate.add(parsed.toString());
-                }
-                parsedValues[field.key] = 'CREATE:${parsed.toString()}';
-              } else {
-                // useDefault strategy but no default set
-                errors.add('No default ${field.displayName} selected');
-              }
-            } else {
-              parsedValues[field.key] = resolvedId;
-            }
-          } else {
-            parsedValues[field.key] = parsed;
-          }
+          parsedValues[field.key] = parsed;
         } catch (e) {
           errors.add('Invalid ${field.displayName}: $rawValue');
+        }
+      }
+
+      // Handle foreign key resolution for transactions
+      if (config.entityType == ImportEntityType.transaction) {
+        // Resolve category
+        if (useSameCategoryForAll && defaultCategoryId != null) {
+          parsedValues['categoryId'] = defaultCategoryId;
+        } else {
+          final categoryResult = _resolveCategoryFromRow(
+            parsedValues,
+            categoriesById,
+            categoriesByName,
+          );
+          if (categoryResult.id != null) {
+            parsedValues['categoryId'] = categoryResult.id;
+          } else if (categoryResult.nameToCreate != null) {
+            categoriesToCreate.add(categoryResult.nameToCreate!);
+            parsedValues['categoryId'] = 'CREATE:${categoryResult.nameToCreate}';
+          } else {
+            errors.add('No category specified');
+          }
+        }
+
+        // Resolve account
+        if (useSameAccountForAll && defaultAccountId != null) {
+          parsedValues['accountId'] = defaultAccountId;
+        } else {
+          final accountResult = _resolveAccountFromRow(
+            parsedValues,
+            accountsById,
+            accountsByName,
+          );
+          if (accountResult.id != null) {
+            parsedValues['accountId'] = accountResult.id;
+          } else if (accountResult.nameToCreate != null) {
+            accountsToCreate.add(accountResult.nameToCreate!);
+            parsedValues['accountId'] = 'CREATE:${accountResult.nameToCreate}';
+          } else {
+            errors.add('No account specified');
+          }
+        }
+      }
+
+      // Handle parentId for categories (FK resolution)
+      if (config.entityType == ImportEntityType.category && parsedValues['parentId'] != null) {
+        final parentValue = parsedValues['parentId'].toString();
+        // Try by ID first, then by name
+        if (categoriesById.containsKey(parentValue)) {
+          // Already an ID
+        } else {
+          final byName = categoriesByName[parentValue.toLowerCase()];
+          if (byName != null) {
+            parsedValues['parentId'] = byName.id;
+          } else {
+            // Will need to create
+            categoriesToCreate.add(parentValue);
+            parsedValues['parentId'] = 'CREATE:$parentValue';
+          }
         }
       }
 
@@ -265,6 +293,72 @@ class FlexibleCsvImportService {
       categoriesToCreate: categoriesToCreate.toList(),
       accountsToCreate: accountsToCreate.toList(),
     );
+  }
+
+  /// Resolve category from row values (categoryId or categoryName).
+  ({String? id, String? nameToCreate}) _resolveCategoryFromRow(
+    Map<String, dynamic> values,
+    Map<String, Category> categoriesById,
+    Map<String, Category> categoriesByName,
+  ) {
+    // Try categoryId first
+    final categoryIdValue = values['categoryId'];
+    if (categoryIdValue != null) {
+      final id = categoryIdValue.toString();
+      if (categoriesById.containsKey(id)) {
+        return (id: id, nameToCreate: null);
+      }
+      // ID not found, treat as name to create
+      return (id: null, nameToCreate: id);
+    }
+
+    // Try categoryName
+    final categoryNameValue = values['categoryName'];
+    if (categoryNameValue != null) {
+      final name = categoryNameValue.toString();
+      final normalized = name.toLowerCase().trim();
+      final existing = categoriesByName[normalized];
+      if (existing != null) {
+        return (id: existing.id, nameToCreate: null);
+      }
+      // Name not found, will create
+      return (id: null, nameToCreate: name);
+    }
+
+    return (id: null, nameToCreate: null);
+  }
+
+  /// Resolve account from row values (accountId or accountName).
+  ({String? id, String? nameToCreate}) _resolveAccountFromRow(
+    Map<String, dynamic> values,
+    Map<String, Account> accountsById,
+    Map<String, Account> accountsByName,
+  ) {
+    // Try accountId first
+    final accountIdValue = values['accountId'];
+    if (accountIdValue != null) {
+      final id = accountIdValue.toString();
+      if (accountsById.containsKey(id)) {
+        return (id: id, nameToCreate: null);
+      }
+      // ID not found, treat as name to create
+      return (id: null, nameToCreate: id);
+    }
+
+    // Try accountName
+    final accountNameValue = values['accountName'];
+    if (accountNameValue != null) {
+      final name = accountNameValue.toString();
+      final normalized = name.toLowerCase().trim();
+      final existing = accountsByName[normalized];
+      if (existing != null) {
+        return (id: existing.id, nameToCreate: null);
+      }
+      // Name not found, will create
+      return (id: null, nameToCreate: name);
+    }
+
+    return (id: null, nameToCreate: null);
   }
 
   /// Parse a string value to the appropriate Dart type.
@@ -389,46 +483,6 @@ class FlexibleCsvImportService {
       return TransactionType.expense;
     }
     throw FormatException('Unknown transaction type: $value');
-  }
-
-  /// Resolve a foreign key value to an entity ID.
-  String? _resolveForeignKey(
-    String value,
-    String entityType,
-    ForeignKeyMatchStrategy strategy,
-    Map<String, Category> categoriesById,
-    Map<String, Category> categoriesByName,
-    Map<String, Account> accountsById,
-    Map<String, Account> accountsByName,
-    String? defaultCategoryId,
-    String? defaultAccountId,
-  ) {
-    switch (strategy) {
-      case ForeignKeyMatchStrategy.byId:
-        // Value should be an ID, verify it exists
-        if (entityType == 'category') {
-          return categoriesById.containsKey(value) ? value : null;
-        } else {
-          return accountsById.containsKey(value) ? value : null;
-        }
-
-      case ForeignKeyMatchStrategy.byName:
-        // Value is a name, look up by name
-        final normalizedValue = value.toLowerCase().trim();
-        if (entityType == 'category') {
-          return categoriesByName[normalizedValue]?.id;
-        } else {
-          return accountsByName[normalizedValue]?.id;
-        }
-
-      case ForeignKeyMatchStrategy.useDefault:
-        // Return the default entity ID
-        if (entityType == 'category') {
-          return defaultCategoryId;
-        } else {
-          return defaultAccountId;
-        }
-    }
   }
 
   /// Import parsed data into the database.

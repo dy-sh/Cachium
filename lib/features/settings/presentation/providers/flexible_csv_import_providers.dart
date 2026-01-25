@@ -179,10 +179,7 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
     String? csvColumn,
     bool clearCsvColumn = false,
     MissingFieldStrategy? missingStrategy,
-    ForeignKeyMatchStrategy? fkStrategy,
     dynamic defaultValue,
-    String? defaultEntityId,
-    bool clearDefaultEntityId = false,
   }) {
     if (state.config == null) return;
 
@@ -193,10 +190,7 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
       csvColumn: csvColumn,
       clearCsvColumn: clearCsvColumn,
       missingStrategy: missingStrategy,
-      fkStrategy: fkStrategy,
       defaultValue: defaultValue,
-      defaultEntityId: defaultEntityId,
-      clearDefaultEntityId: clearDefaultEntityId,
     );
 
     final newMappings = Map<String, FieldMapping>.from(state.config!.fieldMappings);
@@ -208,7 +202,23 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
     );
   }
 
-  /// Set the default category for FK resolution.
+  /// Toggle "use same category for all" option.
+  void setUseSameCategoryForAll(bool value) {
+    state = state.copyWith(
+      useSameCategoryForAll: value,
+      clearDefaultCategoryId: !value,
+    );
+  }
+
+  /// Toggle "use same account for all" option.
+  void setUseSameAccountForAll(bool value) {
+    state = state.copyWith(
+      useSameAccountForAll: value,
+      clearDefaultAccountId: !value,
+    );
+  }
+
+  /// Set the default category for "same for all" option.
   void setDefaultCategory(String? categoryId) {
     state = state.copyWith(
       defaultCategoryId: categoryId,
@@ -216,7 +226,7 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
     );
   }
 
-  /// Set the default account for FK resolution.
+  /// Set the default account for "same for all" option.
   void setDefaultAccount(String? accountId) {
     state = state.copyWith(
       defaultAccountId: accountId,
@@ -237,6 +247,8 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
         state.existingCategoriesByName,
         state.existingAccountsById,
         state.existingAccountsByName,
+        state.useSameCategoryForAll,
+        state.useSameAccountForAll,
         state.defaultCategoryId,
         state.defaultAccountId,
       );

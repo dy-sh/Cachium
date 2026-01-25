@@ -10,16 +10,12 @@ class ImportPreset {
   /// Map of app field key -> CSV column name.
   final Map<String, String> columnMappings;
 
-  /// Map of FK field key -> strategy.
-  final Map<String, ForeignKeyMatchStrategy> fkStrategies;
-
   const ImportPreset({
     required this.id,
     required this.name,
     required this.description,
     required this.entityType,
     required this.columnMappings,
-    this.fkStrategies = const {},
   });
 
   /// Apply this preset to create field mappings for the given CSV headers.
@@ -50,7 +46,6 @@ class ImportPreset {
             : (field.defaultValue != null
                 ? MissingFieldStrategy.useDefault
                 : MissingFieldStrategy.skip),
-        fkStrategy: field.isForeignKey ? fkStrategies[field.key] : null,
         defaultValue: field.defaultValue,
       );
     }
@@ -77,14 +72,12 @@ class BuiltInPresets {
       'amount': 'amount',
       'type': 'type',
       'categoryId': 'category_id',
+      'categoryName': 'category_name',
       'accountId': 'account_id',
+      'accountName': 'account_name',
       'date': 'date_millis',
       'note': 'note',
       'createdAt': 'created_at_millis',
-    },
-    fkStrategies: {
-      'categoryId': ForeignKeyMatchStrategy.byId,
-      'accountId': ForeignKeyMatchStrategy.byId,
     },
   );
 
@@ -121,9 +114,6 @@ class BuiltInPresets {
       'isCustom': 'is_custom',
       'parentId': 'parent_id',
       'sortOrder': 'sort_order',
-    },
-    fkStrategies: {
-      'parentId': ForeignKeyMatchStrategy.byId,
     },
   );
 

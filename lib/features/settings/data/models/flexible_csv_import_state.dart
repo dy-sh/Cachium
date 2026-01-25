@@ -94,7 +94,11 @@ class FlexibleCsvImportState {
   final Map<String, Account> existingAccountsByName;
   final Map<String, Account> existingAccountsById;
 
-  /// Default entities for FK "useDefault" strategy.
+  /// Use the same category/account for all imported transactions.
+  final bool useSameCategoryForAll;
+  final bool useSameAccountForAll;
+
+  /// Selected entities when using "same for all" option.
   final String? defaultCategoryId;
   final String? defaultAccountId;
 
@@ -111,6 +115,8 @@ class FlexibleCsvImportState {
     this.existingCategoriesById = const {},
     this.existingAccountsByName = const {},
     this.existingAccountsById = const {},
+    this.useSameCategoryForAll = false,
+    this.useSameAccountForAll = false,
     this.defaultCategoryId,
     this.defaultAccountId,
   });
@@ -132,6 +138,8 @@ class FlexibleCsvImportState {
     Map<String, Category>? existingCategoriesById,
     Map<String, Account>? existingAccountsByName,
     Map<String, Account>? existingAccountsById,
+    bool? useSameCategoryForAll,
+    bool? useSameAccountForAll,
     String? defaultCategoryId,
     bool clearDefaultCategoryId = false,
     String? defaultAccountId,
@@ -156,6 +164,9 @@ class FlexibleCsvImportState {
       existingAccountsByName:
           existingAccountsByName ?? this.existingAccountsByName,
       existingAccountsById: existingAccountsById ?? this.existingAccountsById,
+      useSameCategoryForAll:
+          useSameCategoryForAll ?? this.useSameCategoryForAll,
+      useSameAccountForAll: useSameAccountForAll ?? this.useSameAccountForAll,
       defaultCategoryId: clearDefaultCategoryId
           ? null
           : (defaultCategoryId ?? this.defaultCategoryId),
@@ -172,9 +183,35 @@ class FlexibleCsvImportState {
     final fields = ImportFieldDefinitions.getFieldsForType(entityType!);
     final mappings = config!.fieldMappings;
 
-    // Check all required fields are mapped or have a valid strategy
+    // For transactions, check category/account are resolved
+    if (entityType == ImportEntityType.transaction) {
+      // Category: either "use same for all" with selection, or has name/id mapped
+      if (useSameCategoryForAll) {
+        if (defaultCategoryId == null) return false;
+      } else {
+        final categoryIdMapping = mappings['categoryId'];
+        final categoryNameMapping = mappings['categoryName'];
+        final hasCategoryMapping = (categoryIdMapping?.csvColumn != null) ||
+            (categoryNameMapping?.csvColumn != null);
+        if (!hasCategoryMapping) return false;
+      }
+
+      // Account: either "use same for all" with selection, or has name/id mapped
+      if (useSameAccountForAll) {
+        if (defaultAccountId == null) return false;
+      } else {
+        final accountIdMapping = mappings['accountId'];
+        final accountNameMapping = mappings['accountName'];
+        final hasAccountMapping = (accountIdMapping?.csvColumn != null) ||
+            (accountNameMapping?.csvColumn != null);
+        if (!hasAccountMapping) return false;
+      }
+    }
+
+    // Check other required fields are mapped or have a valid strategy
     for (final field in fields) {
       if (!field.isRequired) continue;
+      if (field.isForeignKey) continue; // Handled above for transactions
 
       final mapping = mappings[field.key];
       if (mapping == null) return false;
@@ -184,14 +221,9 @@ class FlexibleCsvImportState {
         if (field.isId && mapping.missingStrategy != MissingFieldStrategy.generateId) {
           return false;
         }
-        if (!field.isId && field.defaultValue == null && mapping.missingStrategy != MissingFieldStrategy.skip) {
+        if (!field.isId && field.defaultValue == null) {
           return false;
         }
-      }
-
-      // FK fields need a strategy
-      if (field.isForeignKey && mapping.csvColumn != null && mapping.fkStrategy == null) {
-        return false;
       }
     }
 
