@@ -39,6 +39,10 @@ class ForeignKeyOptionsPanel extends ConsumerWidget {
     // Check if this FK's sub-fields are selected
     final isNameSelected = selectedFieldKey == 'fk:$foreignKey:name';
     final isIdSelected = selectedFieldKey == 'fk:$foreignKey:id';
+    final isConfigured = config.isValid;
+    final borderColor = isConfigured
+        ? accentColor.withValues(alpha: 0.4)
+        : AppColors.border;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.sm),
@@ -46,9 +50,9 @@ class ForeignKeyOptionsPanel extends ConsumerWidget {
         color: AppColors.background,
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
         border: Border(
-          left: BorderSide(color: accentColor.withValues(alpha: 0.4), width: 2),
-          right: BorderSide(color: accentColor.withValues(alpha: 0.4), width: 2),
-          bottom: BorderSide(color: accentColor.withValues(alpha: 0.4), width: 2),
+          left: BorderSide(color: borderColor, width: 1),
+          right: BorderSide(color: borderColor, width: 1),
+          bottom: BorderSide(color: borderColor, width: 1),
         ),
       ),
       child: Column(
@@ -173,7 +177,7 @@ class ForeignKeyOptionsPanel extends ConsumerWidget {
               shape: BoxShape.circle,
               border: Border.all(
                 color: isSelected ? accentColor : AppColors.border,
-                width: isSelected ? 2 : 1,
+                width: 1,
               ),
             ),
             child: isSelected
@@ -246,7 +250,7 @@ class _MappableSubField extends StatelessWidget {
                 : isSelected
                     ? accentColor
                     : AppColors.border,
-            width: isMapped || isSelected ? 2 : 1,
+            width: 1,
           ),
         ),
         child: Row(

@@ -141,10 +141,8 @@ class ExpandableForeignKeyItem extends ConsumerWidget {
 
     final accentColor = getForeignKeyColor(foreignKey, intensity);
     final isConfigured = config.isValid;
-    // Dim configured items when selecting to highlight available options
-    final isDimmed = hasCsvColumnSelected && isConfigured && !isExpanded;
-    // Highlight available items when selecting
-    final isAvailable = hasCsvColumnSelected && !isConfigured && !isExpanded;
+    // Dim configured items when selecting another field
+    final isDimmed = hasCsvColumnSelected && !isExpanded;
 
     // Get summary text
     final summary = _getSummary(ref, config);
@@ -162,23 +160,17 @@ class ExpandableForeignKeyItem extends ConsumerWidget {
               vertical: AppSpacing.xs + 2,
             ),
             decoration: BoxDecoration(
-              color: isExpanded
-                  ? accentColor.withValues(alpha: 0.12)
-                  : isConfigured
-                      ? accentColor.withValues(alpha: isDimmed ? 0.03 : 0.08)
-                      : AppColors.surface,
+              color: isConfigured
+                  ? accentColor.withValues(alpha: isDimmed ? 0.03 : 0.08)
+                  : AppColors.surface,
               borderRadius: isExpanded
                   ? const BorderRadius.vertical(top: Radius.circular(12))
                   : AppRadius.card,
               border: Border.all(
-                color: isExpanded
-                    ? accentColor.withValues(alpha: 0.5)
-                    : isConfigured
-                        ? accentColor.withValues(alpha: isDimmed ? 0.2 : 0.4)
-                        : isAvailable
-                            ? AppColors.textPrimary
-                            : AppColors.border,
-                width: isExpanded || isConfigured || isAvailable ? 2 : 1,
+                color: isConfigured
+                    ? accentColor.withValues(alpha: isDimmed ? 0.2 : 0.4)
+                    : AppColors.border,
+                width: 1,
               ),
             ),
             child: Opacity(
@@ -189,11 +181,7 @@ class ExpandableForeignKeyItem extends ConsumerWidget {
                   Icon(
                     icon,
                     size: 18,
-                    color: isConfigured
-                        ? accentColor
-                        : isAvailable
-                            ? AppColors.textPrimary
-                            : AppColors.textSecondary,
+                    color: isConfigured ? accentColor : AppColors.textTertiary,
                   ),
                   const SizedBox(width: AppSpacing.xs),
                   // Name and summary
@@ -206,14 +194,12 @@ class ExpandableForeignKeyItem extends ConsumerWidget {
                             Text(
                               displayName,
                               style: AppTypography.bodyMedium.copyWith(
-                                fontWeight: isConfigured || isAvailable
+                                fontWeight: isConfigured
                                     ? FontWeight.w600
                                     : FontWeight.w500,
                                 color: isConfigured
                                     ? accentColor
-                                    : isAvailable
-                                        ? AppColors.textPrimary
-                                        : AppColors.textSecondary,
+                                    : AppColors.textSecondary,
                               ),
                             ),
                             // Required indicator
@@ -242,19 +228,14 @@ class ExpandableForeignKeyItem extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  // Expand/collapse icon or plus icon when available
-                  if (isAvailable)
-                    Icon(
-                      LucideIcons.plus,
-                      size: 18,
-                      color: AppColors.textPrimary,
-                    )
-                  else
-                    Icon(
-                      isExpanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
-                      size: 18,
-                      color: isExpanded ? accentColor : AppColors.textTertiary,
-                    ),
+                  // Expand/collapse icon
+                  Icon(
+                    isExpanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
+                    size: 18,
+                    color: isConfigured
+                        ? accentColor
+                        : AppColors.textTertiary,
+                  ),
                 ],
               ),
             ),

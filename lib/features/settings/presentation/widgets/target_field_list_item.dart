@@ -84,7 +84,7 @@ class TargetFieldListItem extends StatelessWidget {
                 : isMapped
                     ? fieldColor.withValues(alpha: isMappedDimmed ? 0.2 : 0.5)
                     : AppColors.border,
-            width: isSelected || isMapped ? 2 : 1,
+            width: 1,
           ),
         ),
         child: Opacity(

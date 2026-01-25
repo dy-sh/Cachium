@@ -95,9 +95,9 @@ class CsvColumnListItem extends StatelessWidget {
                 : isMapped
                     ? mappedColor.withValues(alpha: isDimmed ? 0.2 : 0.5)
                     : isAvailable
-                        ? AppColors.textPrimary
+                        ? AppColors.textSecondary
                         : AppColors.border,
-            width: isSelected || isMapped || isAvailable ? 2 : 1,
+            width: 1,
           ),
         ),
         child: Opacity(
@@ -113,9 +113,11 @@ class CsvColumnListItem extends StatelessWidget {
                       columnName,
                       style: AppTypography.bodyMedium.copyWith(
                         fontWeight: isMapped || isSelected || isAvailable ? FontWeight.w600 : FontWeight.w500,
-                        color: isMapped || isSelected || isAvailable
+                        color: isMapped || isSelected
                             ? AppColors.textPrimary
-                            : AppColors.textSecondary,
+                            : isAvailable
+                                ? AppColors.textSecondary
+                                : AppColors.textTertiary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -146,7 +148,7 @@ class CsvColumnListItem extends StatelessWidget {
                 Icon(
                   LucideIcons.plus,
                   size: 16,
-                  color: AppColors.textPrimary,
+                  color: AppColors.textSecondary,
                 ),
             ],
           ),
