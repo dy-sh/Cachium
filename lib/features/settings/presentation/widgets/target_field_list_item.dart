@@ -91,22 +91,6 @@ class TargetFieldListItem extends StatelessWidget {
           opacity: isDimmed || isMappedDimmed ? 0.4 : 1.0,
           child: Row(
             children: [
-              // Icon marker on the left (always visible)
-              if (!isSkipItem) ...[
-                Icon(
-                  fieldIcon,
-                  size: 16,
-                  color: isMapped || isSelected ? fieldColor : AppColors.textTertiary,
-                ),
-                const SizedBox(width: AppSpacing.xs),
-              ] else ...[
-                Icon(
-                  LucideIcons.skipForward,
-                  size: 16,
-                  color: AppColors.textTertiary,
-                ),
-                const SizedBox(width: AppSpacing.xs),
-              ],
               // Field name
               Expanded(
                 child: Row(
@@ -136,6 +120,22 @@ class TargetFieldListItem extends StatelessWidget {
                   ],
                 ),
               ),
+              // Icon marker on the right (always visible)
+              if (!isSkipItem) ...[
+                const SizedBox(width: AppSpacing.xs),
+                Icon(
+                  fieldIcon,
+                  size: 16,
+                  color: isMapped || isSelected ? fieldColor : AppColors.textTertiary,
+                ),
+              ] else ...[
+                const SizedBox(width: AppSpacing.xs),
+                Icon(
+                  LucideIcons.skipForward,
+                  size: 16,
+                  color: AppColors.textTertiary,
+                ),
+              ],
             ],
           ),
         ),

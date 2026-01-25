@@ -104,6 +104,22 @@ class CsvColumnListItem extends StatelessWidget {
           opacity: isDimmed ? 0.4 : 1.0,
           child: Row(
             children: [
+              // Icon on the left (when connected) or plus (when available)
+              if (isMapped && mappedIcon != null) ...[
+                Icon(
+                  mappedIcon,
+                  size: 16,
+                  color: mappedColor,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+              ] else if (isAvailable) ...[
+                Icon(
+                  LucideIcons.plus,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+              ],
               // Column name and samples
               Expanded(
                 child: Column(
@@ -137,19 +153,6 @@ class CsvColumnListItem extends StatelessWidget {
                   ],
                 ),
               ),
-              // Icon on the right (when connected) or plus (when available)
-              if (isMapped && mappedIcon != null)
-                Icon(
-                  mappedIcon,
-                  size: 16,
-                  color: mappedColor,
-                )
-              else if (isAvailable)
-                Icon(
-                  LucideIcons.plus,
-                  size: 16,
-                  color: AppColors.textSecondary,
-                ),
             ],
           ),
         ),
