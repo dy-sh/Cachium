@@ -115,6 +115,8 @@ bool _hasEncryptedBlob(Database db, String tableName) {
 
 **Import always re-encrypts** data into the current database's encrypted format, regardless of the source format.
 
+**Optional `is_deleted` column:** When importing plaintext CSV (without `encrypted_blob`), the `is_deleted` column is optional. If missing, records default to `isDeleted = false`. This allows seamless round-trip export/import of plaintext CSVs which skip deleted records.
+
 ### CSV Export Details
 
 CSV export creates 4 separate files:

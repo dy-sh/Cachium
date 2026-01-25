@@ -587,7 +587,9 @@ class DatabaseImportService {
         final date = int.parse(data['date'].toString());
         // Handle both snake_case and camelCase
         final lastUpdatedAt = int.parse((data['last_updated_at'] ?? data['lastUpdatedAt']).toString());
-        final isDeleted = (data['is_deleted'] ?? data['isDeleted']).toString() == '1';
+        // is_deleted is optional - defaults to false (plaintext CSV exports skip deleted records)
+        final isDeletedRaw = data['is_deleted'] ?? data['isDeleted'];
+        final isDeleted = isDeletedRaw != null && isDeletedRaw.toString() == '1';
 
         Uint8List encryptedBlob;
 
@@ -659,7 +661,9 @@ class DatabaseImportService {
         // Handle both snake_case and camelCase
         final createdAt = int.parse((data['created_at'] ?? data['createdAt']).toString());
         final lastUpdatedAt = int.parse((data['last_updated_at'] ?? data['lastUpdatedAt']).toString());
-        final isDeleted = (data['is_deleted'] ?? data['isDeleted']).toString() == '1';
+        // is_deleted is optional - defaults to false (plaintext CSV exports skip deleted records)
+        final isDeletedRaw = data['is_deleted'] ?? data['isDeleted'];
+        final isDeleted = isDeletedRaw != null && isDeletedRaw.toString() == '1';
 
         Uint8List encryptedBlob;
 
@@ -667,7 +671,7 @@ class DatabaseImportService {
           encryptedBlob = base64Decode((data['encrypted_blob'] ?? data['encryptedBlob']).toString());
         } else {
           // Plaintext format, need to encrypt using AccountData model
-          final customColorValue = (data['custom_color_value'] ?? data['customColorValue']).toString();
+          final customColorValue = (data['custom_color_value'] ?? data['customColorValue'])?.toString() ?? '';
           final customIconCodePoint = (data['custom_icon_code_point'] ?? data['customIconCodePoint']).toString();
           final initialBalanceStr = (data['initial_balance'] ?? data['initialBalance'])?.toString() ?? '0';
 
@@ -724,7 +728,9 @@ class DatabaseImportService {
         // Handle both snake_case and camelCase
         final sortOrder = int.parse((data['sort_order'] ?? data['sortOrder']).toString());
         final lastUpdatedAt = int.parse((data['last_updated_at'] ?? data['lastUpdatedAt']).toString());
-        final isDeleted = (data['is_deleted'] ?? data['isDeleted']).toString() == '1';
+        // is_deleted is optional - defaults to false (plaintext CSV exports skip deleted records)
+        final isDeletedRaw = data['is_deleted'] ?? data['isDeleted'];
+        final isDeleted = isDeletedRaw != null && isDeletedRaw.toString() == '1';
 
         Uint8List encryptedBlob;
 
@@ -732,8 +738,8 @@ class DatabaseImportService {
           encryptedBlob = base64Decode((data['encrypted_blob'] ?? data['encryptedBlob']).toString());
         } else {
           // Plaintext format, need to encrypt using CategoryData model
-          final iconFontPackage = (data['icon_font_package'] ?? data['iconFontPackage']).toString();
-          final parentId = (data['parent_id'] ?? data['parentId']).toString();
+          final iconFontPackage = (data['icon_font_package'] ?? data['iconFontPackage'])?.toString() ?? '';
+          final parentId = (data['parent_id'] ?? data['parentId'])?.toString() ?? '';
 
           final categoryData = CategoryData(
             id: id,
@@ -965,12 +971,11 @@ class DatabaseImportService {
       return null;
     }
 
-    // Plaintext format
+    // Plaintext format (is_deleted is optional - defaults to false when missing)
     final requiredPlaintext = [
       ('id', 'id'),
       ('date', 'date'),
       ('last_updated_at', 'lastUpdatedAt'),
-      ('is_deleted', 'isDeleted'),
       ('amount', 'amount'),
       ('category_id', 'categoryId'),
       ('account_id', 'accountId'),
@@ -1008,12 +1013,11 @@ class DatabaseImportService {
       return null;
     }
 
-    // Plaintext format
+    // Plaintext format (is_deleted is optional - defaults to false when missing)
     final requiredPlaintext = [
       ('id', 'id'),
       ('created_at', 'createdAt'),
       ('last_updated_at', 'lastUpdatedAt'),
-      ('is_deleted', 'isDeleted'),
       ('name', 'name'),
       ('type', 'type'),
       ('balance', 'balance'),
@@ -1049,12 +1053,11 @@ class DatabaseImportService {
       return null;
     }
 
-    // Plaintext format
+    // Plaintext format (is_deleted is optional - defaults to false when missing)
     final requiredPlaintext = [
       ('id', 'id'),
       ('sort_order', 'sortOrder'),
       ('last_updated_at', 'lastUpdatedAt'),
-      ('is_deleted', 'isDeleted'),
       ('name', 'name'),
       ('icon_code_point', 'iconCodePoint'),
       ('icon_font_family', 'iconFontFamily'),
@@ -1365,7 +1368,9 @@ class DatabaseImportService {
 
         final date = int.parse(data['date'].toString());
         final lastUpdatedAt = int.parse((data['last_updated_at'] ?? data['lastUpdatedAt']).toString());
-        final isDeleted = (data['is_deleted'] ?? data['isDeleted']).toString() == '1';
+        // is_deleted is optional - defaults to false (plaintext CSV exports skip deleted records)
+        final isDeletedRaw = data['is_deleted'] ?? data['isDeleted'];
+        final isDeleted = isDeletedRaw != null && isDeletedRaw.toString() == '1';
 
         Uint8List encryptedBlob;
 
@@ -1447,7 +1452,9 @@ class DatabaseImportService {
 
         final createdAt = int.parse((data['created_at'] ?? data['createdAt']).toString());
         final lastUpdatedAt = int.parse((data['last_updated_at'] ?? data['lastUpdatedAt']).toString());
-        final isDeleted = (data['is_deleted'] ?? data['isDeleted']).toString() == '1';
+        // is_deleted is optional - defaults to false (plaintext CSV exports skip deleted records)
+        final isDeletedRaw = data['is_deleted'] ?? data['isDeleted'];
+        final isDeleted = isDeletedRaw != null && isDeletedRaw.toString() == '1';
 
         Uint8List encryptedBlob;
 
@@ -1523,7 +1530,9 @@ class DatabaseImportService {
 
         final sortOrder = int.parse((data['sort_order'] ?? data['sortOrder']).toString());
         final lastUpdatedAt = int.parse((data['last_updated_at'] ?? data['lastUpdatedAt']).toString());
-        final isDeleted = (data['is_deleted'] ?? data['isDeleted']).toString() == '1';
+        // is_deleted is optional - defaults to false (plaintext CSV exports skip deleted records)
+        final isDeletedRaw = data['is_deleted'] ?? data['isDeleted'];
+        final isDeleted = isDeletedRaw != null && isDeletedRaw.toString() == '1';
 
         Uint8List encryptedBlob;
 
