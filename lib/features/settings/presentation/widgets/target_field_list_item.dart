@@ -83,7 +83,7 @@ class TargetFieldListItem extends StatelessWidget {
                 ? fieldColor
                 : isMapped
                     ? fieldColor.withValues(alpha: isMappedDimmed ? 0.2 : 0.5)
-                    : AppColors.border,
+                    : AppColors.border.withValues(alpha: 0.6),
             width: 1,
           ),
         ),

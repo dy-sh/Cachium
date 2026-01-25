@@ -169,7 +169,7 @@ class ExpandableForeignKeyItem extends ConsumerWidget {
               border: Border.all(
                 color: isConfigured
                     ? accentColor.withValues(alpha: isDimmed ? 0.2 : 0.4)
-                    : AppColors.border,
+                    : AppColors.border.withValues(alpha: 0.6),
                 width: 1,
               ),
             ),
@@ -177,11 +177,13 @@ class ExpandableForeignKeyItem extends ConsumerWidget {
               opacity: isDimmed ? 0.4 : 1.0,
               child: Row(
                 children: [
-                  // Icon
+                  // Expand/collapse icon on the left
                   Icon(
-                    icon,
+                    isExpanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
                     size: 18,
-                    color: isConfigured ? accentColor : AppColors.textTertiary,
+                    color: isConfigured
+                        ? accentColor
+                        : AppColors.textTertiary,
                   ),
                   const SizedBox(width: AppSpacing.xs),
                   // Name and summary
@@ -228,13 +230,12 @@ class ExpandableForeignKeyItem extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  // Expand/collapse icon
+                  // Icon on the right
+                  const SizedBox(width: AppSpacing.xs),
                   Icon(
-                    isExpanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
+                    icon,
                     size: 18,
-                    color: isConfigured
-                        ? accentColor
-                        : AppColors.textTertiary,
+                    color: isConfigured ? accentColor : AppColors.textTertiary,
                   ),
                 ],
               ),
