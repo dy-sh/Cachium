@@ -164,6 +164,69 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
     if (state.config == null) return;
 
     final newMappings = preset.applyToHeaders(state.config!.csvHeaders);
+    final csvHeaders = state.config!.csvHeaders;
+
+    // Also apply FK mappings to the FK configs for transactions
+    ForeignKeyConfig newCategoryConfig = state.categoryConfig;
+    ForeignKeyConfig newAccountConfig = state.accountConfig;
+
+    if (preset.entityType == ImportEntityType.transaction) {
+      // Check if preset has category mappings
+      final categoryIdCol = preset.columnMappings['categoryId'];
+      final categoryNameCol = preset.columnMappings['categoryName'];
+      if (categoryIdCol != null || categoryNameCol != null) {
+        String? matchedIdCol;
+        String? matchedNameCol;
+
+        for (final header in csvHeaders) {
+          final normalized = header.toLowerCase().replaceAll(RegExp(r'[_\s]'), '');
+          if (categoryIdCol != null &&
+              normalized == categoryIdCol.toLowerCase().replaceAll(RegExp(r'[_\s]'), '')) {
+            matchedIdCol = header;
+          }
+          if (categoryNameCol != null &&
+              normalized == categoryNameCol.toLowerCase().replaceAll(RegExp(r'[_\s]'), '')) {
+            matchedNameCol = header;
+          }
+        }
+
+        if (matchedIdCol != null || matchedNameCol != null) {
+          newCategoryConfig = ForeignKeyConfig(
+            mode: ForeignKeyResolutionMode.mapFromCsv,
+            idColumn: matchedIdCol,
+            nameColumn: matchedNameCol,
+          );
+        }
+      }
+
+      // Check if preset has account mappings
+      final accountIdCol = preset.columnMappings['accountId'];
+      final accountNameCol = preset.columnMappings['accountName'];
+      if (accountIdCol != null || accountNameCol != null) {
+        String? matchedIdCol;
+        String? matchedNameCol;
+
+        for (final header in csvHeaders) {
+          final normalized = header.toLowerCase().replaceAll(RegExp(r'[_\s]'), '');
+          if (accountIdCol != null &&
+              normalized == accountIdCol.toLowerCase().replaceAll(RegExp(r'[_\s]'), '')) {
+            matchedIdCol = header;
+          }
+          if (accountNameCol != null &&
+              normalized == accountNameCol.toLowerCase().replaceAll(RegExp(r'[_\s]'), '')) {
+            matchedNameCol = header;
+          }
+        }
+
+        if (matchedIdCol != null || matchedNameCol != null) {
+          newAccountConfig = ForeignKeyConfig(
+            mode: ForeignKeyResolutionMode.mapFromCsv,
+            idColumn: matchedIdCol,
+            nameColumn: matchedNameCol,
+          );
+        }
+      }
+    }
 
     state = state.copyWith(
       config: state.config!.copyWith(
@@ -171,6 +234,8 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
         presetName: preset.name,
       ),
       appliedPreset: preset,
+      categoryConfig: newCategoryConfig,
+      accountConfig: newAccountConfig,
     );
   }
 

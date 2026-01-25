@@ -72,12 +72,9 @@ class BuiltInPresets {
       'amount': 'amount',
       'type': 'type',
       'categoryId': 'category_id',
-      'categoryName': 'category_name',
       'accountId': 'account_id',
-      'accountName': 'account_name',
-      'date': 'date_millis',
+      'date': 'date',
       'note': 'note',
-      'createdAt': 'created_at_millis',
     },
   );
 
@@ -95,7 +92,7 @@ class BuiltInPresets {
       'initialBalance': 'initial_balance',
       'customColor': 'custom_color_value',
       'customIcon': 'custom_icon_code_point',
-      'createdAt': 'created_at_millis',
+      'createdAt': 'created_at',
     },
   );
 
