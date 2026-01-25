@@ -135,9 +135,9 @@ class ImportStateNotifier extends Notifier<AsyncValue<ImportResult?>> {
     return const AsyncValue.data(null);
   }
 
-  /// Pick a SQLite file and return its path.
-  /// Returns null if the user cancels the file picker.
-  Future<String?> pickSqliteFile() async {
+  /// Pick a SQLite file and return the result.
+  /// Returns FilePickResult with path, error, or cancelled state.
+  Future<FilePickResult> pickSqliteFile() async {
     final service = ref.read(databaseImportServiceProvider);
     return service.pickSqliteFile();
   }
@@ -191,9 +191,9 @@ class ImportStateNotifier extends Notifier<AsyncValue<ImportResult?>> {
     }
   }
 
-  /// Pick CSV files and return their paths.
-  /// Returns null if the user cancels the file picker.
-  Future<List<String>?> pickCsvFiles() async {
+  /// Pick CSV files and return the result.
+  /// Returns FilePickResult with paths, error, or cancelled state.
+  Future<FilePickResult> pickCsvFiles() async {
     final service = ref.read(databaseImportServiceProvider);
     return service.pickCsvFiles();
   }

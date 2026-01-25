@@ -259,9 +259,22 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
 
   Future<void> _handleImportSqlite(BuildContext context) async {
     // Step 1: Pick file first
-    final filePath = await ref.read(importStateProvider.notifier).pickSqliteFile();
+    final pickResult = await ref.read(importStateProvider.notifier).pickSqliteFile();
 
-    if (filePath == null || !context.mounted) return;
+    if (!context.mounted) return;
+
+    // Handle validation errors
+    if (pickResult.isError) {
+      context.showErrorNotification(pickResult.error!);
+      return;
+    }
+
+    // User cancelled
+    if (pickResult.isCancelled || pickResult.paths == null || pickResult.paths!.isEmpty) {
+      return;
+    }
+
+    final filePath = pickResult.paths!.first;
 
     // Step 2: Get metrics from both databases
     final currentMetrics = await ref.read(databaseMetricsProvider.future);
@@ -309,8 +322,22 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
 
   Future<void> _handleImportCsv(BuildContext context) async {
     // Step 1: Pick files
-    final paths = await ref.read(importStateProvider.notifier).pickCsvFiles();
-    if (paths == null || paths.isEmpty || !context.mounted) return;
+    final pickResult = await ref.read(importStateProvider.notifier).pickCsvFiles();
+
+    if (!context.mounted) return;
+
+    // Handle validation errors
+    if (pickResult.isError) {
+      context.showErrorNotification(pickResult.error!);
+      return;
+    }
+
+    // User cancelled
+    if (pickResult.isCancelled || pickResult.paths == null || pickResult.paths!.isEmpty) {
+      return;
+    }
+
+    final paths = pickResult.paths!;
 
     // Step 2: Generate preview
     final preview = await ref.read(importStateProvider.notifier).generateCsvPreview(paths);

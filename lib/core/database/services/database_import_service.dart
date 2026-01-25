@@ -14,6 +14,19 @@ import '../../../features/settings/data/models/database_metrics.dart';
 import '../app_database.dart';
 import 'encryption_service.dart';
 
+/// Result of a file pick operation with validation.
+class FilePickResult {
+  final List<String>? paths;
+  final String? error;
+
+  const FilePickResult.success(this.paths) : error = null;
+  const FilePickResult.error(this.error) : paths = null;
+
+  bool get isSuccess => paths != null && error == null;
+  bool get isError => error != null;
+  bool get isCancelled => paths == null && error == null;
+}
+
 /// Result of an import operation.
 class ImportResult {
   final int transactionsImported;
@@ -47,28 +60,78 @@ class DatabaseImportService {
   });
 
   /// Pick a SQLite database file and return its path.
-  /// Returns null if the user cancels the file picker.
-  Future<String?> pickSqliteFile() async {
+  /// Returns FilePickResult with path, error, or cancelled state.
+  Future<FilePickResult> pickSqliteFile() async {
+    // Use FileType.any because FileType.custom doesn't work reliably
+    // for .db files on iOS/macOS. We validate the file after selection.
     final result = await FilePicker.platform.pickFiles(
       type: FileType.any,
       allowMultiple: false,
     );
 
     if (result == null || result.files.isEmpty) {
-      return null;
+      return const FilePickResult.success(null); // Cancelled
     }
 
-    return result.files.first.path;
+    final path = result.files.first.path;
+    if (path == null) {
+      return const FilePickResult.error('Could not access selected file');
+    }
+
+    // Validate file extension
+    final extension = path.split('.').last.toLowerCase();
+    if (!['db', 'sqlite', 'sqlite3'].contains(extension)) {
+      return const FilePickResult.error('Invalid file type. Please select a .db, .sqlite, or .sqlite3 file');
+    }
+
+    // Validate it's a valid SQLite database
+    final validationError = _validateSqliteFile(path);
+    if (validationError != null) {
+      return FilePickResult.error(validationError);
+    }
+
+    return FilePickResult.success([path]);
+  }
+
+  /// Validates that a file is a valid SQLite database.
+  /// Returns an error message if invalid, null if valid.
+  String? _validateSqliteFile(String path) {
+    try {
+      final file = File(path);
+      if (!file.existsSync()) {
+        return 'File does not exist';
+      }
+
+      // Check file size (SQLite files should be at least 100 bytes for header)
+      if (file.lengthSync() < 100) {
+        return 'File is too small to be a valid SQLite database';
+      }
+
+      // Try to open as SQLite database
+      final db = sql.sqlite3.open(path, mode: sql.OpenMode.readOnly);
+      try {
+        // Try a simple query to verify it's a valid database
+        db.select('SELECT 1');
+        return null; // Valid
+      } finally {
+        db.dispose();
+      }
+    } on sql.SqliteException catch (e) {
+      return 'Invalid SQLite database: ${e.message}';
+    } catch (e) {
+      return 'Could not read file: $e';
+    }
   }
 
   /// Pick and import a SQLite database file.
+  /// Returns null if user cancels or validation fails.
   Future<ImportResult?> pickAndImportSqlite() async {
-    final path = await pickSqliteFile();
-    if (path == null) {
+    final result = await pickSqliteFile();
+    if (!result.isSuccess || result.paths == null || result.paths!.isEmpty) {
       return null;
     }
 
-    return importFromSqlite(path);
+    return importFromSqlite(result.paths!.first);
   }
 
   /// Clear all existing data and import from a SQLite database file.
@@ -778,8 +841,8 @@ class DatabaseImportService {
   // CSV Preview and Skip Duplicates methods
 
   /// Pick CSV files and return their paths.
-  /// Returns null if the user cancels the file picker.
-  Future<List<String>?> pickCsvFiles() async {
+  /// Returns FilePickResult with paths, error, or cancelled state.
+  Future<FilePickResult> pickCsvFiles() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['csv'],
@@ -787,7 +850,7 @@ class DatabaseImportService {
     );
 
     if (result == null || result.files.isEmpty) {
-      return null;
+      return const FilePickResult.success(null); // Cancelled
     }
 
     final paths = result.files
@@ -795,7 +858,235 @@ class DatabaseImportService {
         .map((f) => f.path!)
         .toList();
 
-    return paths.isEmpty ? null : paths;
+    if (paths.isEmpty) {
+      return const FilePickResult.error('Could not access selected files');
+    }
+
+    // Validate each file
+    for (final path in paths) {
+      // Validate file extension
+      final extension = path.split('.').last.toLowerCase();
+      if (extension != 'csv') {
+        final fileName = path.split('/').last;
+        return FilePickResult.error('Invalid file type: $fileName. Please select only .csv files');
+      }
+
+      // Validate it's a valid CSV file
+      final validationError = await _validateCsvFile(path);
+      if (validationError != null) {
+        final fileName = path.split('/').last;
+        return FilePickResult.error('Invalid CSV file "$fileName": $validationError');
+      }
+    }
+
+    return FilePickResult.success(paths);
+  }
+
+  /// Validates that a file is a valid CSV file with all required columns.
+  /// Returns an error message if invalid, null if valid.
+  Future<String?> _validateCsvFile(String path) async {
+    try {
+      final file = File(path);
+      if (!file.existsSync()) {
+        return 'File does not exist';
+      }
+
+      // Check file size (should have at least a header row)
+      if (file.lengthSync() == 0) {
+        return 'File is empty';
+      }
+
+      // Try to parse as CSV
+      final content = await file.readAsString();
+      final rows = const CsvToListConverter().convert(content);
+
+      if (rows.isEmpty) {
+        return 'No data found in file';
+      }
+
+      // Check if it has a header row with at least one column
+      if (rows.first.isEmpty) {
+        return 'No columns found in header row';
+      }
+
+      // Get headers (normalize to handle both snake_case and camelCase)
+      final headers = rows.first.map((e) => e.toString().toLowerCase()).toSet();
+
+      // Determine file type and validate required columns
+      final fileName = path.split('/').last.toLowerCase();
+
+      if (fileName.contains('transaction')) {
+        return _validateTransactionsCsv(headers);
+      } else if (fileName.contains('account')) {
+        return _validateAccountsCsv(headers);
+      } else if (fileName.contains('categor')) {
+        return _validateCategoriesCsv(headers);
+      } else if (fileName.contains('settings')) {
+        return _validateSettingsCsv(headers);
+      }
+
+      // If filename doesn't match, try to detect by columns
+      if (_validateTransactionsCsv(headers) == null) return null;
+      if (_validateAccountsCsv(headers) == null) return null;
+      if (_validateCategoriesCsv(headers) == null) return null;
+      if (_validateSettingsCsv(headers) == null) return null;
+
+      return 'Not a recognized Cachium export file. File name should contain "transaction", "account", "categor", or "settings"';
+    } on FormatException catch (e) {
+      return 'Invalid CSV format: ${e.message}';
+    } catch (e) {
+      return 'Could not read file';
+    }
+  }
+
+  /// Check if headers contain a column (handles snake_case and camelCase).
+  bool _hasColumn(Set<String> headers, String snakeCase, String camelCase) {
+    return headers.contains(snakeCase) || headers.contains(camelCase.toLowerCase());
+  }
+
+  /// Validates transactions CSV has all required columns.
+  String? _validateTransactionsCsv(Set<String> headers) {
+    // Check for encrypted format first
+    if (_hasColumn(headers, 'encrypted_blob', 'encryptedBlob')) {
+      final requiredEncrypted = [
+        ('id', 'id'),
+        ('date', 'date'),
+        ('last_updated_at', 'lastUpdatedAt'),
+        ('is_deleted', 'isDeleted'),
+        ('encrypted_blob', 'encryptedBlob'),
+      ];
+      final missing = requiredEncrypted
+          .where((col) => !_hasColumn(headers, col.$1, col.$2))
+          .map((col) => col.$1)
+          .toList();
+      if (missing.isNotEmpty) {
+        return 'Transactions file missing columns: ${missing.join(', ')}';
+      }
+      return null;
+    }
+
+    // Plaintext format
+    final requiredPlaintext = [
+      ('id', 'id'),
+      ('date', 'date'),
+      ('last_updated_at', 'lastUpdatedAt'),
+      ('is_deleted', 'isDeleted'),
+      ('amount', 'amount'),
+      ('category_id', 'categoryId'),
+      ('account_id', 'accountId'),
+      ('type', 'type'),
+      ('currency', 'currency'),
+    ];
+    final missing = requiredPlaintext
+        .where((col) => !_hasColumn(headers, col.$1, col.$2))
+        .map((col) => col.$1)
+        .toList();
+    if (missing.isNotEmpty) {
+      return 'Transactions file missing columns: ${missing.join(', ')}';
+    }
+    return null;
+  }
+
+  /// Validates accounts CSV has all required columns.
+  String? _validateAccountsCsv(Set<String> headers) {
+    // Check for encrypted format first
+    if (_hasColumn(headers, 'encrypted_blob', 'encryptedBlob')) {
+      final requiredEncrypted = [
+        ('id', 'id'),
+        ('created_at', 'createdAt'),
+        ('last_updated_at', 'lastUpdatedAt'),
+        ('is_deleted', 'isDeleted'),
+        ('encrypted_blob', 'encryptedBlob'),
+      ];
+      final missing = requiredEncrypted
+          .where((col) => !_hasColumn(headers, col.$1, col.$2))
+          .map((col) => col.$1)
+          .toList();
+      if (missing.isNotEmpty) {
+        return 'Accounts file missing columns: ${missing.join(', ')}';
+      }
+      return null;
+    }
+
+    // Plaintext format
+    final requiredPlaintext = [
+      ('id', 'id'),
+      ('created_at', 'createdAt'),
+      ('last_updated_at', 'lastUpdatedAt'),
+      ('is_deleted', 'isDeleted'),
+      ('name', 'name'),
+      ('type', 'type'),
+      ('balance', 'balance'),
+    ];
+    final missing = requiredPlaintext
+        .where((col) => !_hasColumn(headers, col.$1, col.$2))
+        .map((col) => col.$1)
+        .toList();
+    if (missing.isNotEmpty) {
+      return 'Accounts file missing columns: ${missing.join(', ')}';
+    }
+    return null;
+  }
+
+  /// Validates categories CSV has all required columns.
+  String? _validateCategoriesCsv(Set<String> headers) {
+    // Check for encrypted format first
+    if (_hasColumn(headers, 'encrypted_blob', 'encryptedBlob')) {
+      final requiredEncrypted = [
+        ('id', 'id'),
+        ('sort_order', 'sortOrder'),
+        ('last_updated_at', 'lastUpdatedAt'),
+        ('is_deleted', 'isDeleted'),
+        ('encrypted_blob', 'encryptedBlob'),
+      ];
+      final missing = requiredEncrypted
+          .where((col) => !_hasColumn(headers, col.$1, col.$2))
+          .map((col) => col.$1)
+          .toList();
+      if (missing.isNotEmpty) {
+        return 'Categories file missing columns: ${missing.join(', ')}';
+      }
+      return null;
+    }
+
+    // Plaintext format
+    final requiredPlaintext = [
+      ('id', 'id'),
+      ('sort_order', 'sortOrder'),
+      ('last_updated_at', 'lastUpdatedAt'),
+      ('is_deleted', 'isDeleted'),
+      ('name', 'name'),
+      ('icon_code_point', 'iconCodePoint'),
+      ('icon_font_family', 'iconFontFamily'),
+      ('color_index', 'colorIndex'),
+      ('type', 'type'),
+      ('is_custom', 'isCustom'),
+    ];
+    final missing = requiredPlaintext
+        .where((col) => !_hasColumn(headers, col.$1, col.$2))
+        .map((col) => col.$1)
+        .toList();
+    if (missing.isNotEmpty) {
+      return 'Categories file missing columns: ${missing.join(', ')}';
+    }
+    return null;
+  }
+
+  /// Validates settings CSV has all required columns.
+  String? _validateSettingsCsv(Set<String> headers) {
+    final required = [
+      ('id', 'id'),
+      ('last_updated_at', 'lastUpdatedAt'),
+      ('json_data', 'jsonData'),
+    ];
+    final missing = required
+        .where((col) => !_hasColumn(headers, col.$1, col.$2))
+        .map((col) => col.$1)
+        .toList();
+    if (missing.isNotEmpty) {
+      return 'Settings file missing columns: ${missing.join(', ')}';
+    }
+    return null;
   }
 
   /// Generate a preview of what will be imported from CSV files.
