@@ -8,6 +8,7 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/design_system.dart';
+import '../../../../navigation/app_router.dart';
 import '../providers/database_management_providers.dart';
 import '../providers/settings_provider.dart';
 import '../widgets/database_consistency_card.dart';
@@ -163,6 +164,13 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
                           onTap: importState.isLoading
                               ? null
                               : () => _handleImportCsv(context),
+                        ),
+                        SettingsTile(
+                          title: 'CSV Import (External)',
+                          description: 'Import from other apps',
+                          icon: LucideIcons.fileInput,
+                          iconColor: AppColors.getAccentColor(1, intensity),
+                          onTap: () => context.push(AppRoutes.csvImport),
                         ),
                       ],
                     ),

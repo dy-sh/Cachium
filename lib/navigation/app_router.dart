@@ -9,10 +9,13 @@ import '../features/settings/data/models/export_options.dart';
 import '../features/settings/presentation/screens/about_settings_screen.dart';
 import '../features/settings/presentation/screens/appearance_settings_screen.dart';
 import '../features/settings/presentation/screens/category_management_screen.dart';
+import '../features/settings/presentation/screens/column_mapping_screen.dart';
 import '../features/settings/presentation/screens/coming_soon_settings_screen.dart';
+import '../features/settings/presentation/screens/csv_import_screen.dart';
 import '../features/settings/presentation/screens/database_settings_screen.dart';
 import '../features/settings/presentation/screens/export_screen.dart';
 import '../features/settings/presentation/screens/formats_settings_screen.dart';
+import '../features/settings/presentation/screens/import_preview_screen.dart';
 import '../features/settings/presentation/screens/preferences_settings_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/transactions/presentation/screens/transaction_form_screen.dart';
@@ -33,6 +36,9 @@ class AppRoutes {
   static const databaseSettings = '/settings/database';
   static const exportSqlite = '/settings/database/export-sqlite';
   static const exportCsv = '/settings/database/export-csv';
+  static const csvImport = '/settings/csv-import';
+  static const csvImportMapping = '/settings/csv-import/mapping';
+  static const csvImportPreview = '/settings/csv-import/preview';
   static const transactionForm = '/transaction/new';
   static const transactionEdit = '/transaction/:id';
   static const accountForm = '/account/new';
@@ -188,6 +194,30 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
           state,
           const ExportScreen(format: ExportFormat.csv),
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.csvImport,
+        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
+          state,
+          const CsvImportScreen(),
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.csvImportMapping,
+        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
+          state,
+          const ColumnMappingScreen(),
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.csvImportPreview,
+        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
+          state,
+          const ImportPreviewScreen(),
           animationsEnabled: ref.read(formAnimationsEnabledProvider),
         ),
       ),
