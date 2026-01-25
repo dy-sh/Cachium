@@ -31,7 +31,6 @@ class TwoPanelMappingView extends ConsumerWidget {
     final intensity = ref.watch(colorIntensityProvider);
     final selectedColumn = state.selectedCsvColumn;
     final expandedForeignKey = state.expandedForeignKey;
-    final badges = state.connectionBadges;
 
     if (state.config == null) return const SizedBox.shrink();
 
@@ -43,6 +42,23 @@ class TwoPanelMappingView extends ConsumerWidget {
     final displayFields = isTransaction
         ? fields.where((f) => !f.isForeignKey).toList()
         : fields;
+
+    // Build field color indices (fixed based on position in list)
+    final fieldColorIndices = <String, int>{};
+    for (var i = 0; i < displayFields.length; i++) {
+      fieldColorIndices[displayFields[i].key] = i + 1; // 1-based for getFieldBadgeColor
+    }
+
+    // Build CSV column -> field info maps (for showing which field a column is mapped to)
+    final csvColumnColorIndex = <String, int>{};
+    final csvColumnFieldKey = <String, String>{};
+    for (final field in displayFields) {
+      final csvColumn = state.getCsvColumnForField(field.key);
+      if (csvColumn != null) {
+        csvColumnColorIndex[csvColumn] = fieldColorIndices[field.key]!;
+        csvColumnFieldKey[csvColumn] = field.key;
+      }
+    }
 
     // Build the list of items for the right panel
     final rightPanelItems = <Widget>[];
@@ -98,29 +114,37 @@ class TwoPanelMappingView extends ConsumerWidget {
                   itemBuilder: (context, index) {
                     final column = csvHeaders[index];
                     final sampleValues = config.getSampleValues(column);
-                    final badge = badges[column];
                     final isSelected = selectedColumn == column;
 
-                    // Check if this column is used in FK configs
+                    // Check which FK this column is mapped to (if any)
                     final categoryConfig = state.categoryConfig;
                     final accountConfig = state.accountConfig;
-                    final isUsedByFk = column == categoryConfig.nameColumn ||
-                        column == categoryConfig.idColumn ||
-                        column == accountConfig.nameColumn ||
-                        column == accountConfig.idColumn;
+                    String? fkMappedTo;
+                    if (column == categoryConfig.nameColumn ||
+                        column == categoryConfig.idColumn) {
+                      fkMappedTo = 'category';
+                    } else if (column == accountConfig.nameColumn ||
+                        column == accountConfig.idColumn) {
+                      fkMappedTo = 'account';
+                    }
+
+                    // Get the fixed color index and field key from the mapped field (if mapped to a regular field)
+                    final mappedColorIndex = csvColumnColorIndex[column];
+                    final mappedFieldKey = csvColumnFieldKey[column];
 
                     return CsvColumnListItem(
                       columnName: column,
                       sampleValues: sampleValues,
                       isSelected: isSelected,
-                      connectionBadge: isUsedByFk ? null : badge,
-                      isFkMapped: isUsedByFk,
+                      mappedFieldColorIndex: fkMappedTo != null ? null : mappedColorIndex,
+                      mappedFieldKey: fkMappedTo != null ? null : mappedFieldKey,
+                      fkMappedTo: fkMappedTo,
                       intensity: intensity,
                       onTap: () => _handleCsvColumnTap(
                         ref,
                         column,
-                        badge,
-                        isUsedByFk,
+                        mappedColorIndex,
+                        fkMappedTo,
                       ),
                     );
                   },
@@ -149,16 +173,17 @@ class TwoPanelMappingView extends ConsumerWidget {
                     // Regular fields
                     ...displayFields.map((field) {
                       final csvColumn = state.getCsvColumnForField(field.key);
-                      final badge = state.getBadgeForField(field.key);
                       final isMapped = csvColumn != null;
+                      final colorIndex = fieldColorIndices[field.key]!;
 
                       return Padding(
                         padding: const EdgeInsets.only(bottom: AppSpacing.xs),
                         child: TargetFieldListItem(
                           fieldName: field.displayName,
+                          fieldKey: field.key,
                           isRequired: field.isRequired,
                           isMapped: isMapped,
-                          connectionBadge: badge,
+                          colorIndex: colorIndex,
                           hasCsvColumnSelected: selectedColumn != null,
                           intensity: intensity,
                           onTap: () =>
@@ -193,25 +218,24 @@ class TwoPanelMappingView extends ConsumerWidget {
   void _handleCsvColumnTap(
     WidgetRef ref,
     String column,
-    int? badge,
-    bool isUsedByFk,
+    int? mappedColorIndex,
+    String? fkMappedTo,
   ) {
     final notifier = ref.read(flexibleCsvImportProvider.notifier);
     final selectedColumn = ref.read(flexibleCsvImportProvider).selectedCsvColumn;
 
-    if (isUsedByFk) {
-      // Clear from FK config - need to find which one
+    if (fkMappedTo != null) {
+      // Clear from FK config
       final state = ref.read(flexibleCsvImportProvider);
-      if (column == state.categoryConfig.nameColumn) {
-        notifier.clearForeignKeyField('category', 'name');
-      } else if (column == state.categoryConfig.idColumn) {
-        notifier.clearForeignKeyField('category', 'id');
-      } else if (column == state.accountConfig.nameColumn) {
-        notifier.clearForeignKeyField('account', 'name');
-      } else if (column == state.accountConfig.idColumn) {
-        notifier.clearForeignKeyField('account', 'id');
+      final config = fkMappedTo == 'category'
+          ? state.categoryConfig
+          : state.accountConfig;
+      if (column == config.nameColumn) {
+        notifier.clearForeignKeyField(fkMappedTo, 'name');
+      } else if (column == config.idColumn) {
+        notifier.clearForeignKeyField(fkMappedTo, 'id');
       }
-    } else if (badge != null) {
+    } else if (mappedColorIndex != null) {
       // Already mapped to a regular field - clear the connection
       notifier.clearConnectionForCsvColumn(column);
     } else if (selectedColumn == column) {

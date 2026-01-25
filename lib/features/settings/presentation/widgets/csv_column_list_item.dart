@@ -6,6 +6,8 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../data/models/app_settings.dart';
+import 'expandable_target_field_item.dart'
+    show getFieldBadgeColor, getForeignKeyColor, getFieldIconByKey;
 
 /// A list item representing a CSV column in the two-panel mapping view.
 class CsvColumnListItem extends StatelessWidget {
@@ -18,11 +20,14 @@ class CsvColumnListItem extends StatelessWidget {
   /// Whether this column is currently selected.
   final bool isSelected;
 
-  /// The badge number if this column is mapped to a regular field (null if unmapped).
-  final int? connectionBadge;
+  /// Fixed color index if mapped to a regular field (based on field position).
+  final int? mappedFieldColorIndex;
 
-  /// Whether this column is mapped to a foreign key field (Category/Account).
-  final bool isFkMapped;
+  /// The key of the field this column is mapped to (for icon selection).
+  final String? mappedFieldKey;
+
+  /// Which FK this column is mapped to ('category', 'account', or null).
+  final String? fkMappedTo;
 
   /// Callback when the item is tapped.
   final VoidCallback onTap;
@@ -35,18 +40,31 @@ class CsvColumnListItem extends StatelessWidget {
     required this.columnName,
     required this.sampleValues,
     required this.isSelected,
-    this.connectionBadge,
-    this.isFkMapped = false,
+    this.mappedFieldColorIndex,
+    this.mappedFieldKey,
+    this.fkMappedTo,
     required this.onTap,
     required this.intensity,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isMapped = connectionBadge != null || isFkMapped;
-    final accentColor = isFkMapped
-        ? AppColors.getAccentColor(0, intensity)
-        : _getBadgeColor(connectionBadge, intensity);
+    final isFkMapped = fkMappedTo != null;
+    final isFieldMapped = mappedFieldColorIndex != null;
+    final isMapped = isFieldMapped || isFkMapped;
+
+    final mappedColor = isFkMapped
+        ? getForeignKeyColor(fkMappedTo!, intensity)
+        : isFieldMapped
+            ? getFieldBadgeColor(mappedFieldColorIndex!, intensity)
+            : AppColors.getAccentColor(0, intensity);
+
+    // Get the icon for the mapped field (or FK icon)
+    final IconData? mappedIcon = isFieldMapped && mappedFieldKey != null
+        ? getFieldIconByKey(mappedFieldKey!)
+        : isFkMapped
+            ? (fkMappedTo == 'category' ? LucideIcons.tag : LucideIcons.wallet)
+            : null;
 
     return GestureDetector(
       onTap: onTap,
@@ -55,23 +73,23 @@ class CsvColumnListItem extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.sm),
         decoration: BoxDecoration(
           color: isSelected
-              ? accentColor.withValues(alpha: 0.15)
+              ? mappedColor.withValues(alpha: 0.15)
               : isMapped
-                  ? accentColor.withValues(alpha: 0.08)
+                  ? mappedColor.withValues(alpha: 0.08)
                   : AppColors.surface,
           borderRadius: AppRadius.card,
           border: Border.all(
             color: isSelected
-                ? accentColor
+                ? mappedColor
                 : isMapped
-                    ? accentColor.withValues(alpha: 0.4)
+                    ? mappedColor.withValues(alpha: 0.5)
                     : AppColors.border,
-            width: isSelected ? 2 : 1,
+            width: isSelected || isMapped ? 2 : 1,
           ),
         ),
         child: Row(
           children: [
-            // Column name and samples
+            // Column name and samples (dimmed when disconnected)
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,10 +97,8 @@ class CsvColumnListItem extends StatelessWidget {
                   Text(
                     columnName,
                     style: AppTypography.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: isSelected || isMapped
-                          ? accentColor
-                          : AppColors.textPrimary,
+                      fontWeight: isMapped ? FontWeight.w600 : FontWeight.w500,
+                      color: isMapped ? AppColors.textPrimary : AppColors.textSecondary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -102,17 +118,12 @@ class CsvColumnListItem extends StatelessWidget {
                 ],
               ),
             ),
-            // Badge or FK indicator
-            if (connectionBadge != null)
-              _ConnectionBadge(
-                number: connectionBadge!,
-                intensity: intensity,
-              )
-            else if (isFkMapped)
+            // Icon on the right (only when connected)
+            if (isMapped && mappedIcon != null)
               Icon(
-                LucideIcons.link,
+                mappedIcon,
                 size: 16,
-                color: accentColor,
+                color: mappedColor,
               ),
           ],
         ),
@@ -125,46 +136,5 @@ class CsvColumnListItem extends StatelessWidget {
         .take(2)
         .map((v) => v.length > 15 ? '${v.substring(0, 12)}...' : v)
         .join(', ');
-  }
-
-  static Color _getBadgeColor(int? badge, ColorIntensity intensity) {
-    if (badge == null) return AppColors.getAccentColor(0, intensity);
-    // Cycle through accent colors (skip index 0 which is white)
-    final colorIndex = ((badge - 1) % 6) + 1;
-    return AppColors.getAccentColor(colorIndex, intensity);
-  }
-}
-
-/// A numbered badge showing the connection number.
-class _ConnectionBadge extends StatelessWidget {
-  final int number;
-  final ColorIntensity intensity;
-
-  const _ConnectionBadge({
-    required this.number,
-    required this.intensity,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = CsvColumnListItem._getBadgeColor(number, intensity);
-
-    return Container(
-      width: 24,
-      height: 24,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: Text(
-          number.toString(),
-          style: AppTypography.labelSmall.copyWith(
-            color: AppColors.background,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-    );
   }
 }

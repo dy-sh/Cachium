@@ -6,11 +6,15 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../data/models/app_settings.dart';
+import 'expandable_target_field_item.dart' show getFieldBadgeColor, getFieldIconByKey;
 
 /// A list item representing a target app field in the two-panel mapping view.
 class TargetFieldListItem extends StatelessWidget {
   /// The display name of the field.
   final String fieldName;
+
+  /// The key of the field (used for icon selection).
+  final String fieldKey;
 
   /// Whether this field is required.
   final bool isRequired;
@@ -18,8 +22,8 @@ class TargetFieldListItem extends StatelessWidget {
   /// Whether this field is already mapped to a CSV column.
   final bool isMapped;
 
-  /// The badge number if mapped (null if unmapped).
-  final int? connectionBadge;
+  /// Fixed color index for this field (based on field position, doesn't change).
+  final int colorIndex;
 
   /// Whether a CSV column is currently selected (for visual feedback).
   final bool hasCsvColumnSelected;
@@ -36,9 +40,10 @@ class TargetFieldListItem extends StatelessWidget {
   const TargetFieldListItem({
     super.key,
     required this.fieldName,
+    this.fieldKey = '',
     this.isRequired = false,
     this.isMapped = false,
-    this.connectionBadge,
+    this.colorIndex = 0,
     this.hasCsvColumnSelected = false,
     required this.onTap,
     required this.intensity,
@@ -47,7 +52,8 @@ class TargetFieldListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accentColor = _getBadgeColor(connectionBadge, intensity);
+    final fieldColor = getFieldBadgeColor(colorIndex, intensity);
+    final fieldIcon = getFieldIconByKey(fieldKey);
     final canReceiveMapping = hasCsvColumnSelected && !isMapped;
 
     return GestureDetector(
@@ -60,34 +66,42 @@ class TargetFieldListItem extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: isMapped
-              ? accentColor.withValues(alpha: 0.08)
+              ? fieldColor.withValues(alpha: 0.08)
               : canReceiveMapping
-                  ? AppColors.getAccentColor(0, intensity).withValues(alpha: 0.05)
+                  ? fieldColor.withValues(alpha: 0.05)
                   : AppColors.surface,
           borderRadius: AppRadius.card,
           border: Border.all(
             color: isMapped
-                ? accentColor.withValues(alpha: 0.4)
+                ? fieldColor.withValues(alpha: 0.5)
                 : canReceiveMapping
-                    ? AppColors.getAccentColor(0, intensity).withValues(alpha: 0.3)
+                    ? fieldColor.withValues(alpha: 0.3)
                     : AppColors.border,
-            width: canReceiveMapping ? 2 : 1,
+            width: isMapped || canReceiveMapping ? 2 : 1,
           ),
         ),
         child: Row(
           children: [
-            // Field name
+            // Icon marker on the left (always visible)
+            if (!isSkipItem) ...[
+              Icon(
+                fieldIcon,
+                size: 16,
+                color: isMapped ? fieldColor : AppColors.textTertiary,
+              ),
+              const SizedBox(width: AppSpacing.xs),
+            ] else ...[
+              Icon(
+                LucideIcons.skipForward,
+                size: 16,
+                color: AppColors.textTertiary,
+              ),
+              const SizedBox(width: AppSpacing.xs),
+            ],
+            // Field name (dimmed when disconnected)
             Expanded(
               child: Row(
                 children: [
-                  if (isSkipItem) ...[
-                    Icon(
-                      LucideIcons.skipForward,
-                      size: 16,
-                      color: AppColors.textTertiary,
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                  ],
                   Text(
                     fieldName,
                     style: AppTypography.bodyMedium.copyWith(
@@ -95,8 +109,8 @@ class TargetFieldListItem extends StatelessWidget {
                       color: isSkipItem
                           ? AppColors.textTertiary
                           : isMapped
-                              ? accentColor
-                              : AppColors.textPrimary,
+                              ? AppColors.textPrimary
+                              : AppColors.textSecondary,
                     ),
                   ),
                   // Required indicator
@@ -113,60 +127,14 @@ class TargetFieldListItem extends StatelessWidget {
                 ],
               ),
             ),
-            // Badge or indicator
-            if (isMapped && connectionBadge != null)
-              _ConnectionBadge(
-                number: connectionBadge!,
-                intensity: intensity,
-              )
-            else if (canReceiveMapping)
+            // Plus icon when can receive mapping
+            if (canReceiveMapping)
               Icon(
                 LucideIcons.plus,
                 size: 18,
-                color: AppColors.getAccentColor(0, intensity).withValues(alpha: 0.6),
+                color: fieldColor.withValues(alpha: 0.6),
               ),
           ],
-        ),
-      ),
-    );
-  }
-
-  static Color _getBadgeColor(int? badge, ColorIntensity intensity) {
-    if (badge == null) return AppColors.getAccentColor(0, intensity);
-    // Cycle through accent colors (skip index 0 which is white)
-    final colorIndex = ((badge - 1) % 6) + 1;
-    return AppColors.getAccentColor(colorIndex, intensity);
-  }
-}
-
-/// A numbered badge showing the connection number.
-class _ConnectionBadge extends StatelessWidget {
-  final int number;
-  final ColorIntensity intensity;
-
-  const _ConnectionBadge({
-    required this.number,
-    required this.intensity,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = TargetFieldListItem._getBadgeColor(number, intensity);
-
-    return Container(
-      width: 24,
-      height: 24,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: Text(
-          number.toString(),
-          style: AppTypography.labelSmall.copyWith(
-            color: AppColors.background,
-            fontWeight: FontWeight.w700,
-          ),
         ),
       ),
     );

@@ -13,6 +13,7 @@ import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../data/models/app_settings.dart';
 import '../../data/models/field_mapping_options.dart';
 import '../providers/flexible_csv_import_providers.dart';
+import 'expandable_target_field_item.dart';
 
 /// Panel for configuring a foreign key (Category or Account).
 /// Shows mode selection and either column mapping or entity picker.
@@ -33,7 +34,7 @@ class ForeignKeyOptionsPanel extends ConsumerWidget {
         ? ref.watch(categoryConfigProvider)
         : ref.watch(accountConfigProvider);
     final selectedCsvColumn = ref.watch(selectedCsvColumnProvider);
-    final accentColor = AppColors.getAccentColor(0, intensity);
+    final accentColor = getForeignKeyColor(foreignKey, intensity);
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.sm),
@@ -73,6 +74,7 @@ class ForeignKeyOptionsPanel extends ConsumerWidget {
                     mappedColumn: config.nameColumn,
                     hasCsvColumnSelected: selectedCsvColumn != null,
                     intensity: intensity,
+                    foreignKey: foreignKey,
                     onTap: () {
                       if (config.nameColumn != null) {
                         notifier.clearForeignKeyField(foreignKey, 'name');
@@ -87,6 +89,7 @@ class ForeignKeyOptionsPanel extends ConsumerWidget {
                     mappedColumn: config.idColumn,
                     hasCsvColumnSelected: selectedCsvColumn != null,
                     intensity: intensity,
+                    foreignKey: foreignKey,
                     onTap: () {
                       if (config.idColumn != null) {
                         notifier.clearForeignKeyField(foreignKey, 'id');
@@ -198,6 +201,7 @@ class _MappableSubField extends StatelessWidget {
   final String? mappedColumn;
   final bool hasCsvColumnSelected;
   final ColorIntensity intensity;
+  final String foreignKey;
   final VoidCallback onTap;
 
   const _MappableSubField({
@@ -205,6 +209,7 @@ class _MappableSubField extends StatelessWidget {
     required this.mappedColumn,
     required this.hasCsvColumnSelected,
     required this.intensity,
+    required this.foreignKey,
     required this.onTap,
   });
 
@@ -212,7 +217,7 @@ class _MappableSubField extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMapped = mappedColumn != null;
     final canReceiveMapping = hasCsvColumnSelected && !isMapped;
-    final accentColor = AppColors.getAccentColor(1, intensity);
+    final accentColor = getForeignKeyColor(foreignKey, intensity);
 
     return GestureDetector(
       onTap: onTap,
@@ -354,7 +359,7 @@ class _EntityPickerButton extends ConsumerWidget {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    final accentColor = AppColors.getAccentColor(0, intensity);
+    final accentColor = getForeignKeyColor(foreignKey, intensity);
 
     return GestureDetector(
       onTap: onTap,

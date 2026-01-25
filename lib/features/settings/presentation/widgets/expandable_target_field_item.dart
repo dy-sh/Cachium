@@ -13,6 +13,104 @@ import '../../data/models/field_mapping_options.dart';
 import '../providers/flexible_csv_import_providers.dart';
 import 'field_options_panel.dart';
 
+/// Color index for Category FK field (cyan - distinctly blue).
+const int categoryColorIndex = 1;
+/// Color index for Account FK field (orange - distinctly warm).
+const int accountColorIndex = 15;
+
+/// Get the color for a foreign key type.
+Color getForeignKeyColor(String foreignKey, ColorIntensity intensity) {
+  final colorIndex = foreignKey == 'category' ? categoryColorIndex : accountColorIndex;
+  return AppColors.getAccentColor(colorIndex, intensity);
+}
+
+/// Get a distinct color for regular field badges.
+/// Uses colors that contrast with FK colors: green, red, yellow, purple, pink.
+Color getFieldBadgeColor(int badgeNumber, ColorIntensity intensity) {
+  // Skip blue (1-6) and orange (15-16) since those are used for FKs
+  // Use: green(7), red(9), yellow(11), purple(13), pink(17)
+  const distinctIndices = [7, 9, 11, 13, 17, 8, 10, 12, 14, 18];
+  final index = distinctIndices[(badgeNumber - 1) % distinctIndices.length];
+  return AppColors.getAccentColor(index, intensity);
+}
+
+/// Get a semantically meaningful icon for a field based on its key.
+/// Returns icons that represent the field's purpose.
+IconData getFieldIconByKey(String fieldKey) {
+  final key = fieldKey.toLowerCase();
+
+  // Date/time fields
+  if (key.contains('date') || key.contains('time') ||
+      key.contains('created') || key.contains('updated')) {
+    return LucideIcons.calendar;
+  }
+
+  // Amount/money fields
+  if (key.contains('amount') || key.contains('balance') ||
+      key.contains('value') || key.contains('price') || key.contains('cost')) {
+    return LucideIcons.coins;
+  }
+
+  // Description/text fields
+  if (key.contains('description') || key.contains('notes') ||
+      key.contains('memo') || key.contains('comment')) {
+    return LucideIcons.fileText;
+  }
+
+  // Name/title fields
+  if (key.contains('name') || key.contains('title') || key.contains('label')) {
+    return LucideIcons.type;
+  }
+
+  // Type fields
+  if (key.contains('type') || key.contains('kind')) {
+    return LucideIcons.listTree;
+  }
+
+  // Category fields
+  if (key.contains('category')) {
+    return LucideIcons.tag;
+  }
+
+  // Account fields
+  if (key.contains('account')) {
+    return LucideIcons.wallet;
+  }
+
+  // Icon fields
+  if (key.contains('icon') || key.contains('image')) {
+    return LucideIcons.image;
+  }
+
+  // Color fields
+  if (key.contains('color') || key.contains('colour')) {
+    return LucideIcons.palette;
+  }
+
+  // ID fields
+  if (key == 'id' || key.endsWith('id') || key.endsWith('_id')) {
+    return LucideIcons.hash;
+  }
+
+  // Parent/hierarchy fields
+  if (key.contains('parent')) {
+    return LucideIcons.gitBranch;
+  }
+
+  // Currency fields
+  if (key.contains('currency')) {
+    return LucideIcons.dollarSign;
+  }
+
+  // Status fields
+  if (key.contains('status') || key.contains('state')) {
+    return LucideIcons.toggleLeft;
+  }
+
+  // Default fallback
+  return LucideIcons.circleDot;
+}
+
 /// An expandable item for foreign key fields (Category/Account).
 /// Shows a summary when collapsed, expands to show mapping options.
 class ExpandableForeignKeyItem extends ConsumerWidget {
@@ -39,7 +137,7 @@ class ExpandableForeignKeyItem extends ConsumerWidget {
         ? ref.watch(categoryConfigProvider)
         : ref.watch(accountConfigProvider);
 
-    final accentColor = AppColors.getAccentColor(0, intensity);
+    final accentColor = getForeignKeyColor(foreignKey, intensity);
     final isConfigured = config.isValid;
 
     // Get summary text
