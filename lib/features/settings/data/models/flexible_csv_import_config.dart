@@ -29,20 +29,18 @@ enum MissingFieldStrategy {
 
 /// How to resolve foreign key references (category/account IDs in transactions).
 enum ForeignKeyMatchStrategy {
-  /// Value is expected to be a UUID, verify it exists.
-  byId('Match by ID'),
+  /// Value is expected to be a UUID, look up by ID. Creates if not found.
+  byId('Match by ID', 'CSV contains UUIDs. Creates new if not found.'),
 
-  /// Value is a name, look up by name (case-insensitive).
-  byName('Match by Name'),
+  /// Value is a name, look up by name (case-insensitive). Creates if not found.
+  byName('Match by Name', 'CSV contains names like "Food". Creates new if not found.'),
 
-  /// If not found, create a new entity with defaults.
-  createIfMissing('Create if Missing'),
-
-  /// Use a pre-selected default entity for all unmatched.
-  useDefault('Use Default');
+  /// Use a pre-selected default entity for all rows.
+  useDefault('Use Default', 'Use a single category/account for all imported rows.');
 
   final String displayName;
-  const ForeignKeyMatchStrategy(this.displayName);
+  final String description;
+  const ForeignKeyMatchStrategy(this.displayName, this.description);
 }
 
 /// Type of data for a field.

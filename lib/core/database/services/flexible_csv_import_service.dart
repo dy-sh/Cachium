@@ -219,7 +219,9 @@ class FlexibleCsvImportService {
             );
 
             if (resolvedId == null) {
-              if (mapping.fkStrategy == ForeignKeyMatchStrategy.createIfMissing) {
+              // For byName and byId strategies, create if not found
+              if (mapping.fkStrategy == ForeignKeyMatchStrategy.byName ||
+                  mapping.fkStrategy == ForeignKeyMatchStrategy.byId) {
                 // Track for creation
                 if (field.foreignKeyEntity == 'category') {
                   categoriesToCreate.add(parsed.toString());
@@ -228,7 +230,8 @@ class FlexibleCsvImportService {
                 }
                 parsedValues[field.key] = 'CREATE:${parsed.toString()}';
               } else {
-                errors.add('Could not resolve ${field.displayName}: $parsed');
+                // useDefault strategy but no default set
+                errors.add('No default ${field.displayName} selected');
               }
             } else {
               parsedValues[field.key] = resolvedId;
@@ -425,10 +428,6 @@ class FlexibleCsvImportService {
         } else {
           return defaultAccountId;
         }
-
-      case ForeignKeyMatchStrategy.createIfMissing:
-        // Will be handled in import step
-        return null;
     }
   }
 

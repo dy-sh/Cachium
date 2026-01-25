@@ -143,32 +143,20 @@ class ForeignKeyResolver extends ConsumerWidget {
     final strategies = [
       (
         ForeignKeyMatchStrategy.byName,
-        'Match by Name',
-        'Look up by name (case-insensitive)',
         LucideIcons.search,
       ),
       (
         ForeignKeyMatchStrategy.byId,
-        'Match by ID',
-        'CSV contains exact UUIDs',
         LucideIcons.hash,
       ),
       (
-        ForeignKeyMatchStrategy.createIfMissing,
-        'Create if Missing',
-        'Create new ${entityType}s for unknown values',
-        LucideIcons.plusCircle,
-      ),
-      (
         ForeignKeyMatchStrategy.useDefault,
-        'Use Default',
-        'Use a selected default for all rows',
         LucideIcons.anchor,
       ),
     ];
 
     return strategies.map((s) {
-      final (strategy, title, description, icon) = s;
+      final (strategy, icon) = s;
       final isSelected = currentStrategy == strategy;
 
       return Padding(
@@ -200,7 +188,7 @@ class ForeignKeyResolver extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        title,
+                        strategy.displayName,
                         style: AppTypography.bodyMedium.copyWith(
                           fontWeight:
                               isSelected ? FontWeight.w600 : FontWeight.normal,
@@ -210,7 +198,7 @@ class ForeignKeyResolver extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        description,
+                        strategy.description,
                         style: AppTypography.bodySmall.copyWith(
                           color: AppColors.textTertiary,
                         ),

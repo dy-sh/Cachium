@@ -160,29 +160,16 @@ class FieldMappingTile extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: sampleValues.map((v) {
-                      final displayValue = v.length > 30 ? '${v.substring(0, 27)}...' : v;
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.background,
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: Text(
-                          displayValue,
-                          style: AppTypography.bodySmall.copyWith(
-                            fontFamily: 'monospace',
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                  Text(
+                    sampleValues.map((v) {
+                      return v.length > 25 ? '${v.substring(0, 22)}...' : v;
+                    }).join(', '),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -392,37 +379,63 @@ class FieldMappingTile extends ConsumerWidget {
     final strategies = [
       ForeignKeyMatchStrategy.byName,
       ForeignKeyMatchStrategy.byId,
-      ForeignKeyMatchStrategy.createIfMissing,
       ForeignKeyMatchStrategy.useDefault,
     ];
 
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+    return Column(
       children: strategies.map((strategy) {
         final isSelected = mapping.fkStrategy == strategy;
-        return GestureDetector(
-          onTap: () => onFkStrategyChanged?.call(strategy),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? AppColors.getAccentColor(0, intensity).withOpacity(0.15)
-                  : AppColors.background,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
+        return Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+          child: GestureDetector(
+            onTap: () => onFkStrategyChanged?.call(strategy),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
                 color: isSelected
-                    ? AppColors.getAccentColor(0, intensity)
-                    : AppColors.border,
+                    ? AppColors.getAccentColor(0, intensity).withOpacity(0.1)
+                    : AppColors.background,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isSelected
+                      ? AppColors.getAccentColor(0, intensity)
+                      : AppColors.border,
+                  width: isSelected ? 2 : 1,
+                ),
               ),
-            ),
-            child: Text(
-              strategy.displayName,
-              style: AppTypography.bodySmall.copyWith(
-                color: isSelected
-                    ? AppColors.getAccentColor(0, intensity)
-                    : AppColors.textSecondary,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          strategy.displayName,
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: isSelected
+                                ? AppColors.getAccentColor(0, intensity)
+                                : AppColors.textPrimary,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          strategy.description,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (isSelected)
+                    Icon(
+                      LucideIcons.check,
+                      size: 18,
+                      color: AppColors.getAccentColor(0, intensity),
+                    ),
+                ],
               ),
             ),
           ),

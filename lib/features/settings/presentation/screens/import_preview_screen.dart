@@ -442,8 +442,8 @@ class ImportPreviewScreen extends ConsumerWidget {
                   label: 'Done',
                   onPressed: () {
                     ref.read(flexibleCsvImportProvider.notifier).reset();
-                    // Pop all the way back to database settings
-                    context.go(AppRoutes.databaseSettings);
+                    // Go back to main settings (preserves navigation hierarchy)
+                    context.go(AppRoutes.settings);
                   },
                 ),
               ),
