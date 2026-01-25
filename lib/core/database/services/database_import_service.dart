@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
@@ -10,6 +9,7 @@ import 'package:sqlite3/sqlite3.dart' as sql;
 import '../../../data/encryption/account_data.dart';
 import '../../../data/encryption/category_data.dart';
 import '../../../data/encryption/transaction_data.dart';
+import '../../../features/settings/data/models/csv_import_preview.dart';
 import '../../../features/settings/data/models/database_metrics.dart';
 import '../app_database.dart';
 import 'encryption_service.dart';
@@ -20,6 +20,7 @@ class ImportResult {
   final int accountsImported;
   final int categoriesImported;
   final int settingsImported;
+  final int transactionsSkipped;
   final List<String> errors;
 
   const ImportResult({
@@ -27,6 +28,7 @@ class ImportResult {
     required this.accountsImported,
     required this.categoriesImported,
     this.settingsImported = 0,
+    this.transactionsSkipped = 0,
     this.errors = const [],
   });
 
@@ -761,5 +763,313 @@ class DatabaseImportService {
     }
 
     return count;
+  }
+
+  // CSV Preview and Skip Duplicates methods
+
+  /// Pick CSV files and return their paths.
+  /// Returns null if the user cancels the file picker.
+  Future<List<String>?> pickCsvFiles() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['csv'],
+      allowMultiple: true,
+    );
+
+    if (result == null || result.files.isEmpty) {
+      return null;
+    }
+
+    final paths = result.files
+        .where((f) => f.path != null)
+        .map((f) => f.path!)
+        .toList();
+
+    return paths.isEmpty ? null : paths;
+  }
+
+  /// Generate a preview of what will be imported from CSV files.
+  /// This parses the files without actually importing anything.
+  Future<CsvImportPreview> generateCsvPreview(List<String> paths) async {
+    final fileStatuses = <CsvFileStatus>[];
+    int transactionCount = 0;
+    int accountCount = 0;
+    int categoryCount = 0;
+    int settingsCount = 0;
+
+    // Track IDs from CSV files
+    final csvTransactionIds = <String>{};
+    final csvCategoryIds = <String>{};
+    final csvAccountIds = <String>{};
+
+    // Track referenced IDs from transactions
+    final referencedCategoryIds = <String>{};
+    final referencedAccountIds = <String>{};
+
+    // Parse each file
+    for (final path in paths) {
+      final fileName = path.split('/').last.toLowerCase();
+      final content = await File(path).readAsString();
+      final rows = const CsvToListConverter().convert(content);
+
+      if (rows.isEmpty) continue;
+
+      final headers = rows.first.map((e) => e.toString()).toList();
+      final recordCount = rows.length - 1; // Exclude header row
+
+      if (fileName.contains('transaction')) {
+        transactionCount = recordCount;
+        fileStatuses.add(CsvFileStatus(
+          type: CsvFileType.transactions,
+          isSelected: true,
+          filePath: path,
+          recordCount: recordCount,
+        ));
+
+        // Extract transaction IDs and referenced category/account IDs
+        final idIndex = headers.indexOf('id');
+        final categoryIdIndex = _findColumnIndex(headers, ['category_id', 'categoryId']);
+        final accountIdIndex = _findColumnIndex(headers, ['account_id', 'accountId']);
+
+        for (int i = 1; i < rows.length; i++) {
+          final row = rows[i];
+          if (idIndex >= 0 && idIndex < row.length) {
+            csvTransactionIds.add(row[idIndex].toString());
+          }
+          if (categoryIdIndex >= 0 && categoryIdIndex < row.length) {
+            referencedCategoryIds.add(row[categoryIdIndex].toString());
+          }
+          if (accountIdIndex >= 0 && accountIdIndex < row.length) {
+            referencedAccountIds.add(row[accountIdIndex].toString());
+          }
+        }
+      } else if (fileName.contains('account')) {
+        accountCount = recordCount;
+        fileStatuses.add(CsvFileStatus(
+          type: CsvFileType.accounts,
+          isSelected: true,
+          filePath: path,
+          recordCount: recordCount,
+        ));
+
+        // Extract account IDs
+        final idIndex = headers.indexOf('id');
+        for (int i = 1; i < rows.length; i++) {
+          final row = rows[i];
+          if (idIndex >= 0 && idIndex < row.length) {
+            csvAccountIds.add(row[idIndex].toString());
+          }
+        }
+      } else if (fileName.contains('categor')) {
+        categoryCount = recordCount;
+        fileStatuses.add(CsvFileStatus(
+          type: CsvFileType.categories,
+          isSelected: true,
+          filePath: path,
+          recordCount: recordCount,
+        ));
+
+        // Extract category IDs
+        final idIndex = headers.indexOf('id');
+        for (int i = 1; i < rows.length; i++) {
+          final row = rows[i];
+          if (idIndex >= 0 && idIndex < row.length) {
+            csvCategoryIds.add(row[idIndex].toString());
+          }
+        }
+      } else if (fileName.contains('settings')) {
+        settingsCount = recordCount;
+        fileStatuses.add(CsvFileStatus(
+          type: CsvFileType.settings,
+          isSelected: true,
+          filePath: path,
+          recordCount: recordCount,
+        ));
+      }
+    }
+
+    // Add unselected file types
+    final selectedTypes = fileStatuses.map((s) => s.type).toSet();
+    for (final type in CsvFileType.values) {
+      if (!selectedTypes.contains(type)) {
+        fileStatuses.add(CsvFileStatus(
+          type: type,
+          isSelected: false,
+        ));
+      }
+    }
+
+    // Sort by enum order
+    fileStatuses.sort((a, b) => a.type.index.compareTo(b.type.index));
+
+    // Get existing IDs from database
+    final existingTransactionIds = await _getExistingTransactionIds();
+    final existingCategoryIds = await _getExistingCategoryIds();
+    final existingAccountIds = await _getExistingAccountIds();
+
+    // Calculate duplicates
+    final duplicateTransactionIds = csvTransactionIds.intersection(existingTransactionIds);
+    final duplicateCount = duplicateTransactionIds.length;
+    final newTransactionCount = transactionCount - duplicateCount;
+
+    // Calculate missing references (IDs referenced by transactions but not in CSV or DB)
+    final allAvailableCategoryIds = csvCategoryIds.union(existingCategoryIds);
+    final allAvailableAccountIds = csvAccountIds.union(existingAccountIds);
+
+    final missingCategoryIds = referencedCategoryIds.difference(allAvailableCategoryIds);
+    final missingAccountIds = referencedAccountIds.difference(allAvailableAccountIds);
+
+    return CsvImportPreview(
+      fileStatuses: fileStatuses,
+      transactionCount: transactionCount,
+      accountCount: accountCount,
+      categoryCount: categoryCount,
+      settingsCount: settingsCount,
+      duplicateTransactionCount: duplicateCount,
+      newTransactionCount: newTransactionCount,
+      missingCategoryIds: missingCategoryIds,
+      missingAccountIds: missingAccountIds,
+      filePaths: paths,
+    );
+  }
+
+  /// Import from CSV files, skipping duplicate transactions.
+  Future<ImportResult> importFromCsvWithSkipDuplicates(List<String> paths) async {
+    final errors = <String>[];
+
+    int transactionsImported = 0;
+    int transactionsSkipped = 0;
+    int accountsImported = 0;
+    int categoriesImported = 0;
+    int settingsImported = 0;
+
+    // Get existing transaction IDs to skip duplicates
+    final existingTransactionIds = await _getExistingTransactionIds();
+
+    for (final path in paths) {
+      final fileName = path.split('/').last.toLowerCase();
+
+      if (fileName.contains('transaction')) {
+        final result = await _importTransactionsFromCsvSkipDuplicates(
+          path,
+          existingTransactionIds,
+          errors,
+        );
+        transactionsImported += result.imported;
+        transactionsSkipped += result.skipped;
+      } else if (fileName.contains('account')) {
+        accountsImported += await _importAccountsFromCsv(path, errors);
+      } else if (fileName.contains('categor')) {
+        categoriesImported += await _importCategoriesFromCsv(path, errors);
+      } else if (fileName.contains('settings')) {
+        settingsImported += await _importSettingsFromCsv(path, errors);
+      }
+    }
+
+    return ImportResult(
+      transactionsImported: transactionsImported,
+      accountsImported: accountsImported,
+      categoriesImported: categoriesImported,
+      settingsImported: settingsImported,
+      transactionsSkipped: transactionsSkipped,
+      errors: errors,
+    );
+  }
+
+  // Helper methods for CSV preview
+
+  int _findColumnIndex(List<String> headers, List<String> possibleNames) {
+    for (final name in possibleNames) {
+      final index = headers.indexOf(name);
+      if (index >= 0) return index;
+    }
+    return -1;
+  }
+
+  Future<Set<String>> _getExistingTransactionIds() async {
+    final result = await database.select(database.transactions).get();
+    return result.map((t) => t.id).toSet();
+  }
+
+  Future<Set<String>> _getExistingCategoryIds() async {
+    final result = await database.select(database.categories).get();
+    return result.map((c) => c.id).toSet();
+  }
+
+  Future<Set<String>> _getExistingAccountIds() async {
+    final result = await database.select(database.accounts).get();
+    return result.map((a) => a.id).toSet();
+  }
+
+  Future<({int imported, int skipped})> _importTransactionsFromCsvSkipDuplicates(
+    String path,
+    Set<String> existingIds,
+    List<String> errors,
+  ) async {
+    int imported = 0;
+    int skipped = 0;
+    final content = await File(path).readAsString();
+    final rows = const CsvToListConverter().convert(content);
+
+    if (rows.isEmpty) return (imported: 0, skipped: 0);
+
+    final headers = rows.first.map((e) => e.toString()).toList();
+    final hasEncryptedBlob = headers.contains('encrypted_blob') || headers.contains('encryptedBlob');
+
+    for (int i = 1; i < rows.length; i++) {
+      try {
+        final row = rows[i];
+        final Map<String, dynamic> data = {};
+        for (int j = 0; j < headers.length; j++) {
+          data[headers[j]] = row[j];
+        }
+
+        final id = data['id'].toString();
+
+        // Skip if transaction already exists
+        if (existingIds.contains(id)) {
+          skipped++;
+          continue;
+        }
+
+        final date = int.parse(data['date'].toString());
+        final lastUpdatedAt = int.parse((data['last_updated_at'] ?? data['lastUpdatedAt']).toString());
+        final isDeleted = (data['is_deleted'] ?? data['isDeleted']).toString() == '1';
+
+        Uint8List encryptedBlob;
+
+        if (hasEncryptedBlob) {
+          encryptedBlob = base64Decode((data['encrypted_blob'] ?? data['encryptedBlob']).toString());
+        } else {
+          final transactionData = TransactionData(
+            id: id,
+            amount: double.parse(data['amount'].toString()),
+            categoryId: (data['category_id'] ?? data['categoryId']).toString(),
+            accountId: (data['account_id'] ?? data['accountId']).toString(),
+            type: data['type'].toString(),
+            note: data['note'].toString().isEmpty ? null : data['note'].toString(),
+            currency: data['currency']?.toString() ?? 'USD',
+            dateMillis: int.parse((data['date_millis'] ?? data['dateMillis'] ?? date).toString()),
+            createdAtMillis: int.parse((data['created_at_millis'] ?? data['createdAtMillis']).toString()),
+          );
+          encryptedBlob = await encryptionService.encryptJson(transactionData.toJson());
+        }
+
+        await database.into(database.transactions).insertOnConflictUpdate(
+          TransactionsCompanion(
+            id: Value(id),
+            date: Value(date),
+            lastUpdatedAt: Value(lastUpdatedAt),
+            isDeleted: Value(isDeleted),
+            encryptedBlob: Value(encryptedBlob),
+          ),
+        );
+        imported++;
+      } catch (e) {
+        errors.add('Failed to import transaction row $i: $e');
+      }
+    }
+
+    return (imported: imported, skipped: skipped);
   }
 }

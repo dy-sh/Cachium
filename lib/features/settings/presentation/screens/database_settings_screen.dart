@@ -12,6 +12,7 @@ import '../providers/database_management_providers.dart';
 import '../providers/settings_provider.dart';
 import '../widgets/database_consistency_card.dart';
 import '../widgets/database_metrics_card.dart';
+import '../widgets/import_csv_preview_dialog.dart';
 import '../widgets/import_database_dialog.dart';
 import '../widgets/reset_database_dialog.dart';
 import '../widgets/recalculate_preview_dialog.dart';
@@ -307,21 +308,41 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
   }
 
   Future<void> _handleImportCsv(BuildContext context) async {
-    await ref.read(importStateProvider.notifier).importFromCsv();
+    // Step 1: Pick files
+    final paths = await ref.read(importStateProvider.notifier).pickCsvFiles();
+    if (paths == null || paths.isEmpty || !context.mounted) return;
 
+    // Step 2: Generate preview
+    final preview = await ref.read(importStateProvider.notifier).generateCsvPreview(paths);
+    if (preview == null || !context.mounted) return;
+
+    // Step 3: Show preview dialog
+    final confirmed = await showImportCsvPreviewDialog(
+      context: context,
+      preview: preview,
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    // Step 4: Import with skip duplicates
+    await ref.read(importStateProvider.notifier).importFromCsvWithPreview(paths);
+
+    // Step 5: Show result notification (include skipped count)
     final importResult = ref.read(importStateProvider);
 
     if (context.mounted) {
       importResult.whenOrNull(
         data: (result) {
           if (result != null) {
+            final skippedText = result.transactionsSkipped > 0
+                ? ', ${result.transactionsSkipped} skipped'
+                : '';
             if (result.hasErrors) {
               context.showWarningNotification(
-                'Imported ${result.totalImported} records with errors',
+                'Imported ${result.totalImported} records$skippedText with errors',
               );
             } else {
               context.showSuccessNotification(
-                'Imported ${result.totalImported} records',
+                'Imported ${result.totalImported} records$skippedText',
               );
             }
           }

@@ -10,6 +10,7 @@ import '../../../../core/providers/provider_utils.dart';
 import '../../../../data/demo/demo_data.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../data/models/app_settings.dart';
+import '../../data/models/csv_import_preview.dart';
 import '../../data/models/database_consistency.dart';
 import '../../data/models/database_metrics.dart';
 import '../../data/models/export_options.dart';
@@ -181,6 +182,38 @@ class ImportStateNotifier extends Notifier<AsyncValue<ImportResult?>> {
     try {
       final service = ref.read(databaseImportServiceProvider);
       final result = await service.pickAndImportCsv();
+      state = AsyncValue.data(result);
+
+      // Invalidate all data providers to refresh UI
+      invalidateAllDataProviders(ref);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  /// Pick CSV files and return their paths.
+  /// Returns null if the user cancels the file picker.
+  Future<List<String>?> pickCsvFiles() async {
+    final service = ref.read(databaseImportServiceProvider);
+    return service.pickCsvFiles();
+  }
+
+  /// Generate a preview of what will be imported from CSV files.
+  Future<CsvImportPreview?> generateCsvPreview(List<String> paths) async {
+    try {
+      final service = ref.read(databaseImportServiceProvider);
+      return await service.generateCsvPreview(paths);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Import from CSV files, skipping duplicate transactions.
+  Future<void> importFromCsvWithPreview(List<String> paths) async {
+    state = const AsyncValue.loading();
+    try {
+      final service = ref.read(databaseImportServiceProvider);
+      final result = await service.importFromCsvWithSkipDuplicates(paths);
       state = AsyncValue.data(result);
 
       // Invalidate all data providers to refresh UI
