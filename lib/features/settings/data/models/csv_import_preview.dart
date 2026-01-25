@@ -43,7 +43,11 @@ class CsvImportPreview {
   final int categoryCount;
   final int settingsCount;
   final int duplicateTransactionCount;
+  final int duplicateAccountCount;
+  final int duplicateCategoryCount;
   final int newTransactionCount;
+  final int newAccountCount;
+  final int newCategoryCount;
   final Set<String> missingCategoryIds;
   final Set<String> missingAccountIds;
   final List<String> filePaths;
@@ -55,7 +59,11 @@ class CsvImportPreview {
     required this.categoryCount,
     required this.settingsCount,
     required this.duplicateTransactionCount,
+    required this.duplicateAccountCount,
+    required this.duplicateCategoryCount,
     required this.newTransactionCount,
+    required this.newAccountCount,
+    required this.newCategoryCount,
     required this.missingCategoryIds,
     required this.missingAccountIds,
     required this.filePaths,
@@ -63,10 +71,14 @@ class CsvImportPreview {
 
   /// Total records that will be imported (excluding duplicates).
   int get totalNewRecords =>
-      newTransactionCount + accountCount + categoryCount + settingsCount;
+      newTransactionCount + newAccountCount + newCategoryCount + settingsCount;
 
-  /// Whether there are any duplicate transactions.
-  bool get hasDuplicates => duplicateTransactionCount > 0;
+  /// Total duplicate count across all types.
+  int get totalDuplicateCount =>
+      duplicateTransactionCount + duplicateAccountCount + duplicateCategoryCount;
+
+  /// Whether there are any duplicates.
+  bool get hasDuplicates => totalDuplicateCount > 0;
 
   /// Whether there are any missing references.
   bool get hasMissingReferences =>

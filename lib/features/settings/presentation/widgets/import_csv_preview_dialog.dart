@@ -75,7 +75,7 @@ class ImportCsvPreviewDialog extends StatelessWidget {
               _buildWarningBox(
                 icon: LucideIcons.copy,
                 color: AppColors.yellow,
-                message: '${preview.duplicateTransactionCount} transaction${preview.duplicateTransactionCount == 1 ? '' : 's'} already exist and will be skipped',
+                message: _buildDuplicatesMessage(),
               ),
             ],
 
@@ -197,14 +197,24 @@ class ImportCsvPreviewDialog extends StatelessWidget {
           if (preview.transactionCount > 0)
             _buildMetricRow(
               'Transactions',
-              preview.hasDuplicates
+              preview.duplicateTransactionCount > 0
                   ? '${preview.newTransactionCount} new'
                   : preview.newTransactionCount.toString(),
             ),
           if (preview.accountCount > 0)
-            _buildMetricRow('Accounts', preview.accountCount.toString()),
+            _buildMetricRow(
+              'Accounts',
+              preview.duplicateAccountCount > 0
+                  ? '${preview.newAccountCount} new'
+                  : preview.newAccountCount.toString(),
+            ),
           if (preview.categoryCount > 0)
-            _buildMetricRow('Categories', preview.categoryCount.toString()),
+            _buildMetricRow(
+              'Categories',
+              preview.duplicateCategoryCount > 0
+                  ? '${preview.newCategoryCount} new'
+                  : preview.newCategoryCount.toString(),
+            ),
           if (preview.settingsCount > 0)
             _buildMetricRow('Settings', preview.settingsCount.toString()),
           if (preview.totalNewRecords == 0)
@@ -281,6 +291,23 @@ class ImportCsvPreviewDialog extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _buildDuplicatesMessage() {
+    final parts = <String>[];
+    if (preview.duplicateTransactionCount > 0) {
+      final count = preview.duplicateTransactionCount;
+      parts.add('$count transaction${count == 1 ? '' : 's'}');
+    }
+    if (preview.duplicateAccountCount > 0) {
+      final count = preview.duplicateAccountCount;
+      parts.add('$count account${count == 1 ? '' : 's'}');
+    }
+    if (preview.duplicateCategoryCount > 0) {
+      final count = preview.duplicateCategoryCount;
+      parts.add('$count ${count == 1 ? 'category' : 'categories'}');
+    }
+    return '${parts.join(', ')} already exist and will be skipped';
   }
 
   String _buildMissingReferencesMessage() {

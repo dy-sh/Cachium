@@ -917,10 +917,18 @@ class DatabaseImportService {
     final existingCategoryIds = await _getExistingCategoryIds();
     final existingAccountIds = await _getExistingAccountIds();
 
-    // Calculate duplicates
+    // Calculate duplicates for all types
     final duplicateTransactionIds = csvTransactionIds.intersection(existingTransactionIds);
-    final duplicateCount = duplicateTransactionIds.length;
-    final newTransactionCount = transactionCount - duplicateCount;
+    final duplicateTransactionCount = duplicateTransactionIds.length;
+    final newTransactionCount = transactionCount - duplicateTransactionCount;
+
+    final duplicateAccountIds = csvAccountIds.intersection(existingAccountIds);
+    final duplicateAccountCount = duplicateAccountIds.length;
+    final newAccountCount = accountCount - duplicateAccountCount;
+
+    final duplicateCategoryIds = csvCategoryIds.intersection(existingCategoryIds);
+    final duplicateCategoryCount = duplicateCategoryIds.length;
+    final newCategoryCount = categoryCount - duplicateCategoryCount;
 
     // Calculate missing references (IDs referenced by transactions but not in CSV or DB)
     final allAvailableCategoryIds = csvCategoryIds.union(existingCategoryIds);
@@ -935,26 +943,34 @@ class DatabaseImportService {
       accountCount: accountCount,
       categoryCount: categoryCount,
       settingsCount: settingsCount,
-      duplicateTransactionCount: duplicateCount,
+      duplicateTransactionCount: duplicateTransactionCount,
+      duplicateAccountCount: duplicateAccountCount,
+      duplicateCategoryCount: duplicateCategoryCount,
       newTransactionCount: newTransactionCount,
+      newAccountCount: newAccountCount,
+      newCategoryCount: newCategoryCount,
       missingCategoryIds: missingCategoryIds,
       missingAccountIds: missingAccountIds,
       filePaths: paths,
     );
   }
 
-  /// Import from CSV files, skipping duplicate transactions.
+  /// Import from CSV files, skipping duplicates.
   Future<ImportResult> importFromCsvWithSkipDuplicates(List<String> paths) async {
     final errors = <String>[];
 
     int transactionsImported = 0;
     int transactionsSkipped = 0;
     int accountsImported = 0;
+    int accountsSkipped = 0;
     int categoriesImported = 0;
+    int categoriesSkipped = 0;
     int settingsImported = 0;
 
-    // Get existing transaction IDs to skip duplicates
+    // Get existing IDs to skip duplicates
     final existingTransactionIds = await _getExistingTransactionIds();
+    final existingAccountIds = await _getExistingAccountIds();
+    final existingCategoryIds = await _getExistingCategoryIds();
 
     for (final path in paths) {
       final fileName = path.split('/').last.toLowerCase();
@@ -968,20 +984,34 @@ class DatabaseImportService {
         transactionsImported += result.imported;
         transactionsSkipped += result.skipped;
       } else if (fileName.contains('account')) {
-        accountsImported += await _importAccountsFromCsv(path, errors);
+        final result = await _importAccountsFromCsvSkipDuplicates(
+          path,
+          existingAccountIds,
+          errors,
+        );
+        accountsImported += result.imported;
+        accountsSkipped += result.skipped;
       } else if (fileName.contains('categor')) {
-        categoriesImported += await _importCategoriesFromCsv(path, errors);
+        final result = await _importCategoriesFromCsvSkipDuplicates(
+          path,
+          existingCategoryIds,
+          errors,
+        );
+        categoriesImported += result.imported;
+        categoriesSkipped += result.skipped;
       } else if (fileName.contains('settings')) {
         settingsImported += await _importSettingsFromCsv(path, errors);
       }
     }
+
+    final totalSkipped = transactionsSkipped + accountsSkipped + categoriesSkipped;
 
     return ImportResult(
       transactionsImported: transactionsImported,
       accountsImported: accountsImported,
       categoriesImported: categoriesImported,
       settingsImported: settingsImported,
-      transactionsSkipped: transactionsSkipped,
+      transactionsSkipped: totalSkipped,
       errors: errors,
     );
   }
@@ -1087,6 +1117,158 @@ class DatabaseImportService {
         imported++;
       } catch (e) {
         errors.add('Failed to import transaction row $i: $e');
+      }
+    }
+
+    return (imported: imported, skipped: skipped);
+  }
+
+  Future<({int imported, int skipped})> _importAccountsFromCsvSkipDuplicates(
+    String path,
+    Set<String> existingIds,
+    List<String> errors,
+  ) async {
+    int imported = 0;
+    int skipped = 0;
+    final content = await File(path).readAsString();
+    final rows = const CsvToListConverter().convert(content);
+
+    if (rows.isEmpty) return (imported: 0, skipped: 0);
+
+    final headers = rows.first.map((e) => e.toString()).toList();
+    final hasEncryptedBlob = headers.contains('encrypted_blob') || headers.contains('encryptedBlob');
+
+    for (int i = 1; i < rows.length; i++) {
+      try {
+        final row = rows[i];
+        final Map<String, dynamic> data = {};
+        for (int j = 0; j < headers.length; j++) {
+          data[headers[j]] = row[j];
+        }
+
+        final id = data['id'].toString();
+
+        // Skip if account already exists
+        if (existingIds.contains(id)) {
+          skipped++;
+          continue;
+        }
+
+        final createdAt = int.parse((data['created_at'] ?? data['createdAt']).toString());
+        final lastUpdatedAt = int.parse((data['last_updated_at'] ?? data['lastUpdatedAt']).toString());
+        final isDeleted = (data['is_deleted'] ?? data['isDeleted']).toString() == '1';
+
+        Uint8List encryptedBlob;
+
+        if (hasEncryptedBlob) {
+          encryptedBlob = base64Decode((data['encrypted_blob'] ?? data['encryptedBlob']).toString());
+        } else {
+          final customColorValue = (data['custom_color_value'] ?? data['customColorValue'])?.toString() ?? '';
+          final customIconCodePoint = (data['custom_icon_code_point'] ?? data['customIconCodePoint'])?.toString() ?? '';
+          final initialBalanceStr = (data['initial_balance'] ?? data['initialBalance'])?.toString() ?? '0';
+          final createdAtMillisRaw = data['created_at_millis'] ?? data['createdAtMillis'];
+
+          final accountData = AccountData(
+            id: id,
+            name: data['name'].toString(),
+            type: data['type'].toString(),
+            balance: double.parse(data['balance'].toString()),
+            initialBalance: initialBalanceStr.isEmpty ? 0.0 : double.parse(initialBalanceStr),
+            customColorValue: customColorValue.isEmpty ? null : int.parse(customColorValue),
+            customIconCodePoint: customIconCodePoint.isEmpty ? null : int.parse(customIconCodePoint),
+            createdAtMillis: createdAtMillisRaw != null ? int.parse(createdAtMillisRaw.toString()) : createdAt,
+          );
+          encryptedBlob = await encryptionService.encryptJson(accountData.toJson());
+        }
+
+        await database.into(database.accounts).insertOnConflictUpdate(
+          AccountsCompanion(
+            id: Value(id),
+            createdAt: Value(createdAt),
+            lastUpdatedAt: Value(lastUpdatedAt),
+            isDeleted: Value(isDeleted),
+            encryptedBlob: Value(encryptedBlob),
+          ),
+        );
+        imported++;
+      } catch (e) {
+        errors.add('Failed to import account row $i: $e');
+      }
+    }
+
+    return (imported: imported, skipped: skipped);
+  }
+
+  Future<({int imported, int skipped})> _importCategoriesFromCsvSkipDuplicates(
+    String path,
+    Set<String> existingIds,
+    List<String> errors,
+  ) async {
+    int imported = 0;
+    int skipped = 0;
+    final content = await File(path).readAsString();
+    final rows = const CsvToListConverter().convert(content);
+
+    if (rows.isEmpty) return (imported: 0, skipped: 0);
+
+    final headers = rows.first.map((e) => e.toString()).toList();
+    final hasEncryptedBlob = headers.contains('encrypted_blob') || headers.contains('encryptedBlob');
+
+    for (int i = 1; i < rows.length; i++) {
+      try {
+        final row = rows[i];
+        final Map<String, dynamic> data = {};
+        for (int j = 0; j < headers.length; j++) {
+          data[headers[j]] = row[j];
+        }
+
+        final id = data['id'].toString();
+
+        // Skip if category already exists
+        if (existingIds.contains(id)) {
+          skipped++;
+          continue;
+        }
+
+        final sortOrder = int.parse((data['sort_order'] ?? data['sortOrder']).toString());
+        final lastUpdatedAt = int.parse((data['last_updated_at'] ?? data['lastUpdatedAt']).toString());
+        final isDeleted = (data['is_deleted'] ?? data['isDeleted']).toString() == '1';
+
+        Uint8List encryptedBlob;
+
+        if (hasEncryptedBlob) {
+          encryptedBlob = base64Decode((data['encrypted_blob'] ?? data['encryptedBlob']).toString());
+        } else {
+          final iconFontPackage = (data['icon_font_package'] ?? data['iconFontPackage'])?.toString() ?? '';
+          final parentId = (data['parent_id'] ?? data['parentId'])?.toString() ?? '';
+
+          final categoryData = CategoryData(
+            id: id,
+            name: data['name'].toString(),
+            iconCodePoint: int.parse((data['icon_code_point'] ?? data['iconCodePoint']).toString()),
+            iconFontFamily: (data['icon_font_family'] ?? data['iconFontFamily']).toString(),
+            iconFontPackage: iconFontPackage.isEmpty ? null : iconFontPackage,
+            colorIndex: int.parse((data['color_index'] ?? data['colorIndex']).toString()),
+            type: data['type'].toString(),
+            isCustom: (data['is_custom'] ?? data['isCustom']).toString() == '1',
+            parentId: parentId.isEmpty ? null : parentId,
+            sortOrder: sortOrder,
+          );
+          encryptedBlob = await encryptionService.encryptJson(categoryData.toJson());
+        }
+
+        await database.into(database.categories).insertOnConflictUpdate(
+          CategoriesCompanion(
+            id: Value(id),
+            sortOrder: Value(sortOrder),
+            lastUpdatedAt: Value(lastUpdatedAt),
+            isDeleted: Value(isDeleted),
+            encryptedBlob: Value(encryptedBlob),
+          ),
+        );
+        imported++;
+      } catch (e) {
+        errors.add('Failed to import category row $i: $e');
       }
     }
 
