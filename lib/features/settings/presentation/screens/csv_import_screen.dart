@@ -28,6 +28,9 @@ class _CsvImportScreenState extends ConsumerState<CsvImportScreen> {
   @override
   Widget build(BuildContext context) {
     final intensity = ref.watch(colorIntensityProvider);
+    // Watch the provider to keep it alive during the import flow
+    // (autoDispose would otherwise dispose it between screens)
+    ref.watch(flexibleCsvImportProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
