@@ -342,15 +342,22 @@ void showParentCategoryPicker({
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (context) => DraggableScrollableSheet(
-      initialChildSize: 0.7,
-      maxChildSize: 0.9,
-      minChildSize: 0.4,
-      builder: (context, scrollController) => ParentCategoryPicker(
-        type: type,
-        currentCategoryId: currentCategoryId,
-        selectedParentId: selectedParentId,
-        onSelected: onSelected,
+    builder: (ctx) => GestureDetector(
+      onTap: () => Navigator.pop(ctx),
+      behavior: HitTestBehavior.opaque,
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        maxChildSize: 0.9,
+        minChildSize: 0.4,
+        builder: (context, scrollController) => GestureDetector(
+          onTap: () {}, // Prevent tap from propagating to parent
+          child: ParentCategoryPicker(
+            type: type,
+            currentCategoryId: currentCategoryId,
+            selectedParentId: selectedParentId,
+            onSelected: onSelected,
+          ),
+        ),
       ),
     ),
   );

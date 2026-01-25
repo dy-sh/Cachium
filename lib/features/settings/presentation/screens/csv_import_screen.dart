@@ -150,7 +150,6 @@ class CsvImportScreen extends ConsumerWidget {
                       color: AppColors.getAccentColor(0, intensity),
                       description: 'Income & expense records',
                       onTap: () => _selectType(context, ref, ImportEntityType.transaction),
-                      isLoading: state.isLoading,
                     ),
                     const SizedBox(height: AppSpacing.md),
                     _EntityTypeCard(
@@ -159,7 +158,6 @@ class CsvImportScreen extends ConsumerWidget {
                       color: AppColors.getAccentColor(3, intensity),
                       description: 'Bank accounts, credit cards, etc.',
                       onTap: () => _selectType(context, ref, ImportEntityType.account),
-                      isLoading: state.isLoading,
                     ),
                     const SizedBox(height: AppSpacing.md),
                     _EntityTypeCard(
@@ -168,7 +166,6 @@ class CsvImportScreen extends ConsumerWidget {
                       color: AppColors.getAccentColor(7, intensity),
                       description: 'Spending & income categories',
                       onTap: () => _selectType(context, ref, ImportEntityType.category),
-                      isLoading: state.isLoading,
                     ),
 
                     const SizedBox(height: AppSpacing.xxxl),
@@ -212,7 +209,6 @@ class _EntityTypeCard extends ConsumerWidget {
   final Color color;
   final String description;
   final VoidCallback onTap;
-  final bool isLoading;
 
   const _EntityTypeCard({
     required this.type,
@@ -220,7 +216,6 @@ class _EntityTypeCard extends ConsumerWidget {
     required this.color,
     required this.description,
     required this.onTap,
-    required this.isLoading,
   });
 
   @override
@@ -229,7 +224,7 @@ class _EntityTypeCard extends ConsumerWidget {
     final bgOpacity = AppColors.getBgOpacity(intensity);
 
     return GestureDetector(
-      onTap: isLoading ? null : onTap,
+      onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
@@ -273,18 +268,11 @@ class _EntityTypeCard extends ConsumerWidget {
                 ],
               ),
             ),
-            if (isLoading)
-              const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            else
-              Icon(
-                LucideIcons.chevronRight,
-                size: 20,
-                color: AppColors.textTertiary,
-              ),
+            Icon(
+              LucideIcons.chevronRight,
+              size: 20,
+              color: AppColors.textTertiary,
+            ),
           ],
         ),
       ),
