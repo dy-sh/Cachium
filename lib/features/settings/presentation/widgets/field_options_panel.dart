@@ -33,8 +33,12 @@ class ForeignKeyOptionsPanel extends ConsumerWidget {
     final config = foreignKey == 'category'
         ? ref.watch(categoryConfigProvider)
         : ref.watch(accountConfigProvider);
-    final selectedCsvColumn = ref.watch(selectedCsvColumnProvider);
+    final selectedFieldKey = ref.watch(selectedFieldKeyProvider);
     final accentColor = getForeignKeyColor(foreignKey, intensity);
+
+    // Check if this FK's sub-fields are selected
+    final isNameSelected = selectedFieldKey == 'fk:$foreignKey:name';
+    final isIdSelected = selectedFieldKey == 'fk:$foreignKey:id';
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.sm),
@@ -72,14 +76,16 @@ class ForeignKeyOptionsPanel extends ConsumerWidget {
                   _MappableSubField(
                     label: 'Name column',
                     mappedColumn: config.nameColumn,
-                    hasCsvColumnSelected: selectedCsvColumn != null,
+                    isSelected: isNameSelected,
                     intensity: intensity,
                     foreignKey: foreignKey,
                     onTap: () {
                       if (config.nameColumn != null) {
                         notifier.clearForeignKeyField(foreignKey, 'name');
-                      } else if (selectedCsvColumn != null) {
-                        notifier.connectToForeignKeyField(foreignKey, 'name');
+                      } else if (isNameSelected) {
+                        notifier.selectField(null); // Deselect
+                      } else {
+                        notifier.selectForeignKeyField(foreignKey, 'name');
                       }
                     },
                   ),
@@ -87,14 +93,16 @@ class ForeignKeyOptionsPanel extends ConsumerWidget {
                   _MappableSubField(
                     label: 'ID column',
                     mappedColumn: config.idColumn,
-                    hasCsvColumnSelected: selectedCsvColumn != null,
+                    isSelected: isIdSelected,
                     intensity: intensity,
                     foreignKey: foreignKey,
                     onTap: () {
                       if (config.idColumn != null) {
                         notifier.clearForeignKeyField(foreignKey, 'id');
-                      } else if (selectedCsvColumn != null) {
-                        notifier.connectToForeignKeyField(foreignKey, 'id');
+                      } else if (isIdSelected) {
+                        notifier.selectField(null); // Deselect
+                      } else {
+                        notifier.selectForeignKeyField(foreignKey, 'id');
                       }
                     },
                   ),
@@ -199,7 +207,7 @@ class ForeignKeyOptionsPanel extends ConsumerWidget {
 class _MappableSubField extends StatelessWidget {
   final String label;
   final String? mappedColumn;
-  final bool hasCsvColumnSelected;
+  final bool isSelected;
   final ColorIntensity intensity;
   final String foreignKey;
   final VoidCallback onTap;
@@ -207,7 +215,7 @@ class _MappableSubField extends StatelessWidget {
   const _MappableSubField({
     required this.label,
     required this.mappedColumn,
-    required this.hasCsvColumnSelected,
+    required this.isSelected,
     required this.intensity,
     required this.foreignKey,
     required this.onTap,
@@ -216,7 +224,6 @@ class _MappableSubField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMapped = mappedColumn != null;
-    final canReceiveMapping = hasCsvColumnSelected && !isMapped;
     final accentColor = getForeignKeyColor(foreignKey, intensity);
 
     return GestureDetector(
@@ -229,17 +236,17 @@ class _MappableSubField extends StatelessWidget {
         decoration: BoxDecoration(
           color: isMapped
               ? accentColor.withValues(alpha: 0.1)
-              : canReceiveMapping
-                  ? accentColor.withValues(alpha: 0.05)
+              : isSelected
+                  ? accentColor.withValues(alpha: 0.15)
                   : AppColors.surface,
           borderRadius: AppRadius.input,
           border: Border.all(
             color: isMapped
                 ? accentColor.withValues(alpha: 0.5)
-                : canReceiveMapping
-                    ? accentColor.withValues(alpha: 0.3)
+                : isSelected
+                    ? accentColor
                     : AppColors.border,
-            width: canReceiveMapping ? 2 : 1,
+            width: isMapped || isSelected ? 2 : 1,
           ),
         ),
         child: Row(
@@ -251,8 +258,8 @@ class _MappableSubField extends StatelessWidget {
                   Text(
                     label,
                     style: AppTypography.labelSmall.copyWith(
-                      color: isMapped ? accentColor : AppColors.textSecondary,
-                      fontWeight: isMapped ? FontWeight.w600 : FontWeight.w500,
+                      color: isMapped || isSelected ? accentColor : AppColors.textSecondary,
+                      fontWeight: isMapped || isSelected ? FontWeight.w600 : FontWeight.w500,
                     ),
                   ),
                   if (isMapped)
@@ -266,13 +273,7 @@ class _MappableSubField extends StatelessWidget {
               ),
             ),
             if (isMapped)
-              Icon(LucideIcons.x, size: 14, color: accentColor)
-            else if (canReceiveMapping)
-              Icon(
-                LucideIcons.plus,
-                size: 14,
-                color: accentColor.withValues(alpha: 0.6),
-              ),
+              Icon(LucideIcons.x, size: 14, color: accentColor),
           ],
         ),
       ),

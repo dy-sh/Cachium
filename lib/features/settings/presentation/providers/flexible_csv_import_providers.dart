@@ -203,21 +203,21 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
     );
   }
 
-  /// Select a CSV column in the two-panel mapping view.
-  void selectCsvColumn(String? column) {
+  /// Select a target field in the two-panel mapping view.
+  void selectField(String? fieldKey) {
     state = state.copyWith(
-      selectedCsvColumn: column,
-      clearSelectedCsvColumn: column == null,
+      selectedFieldKey: fieldKey,
+      clearSelectedFieldKey: fieldKey == null,
     );
   }
 
-  /// Connect the currently selected CSV column to a target field.
+  /// Connect a CSV column to the currently selected target field.
   /// If the field was already mapped to a different column, that mapping is cleared.
   /// If the CSV column was already mapped to a different field, that mapping is cleared.
-  void connectToField(String fieldKey) {
-    if (state.config == null || state.selectedCsvColumn == null) return;
+  void connectToCsvColumn(String csvColumn) {
+    if (state.config == null || state.selectedFieldKey == null) return;
 
-    final csvColumn = state.selectedCsvColumn!;
+    final fieldKey = state.selectedFieldKey!;
     final newMappings = Map<String, FieldMapping>.from(state.config!.fieldMappings);
 
     // Clear any existing mapping that uses this CSV column
@@ -235,7 +235,7 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
 
     state = state.copyWith(
       config: state.config!.copyWith(fieldMappings: newMappings),
-      clearSelectedCsvColumn: true,
+      clearSelectedFieldKey: true,
       clearAppliedPreset: true,
     );
   }
@@ -255,7 +255,7 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
 
     state = state.copyWith(
       config: state.config!.copyWith(fieldMappings: newMappings),
-      clearSelectedCsvColumn: true,
+      clearSelectedFieldKey: true,
       clearAppliedPreset: true,
     );
   }
@@ -272,7 +272,7 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
 
     state = state.copyWith(
       config: state.config!.copyWith(fieldMappings: newMappings),
-      clearSelectedCsvColumn: true,
+      clearSelectedFieldKey: true,
       clearAppliedPreset: true,
     );
   }
@@ -334,13 +334,24 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
     }
   }
 
-  /// Connect selected CSV column to a FK sub-field (name or id).
-  void connectToForeignKeyField(String foreignKey, String subField) {
-    if (state.selectedCsvColumn == null) return;
+  /// Select a FK sub-field for mapping.
+  void selectForeignKeyField(String foreignKey, String subField) {
+    // Use a special key format: "fk:category:name" or "fk:account:id"
+    selectField('fk:$foreignKey:$subField');
+  }
 
-    final csvColumn = state.selectedCsvColumn!;
+  /// Connect a CSV column to the selected FK sub-field.
+  void connectCsvColumnToForeignKey(String csvColumn) {
+    if (state.selectedFieldKey == null ||
+        !state.selectedFieldKey!.startsWith('fk:')) return;
 
-    // Also clear this column from regular field mappings
+    final parts = state.selectedFieldKey!.split(':');
+    if (parts.length != 3) return;
+
+    final foreignKey = parts[1];
+    final subField = parts[2];
+
+    // Clear this column from regular field mappings
     if (state.config != null) {
       final newMappings = Map<String, FieldMapping>.from(state.config!.fieldMappings);
       for (final entry in newMappings.entries) {
@@ -357,24 +368,24 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
       if (subField == 'name') {
         state = state.copyWith(
           categoryConfig: state.categoryConfig.copyWith(nameColumn: csvColumn),
-          clearSelectedCsvColumn: true,
+          clearSelectedFieldKey: true,
         );
       } else if (subField == 'id') {
         state = state.copyWith(
           categoryConfig: state.categoryConfig.copyWith(idColumn: csvColumn),
-          clearSelectedCsvColumn: true,
+          clearSelectedFieldKey: true,
         );
       }
     } else if (foreignKey == 'account') {
       if (subField == 'name') {
         state = state.copyWith(
           accountConfig: state.accountConfig.copyWith(nameColumn: csvColumn),
-          clearSelectedCsvColumn: true,
+          clearSelectedFieldKey: true,
         );
       } else if (subField == 'id') {
         state = state.copyWith(
           accountConfig: state.accountConfig.copyWith(idColumn: csvColumn),
-          clearSelectedCsvColumn: true,
+          clearSelectedFieldKey: true,
         );
       }
     }
@@ -558,10 +569,10 @@ final unmappedCsvColumnsProvider = Provider<List<String>>((ref) {
   return state.unmappedCsvColumns;
 });
 
-/// Provider for the currently selected CSV column.
-final selectedCsvColumnProvider = Provider<String?>((ref) {
+/// Provider for the currently selected target field key.
+final selectedFieldKeyProvider = Provider<String?>((ref) {
   final state = ref.watch(flexibleCsvImportProvider);
-  return state.selectedCsvColumn;
+  return state.selectedFieldKey;
 });
 
 /// Provider for connection badges.

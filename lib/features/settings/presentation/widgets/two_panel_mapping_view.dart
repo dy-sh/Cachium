@@ -14,8 +14,8 @@ import 'expandable_target_field_item.dart';
 import 'target_field_list_item.dart';
 
 /// A two-panel view for mapping CSV columns to app fields.
-/// Left panel: CSV columns with sample values
-/// Right panel: Target app fields
+/// Left panel: Target app fields
+/// Right panel: CSV columns with sample values
 class TwoPanelMappingView extends ConsumerWidget {
   /// The list of app field definitions.
   final List<AppFieldDefinition> fields;
@@ -29,7 +29,7 @@ class TwoPanelMappingView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(flexibleCsvImportProvider);
     final intensity = ref.watch(colorIntensityProvider);
-    final selectedColumn = state.selectedCsvColumn;
+    final selectedFieldKey = state.selectedFieldKey;
     final expandedForeignKey = state.expandedForeignKey;
 
     if (state.config == null) return const SizedBox.shrink();
@@ -60,12 +60,12 @@ class TwoPanelMappingView extends ConsumerWidget {
       }
     }
 
-    // Build the list of items for the right panel
-    final rightPanelItems = <Widget>[];
+    // Build the list of items for the left panel (target fields)
+    final leftPanelItems = <Widget>[];
 
     // For transactions, add Category and Account at the top
     if (isTransaction) {
-      rightPanelItems.add(
+      leftPanelItems.add(
         ExpandableForeignKeyItem(
           foreignKey: 'category',
           displayName: 'Category',
@@ -73,11 +73,11 @@ class TwoPanelMappingView extends ConsumerWidget {
           isExpanded: expandedForeignKey == 'category',
           onToggleExpand: () => _handleToggleForeignKey(ref, 'category'),
           intensity: intensity,
-          hasCsvColumnSelected: selectedColumn != null,
+          hasCsvColumnSelected: selectedFieldKey != null,
         ),
       );
-      rightPanelItems.add(const SizedBox(height: AppSpacing.xs));
-      rightPanelItems.add(
+      leftPanelItems.add(const SizedBox(height: AppSpacing.xs));
+      leftPanelItems.add(
         ExpandableForeignKeyItem(
           foreignKey: 'account',
           displayName: 'Account',
@@ -85,20 +85,65 @@ class TwoPanelMappingView extends ConsumerWidget {
           isExpanded: expandedForeignKey == 'account',
           onToggleExpand: () => _handleToggleForeignKey(ref, 'account'),
           intensity: intensity,
-          hasCsvColumnSelected: selectedColumn != null,
+          hasCsvColumnSelected: selectedFieldKey != null,
         ),
       );
-      rightPanelItems.add(const SizedBox(height: AppSpacing.sm));
-      rightPanelItems.add(
+      leftPanelItems.add(const SizedBox(height: AppSpacing.sm));
+      leftPanelItems.add(
         Divider(color: AppColors.border.withValues(alpha: 0.5), height: 1),
       );
-      rightPanelItems.add(const SizedBox(height: AppSpacing.sm));
+      leftPanelItems.add(const SizedBox(height: AppSpacing.sm));
     }
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Left panel - CSV Columns
+        // Left panel - Target Fields
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _PanelHeader(
+                title: 'Target Fields',
+                intensity: intensity,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Expanded(
+                child: ListView(
+                  children: [
+                    // FK items (for transactions)
+                    ...leftPanelItems,
+
+                    // Regular fields
+                    ...displayFields.map((field) {
+                      final csvColumn = state.getCsvColumnForField(field.key);
+                      final isMapped = csvColumn != null;
+                      final colorIndex = fieldColorIndices[field.key]!;
+                      final isSelected = selectedFieldKey == field.key;
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                        child: TargetFieldListItem(
+                          fieldName: field.displayName,
+                          fieldKey: field.key,
+                          isRequired: field.isRequired,
+                          isMapped: isMapped,
+                          isSelected: isSelected,
+                          colorIndex: colorIndex,
+                          hasAnySelected: selectedFieldKey != null,
+                          intensity: intensity,
+                          onTap: () => _handleFieldTap(ref, field.key, isMapped, isSelected),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        // Right panel - CSV Columns
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,7 +161,6 @@ class TwoPanelMappingView extends ConsumerWidget {
                   itemBuilder: (context, index) {
                     final column = csvHeaders[index];
                     final sampleValues = config.getSampleValues(column);
-                    final isSelected = selectedColumn == column;
 
                     // Check which FK this column is mapped to (if any)
                     final categoryConfig = state.categoryConfig;
@@ -133,12 +177,14 @@ class TwoPanelMappingView extends ConsumerWidget {
                     // Get the fixed color index and field key from the mapped field (if mapped to a regular field)
                     final mappedColorIndex = csvColumnColorIndex[column];
                     final mappedFieldKey = csvColumnFieldKey[column];
+                    final isMapped = mappedColorIndex != null || fkMappedTo != null;
 
                     return CsvColumnListItem(
                       columnName: column,
                       sampleValues: sampleValues,
-                      isSelected: isSelected,
-                      hasAnySelected: selectedColumn != null,
+                      isSelected: false, // CSV columns are not selectable anymore
+                      hasAnySelected: selectedFieldKey != null,
+                      isMapped: isMapped,
                       mappedFieldColorIndex: fkMappedTo != null ? null : mappedColorIndex,
                       mappedFieldKey: fkMappedTo != null ? null : mappedFieldKey,
                       fkMappedTo: fkMappedTo,
@@ -156,66 +202,23 @@ class TwoPanelMappingView extends ConsumerWidget {
             ],
           ),
         ),
-        const SizedBox(width: AppSpacing.md),
-        // Right panel - Target Fields
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _PanelHeader(
-                title: 'Target Fields',
-                intensity: intensity,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Expanded(
-                child: ListView(
-                  children: [
-                    // FK items (for transactions)
-                    ...rightPanelItems,
-
-                    // Regular fields
-                    ...displayFields.map((field) {
-                      final csvColumn = state.getCsvColumnForField(field.key);
-                      final isMapped = csvColumn != null;
-                      final colorIndex = fieldColorIndices[field.key]!;
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-                        child: TargetFieldListItem(
-                          fieldName: field.displayName,
-                          fieldKey: field.key,
-                          isRequired: field.isRequired,
-                          isMapped: isMapped,
-                          colorIndex: colorIndex,
-                          hasCsvColumnSelected: selectedColumn != null,
-                          intensity: intensity,
-                          onTap: () =>
-                              _handleFieldTap(ref, field.key, isMapped),
-                        ),
-                      );
-                    }),
-
-                    // Skip option
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-                      child: TargetFieldListItem(
-                        fieldName: 'Skip',
-                        isRequired: false,
-                        isMapped: false,
-                        hasCsvColumnSelected: selectedColumn != null,
-                        intensity: intensity,
-                        isSkipItem: true,
-                        onTap: () => _handleSkipTap(ref),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
       ],
     );
+  }
+
+  void _handleFieldTap(WidgetRef ref, String fieldKey, bool isMapped, bool isSelected) {
+    final notifier = ref.read(flexibleCsvImportProvider.notifier);
+
+    if (isMapped) {
+      // Already mapped - clear the connection
+      notifier.clearConnectionForField(fieldKey);
+    } else if (isSelected) {
+      // Already selected - deselect
+      notifier.selectField(null);
+    } else {
+      // Select this field
+      notifier.selectField(fieldKey);
+    }
   }
 
   void _handleCsvColumnTap(
@@ -225,11 +228,11 @@ class TwoPanelMappingView extends ConsumerWidget {
     String? fkMappedTo,
   ) {
     final notifier = ref.read(flexibleCsvImportProvider.notifier);
-    final selectedColumn = ref.read(flexibleCsvImportProvider).selectedCsvColumn;
+    final state = ref.read(flexibleCsvImportProvider);
+    final selectedFieldKey = state.selectedFieldKey;
 
     if (fkMappedTo != null) {
-      // Clear from FK config
-      final state = ref.read(flexibleCsvImportProvider);
+      // Already mapped to FK - clear from FK config
       final config = fkMappedTo == 'category'
           ? state.categoryConfig
           : state.accountConfig;
@@ -241,33 +244,16 @@ class TwoPanelMappingView extends ConsumerWidget {
     } else if (mappedColorIndex != null) {
       // Already mapped to a regular field - clear the connection
       notifier.clearConnectionForCsvColumn(column);
-    } else if (selectedColumn == column) {
-      // Already selected - deselect
-      notifier.selectCsvColumn(null);
-    } else {
-      // Select this column
-      notifier.selectCsvColumn(column);
+    } else if (selectedFieldKey != null) {
+      // A field is selected - connect this CSV column to it
+      if (selectedFieldKey.startsWith('fk:')) {
+        // Selected field is a FK sub-field
+        notifier.connectCsvColumnToForeignKey(column);
+      } else {
+        // Selected field is a regular field
+        notifier.connectToCsvColumn(column);
+      }
     }
-  }
-
-  void _handleFieldTap(WidgetRef ref, String fieldKey, bool isMapped) {
-    final notifier = ref.read(flexibleCsvImportProvider.notifier);
-    final selectedColumn = ref.read(flexibleCsvImportProvider).selectedCsvColumn;
-
-    if (isMapped) {
-      // Already mapped - clear the connection
-      notifier.clearConnectionForField(fieldKey);
-    } else if (selectedColumn != null) {
-      // Connect selected column to this field
-      notifier.connectToField(fieldKey);
-    }
-    // If nothing selected and not mapped, do nothing
-  }
-
-  void _handleSkipTap(WidgetRef ref) {
-    final notifier = ref.read(flexibleCsvImportProvider.notifier);
-    // Just deselect the current column (skip it)
-    notifier.selectCsvColumn(null);
   }
 
   void _handleToggleForeignKey(WidgetRef ref, String foreignKey) {

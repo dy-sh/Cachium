@@ -95,8 +95,8 @@ class FlexibleCsvImportState {
   final Map<String, Account> existingAccountsByName;
   final Map<String, Account> existingAccountsById;
 
-  /// Currently selected CSV column in the two-panel mapping view.
-  final String? selectedCsvColumn;
+  /// Currently selected target field in the two-panel mapping view.
+  final String? selectedFieldKey;
 
   /// Currently expanded foreign key ('category' or 'account').
   final String? expandedForeignKey;
@@ -118,7 +118,7 @@ class FlexibleCsvImportState {
     this.existingCategoriesById = const {},
     this.existingAccountsByName = const {},
     this.existingAccountsById = const {},
-    this.selectedCsvColumn,
+    this.selectedFieldKey,
     this.expandedForeignKey,
     this.categoryConfig = const ForeignKeyConfig(),
     this.accountConfig = const ForeignKeyConfig(),
@@ -141,8 +141,8 @@ class FlexibleCsvImportState {
     Map<String, Category>? existingCategoriesById,
     Map<String, Account>? existingAccountsByName,
     Map<String, Account>? existingAccountsById,
-    String? selectedCsvColumn,
-    bool clearSelectedCsvColumn = false,
+    String? selectedFieldKey,
+    bool clearSelectedFieldKey = false,
     String? expandedForeignKey,
     bool clearExpandedForeignKey = false,
     ForeignKeyConfig? categoryConfig,
@@ -167,9 +167,9 @@ class FlexibleCsvImportState {
       existingAccountsByName:
           existingAccountsByName ?? this.existingAccountsByName,
       existingAccountsById: existingAccountsById ?? this.existingAccountsById,
-      selectedCsvColumn: clearSelectedCsvColumn
+      selectedFieldKey: clearSelectedFieldKey
           ? null
-          : (selectedCsvColumn ?? this.selectedCsvColumn),
+          : (selectedFieldKey ?? this.selectedFieldKey),
       expandedForeignKey: clearExpandedForeignKey
           ? null
           : (expandedForeignKey ?? this.expandedForeignKey),

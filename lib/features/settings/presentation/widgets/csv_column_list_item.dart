@@ -20,8 +20,11 @@ class CsvColumnListItem extends StatelessWidget {
   /// Whether this column is currently selected.
   final bool isSelected;
 
-  /// Whether any column is currently selected (to dim non-selected items).
+  /// Whether any field is currently selected (to highlight available items).
   final bool hasAnySelected;
+
+  /// Whether this column is already mapped.
+  final bool isMapped;
 
   /// Fixed color index if mapped to a regular field (based on field position).
   final int? mappedFieldColorIndex;
@@ -44,6 +47,7 @@ class CsvColumnListItem extends StatelessWidget {
     required this.sampleValues,
     required this.isSelected,
     this.hasAnySelected = false,
+    this.isMapped = false,
     this.mappedFieldColorIndex,
     this.mappedFieldKey,
     this.fkMappedTo,
@@ -55,9 +59,10 @@ class CsvColumnListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final isFkMapped = fkMappedTo != null;
     final isFieldMapped = mappedFieldColorIndex != null;
-    final isMapped = isFieldMapped || isFkMapped;
-    // Dim non-selected items when another is selected
-    final isDimmed = hasAnySelected && !isSelected;
+    // Available for mapping when a field is selected and this column is not mapped
+    final isAvailable = hasAnySelected && !isMapped;
+    // Dim mapped items when a field is selected
+    final isDimmed = hasAnySelected && isMapped;
 
     final mappedColor = isFkMapped
         ? getForeignKeyColor(fkMappedTo!, intensity)
@@ -89,15 +94,17 @@ class CsvColumnListItem extends StatelessWidget {
                 ? mappedColor
                 : isMapped
                     ? mappedColor.withValues(alpha: isDimmed ? 0.2 : 0.5)
-                    : AppColors.border,
-            width: isSelected || isMapped ? 2 : 1,
+                    : isAvailable
+                        ? AppColors.textPrimary
+                        : AppColors.border,
+            width: isSelected || isMapped || isAvailable ? 2 : 1,
           ),
         ),
         child: Opacity(
           opacity: isDimmed ? 0.4 : 1.0,
           child: Row(
             children: [
-              // Column name and samples (dimmed when disconnected)
+              // Column name and samples
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,8 +112,10 @@ class CsvColumnListItem extends StatelessWidget {
                     Text(
                       columnName,
                       style: AppTypography.bodyMedium.copyWith(
-                        fontWeight: isMapped || isSelected ? FontWeight.w600 : FontWeight.w500,
-                        color: isMapped || isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+                        fontWeight: isMapped || isSelected || isAvailable ? FontWeight.w600 : FontWeight.w500,
+                        color: isMapped || isSelected || isAvailable
+                            ? AppColors.textPrimary
+                            : AppColors.textSecondary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -126,12 +135,18 @@ class CsvColumnListItem extends StatelessWidget {
                   ],
                 ),
               ),
-              // Icon on the right (only when connected)
+              // Icon on the right (when connected) or plus (when available)
               if (isMapped && mappedIcon != null)
                 Icon(
                   mappedIcon,
                   size: 16,
                   color: mappedColor,
+                )
+              else if (isAvailable)
+                Icon(
+                  LucideIcons.plus,
+                  size: 16,
+                  color: AppColors.textPrimary,
                 ),
             ],
           ),

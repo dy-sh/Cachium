@@ -22,11 +22,14 @@ class TargetFieldListItem extends StatelessWidget {
   /// Whether this field is already mapped to a CSV column.
   final bool isMapped;
 
+  /// Whether this field is currently selected.
+  final bool isSelected;
+
   /// Fixed color index for this field (based on field position, doesn't change).
   final int colorIndex;
 
-  /// Whether a CSV column is currently selected (for visual feedback).
-  final bool hasCsvColumnSelected;
+  /// Whether any field is currently selected (for dimming other items).
+  final bool hasAnySelected;
 
   /// Callback when the item is tapped.
   final VoidCallback onTap;
@@ -43,8 +46,9 @@ class TargetFieldListItem extends StatelessWidget {
     this.fieldKey = '',
     this.isRequired = false,
     this.isMapped = false,
+    this.isSelected = false,
     this.colorIndex = 0,
-    this.hasCsvColumnSelected = false,
+    this.hasAnySelected = false,
     required this.onTap,
     required this.intensity,
     this.isSkipItem = false,
@@ -54,9 +58,10 @@ class TargetFieldListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final fieldColor = getFieldBadgeColor(colorIndex, intensity);
     final fieldIcon = getFieldIconByKey(fieldKey);
-    final canReceiveMapping = hasCsvColumnSelected && !isMapped;
-    // Dim mapped items when selecting to highlight available options
-    final isDimmed = hasCsvColumnSelected && isMapped;
+    // Dim other items when this field or another is selected
+    final isDimmed = hasAnySelected && !isSelected && !isMapped;
+    // Dim mapped items more when selecting
+    final isMappedDimmed = hasAnySelected && !isSelected && isMapped;
 
     return GestureDetector(
       onTap: onTap,
@@ -67,21 +72,23 @@ class TargetFieldListItem extends StatelessWidget {
           vertical: AppSpacing.xs + 2,
         ),
         decoration: BoxDecoration(
-          color: isMapped
-              ? fieldColor.withValues(alpha: isDimmed ? 0.03 : 0.08)
-              : AppColors.surface,
+          color: isSelected
+              ? fieldColor.withValues(alpha: 0.15)
+              : isMapped
+                  ? fieldColor.withValues(alpha: isMappedDimmed ? 0.03 : 0.08)
+                  : AppColors.surface,
           borderRadius: AppRadius.card,
           border: Border.all(
-            color: isMapped
-                ? fieldColor.withValues(alpha: isDimmed ? 0.2 : 0.5)
-                : canReceiveMapping
-                    ? AppColors.textPrimary
+            color: isSelected
+                ? fieldColor
+                : isMapped
+                    ? fieldColor.withValues(alpha: isMappedDimmed ? 0.2 : 0.5)
                     : AppColors.border,
-            width: isMapped || canReceiveMapping ? 2 : 1,
+            width: isSelected || isMapped ? 2 : 1,
           ),
         ),
         child: Opacity(
-          opacity: isDimmed ? 0.4 : 1.0,
+          opacity: isDimmed || isMappedDimmed ? 0.4 : 1.0,
           child: Row(
             children: [
               // Icon marker on the left (always visible)
@@ -89,36 +96,30 @@ class TargetFieldListItem extends StatelessWidget {
                 Icon(
                   fieldIcon,
                   size: 16,
-                  color: isMapped
-                      ? fieldColor
-                      : canReceiveMapping
-                          ? AppColors.textPrimary
-                          : AppColors.textTertiary,
+                  color: isMapped || isSelected ? fieldColor : AppColors.textTertiary,
                 ),
                 const SizedBox(width: AppSpacing.xs),
               ] else ...[
                 Icon(
                   LucideIcons.skipForward,
                   size: 16,
-                  color: canReceiveMapping ? AppColors.textPrimary : AppColors.textTertiary,
+                  color: AppColors.textTertiary,
                 ),
                 const SizedBox(width: AppSpacing.xs),
               ],
-              // Field name (bright when available, dimmed when disconnected)
+              // Field name
               Expanded(
                 child: Row(
                   children: [
                     Text(
                       fieldName,
                       style: AppTypography.bodyMedium.copyWith(
-                        fontWeight: isMapped || canReceiveMapping ? FontWeight.w600 : FontWeight.w500,
+                        fontWeight: isMapped || isSelected ? FontWeight.w600 : FontWeight.w500,
                         color: isSkipItem
                             ? AppColors.textTertiary
-                            : isMapped
+                            : isMapped || isSelected
                                 ? AppColors.textPrimary
-                                : canReceiveMapping
-                                    ? AppColors.textPrimary
-                                    : AppColors.textSecondary,
+                                : AppColors.textSecondary,
                       ),
                     ),
                     // Required indicator
@@ -135,13 +136,6 @@ class TargetFieldListItem extends StatelessWidget {
                   ],
                 ),
               ),
-              // Plus icon when can receive mapping
-              if (canReceiveMapping)
-                Icon(
-                  LucideIcons.plus,
-                  size: 18,
-                  color: AppColors.textPrimary,
-                ),
             ],
           ),
         ),
