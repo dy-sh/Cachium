@@ -353,12 +353,6 @@ class ImportFieldDefinitions {
       type: FieldType.string,
       description: 'Optional note/memo',
     ),
-    AppFieldDefinition(
-      key: 'createdAt',
-      displayName: 'Created At',
-      type: FieldType.dateTime,
-      description: 'Creation timestamp',
-    ),
   ];
 
   static List<AppFieldDefinition> getFieldsForType(ImportEntityType type) {
