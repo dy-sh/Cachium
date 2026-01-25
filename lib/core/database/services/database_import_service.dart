@@ -531,6 +531,14 @@ class DatabaseImportService {
         if (hasEncryptedBlob) {
           encryptedBlob = base64Decode((data['encrypted_blob'] ?? data['encryptedBlob']).toString());
         } else {
+          // Handle optional fields that may not exist in plaintext CSV exports
+          final dateMillisRaw = data['date_millis'] ?? data['dateMillis'];
+          final createdAtMillisRaw = data['created_at_millis'] ?? data['createdAtMillis'];
+
+          // Parse note - handle empty strings and "null" string
+          final noteRaw = data['note']?.toString() ?? '';
+          final note = (noteRaw.isEmpty || noteRaw == 'null') ? null : noteRaw;
+
           // Plaintext format, need to encrypt using TransactionData model
           final transactionData = TransactionData(
             id: id,
@@ -538,10 +546,12 @@ class DatabaseImportService {
             categoryId: (data['category_id'] ?? data['categoryId']).toString(),
             accountId: (data['account_id'] ?? data['accountId']).toString(),
             type: data['type'].toString(),
-            note: data['note'].toString().isEmpty ? null : data['note'].toString(),
+            note: note,
             currency: data['currency']?.toString() ?? 'USD',
-            dateMillis: int.parse((data['date_millis'] ?? data['dateMillis'] ?? date).toString()),
-            createdAtMillis: int.parse((data['created_at_millis'] ?? data['createdAtMillis']).toString()),
+            // Fall back to 'date' if date_millis not present
+            dateMillis: dateMillisRaw != null ? int.parse(dateMillisRaw.toString()) : date,
+            // Fall back to 'date' if created_at_millis not present
+            createdAtMillis: createdAtMillisRaw != null ? int.parse(createdAtMillisRaw.toString()) : date,
           );
           encryptedBlob = await encryptionService.encryptJson(transactionData.toJson());
         }
@@ -1041,16 +1051,26 @@ class DatabaseImportService {
         if (hasEncryptedBlob) {
           encryptedBlob = base64Decode((data['encrypted_blob'] ?? data['encryptedBlob']).toString());
         } else {
+          // Handle optional fields that may not exist in plaintext CSV exports
+          final dateMillisRaw = data['date_millis'] ?? data['dateMillis'];
+          final createdAtMillisRaw = data['created_at_millis'] ?? data['createdAtMillis'];
+
+          // Parse note - handle empty strings and "null" string
+          final noteRaw = data['note']?.toString() ?? '';
+          final note = (noteRaw.isEmpty || noteRaw == 'null') ? null : noteRaw;
+
           final transactionData = TransactionData(
             id: id,
             amount: double.parse(data['amount'].toString()),
             categoryId: (data['category_id'] ?? data['categoryId']).toString(),
             accountId: (data['account_id'] ?? data['accountId']).toString(),
             type: data['type'].toString(),
-            note: data['note'].toString().isEmpty ? null : data['note'].toString(),
+            note: note,
             currency: data['currency']?.toString() ?? 'USD',
-            dateMillis: int.parse((data['date_millis'] ?? data['dateMillis'] ?? date).toString()),
-            createdAtMillis: int.parse((data['created_at_millis'] ?? data['createdAtMillis']).toString()),
+            // Fall back to 'date' if date_millis not present
+            dateMillis: dateMillisRaw != null ? int.parse(dateMillisRaw.toString()) : date,
+            // Fall back to 'date' if created_at_millis not present
+            createdAtMillis: createdAtMillisRaw != null ? int.parse(createdAtMillisRaw.toString()) : date,
           );
           encryptedBlob = await encryptionService.encryptJson(transactionData.toJson());
         }
