@@ -73,6 +73,7 @@ class TwoPanelMappingView extends ConsumerWidget {
           isExpanded: expandedForeignKey == 'category',
           onToggleExpand: () => _handleToggleForeignKey(ref, 'category'),
           intensity: intensity,
+          hasCsvColumnSelected: selectedColumn != null,
         ),
       );
       rightPanelItems.add(const SizedBox(height: AppSpacing.xs));
@@ -84,6 +85,7 @@ class TwoPanelMappingView extends ConsumerWidget {
           isExpanded: expandedForeignKey == 'account',
           onToggleExpand: () => _handleToggleForeignKey(ref, 'account'),
           intensity: intensity,
+          hasCsvColumnSelected: selectedColumn != null,
         ),
       );
       rightPanelItems.add(const SizedBox(height: AppSpacing.sm));
@@ -136,6 +138,7 @@ class TwoPanelMappingView extends ConsumerWidget {
                       columnName: column,
                       sampleValues: sampleValues,
                       isSelected: isSelected,
+                      hasAnySelected: selectedColumn != null,
                       mappedFieldColorIndex: fkMappedTo != null ? null : mappedColorIndex,
                       mappedFieldKey: fkMappedTo != null ? null : mappedFieldKey,
                       fkMappedTo: fkMappedTo,

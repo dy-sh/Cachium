@@ -55,6 +55,8 @@ class TargetFieldListItem extends StatelessWidget {
     final fieldColor = getFieldBadgeColor(colorIndex, intensity);
     final fieldIcon = getFieldIconByKey(fieldKey);
     final canReceiveMapping = hasCsvColumnSelected && !isMapped;
+    // Dim mapped items when selecting to highlight available options
+    final isDimmed = hasCsvColumnSelected && isMapped;
 
     return GestureDetector(
       onTap: onTap,
@@ -66,73 +68,82 @@ class TargetFieldListItem extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: isMapped
-              ? fieldColor.withValues(alpha: 0.08)
+              ? fieldColor.withValues(alpha: isDimmed ? 0.03 : 0.08)
               : AppColors.surface,
           borderRadius: AppRadius.card,
           border: Border.all(
             color: isMapped
-                ? fieldColor.withValues(alpha: 0.5)
+                ? fieldColor.withValues(alpha: isDimmed ? 0.2 : 0.5)
                 : canReceiveMapping
-                    ? AppColors.textTertiary
+                    ? AppColors.textPrimary
                     : AppColors.border,
             width: isMapped || canReceiveMapping ? 2 : 1,
           ),
         ),
-        child: Row(
-          children: [
-            // Icon marker on the left (always visible)
-            if (!isSkipItem) ...[
-              Icon(
-                fieldIcon,
-                size: 16,
-                color: isMapped ? fieldColor : AppColors.textTertiary,
-              ),
-              const SizedBox(width: AppSpacing.xs),
-            ] else ...[
-              Icon(
-                LucideIcons.skipForward,
-                size: 16,
-                color: AppColors.textTertiary,
-              ),
-              const SizedBox(width: AppSpacing.xs),
-            ],
-            // Field name (dimmed when disconnected)
-            Expanded(
-              child: Row(
-                children: [
-                  Text(
-                    fieldName,
-                    style: AppTypography.bodyMedium.copyWith(
-                      fontWeight: isMapped ? FontWeight.w600 : FontWeight.w500,
-                      color: isSkipItem
-                          ? AppColors.textTertiary
-                          : isMapped
-                              ? AppColors.textPrimary
-                              : AppColors.textSecondary,
-                    ),
-                  ),
-                  // Required indicator
-                  if (isRequired && !isMapped && !isSkipItem) ...[
-                    const SizedBox(width: 4),
+        child: Opacity(
+          opacity: isDimmed ? 0.4 : 1.0,
+          child: Row(
+            children: [
+              // Icon marker on the left (always visible)
+              if (!isSkipItem) ...[
+                Icon(
+                  fieldIcon,
+                  size: 16,
+                  color: isMapped
+                      ? fieldColor
+                      : canReceiveMapping
+                          ? AppColors.textPrimary
+                          : AppColors.textTertiary,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+              ] else ...[
+                Icon(
+                  LucideIcons.skipForward,
+                  size: 16,
+                  color: canReceiveMapping ? AppColors.textPrimary : AppColors.textTertiary,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+              ],
+              // Field name (bright when available, dimmed when disconnected)
+              Expanded(
+                child: Row(
+                  children: [
                     Text(
-                      '*',
+                      fieldName,
                       style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.expense,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: isMapped || canReceiveMapping ? FontWeight.w600 : FontWeight.w500,
+                        color: isSkipItem
+                            ? AppColors.textTertiary
+                            : isMapped
+                                ? AppColors.textPrimary
+                                : canReceiveMapping
+                                    ? AppColors.textPrimary
+                                    : AppColors.textSecondary,
                       ),
                     ),
+                    // Required indicator
+                    if (isRequired && !isMapped && !isSkipItem) ...[
+                      const SizedBox(width: 4),
+                      Text(
+                        '*',
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: AppColors.expense,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            // Plus icon when can receive mapping
-            if (canReceiveMapping)
-              Icon(
-                LucideIcons.plus,
-                size: 18,
-                color: AppColors.textTertiary,
-              ),
-          ],
+              // Plus icon when can receive mapping
+              if (canReceiveMapping)
+                Icon(
+                  LucideIcons.plus,
+                  size: 18,
+                  color: AppColors.textPrimary,
+                ),
+            ],
+          ),
         ),
       ),
     );

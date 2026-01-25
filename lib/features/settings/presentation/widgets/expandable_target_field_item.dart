@@ -120,6 +120,7 @@ class ExpandableForeignKeyItem extends ConsumerWidget {
   final bool isExpanded;
   final VoidCallback onToggleExpand;
   final ColorIntensity intensity;
+  final bool hasCsvColumnSelected;
 
   const ExpandableForeignKeyItem({
     super.key,
@@ -129,6 +130,7 @@ class ExpandableForeignKeyItem extends ConsumerWidget {
     required this.isExpanded,
     required this.onToggleExpand,
     required this.intensity,
+    this.hasCsvColumnSelected = false,
   });
 
   @override
@@ -139,6 +141,10 @@ class ExpandableForeignKeyItem extends ConsumerWidget {
 
     final accentColor = getForeignKeyColor(foreignKey, intensity);
     final isConfigured = config.isValid;
+    // Dim configured items when selecting to highlight available options
+    final isDimmed = hasCsvColumnSelected && isConfigured && !isExpanded;
+    // Highlight available items when selecting
+    final isAvailable = hasCsvColumnSelected && !isConfigured && !isExpanded;
 
     // Get summary text
     final summary = _getSummary(ref, config);
@@ -159,7 +165,7 @@ class ExpandableForeignKeyItem extends ConsumerWidget {
               color: isExpanded
                   ? accentColor.withValues(alpha: 0.12)
                   : isConfigured
-                      ? accentColor.withValues(alpha: 0.08)
+                      ? accentColor.withValues(alpha: isDimmed ? 0.03 : 0.08)
                       : AppColors.surface,
               borderRadius: isExpanded
                   ? const BorderRadius.vertical(top: Radius.circular(12))
@@ -168,71 +174,89 @@ class ExpandableForeignKeyItem extends ConsumerWidget {
                 color: isExpanded
                     ? accentColor.withValues(alpha: 0.5)
                     : isConfigured
-                        ? accentColor.withValues(alpha: 0.4)
-                        : AppColors.border,
-                width: isExpanded ? 2 : 1,
+                        ? accentColor.withValues(alpha: isDimmed ? 0.2 : 0.4)
+                        : isAvailable
+                            ? AppColors.textPrimary
+                            : AppColors.border,
+                width: isExpanded || isConfigured || isAvailable ? 2 : 1,
               ),
             ),
-            child: Row(
-              children: [
-                // Icon
-                Icon(
-                  icon,
-                  size: 18,
-                  color: isConfigured ? accentColor : AppColors.textSecondary,
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                // Name and summary
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            displayName,
-                            style: AppTypography.bodyMedium.copyWith(
-                              fontWeight: isConfigured
-                                  ? FontWeight.w600
-                                  : FontWeight.w500,
-                              color: isConfigured
-                                  ? accentColor
-                                  : AppColors.textPrimary,
-                            ),
-                          ),
-                          // Required indicator
-                          if (!isConfigured) ...[
-                            const SizedBox(width: 4),
+            child: Opacity(
+              opacity: isDimmed ? 0.4 : 1.0,
+              child: Row(
+                children: [
+                  // Icon
+                  Icon(
+                    icon,
+                    size: 18,
+                    color: isConfigured
+                        ? accentColor
+                        : isAvailable
+                            ? AppColors.textPrimary
+                            : AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  // Name and summary
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
                             Text(
-                              '*',
+                              displayName,
                               style: AppTypography.bodyMedium.copyWith(
-                                color: AppColors.expense,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: isConfigured || isAvailable
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                                color: isConfigured
+                                    ? accentColor
+                                    : isAvailable
+                                        ? AppColors.textPrimary
+                                        : AppColors.textSecondary,
                               ),
                             ),
+                            // Required indicator
+                            if (!isConfigured) ...[
+                              const SizedBox(width: 4),
+                              Text(
+                                '*',
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: AppColors.expense,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ],
-                        ],
-                      ),
-                      if (!isExpanded && summary != null)
-                        Text(
-                          summary,
-                          style: AppTypography.labelSmall.copyWith(
-                            color: isConfigured
-                                ? accentColor.withValues(alpha: 0.8)
-                                : AppColors.textTertiary,
-                          ),
-                          overflow: TextOverflow.ellipsis,
                         ),
-                    ],
+                        if (!isExpanded && summary != null)
+                          Text(
+                            summary,
+                            style: AppTypography.labelSmall.copyWith(
+                              color: isConfigured
+                                  ? accentColor.withValues(alpha: 0.8)
+                                  : AppColors.textTertiary,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                      ],
+                    ),
                   ),
-                ),
-                // Expand/collapse icon
-                Icon(
-                  isExpanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
-                  size: 18,
-                  color: isExpanded ? accentColor : AppColors.textTertiary,
-                ),
-              ],
+                  // Expand/collapse icon or plus icon when available
+                  if (isAvailable)
+                    Icon(
+                      LucideIcons.plus,
+                      size: 18,
+                      color: AppColors.textPrimary,
+                    )
+                  else
+                    Icon(
+                      isExpanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
+                      size: 18,
+                      color: isExpanded ? accentColor : AppColors.textTertiary,
+                    ),
+                ],
+              ),
             ),
           ),
         ),

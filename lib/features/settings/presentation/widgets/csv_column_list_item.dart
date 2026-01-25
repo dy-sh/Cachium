@@ -20,6 +20,9 @@ class CsvColumnListItem extends StatelessWidget {
   /// Whether this column is currently selected.
   final bool isSelected;
 
+  /// Whether any column is currently selected (to dim non-selected items).
+  final bool hasAnySelected;
+
   /// Fixed color index if mapped to a regular field (based on field position).
   final int? mappedFieldColorIndex;
 
@@ -40,6 +43,7 @@ class CsvColumnListItem extends StatelessWidget {
     required this.columnName,
     required this.sampleValues,
     required this.isSelected,
+    this.hasAnySelected = false,
     this.mappedFieldColorIndex,
     this.mappedFieldKey,
     this.fkMappedTo,
@@ -52,6 +56,8 @@ class CsvColumnListItem extends StatelessWidget {
     final isFkMapped = fkMappedTo != null;
     final isFieldMapped = mappedFieldColorIndex != null;
     final isMapped = isFieldMapped || isFkMapped;
+    // Dim non-selected items when another is selected
+    final isDimmed = hasAnySelected && !isSelected;
 
     final mappedColor = isFkMapped
         ? getForeignKeyColor(fkMappedTo!, intensity)
@@ -75,57 +81,60 @@ class CsvColumnListItem extends StatelessWidget {
           color: isSelected
               ? mappedColor.withValues(alpha: 0.15)
               : isMapped
-                  ? mappedColor.withValues(alpha: 0.08)
+                  ? mappedColor.withValues(alpha: isDimmed ? 0.03 : 0.08)
                   : AppColors.surface,
           borderRadius: AppRadius.card,
           border: Border.all(
             color: isSelected
                 ? mappedColor
                 : isMapped
-                    ? mappedColor.withValues(alpha: 0.5)
+                    ? mappedColor.withValues(alpha: isDimmed ? 0.2 : 0.5)
                     : AppColors.border,
             width: isSelected || isMapped ? 2 : 1,
           ),
         ),
-        child: Row(
-          children: [
-            // Column name and samples (dimmed when disconnected)
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    columnName,
-                    style: AppTypography.bodyMedium.copyWith(
-                      fontWeight: isMapped ? FontWeight.w600 : FontWeight.w500,
-                      color: isMapped ? AppColors.textPrimary : AppColors.textSecondary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (sampleValues.isNotEmpty) ...[
-                    const SizedBox(height: 2),
+        child: Opacity(
+          opacity: isDimmed ? 0.4 : 1.0,
+          child: Row(
+            children: [
+              // Column name and samples (dimmed when disconnected)
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      _formatSampleValues(),
-                      style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.textTertiary,
-                        fontStyle: FontStyle.italic,
+                      columnName,
+                      style: AppTypography.bodyMedium.copyWith(
+                        fontWeight: isMapped || isSelected ? FontWeight.w600 : FontWeight.w500,
+                        color: isMapped || isSelected ? AppColors.textPrimary : AppColors.textSecondary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    if (sampleValues.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        _formatSampleValues(),
+                        style: AppTypography.labelSmall.copyWith(
+                          color: AppColors.textTertiary,
+                          fontStyle: FontStyle.italic,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            // Icon on the right (only when connected)
-            if (isMapped && mappedIcon != null)
-              Icon(
-                mappedIcon,
-                size: 16,
-                color: mappedColor,
-              ),
-          ],
+              // Icon on the right (only when connected)
+              if (isMapped && mappedIcon != null)
+                Icon(
+                  mappedIcon,
+                  size: 16,
+                  color: mappedColor,
+                ),
+            ],
+          ),
         ),
       ),
     );
