@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../data/models/app_settings.dart';
+import '../../data/models/field_mapping_options.dart';
 import '../../data/models/flexible_csv_import_config.dart';
 import '../providers/flexible_csv_import_providers.dart';
 import '../providers/settings_provider.dart';
@@ -163,14 +164,17 @@ class TwoPanelMappingView extends ConsumerWidget {
                     final sampleValues = config.getSampleValues(column);
 
                     // Check which FK this column is mapped to (if any)
+                    // Only show as mapped when mode is mapFromCsv
                     final categoryConfig = state.categoryConfig;
                     final accountConfig = state.accountConfig;
                     String? fkMappedTo;
-                    if (column == categoryConfig.nameColumn ||
-                        column == categoryConfig.idColumn) {
+                    if (categoryConfig.mode == ForeignKeyResolutionMode.mapFromCsv &&
+                        (column == categoryConfig.nameColumn ||
+                         column == categoryConfig.idColumn)) {
                       fkMappedTo = 'category';
-                    } else if (column == accountConfig.nameColumn ||
-                        column == accountConfig.idColumn) {
+                    } else if (accountConfig.mode == ForeignKeyResolutionMode.mapFromCsv &&
+                        (column == accountConfig.nameColumn ||
+                         column == accountConfig.idColumn)) {
                       fkMappedTo = 'account';
                     }
 
