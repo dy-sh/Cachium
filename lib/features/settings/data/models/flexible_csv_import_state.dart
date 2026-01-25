@@ -102,6 +102,9 @@ class FlexibleCsvImportState {
   final String? defaultCategoryId;
   final String? defaultAccountId;
 
+  /// Currently selected CSV column in the two-panel mapping view.
+  final String? selectedCsvColumn;
+
   const FlexibleCsvImportState({
     this.step = ImportWizardStep.selectType,
     this.entityType,
@@ -119,6 +122,7 @@ class FlexibleCsvImportState {
     this.useSameAccountForAll = false,
     this.defaultCategoryId,
     this.defaultAccountId,
+    this.selectedCsvColumn,
   });
 
   FlexibleCsvImportState copyWith({
@@ -144,6 +148,8 @@ class FlexibleCsvImportState {
     bool clearDefaultCategoryId = false,
     String? defaultAccountId,
     bool clearDefaultAccountId = false,
+    String? selectedCsvColumn,
+    bool clearSelectedCsvColumn = false,
   }) {
     return FlexibleCsvImportState(
       step: step ?? this.step,
@@ -173,6 +179,9 @@ class FlexibleCsvImportState {
       defaultAccountId: clearDefaultAccountId
           ? null
           : (defaultAccountId ?? this.defaultAccountId),
+      selectedCsvColumn: clearSelectedCsvColumn
+          ? null
+          : (selectedCsvColumn ?? this.selectedCsvColumn),
     );
   }
 
@@ -242,5 +251,68 @@ class FlexibleCsvImportState {
     return config!.csvHeaders
         .where((h) => !mappedColumns.contains(h))
         .toList();
+  }
+
+  /// Get connection badges for mapped CSV columns and fields.
+  /// Returns a map where keys are CSV column names and values are badge numbers (1-indexed).
+  Map<String, int> get connectionBadges {
+    if (config == null) return {};
+
+    final badges = <String, int>{};
+    int badgeNumber = 1;
+
+    // Assign badge numbers in the order columns appear in the CSV headers
+    for (final header in config!.csvHeaders) {
+      // Check if this column is mapped to any field
+      for (final mapping in config!.fieldMappings.values) {
+        if (mapping.csvColumn == header) {
+          badges[header] = badgeNumber;
+          badgeNumber++;
+          break;
+        }
+      }
+    }
+
+    return badges;
+  }
+
+  /// Get the field key that a CSV column is mapped to.
+  String? getFieldKeyForCsvColumn(String csvColumn) {
+    if (config == null) return null;
+
+    for (final entry in config!.fieldMappings.entries) {
+      if (entry.value.csvColumn == csvColumn) {
+        return entry.key;
+      }
+    }
+    return null;
+  }
+
+  /// Get the CSV column that a field is mapped to.
+  String? getCsvColumnForField(String fieldKey) {
+    if (config == null) return null;
+    return config!.fieldMappings[fieldKey]?.csvColumn;
+  }
+
+  /// Get badge number for a field key.
+  int? getBadgeForField(String fieldKey) {
+    final csvColumn = getCsvColumnForField(fieldKey);
+    if (csvColumn == null) return null;
+    return connectionBadges[csvColumn];
+  }
+
+  /// Get the count of mapped fields (for progress display).
+  int get mappedFieldCount {
+    if (config == null) return 0;
+    return config!.fieldMappings.values
+        .where((m) => m.csvColumn != null)
+        .length;
+  }
+
+  /// Get the total required field count.
+  int get totalRequiredFieldCount {
+    if (entityType == null) return 0;
+    final fields = ImportFieldDefinitions.getFieldsForType(entityType!);
+    return fields.where((f) => f.isRequired && !f.isForeignKey).length;
   }
 }

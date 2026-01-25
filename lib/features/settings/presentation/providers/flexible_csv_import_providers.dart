@@ -202,6 +202,80 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
     );
   }
 
+  /// Select a CSV column in the two-panel mapping view.
+  void selectCsvColumn(String? column) {
+    state = state.copyWith(
+      selectedCsvColumn: column,
+      clearSelectedCsvColumn: column == null,
+    );
+  }
+
+  /// Connect the currently selected CSV column to a target field.
+  /// If the field was already mapped to a different column, that mapping is cleared.
+  /// If the CSV column was already mapped to a different field, that mapping is cleared.
+  void connectToField(String fieldKey) {
+    if (state.config == null || state.selectedCsvColumn == null) return;
+
+    final csvColumn = state.selectedCsvColumn!;
+    final newMappings = Map<String, FieldMapping>.from(state.config!.fieldMappings);
+
+    // Clear any existing mapping that uses this CSV column
+    for (final entry in newMappings.entries) {
+      if (entry.value.csvColumn == csvColumn && entry.key != fieldKey) {
+        newMappings[entry.key] = entry.value.copyWith(clearCsvColumn: true);
+      }
+    }
+
+    // Set the new mapping
+    final currentMapping = newMappings[fieldKey];
+    if (currentMapping != null) {
+      newMappings[fieldKey] = currentMapping.copyWith(csvColumn: csvColumn);
+    }
+
+    state = state.copyWith(
+      config: state.config!.copyWith(fieldMappings: newMappings),
+      clearSelectedCsvColumn: true,
+      clearAppliedPreset: true,
+    );
+  }
+
+  /// Clear the mapping for a CSV column.
+  void clearConnectionForCsvColumn(String csvColumn) {
+    if (state.config == null) return;
+
+    final newMappings = Map<String, FieldMapping>.from(state.config!.fieldMappings);
+
+    for (final entry in newMappings.entries) {
+      if (entry.value.csvColumn == csvColumn) {
+        newMappings[entry.key] = entry.value.copyWith(clearCsvColumn: true);
+        break;
+      }
+    }
+
+    state = state.copyWith(
+      config: state.config!.copyWith(fieldMappings: newMappings),
+      clearSelectedCsvColumn: true,
+      clearAppliedPreset: true,
+    );
+  }
+
+  /// Clear the mapping for a field.
+  void clearConnectionForField(String fieldKey) {
+    if (state.config == null) return;
+
+    final currentMapping = state.config!.fieldMappings[fieldKey];
+    if (currentMapping == null) return;
+
+    final newMappings = Map<String, FieldMapping>.from(state.config!.fieldMappings);
+    newMappings[fieldKey] = currentMapping.copyWith(clearCsvColumn: true);
+
+    state = state.copyWith(
+      config: state.config!.copyWith(fieldMappings: newMappings),
+      clearSelectedCsvColumn: true,
+      clearAppliedPreset: true,
+    );
+  }
+
   /// Toggle "use same category for all" option.
   void setUseSameCategoryForAll(bool value) {
     state = state.copyWith(
@@ -335,6 +409,24 @@ final canProceedToPreviewProvider = Provider<bool>((ref) {
 final unmappedCsvColumnsProvider = Provider<List<String>>((ref) {
   final state = ref.watch(flexibleCsvImportProvider);
   return state.unmappedCsvColumns;
+});
+
+/// Provider for the currently selected CSV column.
+final selectedCsvColumnProvider = Provider<String?>((ref) {
+  final state = ref.watch(flexibleCsvImportProvider);
+  return state.selectedCsvColumn;
+});
+
+/// Provider for connection badges.
+final connectionBadgesProvider = Provider<Map<String, int>>((ref) {
+  final state = ref.watch(flexibleCsvImportProvider);
+  return state.connectionBadges;
+});
+
+/// Provider for mapping progress (mapped count / total required).
+final mappingProgressProvider = Provider<(int mapped, int total)>((ref) {
+  final state = ref.watch(flexibleCsvImportProvider);
+  return (state.mappedFieldCount, state.totalRequiredFieldCount);
 });
 
 /// Provider for the current CSV file name.
