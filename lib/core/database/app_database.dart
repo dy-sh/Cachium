@@ -172,12 +172,14 @@ class AppDatabase extends _$AppDatabase {
     required int date,
     required int lastUpdatedAt,
     required Uint8List encryptedBlob,
+    bool isDeleted = false,
   }) =>
       transactionDao.upsert(
         id: id,
         date: date,
         lastUpdatedAt: lastUpdatedAt,
         encryptedBlob: encryptedBlob,
+        isDeleted: isDeleted,
       );
 
   Future<void> updateTransaction({
@@ -224,12 +226,14 @@ class AppDatabase extends _$AppDatabase {
     required int createdAt,
     required int lastUpdatedAt,
     required Uint8List encryptedBlob,
+    bool isDeleted = false,
   }) =>
       accountDao.upsert(
         id: id,
         createdAt: createdAt,
         lastUpdatedAt: lastUpdatedAt,
         encryptedBlob: encryptedBlob,
+        isDeleted: isDeleted,
       );
 
   Future<void> updateAccount({
@@ -274,12 +278,14 @@ class AppDatabase extends _$AppDatabase {
     required int sortOrder,
     required int lastUpdatedAt,
     required Uint8List encryptedBlob,
+    bool isDeleted = false,
   }) =>
       categoryDao.upsert(
         id: id,
         sortOrder: sortOrder,
         lastUpdatedAt: lastUpdatedAt,
         encryptedBlob: encryptedBlob,
+        isDeleted: isDeleted,
       );
 
   Future<void> updateCategory({

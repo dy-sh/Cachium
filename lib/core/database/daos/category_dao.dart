@@ -33,13 +33,15 @@ class CategoryDao extends DatabaseAccessor<AppDatabase>
     required int sortOrder,
     required int lastUpdatedAt,
     required Uint8List encryptedBlob,
+    bool isDeleted = false,
   }) async {
     await into(categories).insert(
-      CategoriesCompanion.insert(
-        id: id,
-        sortOrder: sortOrder,
-        lastUpdatedAt: lastUpdatedAt,
-        encryptedBlob: encryptedBlob,
+      CategoriesCompanion(
+        id: Value(id),
+        sortOrder: Value(sortOrder),
+        lastUpdatedAt: Value(lastUpdatedAt),
+        encryptedBlob: Value(encryptedBlob),
+        isDeleted: Value(isDeleted),
       ),
       mode: InsertMode.insertOrReplace,
     );

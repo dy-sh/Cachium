@@ -93,6 +93,46 @@ class TransactionRepository {
     }
   }
 
+  /// Create or update a transaction with raw sync metadata.
+  ///
+  /// Use this for imports that need to preserve sync-critical fields like
+  /// lastUpdatedAt and currency from the source data.
+  ///
+  /// Throws [RepositoryException] if encryption or database operation fails.
+  Future<void> upsertTransactionRaw(
+    ui.Transaction transaction, {
+    int? lastUpdatedAt,
+    bool isDeleted = false,
+    String currency = 'USD',
+  }) async {
+    try {
+      final data = TransactionData(
+        id: transaction.id,
+        amount: transaction.amount,
+        categoryId: transaction.categoryId,
+        accountId: transaction.accountId,
+        type: transaction.type.name,
+        note: transaction.note,
+        currency: currency,
+        dateMillis: transaction.date.millisecondsSinceEpoch,
+        createdAtMillis: transaction.createdAt.millisecondsSinceEpoch,
+      );
+      final encryptedBlob = await encryptionService.encrypt(data);
+
+      final effectiveLastUpdatedAt = lastUpdatedAt ?? DateTime.now().millisecondsSinceEpoch;
+
+      await database.upsertTransaction(
+        id: transaction.id,
+        date: transaction.date.millisecondsSinceEpoch,
+        lastUpdatedAt: effectiveLastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+        isDeleted: isDeleted,
+      );
+    } catch (e) {
+      throw RepositoryException.create(entityType: _entityType, cause: e);
+    }
+  }
+
   /// Get a single transaction by ID (fetch, decrypt, verify)
   ///
   /// Returns null if transaction doesn't exist.

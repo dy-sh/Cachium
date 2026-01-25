@@ -33,13 +33,15 @@ class AccountDao extends DatabaseAccessor<AppDatabase>
     required int createdAt,
     required int lastUpdatedAt,
     required Uint8List encryptedBlob,
+    bool isDeleted = false,
   }) async {
     await into(accounts).insert(
-      AccountsCompanion.insert(
-        id: id,
-        createdAt: createdAt,
-        lastUpdatedAt: lastUpdatedAt,
-        encryptedBlob: encryptedBlob,
+      AccountsCompanion(
+        id: Value(id),
+        createdAt: Value(createdAt),
+        lastUpdatedAt: Value(lastUpdatedAt),
+        encryptedBlob: Value(encryptedBlob),
+        isDeleted: Value(isDeleted),
       ),
       mode: InsertMode.insertOrReplace,
     );

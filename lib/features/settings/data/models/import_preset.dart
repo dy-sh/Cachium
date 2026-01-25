@@ -75,6 +75,7 @@ class BuiltInPresets {
       'accountId': 'account_id',
       'date': 'date',
       'note': 'note',
+      'currency': 'currency',
     },
   );
 
@@ -106,6 +107,8 @@ class BuiltInPresets {
       'id': 'id',
       'name': 'name',
       'icon': 'icon_code_point',
+      'iconFontFamily': 'icon_font_family',
+      'iconFontPackage': 'icon_font_package',
       'colorIndex': 'color_index',
       'type': 'type',
       'isCustom': 'is_custom',

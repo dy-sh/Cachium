@@ -408,7 +408,7 @@ class DatabaseExportService {
       }
     } else {
       csvData.add([
-        'id', 'date', 'amount', 'category_id', 'account_id', 'type', 'note',
+        'id', 'date', 'last_updated_at', 'is_deleted', 'amount', 'category_id', 'account_id', 'type', 'note', 'currency',
       ]);
 
       for (final row in rows) {
@@ -418,11 +418,14 @@ class DatabaseExportService {
         csvData.add([
           row.id,
           row.date,
+          row.lastUpdatedAt,
+          row.isDeleted ? 1 : 0,
           data.amount,
           data.categoryId,
           data.accountId,
           data.type,
           data.note ?? '',
+          data.currency,
         ]);
       }
     }
@@ -449,7 +452,7 @@ class DatabaseExportService {
       }
     } else {
       csvData.add([
-        'id', 'created_at', 'name', 'type', 'balance', 'initial_balance', 'custom_color_value', 'custom_icon_code_point',
+        'id', 'created_at', 'last_updated_at', 'is_deleted', 'name', 'type', 'balance', 'initial_balance', 'custom_color_value', 'custom_icon_code_point',
       ]);
 
       for (final row in rows) {
@@ -459,6 +462,8 @@ class DatabaseExportService {
         csvData.add([
           row.id,
           row.createdAt,
+          row.lastUpdatedAt,
+          row.isDeleted ? 1 : 0,
           data.name,
           data.type,
           data.balance,
@@ -491,7 +496,7 @@ class DatabaseExportService {
       }
     } else {
       csvData.add([
-        'id', 'sort_order', 'name', 'icon_code_point', 'color_index', 'type', 'is_custom', 'parent_id',
+        'id', 'sort_order', 'last_updated_at', 'is_deleted', 'name', 'icon_code_point', 'icon_font_family', 'icon_font_package', 'color_index', 'type', 'is_custom', 'parent_id',
       ]);
 
       for (final row in rows) {
@@ -501,8 +506,12 @@ class DatabaseExportService {
         csvData.add([
           row.id,
           row.sortOrder,
+          row.lastUpdatedAt,
+          row.isDeleted ? 1 : 0,
           data.name,
           data.iconCodePoint,
+          data.iconFontFamily,
+          data.iconFontPackage ?? '',
           data.colorIndex,
           data.type,
           data.isCustom ? 1 : 0,

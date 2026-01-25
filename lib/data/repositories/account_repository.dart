@@ -99,6 +99,35 @@ class AccountRepository {
     }
   }
 
+  /// Create or update an account with raw sync metadata.
+  ///
+  /// Use this for imports that need to preserve sync-critical fields like
+  /// lastUpdatedAt from the source data.
+  ///
+  /// Throws [RepositoryException] if encryption or database operation fails.
+  Future<void> upsertAccountRaw(
+    ui.Account account, {
+    int? lastUpdatedAt,
+    bool isDeleted = false,
+  }) async {
+    try {
+      final data = _toData(account);
+      final encryptedBlob = await encryptionService.encryptAccount(data);
+
+      final effectiveLastUpdatedAt = lastUpdatedAt ?? DateTime.now().millisecondsSinceEpoch;
+
+      await database.upsertAccount(
+        id: account.id,
+        createdAt: account.createdAt.millisecondsSinceEpoch,
+        lastUpdatedAt: effectiveLastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+        isDeleted: isDeleted,
+      );
+    } catch (e) {
+      throw RepositoryException.create(entityType: _entityType, cause: e);
+    }
+  }
+
   /// Get a single account by ID (fetch, decrypt, verify)
   ///
   /// Returns null if account doesn't exist.

@@ -33,13 +33,15 @@ class TransactionDao extends DatabaseAccessor<AppDatabase>
     required int date,
     required int lastUpdatedAt,
     required Uint8List encryptedBlob,
+    bool isDeleted = false,
   }) async {
     await into(transactions).insert(
-      TransactionsCompanion.insert(
-        id: id,
-        date: date,
-        lastUpdatedAt: lastUpdatedAt,
-        encryptedBlob: encryptedBlob,
+      TransactionsCompanion(
+        id: Value(id),
+        date: Value(date),
+        lastUpdatedAt: Value(lastUpdatedAt),
+        encryptedBlob: Value(encryptedBlob),
+        isDeleted: Value(isDeleted),
       ),
       mode: InsertMode.insertOrReplace,
     );

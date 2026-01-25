@@ -138,6 +138,12 @@ class FlexibleCsvImportService {
         return ['icon_code', 'icon_code_point'];
       case 'createdAt':
         return ['created_at', 'created', 'creation_date', 'created_at_millis'];
+      case 'currency':
+        return ['currency_code', 'curr'];
+      case 'iconFontFamily':
+        return ['icon_font_family', 'font_family'];
+      case 'iconFontPackage':
+        return ['icon_font_package', 'font_package'];
       default:
         return [];
     }
@@ -659,11 +665,18 @@ class FlexibleCsvImportService {
       parentId = newCategories[parentName] ?? categoriesByName[parentName]?.id;
     }
 
+    final iconFontFamily = values['iconFontFamily'] as String? ?? 'lucide';
+    final iconFontPackage = values['iconFontPackage'] as String?;
+    // Handle empty string as null for fontPackage
+    final effectiveFontPackage = (iconFontPackage == null || iconFontPackage.isEmpty)
+        ? (iconFontFamily == 'lucide' ? 'lucide_icons' : null)
+        : iconFontPackage;
+
     final category = Category(
       id: values['id'] as String,
       name: values['name'] as String,
       icon: values['icon'] != null
-          ? IconData(values['icon'] as int, fontFamily: 'lucide', fontPackage: 'lucide_icons')
+          ? IconData(values['icon'] as int, fontFamily: iconFontFamily, fontPackage: effectiveFontPackage)
           : LucideIcons.folder,
       colorIndex: values['colorIndex'] as int? ?? 0,
       type: values['type'] as CategoryType? ?? CategoryType.expense,
@@ -704,6 +717,11 @@ class FlexibleCsvImportService {
       note: values['note'] as String?,
       createdAt: values['createdAt'] as DateTime? ?? DateTime.now(),
     );
-    await transactionRepository.upsertTransaction(transaction);
+
+    final currency = values['currency'] as String? ?? 'USD';
+    await transactionRepository.upsertTransactionRaw(
+      transaction,
+      currency: currency,
+    );
   }
 }

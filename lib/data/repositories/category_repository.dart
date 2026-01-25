@@ -101,6 +101,35 @@ class CategoryRepository {
     }
   }
 
+  /// Create or update a category with raw sync metadata.
+  ///
+  /// Use this for imports that need to preserve sync-critical fields like
+  /// lastUpdatedAt from the source data.
+  ///
+  /// Throws [RepositoryException] if encryption or database operation fails.
+  Future<void> upsertCategoryRaw(
+    ui.Category category, {
+    int? lastUpdatedAt,
+    bool isDeleted = false,
+  }) async {
+    try {
+      final data = _toData(category);
+      final encryptedBlob = await encryptionService.encryptCategory(data);
+
+      final effectiveLastUpdatedAt = lastUpdatedAt ?? DateTime.now().millisecondsSinceEpoch;
+
+      await database.upsertCategory(
+        id: category.id,
+        sortOrder: category.sortOrder,
+        lastUpdatedAt: effectiveLastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+        isDeleted: isDeleted,
+      );
+    } catch (e) {
+      throw RepositoryException.create(entityType: _entityType, cause: e);
+    }
+  }
+
   /// Get a single category by ID (fetch, decrypt, verify)
   ///
   /// Returns null if category doesn't exist.

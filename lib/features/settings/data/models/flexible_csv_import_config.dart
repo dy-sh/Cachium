@@ -282,6 +282,20 @@ class ImportFieldDefinitions {
       defaultValue: 0,
       description: 'Display order',
     ),
+    AppFieldDefinition(
+      key: 'iconFontFamily',
+      displayName: 'Icon Font Family',
+      type: FieldType.string,
+      defaultValue: 'lucide',
+      description: 'Font family for icon (default: lucide)',
+    ),
+    AppFieldDefinition(
+      key: 'iconFontPackage',
+      displayName: 'Icon Font Package',
+      type: FieldType.string,
+      defaultValue: 'lucide_icons',
+      description: 'Font package for icon (default: lucide_icons)',
+    ),
   ];
 
   static const List<AppFieldDefinition> transactionFields = [
@@ -352,6 +366,13 @@ class ImportFieldDefinitions {
       displayName: 'Note',
       type: FieldType.string,
       description: 'Optional note/memo',
+    ),
+    AppFieldDefinition(
+      key: 'currency',
+      displayName: 'Currency',
+      type: FieldType.string,
+      defaultValue: 'USD',
+      description: 'Currency code (default: USD)',
     ),
   ];
 
