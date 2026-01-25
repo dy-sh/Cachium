@@ -291,7 +291,7 @@ class ColumnMappingScreen extends ConsumerWidget {
             ),
             const SizedBox(width: 6),
             Text(
-              hasPreset ? appliedPreset.name : 'Preset',
+              hasPreset ? appliedPreset.name : 'Presets',
               style: AppTypography.bodySmall.copyWith(
                 color: hasPreset ? accentColor : AppColors.textPrimary,
                 fontWeight: hasPreset ? FontWeight.w600 : FontWeight.normal,

@@ -64,7 +64,7 @@ class BuiltInPresets {
   /// Preset for Cachium's own CSV export format (transactions).
   static const cachiumTransactions = ImportPreset(
     id: 'cachium_transactions',
-    name: 'Cachium Export',
+    name: 'Cachium',
     description: 'Cachium CSV export format',
     entityType: ImportEntityType.transaction,
     columnMappings: {
@@ -84,7 +84,7 @@ class BuiltInPresets {
   /// Preset for Cachium's own CSV export format (accounts).
   static const cachiumAccounts = ImportPreset(
     id: 'cachium_accounts',
-    name: 'Cachium Export',
+    name: 'Cachium',
     description: 'Cachium CSV export format',
     entityType: ImportEntityType.account,
     columnMappings: {
@@ -102,7 +102,7 @@ class BuiltInPresets {
   /// Preset for Cachium's own CSV export format (categories).
   static const cachiumCategories = ImportPreset(
     id: 'cachium_categories',
-    name: 'Cachium Export',
+    name: 'Cachium',
     description: 'Cachium CSV export format',
     entityType: ImportEntityType.category,
     columnMappings: {

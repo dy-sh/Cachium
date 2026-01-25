@@ -304,6 +304,7 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
           mode: mode,
           clearSelectedEntityId: mode != ForeignKeyResolutionMode.useSameForAll,
         ),
+        clearAppliedPreset: true,
       );
     } else if (foreignKey == 'account') {
       state = state.copyWith(
@@ -311,6 +312,7 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
           mode: mode,
           clearSelectedEntityId: mode != ForeignKeyResolutionMode.useSameForAll,
         ),
+        clearAppliedPreset: true,
       );
     }
   }
@@ -323,6 +325,7 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
           selectedEntityId: entityId,
           clearSelectedEntityId: entityId == null,
         ),
+        clearAppliedPreset: true,
       );
     } else if (foreignKey == 'account') {
       state = state.copyWith(
@@ -330,6 +333,7 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
           selectedEntityId: entityId,
           clearSelectedEntityId: entityId == null,
         ),
+        clearAppliedPreset: true,
       );
     }
   }
@@ -369,11 +373,13 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
         state = state.copyWith(
           categoryConfig: state.categoryConfig.copyWith(nameColumn: csvColumn),
           clearSelectedFieldKey: true,
+          clearAppliedPreset: true,
         );
       } else if (subField == 'id') {
         state = state.copyWith(
           categoryConfig: state.categoryConfig.copyWith(idColumn: csvColumn),
           clearSelectedFieldKey: true,
+          clearAppliedPreset: true,
         );
       }
     } else if (foreignKey == 'account') {
@@ -381,11 +387,13 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
         state = state.copyWith(
           accountConfig: state.accountConfig.copyWith(nameColumn: csvColumn),
           clearSelectedFieldKey: true,
+          clearAppliedPreset: true,
         );
       } else if (subField == 'id') {
         state = state.copyWith(
           accountConfig: state.accountConfig.copyWith(idColumn: csvColumn),
           clearSelectedFieldKey: true,
+          clearAppliedPreset: true,
         );
       }
     }
@@ -397,20 +405,24 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
       if (subField == 'name') {
         state = state.copyWith(
           categoryConfig: state.categoryConfig.copyWith(clearNameColumn: true),
+          clearAppliedPreset: true,
         );
       } else if (subField == 'id') {
         state = state.copyWith(
           categoryConfig: state.categoryConfig.copyWith(clearIdColumn: true),
+          clearAppliedPreset: true,
         );
       }
     } else if (foreignKey == 'account') {
       if (subField == 'name') {
         state = state.copyWith(
           accountConfig: state.accountConfig.copyWith(clearNameColumn: true),
+          clearAppliedPreset: true,
         );
       } else if (subField == 'id') {
         state = state.copyWith(
           accountConfig: state.accountConfig.copyWith(clearIdColumn: true),
+          clearAppliedPreset: true,
         );
       }
     }
