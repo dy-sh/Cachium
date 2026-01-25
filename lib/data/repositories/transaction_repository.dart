@@ -66,7 +66,7 @@ class TransactionRepository {
       await database.insertTransaction(
         id: transaction.id,
         date: transaction.date.millisecondsSinceEpoch,
-        lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
+        lastUpdatedAt: transaction.createdAt.millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
     } catch (e) {
@@ -85,7 +85,7 @@ class TransactionRepository {
       await database.upsertTransaction(
         id: transaction.id,
         date: transaction.date.millisecondsSinceEpoch,
-        lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
+        lastUpdatedAt: transaction.createdAt.millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
     } catch (e) {

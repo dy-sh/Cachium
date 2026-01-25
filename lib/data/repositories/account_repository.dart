@@ -72,7 +72,7 @@ class AccountRepository {
       await database.insertAccount(
         id: account.id,
         createdAt: account.createdAt.millisecondsSinceEpoch,
-        lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
+        lastUpdatedAt: account.createdAt.millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
     } catch (e) {
@@ -91,7 +91,7 @@ class AccountRepository {
       await database.upsertAccount(
         id: account.id,
         createdAt: account.createdAt.millisecondsSinceEpoch,
-        lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
+        lastUpdatedAt: account.createdAt.millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
     } catch (e) {
