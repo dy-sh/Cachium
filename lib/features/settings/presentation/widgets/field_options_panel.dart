@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
-import '../../../../navigation/app_router.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../data/models/app_settings.dart';
 import '../../data/models/field_mapping_options.dart';
 import '../providers/flexible_csv_import_providers.dart';
+import 'account_picker_modal.dart';
+import 'category_picker_modal.dart';
 import 'expandable_target_field_item.dart';
 
 /// Panel for configuring a foreign key (Category or Account).
@@ -321,7 +321,11 @@ class _EntityPickerButton extends ConsumerWidget {
           icon: selected?.icon ?? LucideIcons.tag,
           label: selected?.name ?? 'Select Category...',
           isSelected: selected != null,
-          onTap: () => _showCategoryPicker(context, categories),
+          onTap: () => showCategoryPickerModal(
+            context: context,
+            selectedCategoryId: selectedEntityId,
+            onSelected: (id) => onSelect(id),
+          ),
         );
       },
       loading: () => const SizedBox(
@@ -346,7 +350,11 @@ class _EntityPickerButton extends ConsumerWidget {
           icon: selected?.icon ?? LucideIcons.wallet,
           label: selected?.name ?? 'Select Account...',
           isSelected: selected != null,
-          onTap: () => _showAccountPicker(context, accounts),
+          onTap: () => showAccountPickerModal(
+            context: context,
+            selectedAccountId: selectedEntityId,
+            onSelected: (id) => onSelect(id),
+          ),
         );
       },
       loading: () => const SizedBox(
@@ -408,164 +416,6 @@ class _EntityPickerButton extends ConsumerWidget {
           ],
         ),
       ),
-    );
-  }
-
-  void _showCategoryPicker(BuildContext context, List categories) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        return Container(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                child: Text('Select Category', style: AppTypography.h4),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              // Create new option
-              ListTile(
-                leading: Icon(
-                  LucideIcons.plus,
-                  color: AppColors.textSecondary,
-                ),
-                title: Text(
-                  'Create New Category',
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  context.push(AppRoutes.categoryManagement);
-                },
-              ),
-              Divider(color: AppColors.border.withValues(alpha: 0.5)),
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: categories.length,
-                  itemBuilder: (context, index) {
-                    final category = categories[index];
-                    final isSelected = category.id == selectedEntityId;
-                    return ListTile(
-                      leading: Icon(
-                        category.icon,
-                        color: isSelected
-                            ? AppColors.textPrimary
-                            : AppColors.textSecondary,
-                      ),
-                      title: Text(
-                        category.name,
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: isSelected
-                              ? AppColors.textPrimary
-                              : AppColors.textSecondary,
-                          fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.normal,
-                        ),
-                      ),
-                      trailing: isSelected
-                          ? Icon(LucideIcons.check, color: AppColors.textPrimary)
-                          : null,
-                      onTap: () {
-                        onSelect(category.id);
-                        Navigator.pop(ctx);
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _showAccountPicker(BuildContext context, List accounts) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        return Container(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                child: Text('Select Account', style: AppTypography.h4),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              // Create new option
-              ListTile(
-                leading: Icon(
-                  LucideIcons.plus,
-                  color: AppColors.textSecondary,
-                ),
-                title: Text(
-                  'Create New Account',
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  context.push(AppRoutes.accountForm);
-                },
-              ),
-              Divider(color: AppColors.border.withValues(alpha: 0.5)),
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: accounts.length,
-                  itemBuilder: (context, index) {
-                    final account = accounts[index];
-                    final isSelected = account.id == selectedEntityId;
-                    return ListTile(
-                      leading: Icon(
-                        account.icon,
-                        color: isSelected
-                            ? AppColors.textPrimary
-                            : AppColors.textSecondary,
-                      ),
-                      title: Text(
-                        account.name,
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: isSelected
-                              ? AppColors.textPrimary
-                              : AppColors.textSecondary,
-                          fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.normal,
-                        ),
-                      ),
-                      trailing: isSelected
-                          ? Icon(LucideIcons.check, color: AppColors.textPrimary)
-                          : null,
-                      onTap: () {
-                        onSelect(account.id);
-                        Navigator.pop(ctx);
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 }
