@@ -32,10 +32,12 @@ class TransactionData with _$TransactionData {
     /// Currency code (default: USD)
     @Default('USD') String currency,
 
-    /// Duplicated for integrity check - must match row date
+    /// Matches the database date field for integrity verification during import.
+    /// Not exported as a separate CSV column to avoid duplication.
     required int dateMillis,
 
-    /// When the transaction was created
+    /// When the transaction was created (internal metadata only).
+    /// Not exported as a separate CSV column to avoid duplication.
     required int createdAtMillis,
   }) = _TransactionData;
 

@@ -409,7 +409,7 @@ class DatabaseExportService {
     } else {
       csvData.add([
         'id', 'date', 'last_updated_at', 'is_deleted',
-        'amount', 'category_id', 'account_id', 'type', 'note', 'currency', 'date_millis', 'created_at_millis',
+        'amount', 'category_id', 'account_id', 'type', 'note', 'currency',
       ]);
 
       for (final row in rows) {
@@ -427,8 +427,8 @@ class DatabaseExportService {
           data.type,
           data.note ?? '',
           data.currency,
-          data.dateMillis,
-          data.createdAtMillis,
+          // Removed: data.dateMillis (duplicate of row.date)
+          // Removed: data.createdAtMillis (not in DB schema, only for internal integrity)
         ]);
       }
     }
@@ -456,7 +456,7 @@ class DatabaseExportService {
     } else {
       csvData.add([
         'id', 'created_at', 'last_updated_at', 'is_deleted',
-        'name', 'type', 'balance', 'initial_balance', 'custom_color_value', 'custom_icon_code_point', 'created_at_millis',
+        'name', 'type', 'balance', 'initial_balance', 'custom_color_value', 'custom_icon_code_point',
       ]);
 
       for (final row in rows) {
@@ -474,7 +474,7 @@ class DatabaseExportService {
           data.initialBalance,
           data.customColorValue ?? '',
           data.customIconCodePoint ?? '',
-          data.createdAtMillis,
+          // Removed: data.createdAtMillis (duplicate of row.createdAt)
         ]);
       }
     }

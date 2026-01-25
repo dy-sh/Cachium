@@ -32,7 +32,8 @@ class AccountData with _$AccountData {
     /// Custom icon code point (optional)
     int? customIconCodePoint,
 
-    /// Duplicated for integrity check - must match row createdAt
+    /// Matches the database createdAt field for integrity verification during import.
+    /// Not exported as a separate CSV column to avoid duplication.
     required int createdAtMillis,
   }) = _AccountData;
 
