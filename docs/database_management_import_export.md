@@ -136,6 +136,8 @@ Each follows the same encryption toggle logic. For encrypted format, the `encryp
 | categories.csv | `id, sort_order, last_updated_at, name, icon_code_point, icon_font_family, icon_font_package, color_index, type, is_custom, parent_id` |
 | app_settings.csv | `id, last_updated_at, json_data` |
 
+**Note:** The `last_updated_at` column is included in exports and can be mapped during import. When importing, the original timestamps are preserved (for sync compatibility). If not mapped, current time is used.
+
 **Encrypted CSV columns** (encryption ON, all records included):
 
 | File | Columns |

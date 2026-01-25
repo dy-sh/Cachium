@@ -144,6 +144,8 @@ class FlexibleCsvImportService {
         return ['icon_font_family', 'font_family'];
       case 'iconFontPackage':
         return ['icon_font_package', 'font_package'];
+      case 'lastUpdatedAt':
+        return ['last_updated_at', 'updated_at', 'modified_at', 'last_modified'];
       default:
         return [];
     }
@@ -649,7 +651,13 @@ class FlexibleCsvImportService {
           : null,
       createdAt: values['createdAt'] as DateTime? ?? DateTime.now(),
     );
-    await accountRepository.upsertAccount(account);
+
+    // Use upsertRaw to preserve lastUpdatedAt from import
+    final lastUpdatedAt = values['lastUpdatedAt'] as DateTime?;
+    await accountRepository.upsertAccountRaw(
+      account,
+      lastUpdatedAt: lastUpdatedAt?.millisecondsSinceEpoch,
+    );
   }
 
   Future<void> _importCategory(
@@ -684,7 +692,13 @@ class FlexibleCsvImportService {
       parentId: parentId,
       sortOrder: values['sortOrder'] as int? ?? 0,
     );
-    await categoryRepository.upsertCategory(category);
+
+    // Use upsertRaw to preserve lastUpdatedAt from import
+    final lastUpdatedAt = values['lastUpdatedAt'] as DateTime?;
+    await categoryRepository.upsertCategoryRaw(
+      category,
+      lastUpdatedAt: lastUpdatedAt?.millisecondsSinceEpoch,
+    );
   }
 
   Future<void> _importTransaction(
@@ -718,10 +732,13 @@ class FlexibleCsvImportService {
       createdAt: values['createdAt'] as DateTime? ?? DateTime.now(),
     );
 
+    // Use upsertRaw to preserve lastUpdatedAt from import
     final currency = values['currency'] as String? ?? 'USD';
+    final lastUpdatedAt = values['lastUpdatedAt'] as DateTime?;
     await transactionRepository.upsertTransactionRaw(
       transaction,
       currency: currency,
+      lastUpdatedAt: lastUpdatedAt?.millisecondsSinceEpoch,
     );
   }
 }

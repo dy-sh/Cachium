@@ -76,6 +76,7 @@ class BuiltInPresets {
       'date': 'date',
       'note': 'note',
       'currency': 'currency',
+      'lastUpdatedAt': 'last_updated_at',
     },
   );
 
@@ -94,6 +95,7 @@ class BuiltInPresets {
       'customColor': 'custom_color_value',
       'customIcon': 'custom_icon_code_point',
       'createdAt': 'created_at',
+      'lastUpdatedAt': 'last_updated_at',
     },
   );
 
@@ -114,6 +116,7 @@ class BuiltInPresets {
       'isCustom': 'is_custom',
       'parentId': 'parent_id',
       'sortOrder': 'sort_order',
+      'lastUpdatedAt': 'last_updated_at',
     },
   );
 

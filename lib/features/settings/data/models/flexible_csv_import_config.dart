@@ -215,6 +215,12 @@ class ImportFieldDefinitions {
       type: FieldType.dateTime,
       description: 'Creation timestamp',
     ),
+    AppFieldDefinition(
+      key: 'lastUpdatedAt',
+      displayName: 'Last Updated',
+      type: FieldType.dateTime,
+      description: 'Last modification timestamp (for sync)',
+    ),
   ];
 
   // Icon code point for folder icon (0xe399 is LucideIcons.folder)
@@ -296,6 +302,12 @@ class ImportFieldDefinitions {
       defaultValue: 'lucide_icons',
       description: 'Font package for icon (default: lucide_icons)',
     ),
+    AppFieldDefinition(
+      key: 'lastUpdatedAt',
+      displayName: 'Last Updated',
+      type: FieldType.dateTime,
+      description: 'Last modification timestamp (for sync)',
+    ),
   ];
 
   static const List<AppFieldDefinition> transactionFields = [
@@ -373,6 +385,12 @@ class ImportFieldDefinitions {
       type: FieldType.string,
       defaultValue: 'USD',
       description: 'Currency code (default: USD)',
+    ),
+    AppFieldDefinition(
+      key: 'lastUpdatedAt',
+      displayName: 'Last Updated',
+      type: FieldType.dateTime,
+      description: 'Last modification timestamp (for sync)',
     ),
   ];
 
