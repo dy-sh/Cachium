@@ -28,7 +28,16 @@ class DatabaseSettingsScreen extends ConsumerStatefulWidget {
       _DatabaseSettingsScreenState();
 }
 
+enum _LoadingAction {
+  importSqlite,
+  importCsv,
+  recalculate,
+  reset,
+}
+
 class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen> {
+  _LoadingAction? _loadingAction;
+
   @override
   void initState() {
     super.initState();
@@ -42,9 +51,6 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
   @override
   Widget build(BuildContext context) {
     final intensity = ref.watch(colorIntensityProvider);
-    final managementState = ref.watch(databaseManagementProvider);
-    final importState = ref.watch(importStateProvider);
-    final recalculateState = ref.watch(recalculateBalancesProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -114,9 +120,10 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
                         description: 'Refresh from transaction history',
                         icon: LucideIcons.calculator,
                         iconColor: AppColors.getAccentColor(5, intensity),
-                        onTap: recalculateState.isLoading
+                        onTap: _loadingAction != null
                             ? null
                             : () => _handleRecalculateBalances(context),
+                        isLoading: _loadingAction == _LoadingAction.recalculate,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xxl),
@@ -152,25 +159,29 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
                           description: 'Restore from database file',
                           icon: LucideIcons.databaseBackup,
                           iconColor: AppColors.getAccentColor(5, intensity),
-                          onTap: importState.isLoading
+                          onTap: _loadingAction != null
                               ? null
                               : () => _handleImportSqlite(context),
+                          isLoading: _loadingAction == _LoadingAction.importSqlite,
                         ),
                         SettingsTile(
                           title: 'Import CSV',
                           description: 'Import from spreadsheets',
                           icon: LucideIcons.fileUp,
                           iconColor: AppColors.getAccentColor(9, intensity),
-                          onTap: importState.isLoading
+                          onTap: _loadingAction != null
                               ? null
                               : () => _handleImportCsv(context),
+                          isLoading: _loadingAction == _LoadingAction.importCsv,
                         ),
                         SettingsTile(
                           title: 'CSV Import (External)',
                           description: 'Import from other apps',
                           icon: LucideIcons.fileInput,
                           iconColor: AppColors.getAccentColor(1, intensity),
-                          onTap: () => context.push(AppRoutes.csvImport),
+                          onTap: _loadingAction != null
+                              ? null
+                              : () => context.push(AppRoutes.csvImport),
                         ),
                       ],
                     ),
@@ -185,9 +196,10 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
                           description: 'Delete all data and start fresh',
                           icon: LucideIcons.refreshCcw,
                           iconColor: AppColors.expense,
-                          onTap: managementState.isLoading
+                          onTap: _loadingAction != null
                               ? null
                               : () => _handleResetDatabase(context),
+                          isLoading: _loadingAction == _LoadingAction.reset,
                         ),
                       ],
                     ),
@@ -227,9 +239,15 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
     final result = await showResetDatabaseDialog(context: context);
 
     if (result != null && result.confirmed) {
+      setState(() => _loadingAction = _LoadingAction.reset);
+
       final success = await ref
           .read(databaseManagementProvider.notifier)
           .resetDatabase(resetSettings: result.resetSettings);
+
+      if (mounted) {
+        setState(() => _loadingAction = null);
+      }
 
       if (!success && context.mounted) {
         context.showErrorNotification('Failed to reset database');
@@ -239,10 +257,15 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
   }
 
   Future<void> _handleRecalculateBalances(BuildContext context) async {
+    setState(() => _loadingAction = _LoadingAction.recalculate);
+
     // Calculate preview
     final preview = await ref
         .read(recalculateBalancesProvider.notifier)
         .calculatePreview();
+
+    if (!mounted) return;
+    setState(() => _loadingAction = null);
 
     if (preview == null || !context.mounted) return;
 
@@ -266,19 +289,27 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
   }
 
   Future<void> _handleImportSqlite(BuildContext context) async {
+    setState(() => _loadingAction = _LoadingAction.importSqlite);
+
     // Step 1: Pick file first
     final pickResult = await ref.read(importStateProvider.notifier).pickSqliteFile();
 
-    if (!context.mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     // Handle validation errors
     if (pickResult.isError) {
-      context.showErrorNotification(pickResult.error!);
+      setState(() => _loadingAction = null);
+      if (context.mounted) {
+        context.showErrorNotification(pickResult.error!);
+      }
       return;
     }
 
     // User cancelled
     if (pickResult.isCancelled || pickResult.paths == null || pickResult.paths!.isEmpty) {
+      setState(() => _loadingAction = null);
       return;
     }
 
@@ -288,6 +319,9 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
     final currentMetrics = await ref.read(databaseMetricsProvider.future);
     final importMetrics = ref.read(importStateProvider.notifier).getMetricsFromFile(filePath);
     final fileName = filePath.split('/').last;
+
+    if (!mounted) return;
+    setState(() => _loadingAction = null);
 
     if (!context.mounted) return;
 
@@ -329,19 +363,27 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
   }
 
   Future<void> _handleImportCsv(BuildContext context) async {
+    setState(() => _loadingAction = _LoadingAction.importCsv);
+
     // Step 1: Pick files
     final pickResult = await ref.read(importStateProvider.notifier).pickCsvFiles();
 
-    if (!context.mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     // Handle validation errors
     if (pickResult.isError) {
-      context.showErrorNotification(pickResult.error!);
+      setState(() => _loadingAction = null);
+      if (context.mounted) {
+        context.showErrorNotification(pickResult.error!);
+      }
       return;
     }
 
     // User cancelled
     if (pickResult.isCancelled || pickResult.paths == null || pickResult.paths!.isEmpty) {
+      setState(() => _loadingAction = null);
       return;
     }
 
@@ -349,6 +391,10 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
 
     // Step 2: Generate preview
     final preview = await ref.read(importStateProvider.notifier).generateCsvPreview(paths);
+
+    if (!mounted) return;
+    setState(() => _loadingAction = null);
+
     if (preview == null || !context.mounted) return;
 
     // Step 3: Show preview dialog

@@ -15,13 +15,19 @@ import '../providers/settings_provider.dart';
 
 /// Entry screen for flexible CSV import.
 /// Select entity type (Accounts / Categories / Transactions).
-class CsvImportScreen extends ConsumerWidget {
+class CsvImportScreen extends ConsumerStatefulWidget {
   const CsvImportScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CsvImportScreen> createState() => _CsvImportScreenState();
+}
+
+class _CsvImportScreenState extends ConsumerState<CsvImportScreen> {
+  ImportEntityType? _loadingType;
+
+  @override
+  Widget build(BuildContext context) {
     final intensity = ref.watch(colorIntensityProvider);
-    final state = ref.watch(flexibleCsvImportProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -149,7 +155,8 @@ class CsvImportScreen extends ConsumerWidget {
                       icon: LucideIcons.arrowLeftRight,
                       color: AppColors.getAccentColor(0, intensity),
                       description: 'Income & expense records',
-                      onTap: () => _selectType(context, ref, ImportEntityType.transaction),
+                      onTap: () => _selectType(context, ImportEntityType.transaction),
+                      isLoading: _loadingType == ImportEntityType.transaction,
                     ),
                     const SizedBox(height: AppSpacing.md),
                     _EntityTypeCard(
@@ -157,7 +164,8 @@ class CsvImportScreen extends ConsumerWidget {
                       icon: LucideIcons.wallet,
                       color: AppColors.getAccentColor(3, intensity),
                       description: 'Bank accounts, credit cards, etc.',
-                      onTap: () => _selectType(context, ref, ImportEntityType.account),
+                      onTap: () => _selectType(context, ImportEntityType.account),
+                      isLoading: _loadingType == ImportEntityType.account,
                     ),
                     const SizedBox(height: AppSpacing.md),
                     _EntityTypeCard(
@@ -165,7 +173,8 @@ class CsvImportScreen extends ConsumerWidget {
                       icon: LucideIcons.tag,
                       color: AppColors.getAccentColor(7, intensity),
                       description: 'Spending & income categories',
-                      onTap: () => _selectType(context, ref, ImportEntityType.category),
+                      onTap: () => _selectType(context, ImportEntityType.category),
+                      isLoading: _loadingType == ImportEntityType.category,
                     ),
 
                     const SizedBox(height: AppSpacing.xxxl),
@@ -181,14 +190,21 @@ class CsvImportScreen extends ConsumerWidget {
 
   void _selectType(
     BuildContext context,
-    WidgetRef ref,
     ImportEntityType type,
   ) async {
+    if (_loadingType != null) return; // Already loading
+
+    setState(() => _loadingType = type);
+
     final notifier = ref.read(flexibleCsvImportProvider.notifier);
     notifier.selectEntityType(type);
 
     // Pick file
     final success = await notifier.loadCsvFile();
+
+    if (!mounted) return;
+
+    setState(() => _loadingType = null);
 
     if (success && context.mounted) {
       context.push(AppRoutes.csvImportMapping);
@@ -209,6 +225,7 @@ class _EntityTypeCard extends ConsumerWidget {
   final Color color;
   final String description;
   final VoidCallback onTap;
+  final bool isLoading;
 
   const _EntityTypeCard({
     required this.type,
@@ -216,6 +233,7 @@ class _EntityTypeCard extends ConsumerWidget {
     required this.color,
     required this.description,
     required this.onTap,
+    required this.isLoading,
   });
 
   @override
@@ -224,7 +242,7 @@ class _EntityTypeCard extends ConsumerWidget {
     final bgOpacity = AppColors.getBgOpacity(intensity);
 
     return GestureDetector(
-      onTap: onTap,
+      onTap: isLoading ? null : onTap,
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
@@ -268,11 +286,18 @@ class _EntityTypeCard extends ConsumerWidget {
                 ],
               ),
             ),
-            Icon(
-              LucideIcons.chevronRight,
-              size: 20,
-              color: AppColors.textTertiary,
-            ),
+            if (isLoading)
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else
+              Icon(
+                LucideIcons.chevronRight,
+                size: 20,
+                color: AppColors.textTertiary,
+              ),
           ],
         ),
       ),

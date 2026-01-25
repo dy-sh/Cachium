@@ -16,6 +16,7 @@ class SettingsTile extends ConsumerWidget {
   final VoidCallback? onTap;
   final Widget? trailing;
   final bool showChevron;
+  final bool isLoading;
 
   const SettingsTile({
     super.key,
@@ -27,6 +28,7 @@ class SettingsTile extends ConsumerWidget {
     this.onTap,
     this.trailing,
     this.showChevron = true,
+    this.isLoading = false,
   });
 
   @override
@@ -36,7 +38,7 @@ class SettingsTile extends ConsumerWidget {
     final bgOpacity = isPrism ? 0.35 : 0.15;
 
     return GestureDetector(
-      onTap: onTap,
+      onTap: isLoading ? null : onTap,
       behavior: HitTestBehavior.opaque,
       child: Padding(
         padding: const EdgeInsets.symmetric(
@@ -94,7 +96,14 @@ class SettingsTile extends ConsumerWidget {
               const SizedBox(width: AppSpacing.sm),
               trailing!,
             ],
-            if (onTap != null && showChevron && trailing == null) ...[
+            if (isLoading) ...[
+              const SizedBox(width: AppSpacing.sm),
+              const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ] else if (onTap != null && showChevron && trailing == null) ...[
               const SizedBox(width: AppSpacing.sm),
               Icon(
                 LucideIcons.chevronRight,
