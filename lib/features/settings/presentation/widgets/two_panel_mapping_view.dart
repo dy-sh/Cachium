@@ -284,6 +284,15 @@ class _TwoPanelMappingViewState extends ConsumerState<TwoPanelMappingView> {
     return null;
   }
 
+  /// Get which section (amount, category, account) a field key belongs to.
+  /// Returns null if it's a regular field.
+  String? _getSectionForFieldKey(String fieldKey) {
+    if (fieldKey.startsWith('amount:')) return 'amount';
+    if (fieldKey.startsWith('fk:category:')) return 'category';
+    if (fieldKey.startsWith('fk:account:')) return 'account';
+    return null;
+  }
+
   List<MappingConnection> _buildConnections(
     FlexibleCsvImportState state,
     Map<String, int> fieldColorIndices,
@@ -294,6 +303,15 @@ class _TwoPanelMappingViewState extends ConsumerState<TwoPanelMappingView> {
   ) {
     final connections = <MappingConnection>[];
     final selectedFieldKey = state.selectedFieldKey;
+
+    // Determine the active section (for FK/Amount, we show all connections in the section)
+    final String? activeSection = _previewFieldKey != null
+        ? _getSectionForFieldKey(_previewFieldKey!)
+        : _previewCsvColumn != null
+            ? _getSectionForCsvColumn(_previewCsvColumn!, state)
+            : selectedFieldKey != null
+                ? _getSectionForFieldKey(selectedFieldKey)
+                : null;
 
     // Determine the active filter (preview takes priority over selection)
     final String? activeFieldKey;
@@ -321,6 +339,12 @@ class _TwoPanelMappingViewState extends ConsumerState<TwoPanelMappingView> {
     bool shouldShowConnection(String fieldKey, String csvColumn) {
       // If nothing is active, show all connections
       if (activeFieldKey == null && activeCsvColumn == null) return true;
+
+      // If we have an active section (FK/Amount), show ALL connections in that section
+      if (activeSection != null) {
+        final connectionSection = _getSectionForFieldKey(fieldKey);
+        if (connectionSection == activeSection) return true;
+      }
 
       // Check if this connection matches the active field or CSV column
       if (activeFieldKey != null) {

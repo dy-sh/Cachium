@@ -32,9 +32,10 @@ Color getForeignKeyColor(String foreignKey, ColorIntensity intensity) {
 ///   19: violet, 20: purple, 21: magenta, 22: fuchsia, 23: rose
 /// (* = reserved: cyan for Category, orange for Account, green for Amount)
 Color getFieldBadgeColor(int badgeNumber, ColorIntensity intensity) {
-  // Pick distinct colors avoiding: cyan(13), orange(3), green(9), blue tones, yellow tones, red tones
-  // Using: violet(19), magenta(21), purple(20), fuchsia(22), emerald(10), jade(11), aquamarine(12), lime(7), rose(23), harlequin(8)
-  const distinctIndices = [19, 21, 20, 22, 10, 11, 12, 7, 23, 8];
+  // Pick distinct colors, maximizing visual separation between consecutive items
+  // Alternates between green/teal family and pink/purple family
+  // Order: lime, violet, aquamarine, fuchsia, emerald, rose, harlequin, magenta, jade, purple
+  const distinctIndices = [7, 19, 12, 22, 10, 23, 8, 21, 11, 20];
   final index = distinctIndices[(badgeNumber - 1) % distinctIndices.length];
   return AppColors.getAccentColor(index, intensity);
 }
