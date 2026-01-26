@@ -105,6 +105,9 @@ class FlexibleCsvImportState {
   final ForeignKeyConfig categoryConfig;
   final ForeignKeyConfig accountConfig;
 
+  /// Amount configuration for transactions.
+  final AmountConfig amountConfig;
+
   const FlexibleCsvImportState({
     this.step = ImportWizardStep.selectType,
     this.entityType,
@@ -122,6 +125,7 @@ class FlexibleCsvImportState {
     this.expandedForeignKey,
     this.categoryConfig = const ForeignKeyConfig(),
     this.accountConfig = const ForeignKeyConfig(),
+    this.amountConfig = const AmountConfig(),
   });
 
   FlexibleCsvImportState copyWith({
@@ -147,6 +151,7 @@ class FlexibleCsvImportState {
     bool clearExpandedForeignKey = false,
     ForeignKeyConfig? categoryConfig,
     ForeignKeyConfig? accountConfig,
+    AmountConfig? amountConfig,
   }) {
     return FlexibleCsvImportState(
       step: step ?? this.step,
@@ -175,6 +180,7 @@ class FlexibleCsvImportState {
           : (expandedForeignKey ?? this.expandedForeignKey),
       categoryConfig: categoryConfig ?? this.categoryConfig,
       accountConfig: accountConfig ?? this.accountConfig,
+      amountConfig: amountConfig ?? this.amountConfig,
     );
   }
 
@@ -185,16 +191,20 @@ class FlexibleCsvImportState {
     final fields = ImportFieldDefinitions.getFieldsForType(entityType!);
     final mappings = config!.fieldMappings;
 
-    // For transactions, check category/account configs are valid
+    // For transactions, check category/account/amount configs are valid
     if (entityType == ImportEntityType.transaction) {
       if (!categoryConfig.isValid) return false;
       if (!accountConfig.isValid) return false;
+      if (!amountConfig.isValid) return false;
     }
 
     // Check other required fields are mapped or have a valid strategy
     for (final field in fields) {
       if (!field.isRequired) continue;
       if (field.isForeignKey) continue; // Handled above for transactions
+      // Skip amount and type for transactions - handled by amountConfig
+      if (entityType == ImportEntityType.transaction &&
+          (field.key == 'amount' || field.key == 'type')) continue;
 
       final mapping = mappings[field.key];
       if (mapping == null) return false;
@@ -276,40 +286,51 @@ class FlexibleCsvImportState {
   }
 
   /// Get the count of mapped fields (for progress display).
-  /// Counts non-FK fields that are mapped, plus FK configs that are valid.
+  /// Counts non-FK fields that are mapped, plus FK/amount configs that are valid.
   int get mappedFieldCount {
     if (config == null || entityType == null) return 0;
     final fields = ImportFieldDefinitions.getFieldsForType(entityType!);
-    final nonFkFieldKeys = fields
-        .where((f) => !f.isForeignKey)
-        .map((f) => f.key)
-        .toSet();
+
+    // For transactions, exclude FK fields AND amount/type fields
+    final excludedKeys = entityType == ImportEntityType.transaction
+        ? fields
+            .where((f) => f.isForeignKey || f.key == 'amount' || f.key == 'type')
+            .map((f) => f.key)
+            .toSet()
+        : fields.where((f) => f.isForeignKey).map((f) => f.key).toSet();
 
     int count = config!.fieldMappings.entries
-        .where((e) => nonFkFieldKeys.contains(e.key) && e.value.csvColumn != null)
+        .where((e) => !excludedKeys.contains(e.key) && e.value.csvColumn != null)
         .length;
 
-    // For transactions, add FK configs if valid
+    // For transactions, add FK and amount configs if valid
     if (entityType == ImportEntityType.transaction) {
       if (categoryConfig.isValid) count++;
       if (accountConfig.isValid) count++;
+      if (amountConfig.isValid) count++;
     }
 
     return count;
   }
 
   /// Get the total field count (visible items in UI).
-  /// For transactions: non-FK fields + 2 consolidated FK items (Category, Account).
+  /// For transactions: non-FK fields (excluding amount/type) + 3 consolidated items
+  /// (Category, Account, Amount).
   int get totalFieldCount {
     if (entityType == null) return 0;
     final fields = ImportFieldDefinitions.getFieldsForType(entityType!);
-    int count = fields.where((f) => !f.isForeignKey).length;
 
-    // For transactions, add 2 for consolidated Category and Account items
     if (entityType == ImportEntityType.transaction) {
-      count += 2;
+      // Exclude FK fields and amount/type (they're handled by consolidated items)
+      int count = fields
+          .where((f) => !f.isForeignKey && f.key != 'amount' && f.key != 'type')
+          .length;
+      // Add 3 for consolidated Category, Account, and Amount items
+      count += 3;
+      return count;
     }
 
-    return count;
+    // For other entity types, just count non-FK fields
+    return fields.where((f) => !f.isForeignKey).length;
   }
 }

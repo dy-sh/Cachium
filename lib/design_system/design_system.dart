@@ -24,6 +24,7 @@ export 'components/chips/toggle_chip.dart';
 
 // Feedback
 export 'components/feedback/empty_state.dart';
+export 'components/feedback/help_icon.dart';
 export 'components/feedback/loading_indicator.dart';
 export 'components/feedback/notification.dart';
 

@@ -6,6 +6,7 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../data/models/app_settings.dart';
+import 'expandable_amount_item.dart' show getAmountColor;
 import 'expandable_target_field_item.dart'
     show getFieldBadgeColor, getForeignKeyColor, getFieldIconByKey;
 
@@ -57,25 +58,30 @@ class CsvColumnListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isFkMapped = fkMappedTo != null;
+    final isAmountMapped = fkMappedTo == 'amount';
+    final isFkMapped = fkMappedTo != null && fkMappedTo != 'amount';
     final isFieldMapped = mappedFieldColorIndex != null;
     // Available for mapping when a field is selected and this column is not mapped
     final isAvailable = hasAnySelected && !isMapped;
     // Dim mapped items when a field is selected
     final isDimmed = hasAnySelected && isMapped;
 
-    final mappedColor = isFkMapped
-        ? getForeignKeyColor(fkMappedTo!, intensity)
-        : isFieldMapped
-            ? getFieldBadgeColor(mappedFieldColorIndex!, intensity)
-            : AppColors.getAccentColor(0, intensity);
+    final mappedColor = isAmountMapped
+        ? getAmountColor(intensity)
+        : isFkMapped
+            ? getForeignKeyColor(fkMappedTo!, intensity)
+            : isFieldMapped
+                ? getFieldBadgeColor(mappedFieldColorIndex!, intensity)
+                : AppColors.getAccentColor(0, intensity);
 
-    // Get the icon for the mapped field (or FK icon)
+    // Get the icon for the mapped field (or FK/amount icon)
     final IconData? mappedIcon = isFieldMapped && mappedFieldKey != null
         ? getFieldIconByKey(mappedFieldKey!)
-        : isFkMapped
-            ? (fkMappedTo == 'category' ? LucideIcons.tag : LucideIcons.wallet)
-            : null;
+        : isAmountMapped
+            ? LucideIcons.coins
+            : isFkMapped
+                ? (fkMappedTo == 'category' ? LucideIcons.tag : LucideIcons.wallet)
+                : null;
 
     return GestureDetector(
       onTap: onTap,

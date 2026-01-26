@@ -11,6 +11,7 @@ import '../../../data/repositories/category_repository.dart';
 import '../../../data/repositories/transaction_repository.dart';
 import '../../../features/accounts/data/models/account.dart';
 import '../../../features/categories/data/models/category.dart';
+import '../../../features/settings/data/models/field_mapping_options.dart';
 import '../../../features/settings/data/models/flexible_csv_import_config.dart';
 import '../../../features/settings/data/models/flexible_csv_import_state.dart';
 import '../../../features/transactions/data/models/transaction.dart';
@@ -162,6 +163,7 @@ class FlexibleCsvImportService {
     bool useSameAccountForAll,
     String? defaultCategoryId,
     String? defaultAccountId,
+    AmountConfig? amountConfig,
   ) async {
     final validRows = <ParsedImportRow>[];
     final invalidRows = <ParsedImportRow>[];
@@ -277,6 +279,21 @@ class FlexibleCsvImportService {
             parsedValues['accountId'] = 'CREATE:${accountResult.nameToCreate}';
           } else {
             errors.add('No account specified');
+          }
+        }
+
+        // Handle signed amount mode
+        if (amountConfig?.mode == AmountResolutionMode.signedAmount) {
+          final amount = parsedValues['amount'];
+          if (amount is num) {
+            // Derive type from sign and store absolute value
+            if (amount < 0) {
+              parsedValues['type'] = TransactionType.expense;
+              parsedValues['amount'] = amount.abs();
+            } else {
+              parsedValues['type'] = TransactionType.income;
+              parsedValues['amount'] = amount.toDouble();
+            }
           }
         }
       }
@@ -401,9 +418,11 @@ class FlexibleCsvImportService {
 
       case FieldType.double_:
         // Remove currency symbols, commas, and whitespace
-        final cleaned = trimmed
-            .replaceAll(RegExp(r'[\$\u20AC\u00A3,\s]'), '')
-            .replaceAll(RegExp(r'^\(|\)$'), '-'); // Handle (123.45) as negative
+        var cleaned = trimmed.replaceAll(RegExp(r'[\$\u20AC\u00A3,\s]'), '');
+        // Handle parentheses notation for negative: (123.45) -> -123.45
+        if (cleaned.startsWith('(') && cleaned.endsWith(')')) {
+          cleaned = '-${cleaned.substring(1, cleaned.length - 1)}';
+        }
         return double.parse(cleaned);
 
       case FieldType.int_:

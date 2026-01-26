@@ -128,9 +128,10 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
         presetName: appliedPreset?.name,
       );
 
-      // For transactions, populate FK configs from mappings
+      // For transactions, populate FK and amount configs from mappings
       ForeignKeyConfig categoryConfig = const ForeignKeyConfig();
       ForeignKeyConfig accountConfig = const ForeignKeyConfig();
+      AmountConfig amountConfig = const AmountConfig();
 
       if (state.entityType == ImportEntityType.transaction) {
         final categoryIdMapping = mappings['categoryId'];
@@ -154,6 +155,17 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
             nameColumn: accountNameMapping?.csvColumn,
           );
         }
+
+        // Populate amount config from mappings
+        final amountMapping = mappings['amount'];
+        final typeMapping = mappings['type'];
+        if (amountMapping?.csvColumn != null) {
+          amountConfig = AmountConfig(
+            mode: AmountResolutionMode.separateAmountAndType,
+            amountColumn: amountMapping?.csvColumn,
+            typeColumn: typeMapping?.csvColumn,
+          );
+        }
       }
 
       state = state.copyWith(
@@ -162,6 +174,7 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
         isLoading: false,
         categoryConfig: categoryConfig,
         accountConfig: accountConfig,
+        amountConfig: amountConfig,
         appliedPreset: appliedPreset,
       );
 
@@ -540,6 +553,74 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
     }
   }
 
+  /// Set the amount resolution mode.
+  void setAmountMode(AmountResolutionMode mode) {
+    state = state.copyWith(
+      amountConfig: state.amountConfig.copyWith(
+        mode: mode,
+        // Clear type column when switching to signed amount mode
+        clearTypeColumn: mode == AmountResolutionMode.signedAmount,
+      ),
+      clearAppliedPreset: true,
+    );
+  }
+
+  /// Select an amount sub-field for mapping.
+  void selectAmountField(String subField) {
+    // Use a special key format: "amount:amount" or "amount:type"
+    selectField('amount:$subField');
+  }
+
+  /// Connect a CSV column to the selected amount sub-field.
+  void connectCsvColumnToAmount(String csvColumn) {
+    if (state.selectedFieldKey == null ||
+        !state.selectedFieldKey!.startsWith('amount:')) return;
+
+    final subField = state.selectedFieldKey!.split(':')[1];
+
+    // Clear this column from regular field mappings and other configs
+    if (state.config != null) {
+      final newMappings = Map<String, FieldMapping>.from(state.config!.fieldMappings);
+      for (final entry in newMappings.entries) {
+        if (entry.value.csvColumn == csvColumn) {
+          newMappings[entry.key] = entry.value.copyWith(clearCsvColumn: true);
+        }
+      }
+      state = state.copyWith(
+        config: state.config!.copyWith(fieldMappings: newMappings),
+      );
+    }
+
+    if (subField == 'amount') {
+      state = state.copyWith(
+        amountConfig: state.amountConfig.copyWith(amountColumn: csvColumn),
+        clearSelectedFieldKey: true,
+        clearAppliedPreset: true,
+      );
+    } else if (subField == 'type') {
+      state = state.copyWith(
+        amountConfig: state.amountConfig.copyWith(typeColumn: csvColumn),
+        clearSelectedFieldKey: true,
+        clearAppliedPreset: true,
+      );
+    }
+  }
+
+  /// Clear an amount sub-field mapping.
+  void clearAmountField(String subField) {
+    if (subField == 'amount') {
+      state = state.copyWith(
+        amountConfig: state.amountConfig.copyWith(clearAmountColumn: true),
+        clearAppliedPreset: true,
+      );
+    } else if (subField == 'type') {
+      state = state.copyWith(
+        amountConfig: state.amountConfig.copyWith(clearTypeColumn: true),
+        clearAppliedPreset: true,
+      );
+    }
+  }
+
   /// Generate preview of parsed data.
   Future<bool> generatePreview() async {
     if (state.config == null) return false;
@@ -566,6 +647,7 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
         useSameAccountForAll,
         state.categoryConfig.selectedEntityId,
         state.accountConfig.selectedEntityId,
+        state.amountConfig,
       );
 
       state = state.copyWith(
@@ -584,7 +666,7 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
     }
   }
 
-  /// Build config with FK column mappings from the consolidated configs.
+  /// Build config with FK and amount column mappings from the consolidated configs.
   FlexibleCsvImportConfig _buildConfigWithFkMappings() {
     if (state.config == null) return state.config!;
 
@@ -620,6 +702,21 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
           csvColumn: state.accountConfig.idColumn,
         );
       }
+    }
+
+    // Apply amount config
+    if (state.amountConfig.amountColumn != null) {
+      newMappings['amount'] = FieldMapping(
+        fieldKey: 'amount',
+        csvColumn: state.amountConfig.amountColumn,
+      );
+    }
+    if (state.amountConfig.mode == AmountResolutionMode.separateAmountAndType &&
+        state.amountConfig.typeColumn != null) {
+      newMappings['type'] = FieldMapping(
+        fieldKey: 'type',
+        csvColumn: state.amountConfig.typeColumn,
+      );
     }
 
     return state.config!.copyWith(fieldMappings: newMappings);
@@ -733,6 +830,12 @@ final categoryConfigProvider = Provider<ForeignKeyConfig>((ref) {
 final accountConfigProvider = Provider<ForeignKeyConfig>((ref) {
   final state = ref.watch(flexibleCsvImportProvider);
   return state.accountConfig;
+});
+
+/// Provider for amount config.
+final amountConfigProvider = Provider<AmountConfig>((ref) {
+  final state = ref.watch(flexibleCsvImportProvider);
+  return state.amountConfig;
 });
 
 /// Provider for mapping progress (mapped count / total required).

@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../design_system/design_system.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../data/models/app_settings.dart';
@@ -62,6 +63,8 @@ class ForeignKeyOptionsPanel extends ConsumerWidget {
           _buildModeOption(
             context: context,
             label: 'Map from CSV',
+            helpTitle: 'Map from CSV',
+            helpDescription: _getMapFromCsvHelp(),
             isSelected: config.mode == ForeignKeyResolutionMode.mapFromCsv,
             accentColor: accentColor,
             onTap: () => notifier.setForeignKeyMode(
@@ -132,6 +135,8 @@ class ForeignKeyOptionsPanel extends ConsumerWidget {
           _buildModeOption(
             context: context,
             label: 'Use Same for All',
+            helpTitle: 'Use Same for All',
+            helpDescription: _getUseSameForAllHelp(),
             isSelected: config.mode == ForeignKeyResolutionMode.useSameForAll,
             accentColor: accentColor,
             onTap: () => notifier.setForeignKeyMode(
@@ -161,49 +166,78 @@ class ForeignKeyOptionsPanel extends ConsumerWidget {
   Widget _buildModeOption({
     required BuildContext context,
     required String label,
+    required String helpTitle,
+    required String helpDescription,
     required bool isSelected,
     required Color accentColor,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Row(
-        children: [
-          Container(
-            width: 18,
-            height: 18,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isSelected ? AppColors.textSecondary : AppColors.textTertiary,
-                width: 1,
-              ),
-            ),
-            child: isSelected
-                ? Center(
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.textSecondary,
-                      ),
+    return Row(
+      children: [
+        Expanded(
+          child: GestureDetector(
+            onTap: onTap,
+            behavior: HitTestBehavior.opaque,
+            child: Row(
+              children: [
+                Container(
+                  width: 18,
+                  height: 18,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isSelected ? AppColors.textSecondary : AppColors.textTertiary,
+                      width: 1,
                     ),
-                  )
-                : null,
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Text(
-            label,
-            style: AppTypography.bodySmall.copyWith(
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-              color: isSelected ? AppColors.textSecondary : AppColors.textTertiary,
+                  ),
+                  child: isSelected
+                      ? Center(
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        )
+                      : null,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: AppTypography.bodySmall.copyWith(
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      color: isSelected ? AppColors.textSecondary : AppColors.textTertiary,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+        HelpIcon(
+          title: helpTitle,
+          description: helpDescription,
+        ),
+      ],
     );
+  }
+
+  String _getMapFromCsvHelp() {
+    final entityName = foreignKey == 'category' ? 'categories' : 'accounts';
+    final entityNameSingular = foreignKey == 'category' ? 'category' : 'account';
+    return 'Match $entityName from your CSV to existing ones in the app.\n\n'
+        '- Name column: If your CSV has $entityNameSingular names (recommended)\n'
+        '- ID column: If your CSV has UUIDs\n\n'
+        'Missing names will create new $entityName automatically.';
+  }
+
+  String _getUseSameForAllHelp() {
+    final entityName = foreignKey == 'category' ? 'category' : 'account';
+    return 'Apply the same $entityName to all imported transactions.\n\n'
+        'Useful when importing transactions that all belong to one $entityName.';
   }
 }
 

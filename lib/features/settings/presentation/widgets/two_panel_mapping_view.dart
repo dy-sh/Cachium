@@ -11,6 +11,7 @@ import '../../data/models/flexible_csv_import_config.dart';
 import '../providers/flexible_csv_import_providers.dart';
 import '../providers/settings_provider.dart';
 import 'csv_column_list_item.dart';
+import 'expandable_amount_item.dart';
 import 'expandable_target_field_item.dart';
 import 'target_field_list_item.dart';
 
@@ -39,9 +40,10 @@ class TwoPanelMappingView extends ConsumerWidget {
     final csvHeaders = config.csvHeaders;
     final isTransaction = config.entityType == ImportEntityType.transaction;
 
-    // For transactions, filter out individual FK fields (we show consolidated Category/Account instead)
+    // For transactions, filter out individual FK fields and amount/type fields
+    // (we show consolidated Category/Account/Amount sections instead)
     final displayFields = isTransaction
-        ? fields.where((f) => !f.isForeignKey).toList()
+        ? fields.where((f) => !f.isForeignKey && f.key != 'amount' && f.key != 'type').toList()
         : fields;
 
     // Build field color indices (fixed based on position in list)
@@ -64,7 +66,7 @@ class TwoPanelMappingView extends ConsumerWidget {
     // Build the list of items for the left panel (target fields)
     final leftPanelItems = <Widget>[];
 
-    // For transactions, add Category and Account at the top
+    // For transactions, add Category, Account, and Amount at the top
     if (isTransaction) {
       leftPanelItems.add(
         ExpandableForeignKeyItem(
@@ -72,7 +74,7 @@ class TwoPanelMappingView extends ConsumerWidget {
           displayName: 'Category',
           icon: LucideIcons.tag,
           isExpanded: expandedForeignKey == 'category',
-          onToggleExpand: () => _handleToggleForeignKey(ref, 'category'),
+          onToggleExpand: () => _handleToggleExpandedSection(ref, 'category'),
           intensity: intensity,
           hasCsvColumnSelected: selectedFieldKey != null,
         ),
@@ -84,7 +86,16 @@ class TwoPanelMappingView extends ConsumerWidget {
           displayName: 'Account',
           icon: LucideIcons.wallet,
           isExpanded: expandedForeignKey == 'account',
-          onToggleExpand: () => _handleToggleForeignKey(ref, 'account'),
+          onToggleExpand: () => _handleToggleExpandedSection(ref, 'account'),
+          intensity: intensity,
+          hasCsvColumnSelected: selectedFieldKey != null,
+        ),
+      );
+      leftPanelItems.add(const SizedBox(height: AppSpacing.xs));
+      leftPanelItems.add(
+        ExpandableAmountItem(
+          isExpanded: expandedForeignKey == 'amount',
+          onToggleExpand: () => _handleToggleExpandedSection(ref, 'amount'),
           intensity: intensity,
           hasCsvColumnSelected: selectedFieldKey != null,
         ),
@@ -163,11 +174,13 @@ class TwoPanelMappingView extends ConsumerWidget {
                     final column = csvHeaders[index];
                     final sampleValues = config.getSampleValues(column);
 
-                    // Check which FK this column is mapped to (if any)
-                    // Only show as mapped when mode is mapFromCsv
+                    // Check which FK or amount this column is mapped to (if any)
+                    // Only show FK as mapped when mode is mapFromCsv
                     final categoryConfig = state.categoryConfig;
                     final accountConfig = state.accountConfig;
+                    final amountConfig = state.amountConfig;
                     String? fkMappedTo;
+                    bool isAmountMapped = false;
                     if (categoryConfig.mode == ForeignKeyResolutionMode.mapFromCsv &&
                         (column == categoryConfig.nameColumn ||
                          column == categoryConfig.idColumn)) {
@@ -176,12 +189,16 @@ class TwoPanelMappingView extends ConsumerWidget {
                         (column == accountConfig.nameColumn ||
                          column == accountConfig.idColumn)) {
                       fkMappedTo = 'account';
+                    } else if (column == amountConfig.amountColumn ||
+                        (amountConfig.mode == AmountResolutionMode.separateAmountAndType &&
+                         column == amountConfig.typeColumn)) {
+                      isAmountMapped = true;
                     }
 
                     // Get the fixed color index and field key from the mapped field (if mapped to a regular field)
                     final mappedColorIndex = csvColumnColorIndex[column];
                     final mappedFieldKey = csvColumnFieldKey[column];
-                    final isMapped = mappedColorIndex != null || fkMappedTo != null;
+                    final isMapped = mappedColorIndex != null || fkMappedTo != null || isAmountMapped;
 
                     return CsvColumnListItem(
                       columnName: column,
@@ -189,15 +206,15 @@ class TwoPanelMappingView extends ConsumerWidget {
                       isSelected: false, // CSV columns are not selectable anymore
                       hasAnySelected: selectedFieldKey != null,
                       isMapped: isMapped,
-                      mappedFieldColorIndex: fkMappedTo != null ? null : mappedColorIndex,
-                      mappedFieldKey: fkMappedTo != null ? null : mappedFieldKey,
-                      fkMappedTo: fkMappedTo,
+                      mappedFieldColorIndex: (fkMappedTo != null || isAmountMapped) ? null : mappedColorIndex,
+                      mappedFieldKey: (fkMappedTo != null || isAmountMapped) ? null : mappedFieldKey,
+                      fkMappedTo: isAmountMapped ? 'amount' : fkMappedTo,
                       intensity: intensity,
                       onTap: () => _handleCsvColumnTap(
                         ref,
                         column,
                         mappedColorIndex,
-                        fkMappedTo,
+                        isAmountMapped ? 'amount' : fkMappedTo,
                       ),
                     );
                   },
@@ -229,21 +246,30 @@ class TwoPanelMappingView extends ConsumerWidget {
     WidgetRef ref,
     String column,
     int? mappedColorIndex,
-    String? fkMappedTo,
+    String? mappedTo, // 'category', 'account', 'amount', or null
   ) {
     final notifier = ref.read(flexibleCsvImportProvider.notifier);
     final state = ref.read(flexibleCsvImportProvider);
     final selectedFieldKey = state.selectedFieldKey;
 
-    if (fkMappedTo != null) {
+    if (mappedTo == 'amount') {
+      // Already mapped to amount - clear from amount config
+      final amountConfig = state.amountConfig;
+      if (column == amountConfig.amountColumn) {
+        notifier.clearAmountField('amount');
+      } else if (column == amountConfig.typeColumn) {
+        notifier.clearAmountField('type');
+      }
+    } else if (mappedTo == 'category' || mappedTo == 'account') {
       // Already mapped to FK - clear from FK config
-      final config = fkMappedTo == 'category'
+      final fkKey = mappedTo!; // Safe since we checked above
+      final config = fkKey == 'category'
           ? state.categoryConfig
           : state.accountConfig;
       if (column == config.nameColumn) {
-        notifier.clearForeignKeyField(fkMappedTo, 'name');
+        notifier.clearForeignKeyField(fkKey, 'name');
       } else if (column == config.idColumn) {
-        notifier.clearForeignKeyField(fkMappedTo, 'id');
+        notifier.clearForeignKeyField(fkKey, 'id');
       }
     } else if (mappedColorIndex != null) {
       // Already mapped to a regular field - clear the connection
@@ -253,6 +279,9 @@ class TwoPanelMappingView extends ConsumerWidget {
       if (selectedFieldKey.startsWith('fk:')) {
         // Selected field is a FK sub-field
         notifier.connectCsvColumnToForeignKey(column);
+      } else if (selectedFieldKey.startsWith('amount:')) {
+        // Selected field is an amount sub-field
+        notifier.connectCsvColumnToAmount(column);
       } else {
         // Selected field is a regular field
         notifier.connectToCsvColumn(column);
@@ -260,9 +289,9 @@ class TwoPanelMappingView extends ConsumerWidget {
     }
   }
 
-  void _handleToggleForeignKey(WidgetRef ref, String foreignKey) {
+  void _handleToggleExpandedSection(WidgetRef ref, String section) {
     final notifier = ref.read(flexibleCsvImportProvider.notifier);
-    notifier.toggleExpandedForeignKey(foreignKey);
+    notifier.toggleExpandedForeignKey(section);
   }
 }
 

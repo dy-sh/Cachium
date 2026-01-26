@@ -10,6 +10,95 @@ enum ForeignKeyResolutionMode {
   const ForeignKeyResolutionMode(this.displayName);
 }
 
+/// How to resolve amount and transaction type during import.
+enum AmountResolutionMode {
+  /// Separate columns for amount (always positive) and type (income/expense).
+  separateAmountAndType('Separate Amount & Type'),
+
+  /// Single column where positive = income, negative = expense.
+  signedAmount('Signed Amount');
+
+  final String displayName;
+  const AmountResolutionMode(this.displayName);
+}
+
+/// Configuration for resolving amount and transaction type during import.
+class AmountConfig {
+  /// The resolution mode.
+  final AmountResolutionMode mode;
+
+  /// CSV column for amount value.
+  final String? amountColumn;
+
+  /// CSV column for transaction type (only for separateAmountAndType mode).
+  final String? typeColumn;
+
+  const AmountConfig({
+    this.mode = AmountResolutionMode.separateAmountAndType,
+    this.amountColumn,
+    this.typeColumn,
+  });
+
+  AmountConfig copyWith({
+    AmountResolutionMode? mode,
+    String? amountColumn,
+    bool clearAmountColumn = false,
+    String? typeColumn,
+    bool clearTypeColumn = false,
+  }) {
+    return AmountConfig(
+      mode: mode ?? this.mode,
+      amountColumn: clearAmountColumn ? null : (amountColumn ?? this.amountColumn),
+      typeColumn: clearTypeColumn ? null : (typeColumn ?? this.typeColumn),
+    );
+  }
+
+  /// Whether this config is valid for proceeding with import.
+  bool get isValid {
+    if (amountColumn == null) return false;
+    switch (mode) {
+      case AmountResolutionMode.separateAmountAndType:
+        // Need both amount and type columns
+        return typeColumn != null;
+      case AmountResolutionMode.signedAmount:
+        // Only need amount column
+        return true;
+    }
+  }
+
+  /// Get a display string describing the current configuration.
+  String getDisplaySummary() {
+    switch (mode) {
+      case AmountResolutionMode.separateAmountAndType:
+        if (amountColumn != null && typeColumn != null) {
+          return 'Amount: "$amountColumn", Type: "$typeColumn"';
+        } else if (amountColumn != null) {
+          return 'Amount: "$amountColumn", Type: select...';
+        } else if (typeColumn != null) {
+          return 'Amount: select..., Type: "$typeColumn"';
+        }
+        return 'Select columns...';
+      case AmountResolutionMode.signedAmount:
+        if (amountColumn != null) {
+          return 'Signed amount: "$amountColumn"';
+        }
+        return 'Select column...';
+    }
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is AmountConfig &&
+        other.mode == mode &&
+        other.amountColumn == amountColumn &&
+        other.typeColumn == typeColumn;
+  }
+
+  @override
+  int get hashCode => Object.hash(mode, amountColumn, typeColumn);
+}
+
 /// Configuration for resolving a foreign key (category or account) during import.
 /// This consolidates the old categoryId/categoryName and accountId/accountName
 /// into a single, clearer configuration per entity type.
