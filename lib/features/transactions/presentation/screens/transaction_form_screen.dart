@@ -82,12 +82,21 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
             : TransactionType.expense;
         ref.read(transactionFormProvider.notifier).reset();
         ref.read(transactionFormProvider.notifier).setType(type);
+        ref.read(transactionFormProvider.notifier).applyLastUsedAccountIfNeeded();
         if (mounted) setState(() {});
         _initialized = true;
       });
     }
 
     final formState = ref.watch(transactionFormProvider);
+
+    // Apply last used account if settings loaded after form initialization
+    if (!formState.isEditing && formState.accountId == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(transactionFormProvider.notifier).applyLastUsedAccountIfNeeded();
+      });
+    }
+
     final incomeCategories = ref.watch(incomeCategoriesProvider);
     final expenseCategories = ref.watch(expenseCategoriesProvider);
     final accountsAsync = ref.watch(accountsProvider);
