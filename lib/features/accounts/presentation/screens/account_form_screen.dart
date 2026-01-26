@@ -84,6 +84,11 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
 
     final formState = ref.watch(accountFormProvider);
     final isEditing = formState.isEditing;
+    final accountName = formState.name.trim();
+
+    final isDuplicateName = accountName.isNotEmpty && ref.watch(
+      accountNameExistsProvider((name: accountName, excludeId: formState.editingAccountId)),
+    );
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -128,6 +133,16 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                         ref.read(accountFormProvider.notifier).setName(value);
                       },
                     ),
+                    if (isDuplicateName)
+                      Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.sm),
+                        child: Text(
+                          'Account with this name already exists',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.expense,
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: AppSpacing.xxl),
 
                     Text('Account Type', style: AppTypography.labelMedium),
@@ -301,7 +316,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
               ),
               child: PrimaryButton(
                 label: isEditing ? 'Save Changes' : 'Create Account',
-                onPressed: formState.isValid
+                onPressed: formState.isValid && !isDuplicateName
                     ? () async {
                         // Get custom color if set
                         final intensity = ref.read(colorIntensityProvider);

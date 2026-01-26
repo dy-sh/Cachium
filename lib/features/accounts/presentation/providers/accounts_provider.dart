@@ -351,3 +351,14 @@ final recentlyUsedAccountIdsProvider = Provider<List<String>>((ref) {
 
   return sortedAccounts.map((a) => a.id).toList();
 });
+
+/// Checks if an account name already exists (case-insensitive).
+/// Returns true if duplicate exists, excluding the account with excludeId.
+final accountNameExistsProvider = Provider.family<bool, ({String name, String? excludeId})>((ref, params) {
+  final accountsAsync = ref.watch(accountsProvider);
+  final accounts = accountsAsync.valueOrEmpty;
+  final nameLower = params.name.trim().toLowerCase();
+  return accounts.any((a) =>
+    a.name.toLowerCase() == nameLower && a.id != params.excludeId
+  );
+});
