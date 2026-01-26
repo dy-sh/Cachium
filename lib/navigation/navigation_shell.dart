@@ -19,10 +19,12 @@ class NavigationShell extends StatelessWidget {
         return 0;
       case AppRoutes.transactions:
         return 1;
-      case AppRoutes.accounts:
+      case AppRoutes.analytics:
         return 2;
-      case AppRoutes.settings:
+      case AppRoutes.accounts:
         return 3;
+      case AppRoutes.settings:
+        return 4;
       default:
         return 0;
     }
@@ -37,9 +39,12 @@ class NavigationShell extends StatelessWidget {
         context.go(AppRoutes.transactions);
         break;
       case 2:
-        context.go(AppRoutes.accounts);
+        context.go(AppRoutes.analytics);
         break;
       case 3:
+        context.go(AppRoutes.accounts);
+        break;
+      case 4:
         context.go(AppRoutes.settings);
         break;
     }

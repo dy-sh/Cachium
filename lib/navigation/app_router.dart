@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../core/animations/page_transitions.dart';
 import '../features/accounts/presentation/screens/account_form_screen.dart';
 import '../features/accounts/presentation/screens/accounts_screen.dart';
+import '../features/analytics/presentation/screens/analytics_screen.dart';
 import '../features/home/presentation/screens/home_screen.dart';
 import '../features/settings/presentation/providers/settings_provider.dart';
 import '../features/settings/data/models/export_options.dart';
@@ -26,6 +27,7 @@ import 'navigation_shell.dart';
 class AppRoutes {
   static const home = '/';
   static const transactions = '/transactions';
+  static const analytics = '/analytics';
   static const accounts = '/accounts';
   static const settings = '/settings';
   static const categoryManagement = '/settings/categories';
@@ -68,6 +70,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) => NoTransitionPage(
               key: state.pageKey,
               child: const TransactionsScreen(),
+            ),
+          ),
+          GoRoute(
+            path: AppRoutes.analytics,
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: state.pageKey,
+              child: const AnalyticsScreen(),
             ),
           ),
           GoRoute(

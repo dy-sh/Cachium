@@ -46,6 +46,11 @@ class BottomNavBar extends ConsumerStatefulWidget {
           label: 'Transactions',
         ),
         const BottomNavItem(
+          icon: LucideIcons.lineChart,
+          activeIcon: LucideIcons.lineChart,
+          label: 'Analytics',
+        ),
+        const BottomNavItem(
           icon: LucideIcons.wallet,
           activeIcon: LucideIcons.wallet,
           label: 'Accounts',
