@@ -28,6 +28,11 @@ class CategoryNavigationState {
 
   /// Initialize navigation to show a selected category's parent level.
   void initializeFor(List<Category> categories, String? selectedId, List<Category> ancestors) {
+    // Reset state first
+    _navigationStack.clear();
+    _viewingParentId = null;
+    _showAll = false;
+
     if (selectedId == null || categories.isEmpty) return;
 
     final selectedCategory = categories.firstWhere(
@@ -107,13 +112,30 @@ class CategorySelector extends ConsumerStatefulWidget {
 
 class _CategorySelectorState extends ConsumerState<CategorySelector> {
   final _navState = CategoryNavigationState();
+  String? _lastSelectedId;
 
   @override
   void initState() {
     super.initState();
+    _initializeNavigation();
+  }
+
+  @override
+  void didUpdateWidget(CategorySelector oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Reinitialize navigation when selected category changes externally
+    // (e.g., after creating a new child category)
+    if (widget.selectedId != oldWidget.selectedId &&
+        widget.selectedId != _lastSelectedId) {
+      _initializeNavigation();
+    }
+  }
+
+  void _initializeNavigation() {
     if (widget.selectedId != null && widget.categories.isNotEmpty) {
       final ancestors = ref.read(categoryAncestorsProvider(widget.selectedId!));
       _navState.initializeFor(widget.categories, widget.selectedId, ancestors);
+      _lastSelectedId = widget.selectedId;
     }
   }
 
@@ -203,6 +225,7 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
 
   void _handleCategoryTap(Category category, bool hasChildren) {
     HapticHelper.lightImpact();
+    _lastSelectedId = category.id;
     widget.onChanged(category.id);
 
     if (hasChildren) {
