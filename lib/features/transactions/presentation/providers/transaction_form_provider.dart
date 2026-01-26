@@ -135,7 +135,17 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
           ? ref.read(lastUsedIncomeCategoryIdProvider)
           : ref.read(lastUsedExpenseCategoryIdProvider);
     }
-    state = state.copyWith(type: type, categoryId: categoryId);
+
+    // Also apply last used account if not already set (handles async settings load)
+    String? accountId = state.accountId;
+    if (accountId == null && !state.isEditing) {
+      final selectLastAccount = ref.read(selectLastAccountProvider);
+      if (selectLastAccount) {
+        accountId = ref.read(lastUsedAccountIdProvider);
+      }
+    }
+
+    state = state.copyWith(type: type, categoryId: categoryId, accountId: accountId);
   }
 
   /// Apply last used account if setting is enabled and no account is selected.

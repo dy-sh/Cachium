@@ -39,6 +39,7 @@ class TransactionFormScreen extends ConsumerStatefulWidget {
 
 class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   bool _initialized = false;
+  bool _accountApplied = false;
   late TextEditingController _noteController;
 
   @override
@@ -89,19 +90,32 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     }
 
     final formState = ref.watch(transactionFormProvider);
-
-    // Apply last used account if settings loaded after form initialization
-    if (!formState.isEditing && formState.accountId == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref.read(transactionFormProvider.notifier).applyLastUsedAccountIfNeeded();
-      });
-    }
-
     final incomeCategories = ref.watch(incomeCategoriesProvider);
     final expenseCategories = ref.watch(expenseCategoriesProvider);
     final accountsAsync = ref.watch(accountsProvider);
     final accounts = accountsAsync.valueOrEmpty;
     final recentAccountIds = ref.watch(recentlyUsedAccountIdsProvider);
+    final selectLastAccount = ref.watch(selectLastAccountProvider);
+
+    // Apply last used account when form has no account selected
+    // Use lastUsedAccountId from settings, or fall back to first recent account
+    if (!_accountApplied &&
+        !formState.isEditing &&
+        formState.accountId == null &&
+        selectLastAccount) {
+      final lastUsedAccountId = ref.watch(lastUsedAccountIdProvider);
+      // Use lastUsedAccountId if available, otherwise use first recent account
+      final accountToSelect = lastUsedAccountId ??
+          (recentAccountIds.isNotEmpty ? recentAccountIds.first : null);
+      if (accountToSelect != null) {
+        _accountApplied = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            ref.read(transactionFormProvider.notifier).setAccount(accountToSelect);
+          }
+        });
+      }
+    }
     final intensity = ref.watch(colorIntensityProvider);
 
     // Transaction settings
