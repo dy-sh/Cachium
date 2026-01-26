@@ -279,6 +279,8 @@ class _TransactionItem extends ConsumerWidget {
                   Text(
                     category?.name ?? 'Unknown',
                     style: AppTypography.labelLarge,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   if (transaction.note != null && transaction.note!.isNotEmpty)
                     Padding(
@@ -296,18 +298,28 @@ class _TransactionItem extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  CurrencyFormatter.formatWithSign(transaction.amount, transaction.type.name),
-                  style: AppTypography.moneySmall.copyWith(color: color),
+            Flexible(
+              flex: 0,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 100),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      CurrencyFormatter.formatWithSign(transaction.amount, transaction.type.name),
+                      style: AppTypography.moneySmall.copyWith(color: color),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      account?.name ?? 'Unknown',
+                      style: AppTypography.labelSmall,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
-                Text(
-                  account?.name ?? 'Unknown',
-                  style: AppTypography.labelSmall,
-                ),
-              ],
+              ),
             ),
           ],
         ),

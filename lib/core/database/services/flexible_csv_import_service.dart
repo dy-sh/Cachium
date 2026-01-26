@@ -357,8 +357,9 @@ class FlexibleCsvImportService {
       if (categoriesById.containsKey(id)) {
         return (id: id, idToCreate: null, nameToCreate: null);
       }
-      // ID not found - create with this specific ID (use ID as temp name, will be updated when categories are imported)
-      return (id: null, idToCreate: id, nameToCreate: 'Imported ($id)');
+      // ID not found - create with this specific ID (short name, will be updated when categories are imported)
+      final shortId = id.length > 8 ? id.substring(0, 8) : id;
+      return (id: null, idToCreate: id, nameToCreate: 'Imported ($shortId)');
     }
 
     // Try categoryName
@@ -391,8 +392,9 @@ class FlexibleCsvImportService {
       if (accountsById.containsKey(id)) {
         return (id: id, idToCreate: null, nameToCreate: null);
       }
-      // ID not found - create with this specific ID (use ID as temp name, will be updated when accounts are imported)
-      return (id: null, idToCreate: id, nameToCreate: 'Imported ($id)');
+      // ID not found - create with this specific ID (short name, will be updated when accounts are imported)
+      final shortId = id.length > 8 ? id.substring(0, 8) : id;
+      return (id: null, idToCreate: id, nameToCreate: 'Imported ($shortId)');
     }
 
     // Try accountName

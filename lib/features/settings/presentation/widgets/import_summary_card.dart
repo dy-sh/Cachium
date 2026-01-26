@@ -256,8 +256,18 @@ class ImportSummaryCard extends ConsumerWidget {
         Wrap(
           spacing: 6,
           runSpacing: 6,
-          children: items.take(10).map((name) {
+          children: items.take(10).map((item) {
+            // Parse display name from format: "ID:uuid:name" or "NAME:name"
+            String displayName = item;
+            if (item.startsWith('ID:')) {
+              final parts = item.substring(3).split(':');
+              displayName = parts.length > 1 ? parts.sublist(1).join(':') : parts[0];
+            } else if (item.startsWith('NAME:')) {
+              displayName = item.substring(5);
+            }
+
             return Container(
+              constraints: const BoxConstraints(maxWidth: 150),
               padding: const EdgeInsets.symmetric(
                 horizontal: 8,
                 vertical: 4,
@@ -278,10 +288,14 @@ class ImportSummaryCard extends ConsumerWidget {
                     color: AppColors.getAccentColor(0, intensity),
                   ),
                   const SizedBox(width: 4),
-                  Text(
-                    name,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.getAccentColor(0, intensity),
+                  Flexible(
+                    child: Text(
+                      displayName,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.getAccentColor(0, intensity),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
                   ),
                 ],
