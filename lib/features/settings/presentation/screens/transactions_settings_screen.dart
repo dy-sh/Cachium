@@ -221,6 +221,7 @@ class TransactionsSettingsScreen extends ConsumerWidget {
       title: 'Category Sort',
       options: options,
       selectedIndex: selectedIndex,
+      hint: 'List Order is manually sorted in Settings → Categories',
       onSelected: (index) {
         ref.read(settingsProvider.notifier).setCategorySortOption(CategorySortOption.values[index]);
         Navigator.pop(context);
@@ -375,12 +376,14 @@ class _OptionPickerSheet extends StatelessWidget {
   final List<String> options;
   final int selectedIndex;
   final ValueChanged<int> onSelected;
+  final String? hint;
 
   const _OptionPickerSheet({
     required this.title,
     required this.options,
     required this.selectedIndex,
     required this.onSelected,
+    this.hint,
   });
 
   @override
@@ -404,6 +407,15 @@ class _OptionPickerSheet extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(title, style: AppTypography.h4),
+            if (hint != null) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                hint!,
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textTertiary,
+                ),
+              ),
+            ],
             const SizedBox(height: AppSpacing.lg),
             ...List.generate(options.length, (index) {
               final isSelected = index == selectedIndex;
