@@ -140,13 +140,6 @@ class SettingsScreen extends ConsumerWidget {
                     title: 'More',
                     children: [
                       SettingsTile(
-                        title: 'Coming Soon',
-                        description: 'Feature roadmap',
-                        icon: LucideIcons.sparkles,
-                        iconColor: AppColors.getAccentColor(15, intensity), // Orange
-                        onTap: () => context.push('/settings/coming-soon'),
-                      ),
-                      SettingsTile(
                         title: 'About',
                         description: 'App version',
                         icon: LucideIcons.info,

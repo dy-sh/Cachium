@@ -10,7 +10,6 @@ import '../features/settings/presentation/screens/about_settings_screen.dart';
 import '../features/settings/presentation/screens/appearance_settings_screen.dart';
 import '../features/settings/presentation/screens/category_management_screen.dart';
 import '../features/settings/presentation/screens/column_mapping_screen.dart';
-import '../features/settings/presentation/screens/coming_soon_settings_screen.dart';
 import '../features/settings/presentation/screens/csv_import_screen.dart';
 import '../features/settings/presentation/screens/database_settings_screen.dart';
 import '../features/settings/presentation/screens/export_screen.dart';
@@ -35,7 +34,6 @@ class AppRoutes {
   static const preferencesSettings = '/settings/preferences';
   static const transactionsSettings = '/settings/transactions';
   static const homeSettings = '/settings/home';
-  static const comingSoonSettings = '/settings/coming-soon';
   static const aboutSettings = '/settings/about';
   static const databaseSettings = '/settings/database';
   static const exportSqlite = '/settings/database/export-sqlite';
@@ -174,14 +172,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
           state,
           const HomeSettingsScreen(),
-          animationsEnabled: ref.read(formAnimationsEnabledProvider),
-        ),
-      ),
-      GoRoute(
-        path: AppRoutes.comingSoonSettings,
-        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
-          state,
-          const ComingSoonSettingsScreen(),
           animationsEnabled: ref.read(formAnimationsEnabledProvider),
         ),
       ),

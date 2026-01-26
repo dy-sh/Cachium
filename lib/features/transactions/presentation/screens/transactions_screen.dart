@@ -150,10 +150,7 @@ class TransactionsScreen extends ConsumerWidget {
                       ),
                       itemCount: groups.length,
                       itemBuilder: (context, index) {
-                        return StaggeredListItem(
-                          index: index,
-                          child: _TransactionGroupWidget(group: groups[index]),
-                        );
+                        return _TransactionGroupWidget(group: groups[index]);
                       },
                     ),
             ),
