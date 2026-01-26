@@ -112,10 +112,40 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
         fieldMappings: mappings,
       );
 
+      // For transactions, populate FK configs from auto-detected mappings
+      ForeignKeyConfig categoryConfig = const ForeignKeyConfig();
+      ForeignKeyConfig accountConfig = const ForeignKeyConfig();
+
+      if (state.entityType == ImportEntityType.transaction) {
+        final categoryIdMapping = mappings['categoryId'];
+        final categoryNameMapping = mappings['categoryName'];
+        if (categoryIdMapping?.csvColumn != null ||
+            categoryNameMapping?.csvColumn != null) {
+          categoryConfig = ForeignKeyConfig(
+            mode: ForeignKeyResolutionMode.mapFromCsv,
+            idColumn: categoryIdMapping?.csvColumn,
+            nameColumn: categoryNameMapping?.csvColumn,
+          );
+        }
+
+        final accountIdMapping = mappings['accountId'];
+        final accountNameMapping = mappings['accountName'];
+        if (accountIdMapping?.csvColumn != null ||
+            accountNameMapping?.csvColumn != null) {
+          accountConfig = ForeignKeyConfig(
+            mode: ForeignKeyResolutionMode.mapFromCsv,
+            idColumn: accountIdMapping?.csvColumn,
+            nameColumn: accountNameMapping?.csvColumn,
+          );
+        }
+      }
+
       state = state.copyWith(
         config: config,
         step: ImportWizardStep.mapColumns,
         isLoading: false,
+        categoryConfig: categoryConfig,
+        accountConfig: accountConfig,
       );
 
       return true;
