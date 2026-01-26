@@ -193,6 +193,48 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     const defaultSettings = AppSettings();
     await _saveAndUpdate(defaultSettings);
   }
+
+  /// Reset only settings section (Appearance, Formats, Preferences, Transactions)
+  /// Preserves onboardingCompleted
+  Future<void> resetSettingsSection() async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+
+    const defaults = AppSettings();
+    final resetSettings = AppSettings(
+      // Reset Appearance
+      colorIntensity: defaults.colorIntensity,
+      accentColorIndex: defaults.accentColorIndex,
+      accountCardStyle: defaults.accountCardStyle,
+      tabTransitionsEnabled: defaults.tabTransitionsEnabled,
+      formAnimationsEnabled: defaults.formAnimationsEnabled,
+      balanceCountersEnabled: defaults.balanceCountersEnabled,
+      // Reset Formats
+      dateFormat: defaults.dateFormat,
+      currencySymbol: defaults.currencySymbol,
+      customCurrencySymbol: defaults.customCurrencySymbol,
+      firstDayOfWeek: defaults.firstDayOfWeek,
+      // Reset Preferences
+      hapticFeedbackEnabled: defaults.hapticFeedbackEnabled,
+      startScreen: defaults.startScreen,
+      lastUsedAccountId: defaults.lastUsedAccountId,
+      // Reset Transactions
+      selectLastCategory: defaults.selectLastCategory,
+      selectLastAccount: defaults.selectLastAccount,
+      accountsFoldedCount: defaults.accountsFoldedCount,
+      categoriesFoldedCount: defaults.categoriesFoldedCount,
+      showAddAccountButton: defaults.showAddAccountButton,
+      showAddCategoryButton: defaults.showAddCategoryButton,
+      defaultTransactionType: defaults.defaultTransactionType,
+      allowZeroAmount: defaults.allowZeroAmount,
+      categorySortOption: defaults.categorySortOption,
+      lastUsedIncomeCategoryId: defaults.lastUsedIncomeCategoryId,
+      lastUsedExpenseCategoryId: defaults.lastUsedExpenseCategoryId,
+      // Preserve onboarding
+      onboardingCompleted: current.onboardingCompleted,
+    );
+    await _saveAndUpdate(resetSettings);
+  }
 }
 
 final settingsProvider = AsyncNotifierProvider<SettingsNotifier, AppSettings>(() {

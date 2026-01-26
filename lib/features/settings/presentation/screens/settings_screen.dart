@@ -6,14 +6,25 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
-import '../../../../design_system/animations/staggered_list.dart';
+import '../../../../design_system/design_system.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../providers/settings_provider.dart';
+import '../widgets/reset_settings_dialog.dart';
 import '../widgets/settings_section.dart';
 import '../widgets/settings_tile.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
+
+  Future<void> _handleResetSettings(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showResetSettingsDialog(context: context);
+    if (confirmed == true && context.mounted) {
+      await ref.read(settingsProvider.notifier).resetSettingsSection();
+      if (context.mounted) {
+        context.showSuccessNotification('Settings reset to defaults');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -102,6 +113,13 @@ class SettingsScreen extends ConsumerWidget {
                         icon: LucideIcons.receipt,
                         iconColor: AppColors.getAccentColor(5, intensity), // Teal
                         onTap: () => context.push('/settings/transactions'),
+                      ),
+                      SettingsTile(
+                        title: 'Reset to Defaults',
+                        description: 'Restore all settings',
+                        icon: LucideIcons.rotateCcw,
+                        iconColor: AppColors.expense,
+                        onTap: () => _handleResetSettings(context, ref),
                       ),
                     ],
                   ),
