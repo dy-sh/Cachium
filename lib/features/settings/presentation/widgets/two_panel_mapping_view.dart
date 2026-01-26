@@ -140,6 +140,7 @@ class TwoPanelMappingView extends ConsumerWidget {
                           fieldKey: field.key,
                           isRequired: field.isRequired,
                           isMapped: isMapped,
+                          mappedCsvColumn: csvColumn,
                           isSelected: isSelected,
                           colorIndex: colorIndex,
                           hasAnySelected: selectedFieldKey != null,

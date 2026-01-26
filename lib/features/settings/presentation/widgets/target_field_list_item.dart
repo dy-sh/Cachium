@@ -22,6 +22,9 @@ class TargetFieldListItem extends StatelessWidget {
   /// Whether this field is already mapped to a CSV column.
   final bool isMapped;
 
+  /// The name of the mapped CSV column (if mapped).
+  final String? mappedCsvColumn;
+
   /// Whether this field is currently selected.
   final bool isSelected;
 
@@ -46,6 +49,7 @@ class TargetFieldListItem extends StatelessWidget {
     this.fieldKey = '',
     this.isRequired = false,
     this.isMapped = false,
+    this.mappedCsvColumn,
     this.isSelected = false,
     this.colorIndex = 0,
     this.hasAnySelected = false,
@@ -91,32 +95,45 @@ class TargetFieldListItem extends StatelessWidget {
           opacity: isDimmed || isMappedDimmed ? 0.4 : 1.0,
           child: Row(
             children: [
-              // Field name
+              // Field name and mapped column
               Expanded(
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      fieldName,
-                      style: AppTypography.bodyMedium.copyWith(
-                        fontWeight: isMapped || isSelected ? FontWeight.w600 : FontWeight.w500,
-                        color: isSkipItem
-                            ? AppColors.textTertiary
-                            : isMapped || isSelected
-                                ? AppColors.textPrimary
-                                : AppColors.textSecondary,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          fieldName,
+                          style: AppTypography.bodyMedium.copyWith(
+                            fontWeight: isMapped || isSelected ? FontWeight.w600 : FontWeight.w500,
+                            color: isSkipItem
+                                ? AppColors.textTertiary
+                                : isMapped || isSelected
+                                    ? AppColors.textPrimary
+                                    : AppColors.textSecondary,
+                          ),
+                        ),
+                        // Required indicator
+                        if (isRequired && !isMapped && !isSkipItem) ...[
+                          const SizedBox(width: 4),
+                          Text(
+                            '*',
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.expense,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
-                    // Required indicator
-                    if (isRequired && !isMapped && !isSkipItem) ...[
-                      const SizedBox(width: 4),
+                    // Show mapped CSV column name
+                    if (isMapped && mappedCsvColumn != null)
                       Text(
-                        '*',
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.expense,
-                          fontWeight: FontWeight.w600,
+                        '"$mappedCsvColumn"',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: fieldColor,
                         ),
                       ),
-                    ],
                   ],
                 ),
               ),
