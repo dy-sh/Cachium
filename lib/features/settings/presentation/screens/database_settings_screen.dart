@@ -186,8 +186,8 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
                           isLoading: _loadingAction == _LoadingAction.importCsv,
                         ),
                         SettingsTile(
-                          title: 'CSV Import (External)',
-                          description: 'Import from other apps',
+                          title: 'Import CSV (Flexible)',
+                          description: 'Import from other apps with custom column mappings',
                           icon: LucideIcons.fileInput,
                           iconColor: AppColors.getAccentColor(14, intensity), // sky - external
                           onTap: _loadingAction != null
