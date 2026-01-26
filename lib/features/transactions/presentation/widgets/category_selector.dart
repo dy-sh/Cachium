@@ -378,40 +378,40 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
 
     return Row(
       children: [
-        // Back button - same size as category chips but dimmer
+        // Back button - dimmer than categories
         GestureDetector(
           onTap: _navigateBack,
           behavior: HitTestBehavior.opaque,
           child: Container(
             padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
-              vertical: AppSpacing.xs,
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
             ),
             decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: AppRadius.smAll,
+              borderRadius: AppRadius.mdAll,
               border: Border.all(color: AppColors.border),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 24,
-                  height: 24,
+                  width: 28,
+                  height: 28,
                   decoration: BoxDecoration(
                     color: AppColors.surfaceLight,
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(7),
                   ),
                   child: Icon(
                     LucideIcons.arrowLeft,
-                    size: 12,
+                    size: 14,
                     color: AppColors.textSecondary,
                   ),
                 ),
-                const SizedBox(width: AppSpacing.xs),
+                const SizedBox(width: AppSpacing.sm),
                 Text(
                   'Back',
-                  style: AppTypography.labelSmall.copyWith(
+                  style: AppTypography.labelMedium.copyWith(
                     color: AppColors.textSecondary,
                   ),
                 ),
@@ -420,14 +420,14 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
           ),
         ),
         const Spacer(),
-        // Parent category indicator - same size as category chips
+        // Parent category indicator
         Container(
           padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: AppSpacing.xs,
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
           ),
           decoration: BoxDecoration(
-            borderRadius: AppRadius.smAll,
+            borderRadius: AppRadius.mdAll,
             gradient: isParentSelected
                 ? LinearGradient(
                     begin: Alignment.topLeft,
@@ -448,24 +448,24 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 24,
-                height: 24,
+                width: 28,
+                height: 28,
                 decoration: BoxDecoration(
                   color: isParentSelected
                       ? categoryColor.withValues(alpha: 0.9)
                       : AppColors.surfaceLight,
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(7),
                 ),
                 child: Icon(
                   parentCategory.icon,
-                  size: 12,
+                  size: 14,
                   color: isParentSelected ? AppColors.background : AppColors.textSecondary,
                 ),
               ),
-              const SizedBox(width: AppSpacing.xs),
+              const SizedBox(width: AppSpacing.sm),
               Text(
                 parentCategory.name,
-                style: AppTypography.labelSmall.copyWith(
+                style: AppTypography.labelMedium.copyWith(
                   color: isParentSelected ? categoryColor : AppColors.textPrimary,
                   fontWeight: isParentSelected ? FontWeight.w600 : FontWeight.w500,
                 ),
@@ -474,7 +474,7 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
                 const SizedBox(width: AppSpacing.xs),
                 Icon(
                   LucideIcons.check,
-                  size: 14,
+                  size: 16,
                   color: categoryColor,
                 ),
               ],
