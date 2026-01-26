@@ -91,6 +91,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     final expenseCategories = ref.watch(expenseCategoriesProvider);
     final accountsAsync = ref.watch(accountsProvider);
     final accounts = accountsAsync.valueOrEmpty;
+    final recentAccountIds = ref.watch(recentlyUsedAccountIdsProvider);
     final intensity = ref.watch(colorIntensityProvider);
 
     final categories = formState.type == TransactionType.income
@@ -178,6 +179,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                     AccountSelector(
                       accounts: accounts,
                       selectedId: formState.accountId,
+                      recentAccountIds: recentAccountIds,
                       onChanged: (id) {
                         ref.read(transactionFormProvider.notifier).setAccount(id);
                       },

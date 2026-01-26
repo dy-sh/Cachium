@@ -7,6 +7,7 @@ import '../../../../core/exceptions/app_exception.dart';
 import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/providers/database_providers.dart';
 import '../../data/models/account.dart';
+import '../../../transactions/presentation/providers/transactions_provider.dart';
 
 /// Notifier for managing account state.
 ///
@@ -310,4 +311,43 @@ final accountByIdProvider = Provider.family<Account?, String>((ref, id) {
   } catch (_) {
     return null;
   }
+});
+
+/// Returns account IDs sorted by most recent transaction usage.
+/// Accounts without transactions appear last, sorted by creation date.
+final recentlyUsedAccountIdsProvider = Provider<List<String>>((ref) {
+  final transactions = ref.watch(transactionsProvider).valueOrNull;
+  final accounts = ref.watch(accountsProvider).valueOrNull;
+  if (accounts == null || accounts.isEmpty) return [];
+
+  // Get most recent transaction date per account
+  final Map<String, DateTime> lastUsedMap = {};
+  if (transactions != null) {
+    for (final tx in transactions) {
+      final current = lastUsedMap[tx.accountId];
+      if (current == null || tx.createdAt.isAfter(current)) {
+        lastUsedMap[tx.accountId] = tx.createdAt;
+      }
+    }
+  }
+
+  // Sort accounts: recently used first, then by account creation date
+  final sortedAccounts = List<Account>.from(accounts);
+  sortedAccounts.sort((a, b) {
+    final aLastUsed = lastUsedMap[a.id];
+    final bLastUsed = lastUsedMap[b.id];
+
+    // Both have transactions - sort by last used
+    if (aLastUsed != null && bLastUsed != null) {
+      return bLastUsed.compareTo(aLastUsed);
+    }
+    // Only a has transactions
+    if (aLastUsed != null) return -1;
+    // Only b has transactions
+    if (bLastUsed != null) return 1;
+    // Neither has transactions - sort by creation date (newest first)
+    return b.createdAt.compareTo(a.createdAt);
+  });
+
+  return sortedAccounts.map((a) => a.id).toList();
 });

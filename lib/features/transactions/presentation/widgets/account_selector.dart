@@ -12,10 +12,12 @@ import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 
 /// A widget for selecting an account from a grid.
+/// Shows recently used accounts first, with a "More" button to reveal others.
 class AccountSelector extends ConsumerStatefulWidget {
   final List<Account> accounts;
   final String? selectedId;
   final ValueChanged<String> onChanged;
+  final List<String>? recentAccountIds;
   final int initialVisibleCount;
   final VoidCallback? onCreatePressed;
 
@@ -24,7 +26,8 @@ class AccountSelector extends ConsumerStatefulWidget {
     required this.accounts,
     this.selectedId,
     required this.onChanged,
-    this.initialVisibleCount = 6,
+    this.recentAccountIds,
+    this.initialVisibleCount = 3,
     this.onCreatePressed,
   });
 
@@ -49,10 +52,29 @@ class _AccountSelectorState extends ConsumerState<AccountSelector> {
       );
     }
 
-    final hasMore = widget.accounts.length > widget.initialVisibleCount;
-    final displayAccounts = _showAll || !hasMore
-        ? widget.accounts
-        : widget.accounts.take(widget.initialVisibleCount).toList();
+    // Sort accounts by recent usage if provided
+    final sortedAccounts = _getSortedAccounts();
+    final hasMore = sortedAccounts.length > widget.initialVisibleCount;
+
+    // Calculate items to show: accounts + optional "More" button + optional "Create" button
+    final List<_GridItem> gridItems = [];
+
+    if (_showAll || !hasMore) {
+      // Show all accounts
+      for (final account in sortedAccounts) {
+        gridItems.add(_GridItem.account(account));
+      }
+      // Add create button when expanded or when 3 or fewer accounts
+      if (widget.onCreatePressed != null) {
+        gridItems.add(_GridItem.create());
+      }
+    } else {
+      // Show limited accounts + "More" button
+      for (int i = 0; i < widget.initialVisibleCount; i++) {
+        gridItems.add(_GridItem.account(sortedAccounts[i]));
+      }
+      gridItems.add(_GridItem.more(sortedAccounts.length - widget.initialVisibleCount));
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,33 +91,39 @@ class _AccountSelectorState extends ConsumerState<AccountSelector> {
               crossAxisSpacing: AppSpacing.chipGap,
               mainAxisSpacing: AppSpacing.chipGap,
             ),
-            // Add 1 for the "Create new" button
-            itemCount: displayAccounts.length + (widget.onCreatePressed != null ? 1 : 0),
+            itemCount: gridItems.length,
             itemBuilder: (context, index) {
-              // Last item is the "Create new" button
-              if (index == displayAccounts.length && widget.onCreatePressed != null) {
-                return _CreateNewCard(onTap: widget.onCreatePressed!);
+              final item = gridItems[index];
+              switch (item.type) {
+                case _GridItemType.account:
+                  final account = item.account!;
+                  final isSelected = account.id == widget.selectedId;
+                  return _AccountCard(
+                    account: account,
+                    isSelected: isSelected,
+                    intensity: intensity,
+                    onTap: () {
+                      HapticHelper.lightImpact();
+                      widget.onChanged(account.id);
+                    },
+                  );
+                case _GridItemType.more:
+                  return _MoreCard(
+                    count: item.moreCount!,
+                    onTap: () => setState(() => _showAll = true),
+                  );
+                case _GridItemType.create:
+                  return _CreateNewCard(onTap: widget.onCreatePressed!);
               }
-              final account = displayAccounts[index];
-              final isSelected = account.id == widget.selectedId;
-              return _AccountCard(
-                account: account,
-                isSelected: isSelected,
-                intensity: intensity,
-                onTap: () {
-                  HapticHelper.lightImpact();
-                  widget.onChanged(account.id);
-                },
-              );
             },
           ),
         ),
-        if (hasMore) ...[
+        if (_showAll && hasMore) ...[
           const SizedBox(height: AppSpacing.sm),
           GestureDetector(
-            onTap: () => setState(() => _showAll = !_showAll),
+            onTap: () => setState(() => _showAll = false),
             child: Text(
-              _showAll ? 'Show Less' : 'Show All',
+              'Show Less',
               style: AppTypography.labelSmall.copyWith(
                 color: AppColors.accentPrimary,
               ),
@@ -106,6 +134,54 @@ class _AccountSelectorState extends ConsumerState<AccountSelector> {
     );
   }
 
+  List<Account> _getSortedAccounts() {
+    if (widget.recentAccountIds == null || widget.recentAccountIds!.isEmpty) {
+      return widget.accounts;
+    }
+
+    // Create a map for quick lookup
+    final accountMap = {for (var a in widget.accounts) a.id: a};
+
+    // Build sorted list: recent accounts first, then remaining
+    final sorted = <Account>[];
+    final addedIds = <String>{};
+
+    // Add accounts in order of recent usage
+    for (final id in widget.recentAccountIds!) {
+      final account = accountMap[id];
+      if (account != null && !addedIds.contains(id)) {
+        sorted.add(account);
+        addedIds.add(id);
+      }
+    }
+
+    // Add any remaining accounts not in the recent list
+    for (final account in widget.accounts) {
+      if (!addedIds.contains(account.id)) {
+        sorted.add(account);
+      }
+    }
+
+    return sorted;
+  }
+}
+
+enum _GridItemType { account, more, create }
+
+class _GridItem {
+  final _GridItemType type;
+  final Account? account;
+  final int? moreCount;
+
+  _GridItem._({required this.type, this.account, this.moreCount});
+
+  factory _GridItem.account(Account account) =>
+      _GridItem._(type: _GridItemType.account, account: account);
+
+  factory _GridItem.more(int count) =>
+      _GridItem._(type: _GridItemType.more, moreCount: count);
+
+  factory _GridItem.create() => _GridItem._(type: _GridItemType.create);
 }
 
 class _AccountCard extends StatelessWidget {
@@ -155,6 +231,62 @@ class _AccountCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _MoreCard extends StatelessWidget {
+  final int count;
+  final VoidCallback onTap;
+
+  const _MoreCard({required this.count, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        HapticHelper.lightImpact();
+        onTap();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: AppColors.border,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceLight,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(
+                LucideIcons.moreHorizontal,
+                size: 12,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Text(
+              '+$count More',
+              style: AppTypography.labelSmall.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
