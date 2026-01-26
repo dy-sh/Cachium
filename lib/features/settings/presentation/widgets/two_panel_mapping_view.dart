@@ -57,6 +57,10 @@ class _TwoPanelMappingViewState extends ConsumerState<TwoPanelMappingView> {
   double _contentTop = 0;
   double _contentBottom = 0;
 
+  // Preview state (when holding an element)
+  String? _previewFieldKey;
+  String? _previewCsvColumn;
+
   @override
   void initState() {
     super.initState();
@@ -158,19 +162,174 @@ class _TwoPanelMappingViewState extends ConsumerState<TwoPanelMappingView> {
     return _rightItemKeys.putIfAbsent(column, () => GlobalKey());
   }
 
+  void _setPreviewField(String? fieldKey) {
+    if (_previewFieldKey != fieldKey) {
+      setState(() {
+        _previewFieldKey = fieldKey;
+        _previewCsvColumn = null;
+      });
+    }
+  }
+
+  void _setPreviewCsvColumn(String? csvColumn) {
+    if (_previewCsvColumn != csvColumn) {
+      setState(() {
+        _previewCsvColumn = csvColumn;
+        _previewFieldKey = null;
+      });
+    }
+  }
+
+  void _clearPreview() {
+    if (_previewFieldKey != null || _previewCsvColumn != null) {
+      setState(() {
+        _previewFieldKey = null;
+        _previewCsvColumn = null;
+      });
+    }
+  }
+
+  /// Get the CSV column that a field is mapped to (for preview from left side)
+  String? _getCsvColumnForPreviewField(String fieldKey, FlexibleCsvImportState state) {
+    // Regular field
+    final csvColumn = state.getCsvColumnForField(fieldKey);
+    if (csvColumn != null) return csvColumn;
+
+    // Amount fields
+    if (fieldKey == 'amount:header' || fieldKey == 'amount:amount') {
+      return state.amountConfig.amountColumn;
+    }
+    if (fieldKey == 'amount:type') {
+      return state.amountConfig.typeColumn;
+    }
+
+    // Category FK
+    if (fieldKey == 'fk:category:header' || fieldKey == 'fk:category:name') {
+      return state.categoryConfig.nameColumn;
+    }
+    if (fieldKey == 'fk:category:id') {
+      return state.categoryConfig.idColumn;
+    }
+
+    // Account FK
+    if (fieldKey == 'fk:account:header' || fieldKey == 'fk:account:name') {
+      return state.accountConfig.nameColumn;
+    }
+    if (fieldKey == 'fk:account:id') {
+      return state.accountConfig.idColumn;
+    }
+
+    return null;
+  }
+
+  /// Get the field key that a CSV column is mapped to (for preview from right side)
+  String? _getFieldKeyForPreviewCsvColumn(
+    String csvColumn,
+    FlexibleCsvImportState state,
+    Map<String, String> csvColumnFieldKey,
+  ) {
+    // Check regular fields first
+    if (csvColumnFieldKey.containsKey(csvColumn)) {
+      return csvColumnFieldKey[csvColumn];
+    }
+
+    // Check amount
+    if (csvColumn == state.amountConfig.amountColumn) {
+      return 'amount:amount';
+    }
+    if (csvColumn == state.amountConfig.typeColumn) {
+      return 'amount:type';
+    }
+
+    // Check category FK
+    if (csvColumn == state.categoryConfig.nameColumn) {
+      return 'fk:category:name';
+    }
+    if (csvColumn == state.categoryConfig.idColumn) {
+      return 'fk:category:id';
+    }
+
+    // Check account FK
+    if (csvColumn == state.accountConfig.nameColumn) {
+      return 'fk:account:name';
+    }
+    if (csvColumn == state.accountConfig.idColumn) {
+      return 'fk:account:id';
+    }
+
+    return null;
+  }
+
   List<MappingConnection> _buildConnections(
     FlexibleCsvImportState state,
     Map<String, int> fieldColorIndices,
     List<AppFieldDefinition> displayFields,
     ColorIntensity intensity,
     bool isTransaction,
+    Map<String, String> csvColumnFieldKey,
   ) {
     final connections = <MappingConnection>[];
+    final selectedFieldKey = state.selectedFieldKey;
+
+    // Determine the active filter (preview takes priority over selection)
+    final String? activeFieldKey;
+    final String? activeCsvColumn;
+
+    if (_previewFieldKey != null) {
+      activeFieldKey = _previewFieldKey;
+      activeCsvColumn = _getCsvColumnForPreviewField(_previewFieldKey!, state);
+    } else if (_previewCsvColumn != null) {
+      activeCsvColumn = _previewCsvColumn;
+      activeFieldKey = _getFieldKeyForPreviewCsvColumn(
+        _previewCsvColumn!,
+        state,
+        csvColumnFieldKey,
+      );
+    } else if (selectedFieldKey != null) {
+      activeFieldKey = selectedFieldKey;
+      activeCsvColumn = _getCsvColumnForPreviewField(selectedFieldKey, state);
+    } else {
+      activeFieldKey = null;
+      activeCsvColumn = null;
+    }
+
+    // Helper to check if a connection should be shown
+    bool shouldShowConnection(String fieldKey, String csvColumn) {
+      // If nothing is active, show all connections
+      if (activeFieldKey == null && activeCsvColumn == null) return true;
+
+      // Check if this connection matches the active field or CSV column
+      if (activeFieldKey != null) {
+        if (fieldKey == activeFieldKey) return true;
+
+        // For header keys, check if the active field is a sub-field
+        if (fieldKey == 'amount:header' &&
+            activeFieldKey.startsWith('amount:')) {
+          return true;
+        }
+        if (fieldKey == 'fk:category:header' &&
+            activeFieldKey.startsWith('fk:category:')) {
+          return true;
+        }
+        if (fieldKey == 'fk:account:header' &&
+            activeFieldKey.startsWith('fk:account:')) {
+          return true;
+        }
+      }
+
+      if (activeCsvColumn != null && csvColumn == activeCsvColumn) {
+        return true;
+      }
+
+      return false;
+    }
 
     // Build connections for regular fields
     for (final field in displayFields) {
       final csvColumn = state.getCsvColumnForField(field.key);
       if (csvColumn != null) {
+        if (!shouldShowConnection(field.key, csvColumn)) continue;
+
         final leftY = _leftItemPositions[field.key];
         final rightY = _rightItemPositions[csvColumn];
         if (leftY != null && rightY != null) {
@@ -200,16 +359,19 @@ class _TwoPanelMappingViewState extends ConsumerState<TwoPanelMappingView> {
         } else {
           leftKey = 'amount:header';
         }
-        final leftY = _leftItemPositions[leftKey];
-        final rightY = _rightItemPositions[amountConfig.amountColumn];
-        if (leftY != null && rightY != null) {
-          connections.add(MappingConnection(
-            fieldKey: leftKey,
-            csvColumn: amountConfig.amountColumn!,
-            leftY: leftY,
-            rightY: rightY,
-            color: amountColor,
-          ));
+
+        if (shouldShowConnection(leftKey, amountConfig.amountColumn!)) {
+          final leftY = _leftItemPositions[leftKey];
+          final rightY = _rightItemPositions[amountConfig.amountColumn];
+          if (leftY != null && rightY != null) {
+            connections.add(MappingConnection(
+              fieldKey: leftKey,
+              csvColumn: amountConfig.amountColumn!,
+              leftY: leftY,
+              rightY: rightY,
+              color: amountColor,
+            ));
+          }
         }
       }
 
@@ -222,16 +384,19 @@ class _TwoPanelMappingViewState extends ConsumerState<TwoPanelMappingView> {
         } else {
           leftKey = 'amount:header';
         }
-        final leftY = _leftItemPositions[leftKey];
-        final rightY = _rightItemPositions[amountConfig.typeColumn];
-        if (leftY != null && rightY != null) {
-          connections.add(MappingConnection(
-            fieldKey: leftKey,
-            csvColumn: amountConfig.typeColumn!,
-            leftY: leftY,
-            rightY: rightY,
-            color: amountColor,
-          ));
+
+        if (shouldShowConnection(leftKey, amountConfig.typeColumn!)) {
+          final leftY = _leftItemPositions[leftKey];
+          final rightY = _rightItemPositions[amountConfig.typeColumn];
+          if (leftY != null && rightY != null) {
+            connections.add(MappingConnection(
+              fieldKey: leftKey,
+              csvColumn: amountConfig.typeColumn!,
+              leftY: leftY,
+              rightY: rightY,
+              color: amountColor,
+            ));
+          }
         }
       }
 
@@ -247,16 +412,19 @@ class _TwoPanelMappingViewState extends ConsumerState<TwoPanelMappingView> {
           } else {
             leftKey = 'fk:category:header';
           }
-          final leftY = _leftItemPositions[leftKey];
-          final rightY = _rightItemPositions[categoryConfig.nameColumn];
-          if (leftY != null && rightY != null) {
-            connections.add(MappingConnection(
-              fieldKey: leftKey,
-              csvColumn: categoryConfig.nameColumn!,
-              leftY: leftY,
-              rightY: rightY,
-              color: categoryColor,
-            ));
+
+          if (shouldShowConnection(leftKey, categoryConfig.nameColumn!)) {
+            final leftY = _leftItemPositions[leftKey];
+            final rightY = _rightItemPositions[categoryConfig.nameColumn];
+            if (leftY != null && rightY != null) {
+              connections.add(MappingConnection(
+                fieldKey: leftKey,
+                csvColumn: categoryConfig.nameColumn!,
+                leftY: leftY,
+                rightY: rightY,
+                color: categoryColor,
+              ));
+            }
           }
         }
 
@@ -267,16 +435,19 @@ class _TwoPanelMappingViewState extends ConsumerState<TwoPanelMappingView> {
           } else {
             leftKey = 'fk:category:header';
           }
-          final leftY = _leftItemPositions[leftKey];
-          final rightY = _rightItemPositions[categoryConfig.idColumn];
-          if (leftY != null && rightY != null) {
-            connections.add(MappingConnection(
-              fieldKey: leftKey,
-              csvColumn: categoryConfig.idColumn!,
-              leftY: leftY,
-              rightY: rightY,
-              color: categoryColor,
-            ));
+
+          if (shouldShowConnection(leftKey, categoryConfig.idColumn!)) {
+            final leftY = _leftItemPositions[leftKey];
+            final rightY = _rightItemPositions[categoryConfig.idColumn];
+            if (leftY != null && rightY != null) {
+              connections.add(MappingConnection(
+                fieldKey: leftKey,
+                csvColumn: categoryConfig.idColumn!,
+                leftY: leftY,
+                rightY: rightY,
+                color: categoryColor,
+              ));
+            }
           }
         }
       }
@@ -293,16 +464,19 @@ class _TwoPanelMappingViewState extends ConsumerState<TwoPanelMappingView> {
           } else {
             leftKey = 'fk:account:header';
           }
-          final leftY = _leftItemPositions[leftKey];
-          final rightY = _rightItemPositions[accountConfig.nameColumn];
-          if (leftY != null && rightY != null) {
-            connections.add(MappingConnection(
-              fieldKey: leftKey,
-              csvColumn: accountConfig.nameColumn!,
-              leftY: leftY,
-              rightY: rightY,
-              color: accountColor,
-            ));
+
+          if (shouldShowConnection(leftKey, accountConfig.nameColumn!)) {
+            final leftY = _leftItemPositions[leftKey];
+            final rightY = _rightItemPositions[accountConfig.nameColumn];
+            if (leftY != null && rightY != null) {
+              connections.add(MappingConnection(
+                fieldKey: leftKey,
+                csvColumn: accountConfig.nameColumn!,
+                leftY: leftY,
+                rightY: rightY,
+                color: accountColor,
+              ));
+            }
           }
         }
 
@@ -313,16 +487,19 @@ class _TwoPanelMappingViewState extends ConsumerState<TwoPanelMappingView> {
           } else {
             leftKey = 'fk:account:header';
           }
-          final leftY = _leftItemPositions[leftKey];
-          final rightY = _rightItemPositions[accountConfig.idColumn];
-          if (leftY != null && rightY != null) {
-            connections.add(MappingConnection(
-              fieldKey: leftKey,
-              csvColumn: accountConfig.idColumn!,
-              leftY: leftY,
-              rightY: rightY,
-              color: accountColor,
-            ));
+
+          if (shouldShowConnection(leftKey, accountConfig.idColumn!)) {
+            final leftY = _leftItemPositions[leftKey];
+            final rightY = _rightItemPositions[accountConfig.idColumn];
+            if (leftY != null && rightY != null) {
+              connections.add(MappingConnection(
+                fieldKey: leftKey,
+                csvColumn: accountConfig.idColumn!,
+                leftY: leftY,
+                rightY: rightY,
+                color: accountColor,
+              ));
+            }
           }
         }
       }
@@ -376,48 +553,90 @@ class _TwoPanelMappingViewState extends ConsumerState<TwoPanelMappingView> {
 
     // For transactions, add Amount, Category, and Account at the top
     if (isTransaction) {
+      // Check if Amount section should be highlighted (its CSV column is being previewed)
+      final amountConfig = state.amountConfig;
+      final isAmountHighlighted = _previewCsvColumn != null &&
+          (_previewCsvColumn == amountConfig.amountColumn ||
+              _previewCsvColumn == amountConfig.typeColumn);
+
+      // Check if Category section should be highlighted
+      final categoryConfig = state.categoryConfig;
+      final isCategoryHighlighted = _previewCsvColumn != null &&
+          (_previewCsvColumn == categoryConfig.nameColumn ||
+              _previewCsvColumn == categoryConfig.idColumn);
+
+      // Check if Account section should be highlighted
+      final accountConfig = state.accountConfig;
+      final isAccountHighlighted = _previewCsvColumn != null &&
+          (_previewCsvColumn == accountConfig.nameColumn ||
+              _previewCsvColumn == accountConfig.idColumn);
+
       leftPanelItems.add(
-        _PositionTrackingWrapper(
-          itemKey: _getLeftItemKey('amount:header'),
-          child: ExpandableAmountItem(
-            isExpanded: expandedForeignKey == 'amount',
-            onToggleExpand: () => _handleToggleExpandedSection(ref, 'amount'),
-            intensity: intensity,
-            hasCsvColumnSelected: selectedFieldKey != null,
-            getPositionKey: _getLeftItemKey,
+        GestureDetector(
+          onLongPressStart: (_) => _setPreviewField('amount:header'),
+          onLongPressEnd: (_) => _clearPreview(),
+          onLongPressCancel: _clearPreview,
+          child: _PositionTrackingWrapper(
+            itemKey: _getLeftItemKey('amount:header'),
+            child: ExpandableAmountItem(
+              isExpanded: expandedForeignKey == 'amount',
+              onToggleExpand: () => _handleToggleExpandedSection(ref, 'amount'),
+              intensity: intensity,
+              hasCsvColumnSelected: selectedFieldKey != null ||
+                  _previewFieldKey != null ||
+                  _previewCsvColumn != null,
+              isHighlighted: isAmountHighlighted,
+              getPositionKey: _getLeftItemKey,
+            ),
           ),
         ),
       );
       leftPanelItems.add(const SizedBox(height: AppSpacing.xs));
       leftPanelItems.add(
-        _PositionTrackingWrapper(
-          itemKey: _getLeftItemKey('fk:category:header'),
-          child: ExpandableForeignKeyItem(
-            foreignKey: 'category',
-            displayName: 'Category',
-            icon: LucideIcons.tag,
-            isExpanded: expandedForeignKey == 'category',
-            onToggleExpand: () =>
-                _handleToggleExpandedSection(ref, 'category'),
-            intensity: intensity,
-            hasCsvColumnSelected: selectedFieldKey != null,
-            getPositionKey: _getLeftItemKey,
+        GestureDetector(
+          onLongPressStart: (_) => _setPreviewField('fk:category:header'),
+          onLongPressEnd: (_) => _clearPreview(),
+          onLongPressCancel: _clearPreview,
+          child: _PositionTrackingWrapper(
+            itemKey: _getLeftItemKey('fk:category:header'),
+            child: ExpandableForeignKeyItem(
+              foreignKey: 'category',
+              displayName: 'Category',
+              icon: LucideIcons.tag,
+              isExpanded: expandedForeignKey == 'category',
+              onToggleExpand: () =>
+                  _handleToggleExpandedSection(ref, 'category'),
+              intensity: intensity,
+              hasCsvColumnSelected: selectedFieldKey != null ||
+                  _previewFieldKey != null ||
+                  _previewCsvColumn != null,
+              isHighlighted: isCategoryHighlighted,
+              getPositionKey: _getLeftItemKey,
+            ),
           ),
         ),
       );
       leftPanelItems.add(const SizedBox(height: AppSpacing.xs));
       leftPanelItems.add(
-        _PositionTrackingWrapper(
-          itemKey: _getLeftItemKey('fk:account:header'),
-          child: ExpandableForeignKeyItem(
-            foreignKey: 'account',
-            displayName: 'Account',
-            icon: LucideIcons.wallet,
-            isExpanded: expandedForeignKey == 'account',
-            onToggleExpand: () => _handleToggleExpandedSection(ref, 'account'),
-            intensity: intensity,
-            hasCsvColumnSelected: selectedFieldKey != null,
-            getPositionKey: _getLeftItemKey,
+        GestureDetector(
+          onLongPressStart: (_) => _setPreviewField('fk:account:header'),
+          onLongPressEnd: (_) => _clearPreview(),
+          onLongPressCancel: _clearPreview,
+          child: _PositionTrackingWrapper(
+            itemKey: _getLeftItemKey('fk:account:header'),
+            child: ExpandableForeignKeyItem(
+              foreignKey: 'account',
+              displayName: 'Account',
+              icon: LucideIcons.wallet,
+              isExpanded: expandedForeignKey == 'account',
+              onToggleExpand: () => _handleToggleExpandedSection(ref, 'account'),
+              intensity: intensity,
+              hasCsvColumnSelected: selectedFieldKey != null ||
+                  _previewFieldKey != null ||
+                  _previewCsvColumn != null,
+              isHighlighted: isAccountHighlighted,
+              getPositionKey: _getLeftItemKey,
+            ),
           ),
         ),
       );
@@ -435,6 +654,7 @@ class _TwoPanelMappingViewState extends ConsumerState<TwoPanelMappingView> {
       displayFields,
       intensity,
       isTransaction,
+      csvColumnFieldKey,
     );
 
     // Schedule position update after build
@@ -472,24 +692,37 @@ class _TwoPanelMappingViewState extends ConsumerState<TwoPanelMappingView> {
                           final isMapped = csvColumn != null;
                           final colorIndex = fieldColorIndices[field.key]!;
                           final isSelected = selectedFieldKey == field.key;
+                          final isPreview = _previewFieldKey == field.key;
+                          // Highlight if this field's CSV column is being previewed
+                          final isPairedPreview = _previewCsvColumn != null &&
+                              csvColumn == _previewCsvColumn;
 
                           return Padding(
                             padding:
                                 const EdgeInsets.only(bottom: AppSpacing.xs),
-                            child: _PositionTrackingWrapper(
-                              itemKey: _getLeftItemKey(field.key),
-                              child: TargetFieldListItem(
-                                fieldName: field.displayName,
-                                fieldKey: field.key,
-                                isRequired: field.isRequired,
-                                isMapped: isMapped,
-                                mappedCsvColumn: csvColumn,
-                                isSelected: isSelected,
-                                colorIndex: colorIndex,
-                                hasAnySelected: selectedFieldKey != null,
-                                intensity: intensity,
-                                onTap: () => _handleFieldTap(
-                                    ref, field.key, isMapped, isSelected),
+                            child: GestureDetector(
+                              onLongPressStart: (_) =>
+                                  _setPreviewField(field.key),
+                              onLongPressEnd: (_) => _clearPreview(),
+                              onLongPressCancel: _clearPreview,
+                              child: _PositionTrackingWrapper(
+                                itemKey: _getLeftItemKey(field.key),
+                                child: TargetFieldListItem(
+                                  fieldName: field.displayName,
+                                  fieldKey: field.key,
+                                  isRequired: field.isRequired,
+                                  isMapped: isMapped,
+                                  mappedCsvColumn: csvColumn,
+                                  isSelected:
+                                      isSelected || isPreview || isPairedPreview,
+                                  colorIndex: colorIndex,
+                                  hasAnySelected: selectedFieldKey != null ||
+                                      _previewFieldKey != null ||
+                                      _previewCsvColumn != null,
+                                  intensity: intensity,
+                                  onTap: () => _handleFieldTap(
+                                      ref, field.key, isMapped, isSelected),
+                                ),
                               ),
                             ),
                           );
@@ -556,30 +789,43 @@ class _TwoPanelMappingViewState extends ConsumerState<TwoPanelMappingView> {
                             fkMappedTo != null ||
                             isAmountMapped;
 
-                        return _PositionTrackingWrapper(
-                          itemKey: _getRightItemKey(column),
-                          child: CsvColumnListItem(
-                            columnName: column,
-                            sampleValues: sampleValues,
-                            isSelected:
-                                false, // CSV columns are not selectable anymore
-                            hasAnySelected: selectedFieldKey != null,
-                            isMapped: isMapped,
-                            mappedFieldColorIndex:
-                                (fkMappedTo != null || isAmountMapped)
-                                    ? null
-                                    : mappedColorIndex,
-                            mappedFieldKey:
-                                (fkMappedTo != null || isAmountMapped)
-                                    ? null
-                                    : mappedFieldKey,
-                            fkMappedTo: isAmountMapped ? 'amount' : fkMappedTo,
-                            intensity: intensity,
-                            onTap: () => _handleCsvColumnTap(
-                              ref,
-                              column,
-                              mappedColorIndex,
-                              isAmountMapped ? 'amount' : fkMappedTo,
+                        final isPreview = _previewCsvColumn == column;
+                        // Highlight if this column's mapped field is being previewed
+                        final isPairedPreview = _previewFieldKey != null &&
+                            _getCsvColumnForPreviewField(
+                                    _previewFieldKey!, state) ==
+                                column;
+
+                        return GestureDetector(
+                          onLongPressStart: (_) => _setPreviewCsvColumn(column),
+                          onLongPressEnd: (_) => _clearPreview(),
+                          onLongPressCancel: _clearPreview,
+                          child: _PositionTrackingWrapper(
+                            itemKey: _getRightItemKey(column),
+                            child: CsvColumnListItem(
+                              columnName: column,
+                              sampleValues: sampleValues,
+                              isSelected: isPreview || isPairedPreview,
+                              hasAnySelected: selectedFieldKey != null ||
+                                  _previewFieldKey != null ||
+                                  _previewCsvColumn != null,
+                              isMapped: isMapped,
+                              mappedFieldColorIndex:
+                                  (fkMappedTo != null || isAmountMapped)
+                                      ? null
+                                      : mappedColorIndex,
+                              mappedFieldKey:
+                                  (fkMappedTo != null || isAmountMapped)
+                                      ? null
+                                      : mappedFieldKey,
+                              fkMappedTo: isAmountMapped ? 'amount' : fkMappedTo,
+                              intensity: intensity,
+                              onTap: () => _handleCsvColumnTap(
+                                ref,
+                                column,
+                                mappedColorIndex,
+                                isAmountMapped ? 'amount' : fkMappedTo,
+                              ),
                             ),
                           ),
                         );

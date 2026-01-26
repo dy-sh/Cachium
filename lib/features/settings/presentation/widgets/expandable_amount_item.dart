@@ -26,6 +26,9 @@ class ExpandableAmountItem extends ConsumerWidget {
   final ColorIntensity intensity;
   final bool hasCsvColumnSelected;
 
+  /// Whether this item should be highlighted (e.g., paired preview).
+  final bool isHighlighted;
+
   /// Optional callback to get a GlobalKey for position tracking.
   final GlobalKey Function(String key)? getPositionKey;
 
@@ -35,6 +38,7 @@ class ExpandableAmountItem extends ConsumerWidget {
     required this.onToggleExpand,
     required this.intensity,
     this.hasCsvColumnSelected = false,
+    this.isHighlighted = false,
     this.getPositionKey,
   });
 
@@ -43,8 +47,10 @@ class ExpandableAmountItem extends ConsumerWidget {
     final config = ref.watch(amountConfigProvider);
     final accentColor = getAmountColor(intensity);
     final isConfigured = config.isValid;
-    // Dim configured items when selecting another field
-    final isDimmed = hasCsvColumnSelected && !isExpanded;
+    // Dim configured items when selecting another field (but not if highlighted)
+    final isDimmed = hasCsvColumnSelected && !isExpanded && !isHighlighted;
+    // Show as active when configured or highlighted
+    final showActive = isConfigured || isHighlighted;
 
     // Get summary text
     final summary = config.getDisplaySummary();
@@ -62,14 +68,14 @@ class ExpandableAmountItem extends ConsumerWidget {
               vertical: AppSpacing.xs + 2,
             ),
             decoration: BoxDecoration(
-              color: isConfigured
+              color: showActive
                   ? accentColor.withValues(alpha: isDimmed ? 0.03 : 0.08)
                   : AppColors.surface,
               borderRadius: isExpanded
                   ? const BorderRadius.vertical(top: Radius.circular(12))
                   : AppRadius.card,
               border: Border.all(
-                color: isConfigured
+                color: showActive
                     ? accentColor.withValues(alpha: isDimmed ? 0.2 : 0.4)
                     : AppColors.textTertiary.withValues(alpha: 0.5),
                 width: 1,
@@ -83,7 +89,7 @@ class ExpandableAmountItem extends ConsumerWidget {
                   Icon(
                     isExpanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
                     size: 18,
-                    color: isConfigured ? accentColor : AppColors.textTertiary,
+                    color: showActive ? accentColor : AppColors.textTertiary,
                   ),
                   const SizedBox(width: AppSpacing.xs),
                   // Name and summary
@@ -96,10 +102,10 @@ class ExpandableAmountItem extends ConsumerWidget {
                             Text(
                               'Amount',
                               style: AppTypography.bodyMedium.copyWith(
-                                fontWeight: isConfigured
+                                fontWeight: showActive
                                     ? FontWeight.w600
                                     : FontWeight.w500,
-                                color: isConfigured
+                                color: showActive
                                     ? AppColors.textPrimary
                                     : AppColors.textSecondary,
                               ),
@@ -121,7 +127,7 @@ class ExpandableAmountItem extends ConsumerWidget {
                           Text(
                             summary,
                             style: AppTypography.labelSmall.copyWith(
-                              color: isConfigured
+                              color: showActive
                                   ? accentColor
                                   : AppColors.textTertiary,
                             ),
@@ -135,7 +141,7 @@ class ExpandableAmountItem extends ConsumerWidget {
                   Icon(
                     LucideIcons.coins,
                     size: 18,
-                    color: isConfigured ? accentColor : AppColors.textTertiary,
+                    color: showActive ? accentColor : AppColors.textTertiary,
                   ),
                 ],
               ),
