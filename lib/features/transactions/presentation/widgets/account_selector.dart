@@ -69,8 +69,13 @@ class _AccountSelectorState extends ConsumerState<AccountSelector> {
               crossAxisSpacing: AppSpacing.chipGap,
               mainAxisSpacing: AppSpacing.chipGap,
             ),
-            itemCount: displayAccounts.length,
+            // Add 1 for the "Create new" button
+            itemCount: displayAccounts.length + (widget.onCreatePressed != null ? 1 : 0),
             itemBuilder: (context, index) {
+              // Last item is the "Create new" button
+              if (index == displayAccounts.length && widget.onCreatePressed != null) {
+                return _CreateNewCard(onTap: widget.onCreatePressed!);
+              }
               final account = displayAccounts[index];
               final isSelected = account.id == widget.selectedId;
               return _AccountCard(
@@ -150,6 +155,47 @@ class _AccountCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _CreateNewCard extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _CreateNewCard({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: AppColors.textTertiary.withValues(alpha: 0.3),
+            width: 1,
+            strokeAlign: BorderSide.strokeAlignInside,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              LucideIcons.plus,
+              size: 16,
+              color: AppColors.textTertiary,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              'New Account',
+              style: AppTypography.labelSmall.copyWith(
+                color: AppColors.textTertiary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

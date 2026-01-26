@@ -165,8 +165,13 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
               crossAxisSpacing: AppSpacing.chipGap,
               mainAxisSpacing: AppSpacing.chipGap,
             ),
-            itemCount: visibleCategories.length,
+            // Add 1 for the "Create new" button
+            itemCount: visibleCategories.length + (widget.onCreatePressed != null ? 1 : 0),
             itemBuilder: (context, index) {
+              // Last item is the "Create new" button
+              if (index == visibleCategories.length && widget.onCreatePressed != null) {
+                return _CreateNewChip(onTap: widget.onCreatePressed!);
+              }
               final category = visibleCategories[index];
               final isSelected = category.id == widget.selectedId;
               final hasChildren = ref.watch(hasChildrenProvider(category.id));
@@ -353,6 +358,47 @@ class _CategoryChip extends StatelessWidget {
               color: isSelected ? categoryColor : AppColors.textTertiary,
             )
           : null,
+    );
+  }
+}
+
+class _CreateNewChip extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _CreateNewChip({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: AppRadius.smAll,
+          border: Border.all(
+            color: AppColors.textTertiary.withValues(alpha: 0.3),
+            width: 1,
+            strokeAlign: BorderSide.strokeAlignInside,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              LucideIcons.plus,
+              size: 14,
+              color: AppColors.textTertiary,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              'New',
+              style: AppTypography.labelSmall.copyWith(
+                color: AppColors.textTertiary,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

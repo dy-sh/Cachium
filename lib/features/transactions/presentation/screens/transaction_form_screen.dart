@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -12,10 +13,12 @@ import '../../../../design_system/components/layout/form_header.dart';
 import '../../../../design_system/components/chips/toggle_chip.dart';
 import '../../../../design_system/components/inputs/amount_input.dart';
 import '../../../../design_system/components/inputs/input_field.dart';
-import '../../../../navigation/app_router.dart';
+import '../../../accounts/presentation/screens/account_form_screen.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
+import '../../../categories/data/models/category.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
+import '../../../settings/presentation/widgets/category_form_modal.dart';
 import '../../data/models/transaction.dart';
 import '../providers/transaction_form_provider.dart';
 import '../providers/transactions_provider.dart';
@@ -166,7 +169,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                       onChanged: (id) {
                         ref.read(transactionFormProvider.notifier).setCategory(id);
                       },
-                      onCreatePressed: () => context.push(AppRoutes.categoryManagement),
+                      onCreatePressed: () => _createNewCategory(context, ref, formState.type),
                     ),
                     const SizedBox(height: AppSpacing.xxl),
 
@@ -178,7 +181,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                       onChanged: (id) {
                         ref.read(transactionFormProvider.notifier).setAccount(id);
                       },
-                      onCreatePressed: () => context.push(AppRoutes.accountForm),
+                      onCreatePressed: () => _createNewAccount(context, ref),
                     ),
                     const SizedBox(height: AppSpacing.xxl),
 
@@ -324,6 +327,77 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _createNewCategory(
+    BuildContext context,
+    WidgetRef ref,
+    TransactionType transactionType,
+  ) async {
+    final categoryType = transactionType == TransactionType.income
+        ? CategoryType.income
+        : CategoryType.expense;
+
+    final newCategoryId = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (context) => _CategoryPickerFormScreen(
+          type: categoryType,
+          onCategoryCreated: (id) => Navigator.of(context).pop(id),
+        ),
+      ),
+    );
+
+    if (newCategoryId != null && mounted) {
+      ref.read(transactionFormProvider.notifier).setCategory(newCategoryId);
+    }
+  }
+
+  Future<void> _createNewAccount(BuildContext context, WidgetRef ref) async {
+    final newAccountId = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (context) => const AccountFormScreen(pickerMode: true),
+      ),
+    );
+
+    if (newAccountId != null && mounted) {
+      ref.read(transactionFormProvider.notifier).setAccount(newAccountId);
+    }
+  }
+}
+
+/// A screen that wraps CategoryFormModal for picker mode.
+class _CategoryPickerFormScreen extends ConsumerWidget {
+  final CategoryType type;
+  final ValueChanged<String> onCategoryCreated;
+
+  const _CategoryPickerFormScreen({
+    required this.type,
+    required this.onCategoryCreated,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return CategoryFormModal(
+      type: type,
+      onSave: (name, icon, colorIndex, parentId) async {
+        final uuid = const Uuid();
+        final newId = uuid.v4();
+
+        final category = Category(
+          id: newId,
+          name: name,
+          icon: icon,
+          colorIndex: colorIndex,
+          type: type,
+          parentId: parentId,
+          isCustom: true,
+          sortOrder: 0,
+        );
+
+        await ref.read(categoriesProvider.notifier).addCategory(category);
+        onCategoryCreated(newId);
+      },
     );
   }
 }

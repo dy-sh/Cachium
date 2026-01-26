@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
-import '../../../../navigation/app_router.dart';
 import '../../../categories/data/models/category.dart';
 import '../../../categories/data/models/category_tree_node.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../providers/settings_provider.dart';
+import 'category_form_modal.dart';
 
 /// A modal picker for selecting a category with hierarchy support.
 class CategoryPickerModal extends ConsumerStatefulWidget {
@@ -160,22 +160,28 @@ class _CategoryPickerModalState extends ConsumerState<CategoryPickerModal> {
   Widget _buildCreateOption(BuildContext context) {
     return GestureDetector(
       onTap: () async {
-        // Get existing category IDs before navigation
-        final existingIds = ref.read(categoriesProvider).valueOrNull
-            ?.map((c) => c.id).toSet() ?? <String>{};
+        // Store callback reference before popping
+        final onSelected = widget.onSelected;
 
-        Navigator.pop(context);
-        await context.push(AppRoutes.categoryManagement);
+        // Get the root navigator before popping
+        final navigator = Navigator.of(context, rootNavigator: true);
 
-        // After returning, check for new category
-        if (!context.mounted) return;
-        final currentCategories = ref.read(categoriesProvider).valueOrNull ?? [];
-        final newCategory = currentCategories.where(
-          (c) => !existingIds.contains(c.id)
-        ).firstOrNull;
+        // Pop the modal first
+        navigator.pop();
 
-        if (newCategory != null) {
-          widget.onSelected(newCategory.id);
+        // Navigate to category form in picker mode and wait for result
+        final newCategoryId = await navigator.push<String>(
+          MaterialPageRoute(
+            builder: (context) => _CategoryPickerFormScreen(
+              type: CategoryType.expense,
+              onCategoryCreated: (id) => Navigator.of(context).pop(id),
+            ),
+          ),
+        );
+
+        // Select the new category if one was created
+        if (newCategoryId != null) {
+          onSelected(newCategoryId);
         }
       },
       child: Container(
@@ -347,4 +353,41 @@ void showCategoryPickerModal({
       ),
     ),
   );
+}
+
+/// A screen that wraps CategoryFormModal for picker mode.
+/// Returns the new category ID when created.
+class _CategoryPickerFormScreen extends ConsumerWidget {
+  final CategoryType type;
+  final ValueChanged<String> onCategoryCreated;
+
+  const _CategoryPickerFormScreen({
+    required this.type,
+    required this.onCategoryCreated,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return CategoryFormModal(
+      type: type,
+      onSave: (name, icon, colorIndex, parentId) async {
+        final uuid = const Uuid();
+        final newId = uuid.v4();
+
+        final category = Category(
+          id: newId,
+          name: name,
+          icon: icon,
+          colorIndex: colorIndex,
+          type: type,
+          parentId: parentId,
+          isCustom: true,
+          sortOrder: 0,
+        );
+
+        await ref.read(categoriesProvider.notifier).addCategory(category);
+        onCategoryCreated(newId);
+      },
+    );
+  }
 }

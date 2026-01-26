@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
-import '../../../../navigation/app_router.dart';
 import '../../../accounts/data/models/account.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
+import '../../../accounts/presentation/screens/account_form_screen.dart';
 import '../providers/settings_provider.dart';
 
 /// A modal picker for selecting an account.
@@ -116,22 +115,25 @@ class AccountPickerModal extends ConsumerWidget {
   Widget _buildCreateOption(BuildContext context, WidgetRef ref) {
     return GestureDetector(
       onTap: () async {
-        // Get existing account IDs before navigation
-        final existingIds = ref.read(accountsProvider).valueOrNull
-            ?.map((a) => a.id).toSet() ?? <String>{};
+        // Store callback reference before popping
+        final onSelectedCallback = onSelected;
 
-        Navigator.pop(context);
-        await context.push(AppRoutes.accountForm);
+        // Get the root navigator before popping
+        final navigator = Navigator.of(context, rootNavigator: true);
 
-        // After returning, check for new account
-        if (!context.mounted) return;
-        final currentAccounts = ref.read(accountsProvider).valueOrNull ?? [];
-        final newAccount = currentAccounts.where(
-          (a) => !existingIds.contains(a.id)
-        ).firstOrNull;
+        // Pop the modal first
+        navigator.pop();
 
-        if (newAccount != null) {
-          onSelected(newAccount.id);
+        // Navigate to account form in picker mode and wait for result
+        final newAccountId = await navigator.push<String>(
+          MaterialPageRoute(
+            builder: (context) => const AccountFormScreen(pickerMode: true),
+          ),
+        );
+
+        // Select the new account if one was created
+        if (newAccountId != null) {
+          onSelectedCallback(newAccountId);
         }
       },
       child: Container(

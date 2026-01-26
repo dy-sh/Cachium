@@ -25,9 +25,10 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
 
   /// Add a new account.
   ///
+  /// Returns the new account's ID.
   /// Throws [RepositoryException] on failure, which is caught and
   /// converted to AsyncValue.error().
-  Future<void> addAccount({
+  Future<String> addAccount({
     required String name,
     required AccountType type,
     required double initialBalance,
@@ -53,6 +54,8 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
 
       // Save to encrypted database
       await repo.createAccount(account);
+
+      return account.id;
     } catch (e, st) {
       // Revert to previous state on error
       state = previousState;

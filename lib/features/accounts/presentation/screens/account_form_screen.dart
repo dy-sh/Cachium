@@ -21,8 +21,10 @@ import '../widgets/delete_account_dialog.dart';
 
 class AccountFormScreen extends ConsumerStatefulWidget {
   final String? accountId;
+  /// When true, pops with the new account ID after creation.
+  final bool pickerMode;
 
-  const AccountFormScreen({super.key, this.accountId});
+  const AccountFormScreen({super.key, this.accountId, this.pickerMode = false});
 
   @override
   ConsumerState<AccountFormScreen> createState() => _AccountFormScreenState();
@@ -330,12 +332,22 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                           }
                         } else {
                           // Add new account
-                          await ref.read(accountsProvider.notifier).addAccount(
+                          final newAccountId = await ref.read(accountsProvider.notifier).addAccount(
                                 name: formState.name,
                                 type: formState.type!,
                                 initialBalance: formState.initialBalance,
                                 customColor: customColor,
                               );
+                          ref.read(accountFormProvider.notifier).reset();
+                          if (context.mounted) {
+                            // In picker mode, return the new account ID
+                            if (widget.pickerMode) {
+                              context.pop(newAccountId);
+                            } else {
+                              context.pop();
+                            }
+                          }
+                          return;
                         }
                         ref.read(accountFormProvider.notifier).reset();
                         if (context.mounted) {
