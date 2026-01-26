@@ -275,15 +275,9 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
           const SizedBox(height: AppSpacing.sm),
         ],
 
-        // Navigation header when viewing children (hide during search)
+        // Navigation row: back button (left) + parent indicator (right)
         if (!_navState.isAtRoot && !isSearching) ...[
-          _buildNavigationHeader(intensity),
-          const SizedBox(height: AppSpacing.sm),
-        ],
-
-        // Selected parent indicator (hide during search)
-        if (!_navState.isAtRoot && !isSearching) ...[
-          _buildSelectedParentIndicator(intensity),
+          _buildNavigationRow(intensity),
           const SizedBox(height: AppSpacing.sm),
         ],
 
@@ -372,36 +366,7 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
     setState(() => _navState.navigateBack());
   }
 
-  Widget _buildNavigationHeader(ColorIntensity intensity) {
-    final backLabel = _navState.getPreviousParentName(widget.categories);
-    final isAtTop = backLabel == 'All Categories';
-
-    return GestureDetector(
-      onTap: _navigateBack,
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-        child: Row(
-          children: [
-            Icon(
-              LucideIcons.arrowLeft,
-              size: 16,
-              color: AppColors.accentPrimary,
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            Text(
-              isAtTop ? 'Back to All Categories' : 'Back to $backLabel',
-              style: AppTypography.labelSmall.copyWith(
-                color: AppColors.accentPrimary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSelectedParentIndicator(ColorIntensity intensity) {
+  Widget _buildNavigationRow(ColorIntensity intensity) {
     final parentCategory = widget.categories.firstWhere(
       (c) => c.id == _navState.viewingParentId,
       orElse: () => widget.categories.first,
@@ -411,65 +376,112 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
     final categoryColor = parentCategory.getColor(intensity);
     final bgOpacity = AppColors.getBgOpacity(intensity);
 
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        borderRadius: AppRadius.smAll,
-        gradient: isParentSelected
-            ? LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  categoryColor.withOpacity(bgOpacity * 0.4),
-                  categoryColor.withOpacity(bgOpacity * 0.2),
-                ],
-              )
-            : null,
-        color: isParentSelected ? null : AppColors.surface,
-        border: Border.all(
-          color: isParentSelected ? categoryColor : AppColors.border,
-          width: isParentSelected ? 1.5 : 1,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 24,
-            height: 24,
+    return Row(
+      children: [
+        // Back button - same size as category chips but dimmer
+        GestureDetector(
+          onTap: _navigateBack,
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.xs,
+            ),
             decoration: BoxDecoration(
-              color: isParentSelected
-                  ? categoryColor.withOpacity(0.9)
-                  : AppColors.surfaceLight,
-              borderRadius: BorderRadius.circular(6),
+              color: AppColors.surface,
+              borderRadius: AppRadius.smAll,
+              border: Border.all(color: AppColors.border),
             ),
-            child: Icon(
-              parentCategory.icon,
-              size: 12,
-              color: isParentSelected ? AppColors.background : AppColors.textSecondary,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Icon(
+                    LucideIcons.arrowLeft,
+                    size: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  'Back',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(width: AppSpacing.xs),
-          Text(
-            parentCategory.name,
-            style: AppTypography.labelSmall.copyWith(
-              color: isParentSelected ? categoryColor : AppColors.textPrimary,
-              fontWeight: isParentSelected ? FontWeight.w600 : FontWeight.w500,
+        ),
+        const Spacer(),
+        // Parent category indicator - same size as category chips
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.xs,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: AppRadius.smAll,
+            gradient: isParentSelected
+                ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      categoryColor.withValues(alpha: bgOpacity * 0.4),
+                      categoryColor.withValues(alpha: bgOpacity * 0.2),
+                    ],
+                  )
+                : null,
+            color: isParentSelected ? null : AppColors.surface,
+            border: Border.all(
+              color: isParentSelected ? categoryColor : AppColors.border,
+              width: isParentSelected ? 1.5 : 1,
             ),
           ),
-          if (isParentSelected) ...[
-            const SizedBox(width: AppSpacing.xs),
-            Icon(
-              LucideIcons.check,
-              size: 14,
-              color: categoryColor,
-            ),
-          ],
-        ],
-      ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: isParentSelected
+                      ? categoryColor.withValues(alpha: 0.9)
+                      : AppColors.surfaceLight,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(
+                  parentCategory.icon,
+                  size: 12,
+                  color: isParentSelected ? AppColors.background : AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Text(
+                parentCategory.name,
+                style: AppTypography.labelSmall.copyWith(
+                  color: isParentSelected ? categoryColor : AppColors.textPrimary,
+                  fontWeight: isParentSelected ? FontWeight.w600 : FontWeight.w500,
+                ),
+              ),
+              if (isParentSelected) ...[
+                const SizedBox(width: AppSpacing.xs),
+                Icon(
+                  LucideIcons.check,
+                  size: 14,
+                  color: categoryColor,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
