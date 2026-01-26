@@ -133,6 +133,10 @@ class FlexibleCsvImportService {
         return ['current_balance', 'bal', 'amount'];
       case 'initialBalance':
         return ['initial_balance', 'starting_balance', 'opening_balance'];
+      case 'customColor':
+        return ['custom_color', 'custom_color_value', 'color_value'];
+      case 'customIcon':
+        return ['custom_icon', 'custom_icon_code_point', 'icon_code_point'];
       case 'colorIndex':
         return ['color_index', 'color', 'colour'];
       case 'icon':
