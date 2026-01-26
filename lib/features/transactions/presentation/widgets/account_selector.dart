@@ -37,6 +37,14 @@ class AccountSelector extends ConsumerStatefulWidget {
 
 class _AccountSelectorState extends ConsumerState<AccountSelector> {
   bool _showAll = false;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,14 +62,17 @@ class _AccountSelectorState extends ConsumerState<AccountSelector> {
 
     // Sort accounts by recent usage if provided
     final sortedAccounts = _getSortedAccounts();
+    final filteredAccounts = _searchQuery.isEmpty
+        ? sortedAccounts
+        : sortedAccounts.where((a) => a.name.toLowerCase().contains(_searchQuery)).toList();
     final hasMore = sortedAccounts.length > widget.initialVisibleCount;
 
     // Calculate items to show: accounts + optional "More" button + optional "Create" button
     final List<_GridItem> gridItems = [];
 
     if (_showAll || !hasMore) {
-      // Show all accounts
-      for (final account in sortedAccounts) {
+      // Show all accounts (use filtered when searching)
+      for (final account in filteredAccounts) {
         gridItems.add(_GridItem.account(account));
       }
       // Add create button when expanded or when 3 or fewer accounts
@@ -79,6 +90,15 @@ class _AccountSelectorState extends ConsumerState<AccountSelector> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (_showAll) ...[
+          InputField(
+            controller: _searchController,
+            hint: 'Search accounts...',
+            prefix: Icon(LucideIcons.search, size: 16, color: AppColors.textSecondary),
+            onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+        ],
         AnimatedSize(
           duration: AppAnimations.slow,
           curve: AppAnimations.defaultCurve,
@@ -121,7 +141,11 @@ class _AccountSelectorState extends ConsumerState<AccountSelector> {
         if (_showAll && hasMore) ...[
           const SizedBox(height: AppSpacing.sm),
           GestureDetector(
-            onTap: () => setState(() => _showAll = false),
+            onTap: () => setState(() {
+              _showAll = false;
+              _searchController.clear();
+              _searchQuery = '';
+            }),
             child: Text(
               'Show Less',
               style: AppTypography.labelSmall.copyWith(

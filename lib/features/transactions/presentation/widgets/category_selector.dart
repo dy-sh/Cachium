@@ -155,11 +155,19 @@ class CategorySelector extends ConsumerStatefulWidget {
 class _CategorySelectorState extends ConsumerState<CategorySelector> {
   final _navState = CategoryNavigationState();
   String? _lastSelectedId;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _initializeNavigation();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -195,11 +203,22 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
       );
     }
 
-    final displayCategories = _navState.getDisplayCategories(
-      widget.categories,
-      sortOption: widget.sortOption,
-      recentCategoryIds: widget.recentCategoryIds,
-    );
+    final bool isSearching = _searchQuery.isNotEmpty;
+
+    final List<Category> displayCategories;
+    if (isSearching) {
+      // Flat search across ALL categories
+      displayCategories = widget.categories
+          .where((c) => c.name.toLowerCase().contains(_searchQuery))
+          .toList();
+    } else {
+      // Normal hierarchy navigation
+      displayCategories = _navState.getDisplayCategories(
+        widget.categories,
+        sortOption: widget.sortOption,
+        recentCategoryIds: widget.recentCategoryIds,
+      );
+    }
     final hasMore = displayCategories.length > widget.initialVisibleCount;
 
     // Build grid items similar to AccountSelector
@@ -225,14 +244,25 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Navigation header when viewing children
-        if (!_navState.isAtRoot) ...[
+        // Show search field when expanded
+        if (_navState.showAll) ...[
+          InputField(
+            controller: _searchController,
+            hint: 'Search categories...',
+            prefix: Icon(LucideIcons.search, size: 16, color: AppColors.textSecondary),
+            onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+        ],
+
+        // Navigation header when viewing children (hide during search)
+        if (!_navState.isAtRoot && !isSearching) ...[
           _buildNavigationHeader(intensity),
           const SizedBox(height: AppSpacing.sm),
         ],
 
-        // Selected parent indicator
-        if (!_navState.isAtRoot) ...[
+        // Selected parent indicator (hide during search)
+        if (!_navState.isAtRoot && !isSearching) ...[
           _buildSelectedParentIndicator(intensity),
           const SizedBox(height: AppSpacing.sm),
         ],
@@ -279,7 +309,11 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
         if (_navState.showAll && hasMore) ...[
           const SizedBox(height: AppSpacing.sm),
           GestureDetector(
-            onTap: () => setState(() => _navState.setShowAll(false)),
+            onTap: () => setState(() {
+              _navState.setShowAll(false);
+              _searchController.clear();
+              _searchQuery = '';
+            }),
             child: Text(
               'Show Less',
               style: AppTypography.labelSmall.copyWith(
