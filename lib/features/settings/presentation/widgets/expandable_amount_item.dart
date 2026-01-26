@@ -10,12 +10,10 @@ import '../../data/models/app_settings.dart';
 import '../providers/flexible_csv_import_providers.dart';
 import 'amount_options_panel.dart';
 
-/// Color index for Amount field (green - index 9).
-const int amountColorIndex = 9;
-
 /// Get the color for the amount section.
+/// Delegates to AppColors.getMappingAmountColor for consistency.
 Color getAmountColor(ColorIntensity intensity) {
-  return AppColors.getAccentColor(amountColorIndex, intensity);
+  return AppColors.getMappingAmountColor(intensity);
 }
 
 /// An expandable item for Amount/Type configuration.

@@ -13,48 +13,16 @@ import '../../data/models/field_mapping_options.dart';
 import '../providers/flexible_csv_import_providers.dart';
 import 'field_options_panel.dart';
 
-/// Color index for Category FK field (cyan - index 13).
-const int categoryColorIndex = 13;
-/// Color index for Account FK field (orange - index 3).
-const int accountColorIndex = 3;
-
 /// Get the color for a foreign key type.
+/// Delegates to AppColors.getMappingForeignKeyColor for consistency.
 Color getForeignKeyColor(String foreignKey, ColorIntensity intensity) {
-  final colorIndex = foreignKey == 'category' ? categoryColorIndex : accountColorIndex;
-  return AppColors.getAccentColor(colorIndex, intensity);
+  return AppColors.getMappingForeignKeyColor(foreignKey, intensity);
 }
 
-/// Get a distinct color for regular field badges.
-/// New 24-color palette indices (15° spacing on color wheel):
-///   0: white, 1: red, 2: vermilion, 3: orange*, 4: amber, 5: yellow, 6: chartreuse,
-///   7: lime, 8: harlequin, 9: green*, 10: emerald, 11: jade, 12: aquamarine,
-///   13: cyan*, 14: sky, 15: azure, 16: cerulean, 17: blue, 18: indigo,
-///   19: violet, 20: purple, 21: magenta, 22: fuchsia, 23: rose
-/// (* = reserved: cyan for Category, orange for Account, green for Amount)
-Color getFieldBadgeColor(int badgeNumber, ColorIntensity intensity) {
-  // Pick distinct colors, maximizing visual separation between consecutive items
-  // Alternates between green/teal family and pink/purple family
-  // Order: lime, violet, aquamarine, fuchsia, emerald, rose, harlequin, magenta, jade, purple
-  const distinctIndices = [7, 19, 12, 22, 10, 23, 8, 21, 11, 20];
-  final index = distinctIndices[(badgeNumber - 1) % distinctIndices.length];
-  return AppColors.getAccentColor(index, intensity);
-}
-
-/// Get color for a specific field, with overrides for certain field keys.
-/// Falls back to position-based color if no override exists.
+/// Get color for a field by its position index.
+/// Colors are purely position-based for consistency across all entity types.
 Color getFieldColor(String fieldKey, int colorIndex, ColorIntensity intensity) {
-  final key = fieldKey.toLowerCase();
-
-  // Specific field color overrides
-  if (key.contains('note') || key == 'notes' || key == 'description') {
-    return AppColors.getAccentColor(5, intensity); // yellow
-  }
-  if (key.contains('updated') || key.contains('modified')) {
-    return AppColors.getAccentColor(17, intensity); // blue
-  }
-
-  // Fall back to position-based color
-  return getFieldBadgeColor(colorIndex, intensity);
+  return AppColors.getMappingFieldColor(colorIndex, intensity);
 }
 
 /// Get a semantically meaningful icon for a field based on its key.

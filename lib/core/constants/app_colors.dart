@@ -364,6 +364,86 @@ class AppColors {
     }
   }
 
+  // ==========================================================================
+  // CSV Import Mapping Colors
+  // ==========================================================================
+  // Unified color system for CSV field mapping. Uses indices from the
+  // 24-color accent palette. Special fields have semantic colors matching
+  // transaction/account colors for consistency.
+
+  /// Color indices for special mapping fields (from accent palette)
+  static const int mappingAmountIndex = 9;      // Green - matches income/cash
+  static const int mappingCategoryIndex = 13;   // Cyan - matches bank account
+  static const int mappingAccountIndex = 3;     // Orange - matches wallet account
+
+  /// Regular field color sequence - 20 distinct colors for position-based assignment.
+  /// Maximizes visual separation between consecutive items.
+  /// Reserved indices NOT in this list: 9 (amount/green), 13 (category/cyan), 3 (orange/account), 0 (white), 1 (red/expense)
+  static const List<int> mappingFieldColorIndices = [
+    7,   // Lime
+    19,  // Violet
+    5,   // Yellow
+    12,  // Aquamarine
+    22,  // Fuchsia
+    17,  // Blue
+    10,  // Emerald
+    23,  // Rose
+    4,   // Amber
+    14,  // Sky
+    8,   // Harlequin
+    21,  // Magenta
+    6,   // Chartreuse
+    18,  // Indigo
+    11,  // Jade
+    20,  // Purple
+    2,   // Vermilion
+    16,  // Cerulean
+    15,  // Azure
+  ];
+
+  /// Get mapping color for Amount field.
+  static Color getMappingAmountColor(ColorIntensity intensity) {
+    return getAccentColor(mappingAmountIndex, intensity);
+  }
+
+  /// Get mapping color for Category FK field.
+  static Color getMappingCategoryColor(ColorIntensity intensity) {
+    return getAccentColor(mappingCategoryIndex, intensity);
+  }
+
+  /// Get mapping color for Account FK field.
+  static Color getMappingAccountColor(ColorIntensity intensity) {
+    return getAccentColor(mappingAccountIndex, intensity);
+  }
+
+  /// Get mapping color for a foreign key type ('category' or 'account').
+  static Color getMappingForeignKeyColor(String foreignKey, ColorIntensity intensity) {
+    return foreignKey == 'category'
+        ? getMappingCategoryColor(intensity)
+        : getMappingAccountColor(intensity);
+  }
+
+  /// Get mapping color for a regular field by its position index (1-based).
+  /// Returns a color from the distinct field color palette.
+  static Color getMappingFieldColor(int fieldIndex, ColorIntensity intensity) {
+    final colorIndex = mappingFieldColorIndices[
+        (fieldIndex - 1) % mappingFieldColorIndices.length];
+    return getAccentColor(colorIndex, intensity);
+  }
+
+  /// Get mapping color for a field by its position index.
+  /// Colors are purely position-based for consistency across all entity types.
+  static Color getMappingFieldColorByKey(
+    String fieldKey,
+    int fieldIndex,
+    ColorIntensity intensity,
+  ) {
+    // Pure position-based colors - same position = same color across all entity types
+    return getMappingFieldColor(fieldIndex, intensity);
+  }
+
+  // ==========================================================================
+
   // Utility methods for color variations
   static Color withOpacity(Color color, double opacity) {
     return color.withOpacity(opacity);
