@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/design_system.dart';
@@ -188,74 +187,77 @@ class ColumnMappingScreen extends ConsumerWidget {
     ImportPreset? appliedPreset,
     ColorIntensity intensity,
   ) {
-    final accentColor = AppColors.getAccentColor(0, intensity);
-
     return Row(
       children: [
-        // File info (compact)
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: AppRadius.card,
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: accentColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    LucideIcons.fileSpreadsheet,
-                    size: 16,
-                    color: accentColor,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${config.csvRows.length} rows',
-                        style: AppTypography.bodySmall.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        '${config.csvHeaders.length} columns',
-                        style: AppTypography.labelSmall.copyWith(
-                          color: AppColors.textTertiary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+        // Compact file stats badges
+        _buildStatBadge(
+          icon: LucideIcons.alignJustify,
+          value: '${config.csvRows.length}',
+          label: 'rows',
         ),
-        // Preset button (if available)
-        if (presets.isNotEmpty) ...[
-          const SizedBox(width: AppSpacing.sm),
-          _buildPresetButton(
+        const SizedBox(width: AppSpacing.xs),
+        _buildStatBadge(
+          icon: LucideIcons.columns,
+          value: '${config.csvHeaders.length}',
+          label: 'cols',
+        ),
+        const Spacer(),
+        // Preset selector (more prominent)
+        if (presets.isNotEmpty)
+          _buildPresetSelector(
             context,
             ref,
             presets,
             appliedPreset,
             intensity,
           ),
-        ],
       ],
     );
   }
 
-  Widget _buildPresetButton(
+  Widget _buildStatBadge({
+    required IconData icon,
+    required String value,
+    required String label,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 6,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 14,
+            color: AppColors.textTertiary,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            value,
+            style: AppTypography.bodySmall.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: AppTypography.labelSmall.copyWith(
+              color: AppColors.textTertiary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPresetSelector(
     BuildContext context,
     WidgetRef ref,
     List<ImportPreset> presets,
@@ -270,13 +272,13 @@ class ColumnMappingScreen extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
+          vertical: 6,
         ),
         decoration: BoxDecoration(
           color: hasPreset
               ? accentColor.withValues(alpha: 0.15)
               : AppColors.surface,
-          borderRadius: AppRadius.card,
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: hasPreset ? accentColor : AppColors.border,
           ),
@@ -285,17 +287,42 @@ class ColumnMappingScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              hasPreset ? LucideIcons.check : LucideIcons.sparkles,
-              size: 16,
-              color: hasPreset ? accentColor : AppColors.textSecondary,
+              LucideIcons.sparkles,
+              size: 14,
+              color: hasPreset ? accentColor : AppColors.textTertiary,
             ),
             const SizedBox(width: 6),
             Text(
-              hasPreset ? appliedPreset.name : 'Presets',
-              style: AppTypography.bodySmall.copyWith(
-                color: hasPreset ? accentColor : AppColors.textPrimary,
-                fontWeight: hasPreset ? FontWeight.w600 : FontWeight.normal,
+              'Preset',
+              style: AppTypography.labelSmall.copyWith(
+                color: hasPreset ? accentColor : AppColors.textTertiary,
               ),
+            ),
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 2,
+              ),
+              decoration: BoxDecoration(
+                color: hasPreset
+                    ? accentColor.withValues(alpha: 0.2)
+                    : AppColors.surfaceLight,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                hasPreset ? appliedPreset.name : 'None',
+                style: AppTypography.labelSmall.copyWith(
+                  color: hasPreset ? accentColor : AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              LucideIcons.chevronDown,
+              size: 14,
+              color: hasPreset ? accentColor : AppColors.textTertiary,
             ),
           ],
         ),
