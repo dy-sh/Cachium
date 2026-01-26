@@ -48,10 +48,13 @@ class _AccountSelectorState extends ConsumerState<AccountSelector> {
     super.dispose();
   }
 
-  void _clearSearch() {
+  void _clearSearch({bool collapse = false}) {
     _searchController.clear();
     _searchQuery = '';
     _searchFocusNode.unfocus();
+    if (collapse) {
+      _showAll = false;
+    }
   }
 
   @override
@@ -104,12 +107,10 @@ class _AccountSelectorState extends ConsumerState<AccountSelector> {
             focusNode: _searchFocusNode,
             hint: 'Search accounts...',
             prefix: Icon(LucideIcons.search, size: 16, color: AppColors.textSecondary),
-            suffix: _searchQuery.isNotEmpty
-                ? GestureDetector(
-                    onTap: () => setState(_clearSearch),
-                    child: Icon(LucideIcons.x, size: 16, color: AppColors.textSecondary),
-                  )
-                : null,
+            suffix: GestureDetector(
+              onTap: () => setState(() => _clearSearch(collapse: true)),
+              child: Icon(LucideIcons.x, size: 16, color: AppColors.textSecondary),
+            ),
             showClearButton: false,
             onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
           ),

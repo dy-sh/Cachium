@@ -172,10 +172,13 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
     super.dispose();
   }
 
-  void _clearSearch() {
+  void _clearSearch({bool collapse = false}) {
     _searchController.clear();
     _searchQuery = '';
     _searchFocusNode.unfocus();
+    if (collapse) {
+      _navState.setShowAll(false);
+    }
   }
 
   @override
@@ -259,12 +262,10 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
             focusNode: _searchFocusNode,
             hint: 'Search categories...',
             prefix: Icon(LucideIcons.search, size: 16, color: AppColors.textSecondary),
-            suffix: _searchQuery.isNotEmpty
-                ? GestureDetector(
-                    onTap: () => setState(_clearSearch),
-                    child: Icon(LucideIcons.x, size: 16, color: AppColors.textSecondary),
-                  )
-                : null,
+            suffix: GestureDetector(
+              onTap: () => setState(() => _clearSearch(collapse: true)),
+              child: Icon(LucideIcons.x, size: 16, color: AppColors.textSecondary),
+            ),
             showClearButton: false,
             onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
           ),
@@ -343,6 +344,7 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
 
   void _handleCategoryTap(Category category, bool hasChildren) {
     HapticHelper.lightImpact();
+    final wasSearching = _searchQuery.isNotEmpty;
     _lastSelectedId = category.id;
     widget.onChanged(category.id);
 
@@ -350,7 +352,11 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
       // Clear search and unfocus when selecting a category
       _clearSearch();
 
-      if (hasChildren) {
+      if (wasSearching && category.parentId != null) {
+        // When selecting from search, navigate to show parent level (siblings visible)
+        final ancestors = ref.read(categoryAncestorsProvider(category.id));
+        _navState.initializeFor(widget.categories, category.id, ancestors);
+      } else if (hasChildren) {
         _navState.navigateTo(category.id);
       }
     });
