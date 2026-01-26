@@ -486,6 +486,10 @@ class _MoreChip extends StatelessWidget {
         onTap();
       },
       child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: AppRadius.smAll,
@@ -495,7 +499,6 @@ class _MoreChip extends StatelessWidget {
           ),
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
               width: 20,
