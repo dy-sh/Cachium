@@ -149,7 +149,7 @@ class CsvColumnListItem extends StatelessWidget {
                       Text(
                         _formatSampleValues(),
                         style: AppTypography.labelSmall.copyWith(
-                          color: AppColors.textTertiary,
+                          color: isMapped ? mappedColor : AppColors.textTertiary,
                           fontStyle: FontStyle.italic,
                         ),
                         maxLines: 1,
