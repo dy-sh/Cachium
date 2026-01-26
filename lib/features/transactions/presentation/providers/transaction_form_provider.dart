@@ -17,6 +17,8 @@ class TransactionFormState {
   final String? originalAccountId;
   final DateTime? originalDate;
   final String? originalNote;
+  // Settings-driven validation
+  final bool allowZeroAmount;
 
   const TransactionFormState({
     this.type = TransactionType.expense,
@@ -32,10 +34,11 @@ class TransactionFormState {
     this.originalAccountId,
     this.originalDate,
     this.originalNote,
+    this.allowZeroAmount = false,
   });
 
   bool get isValid =>
-      amount > 0 && categoryId != null && accountId != null;
+      (allowZeroAmount ? amount >= 0 : amount > 0) && categoryId != null && accountId != null;
 
   bool get isEditing => editingTransactionId != null;
 
@@ -77,6 +80,7 @@ class TransactionFormState {
     String? originalAccountId,
     DateTime? originalDate,
     String? originalNote,
+    bool? allowZeroAmount,
   }) {
     return TransactionFormState(
       type: type ?? this.type,
@@ -92,6 +96,7 @@ class TransactionFormState {
       originalAccountId: originalAccountId ?? this.originalAccountId,
       originalDate: originalDate ?? this.originalDate,
       originalNote: originalNote ?? this.originalNote,
+      allowZeroAmount: allowZeroAmount ?? this.allowZeroAmount,
     );
   }
 }
@@ -99,16 +104,38 @@ class TransactionFormState {
 class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> {
   @override
   TransactionFormState build() {
+    final defaultType = ref.read(defaultTransactionTypeProvider);
+    final selectLastAccount = ref.read(selectLastAccountProvider);
+    final selectLastCategory = ref.read(selectLastCategoryProvider);
+    final allowZeroAmount = ref.read(allowZeroAmountProvider);
     final lastUsedAccountId = ref.read(lastUsedAccountIdProvider);
+    final lastUsedIncomeCategoryId = ref.read(lastUsedIncomeCategoryIdProvider);
+    final lastUsedExpenseCategoryId = ref.read(lastUsedExpenseCategoryIdProvider);
+
     return TransactionFormState(
+      type: defaultType,
       date: DateTime.now(),
-      accountId: lastUsedAccountId,
+      accountId: selectLastAccount ? lastUsedAccountId : null,
+      categoryId: selectLastCategory
+          ? (defaultType == TransactionType.income
+              ? lastUsedIncomeCategoryId
+              : lastUsedExpenseCategoryId)
+          : null,
+      allowZeroAmount: allowZeroAmount,
     );
   }
 
   void setType(TransactionType type) {
     // Reset category when type changes since categories are type-specific
-    state = state.copyWith(type: type, categoryId: null);
+    // Auto-select last used category for the new type if setting enabled
+    final selectLastCategory = ref.read(selectLastCategoryProvider);
+    String? categoryId;
+    if (selectLastCategory) {
+      categoryId = type == TransactionType.income
+          ? ref.read(lastUsedIncomeCategoryIdProvider)
+          : ref.read(lastUsedExpenseCategoryIdProvider);
+    }
+    state = state.copyWith(type: type, categoryId: categoryId);
   }
 
   void setAmount(double amount) {
@@ -132,14 +159,29 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
   }
 
   void reset() {
+    final defaultType = ref.read(defaultTransactionTypeProvider);
+    final selectLastAccount = ref.read(selectLastAccountProvider);
+    final selectLastCategory = ref.read(selectLastCategoryProvider);
+    final allowZeroAmount = ref.read(allowZeroAmountProvider);
     final lastUsedAccountId = ref.read(lastUsedAccountIdProvider);
+    final lastUsedIncomeCategoryId = ref.read(lastUsedIncomeCategoryIdProvider);
+    final lastUsedExpenseCategoryId = ref.read(lastUsedExpenseCategoryIdProvider);
+
     state = TransactionFormState(
+      type: defaultType,
       date: DateTime.now(),
-      accountId: lastUsedAccountId,
+      accountId: selectLastAccount ? lastUsedAccountId : null,
+      categoryId: selectLastCategory
+          ? (defaultType == TransactionType.income
+              ? lastUsedIncomeCategoryId
+              : lastUsedExpenseCategoryId)
+          : null,
+      allowZeroAmount: allowZeroAmount,
     );
   }
 
   void initForEdit(Transaction transaction) {
+    final allowZeroAmount = ref.read(allowZeroAmountProvider);
     state = TransactionFormState(
       type: transaction.type,
       amount: transaction.amount,
@@ -155,6 +197,7 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
       originalAccountId: transaction.accountId,
       originalDate: transaction.date,
       originalNote: transaction.note,
+      allowZeroAmount: allowZeroAmount,
     );
   }
 }

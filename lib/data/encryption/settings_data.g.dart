@@ -22,6 +22,16 @@ _$SettingsDataImpl _$$SettingsDataImplFromJson(Map<String, dynamic> json) =>
       hapticFeedbackEnabled: json['hapticFeedbackEnabled'] as bool? ?? true,
       startScreen: json['startScreen'] as String? ?? 'home',
       lastUsedAccountId: json['lastUsedAccountId'] as String?,
+      selectLastCategory: json['selectLastCategory'] as bool? ?? false,
+      selectLastAccount: json['selectLastAccount'] as bool? ?? true,
+      accountsFoldedCount: (json['accountsFoldedCount'] as num?)?.toInt() ?? 3,
+      showAddAccountButton: json['showAddAccountButton'] as bool? ?? true,
+      showAddCategoryButton: json['showAddCategoryButton'] as bool? ?? true,
+      defaultTransactionType:
+          json['defaultTransactionType'] as String? ?? 'expense',
+      allowZeroAmount: json['allowZeroAmount'] as bool? ?? true,
+      lastUsedIncomeCategoryId: json['lastUsedIncomeCategoryId'] as String?,
+      lastUsedExpenseCategoryId: json['lastUsedExpenseCategoryId'] as String?,
     );
 
 Map<String, dynamic> _$$SettingsDataImplToJson(_$SettingsDataImpl instance) =>
@@ -40,4 +50,13 @@ Map<String, dynamic> _$$SettingsDataImplToJson(_$SettingsDataImpl instance) =>
       'hapticFeedbackEnabled': instance.hapticFeedbackEnabled,
       'startScreen': instance.startScreen,
       'lastUsedAccountId': instance.lastUsedAccountId,
+      'selectLastCategory': instance.selectLastCategory,
+      'selectLastAccount': instance.selectLastAccount,
+      'accountsFoldedCount': instance.accountsFoldedCount,
+      'showAddAccountButton': instance.showAddAccountButton,
+      'showAddCategoryButton': instance.showAddCategoryButton,
+      'defaultTransactionType': instance.defaultTransactionType,
+      'allowZeroAmount': instance.allowZeroAmount,
+      'lastUsedIncomeCategoryId': instance.lastUsedIncomeCategoryId,
+      'lastUsedExpenseCategoryId': instance.lastUsedExpenseCategoryId,
     };

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../transactions/data/models/transaction.dart';
 
 enum DateFormatOption {
   mmddyyyy('MM/DD/YYYY', 'M/d/yyyy'),
@@ -71,6 +72,17 @@ class AppSettings {
   final StartScreen startScreen;
   final String? lastUsedAccountId;
 
+  // Transactions
+  final bool selectLastCategory;
+  final bool selectLastAccount;
+  final int accountsFoldedCount;
+  final bool showAddAccountButton;
+  final bool showAddCategoryButton;
+  final TransactionType defaultTransactionType;
+  final bool allowZeroAmount;
+  final String? lastUsedIncomeCategoryId;
+  final String? lastUsedExpenseCategoryId;
+
   // Onboarding
   final bool onboardingCompleted;
 
@@ -88,6 +100,15 @@ class AppSettings {
     this.hapticFeedbackEnabled = true,
     this.startScreen = StartScreen.home,
     this.lastUsedAccountId,
+    this.selectLastCategory = false,
+    this.selectLastAccount = true,
+    this.accountsFoldedCount = 3,
+    this.showAddAccountButton = true,
+    this.showAddCategoryButton = true,
+    this.defaultTransactionType = TransactionType.expense,
+    this.allowZeroAmount = true,
+    this.lastUsedIncomeCategoryId,
+    this.lastUsedExpenseCategoryId,
     this.onboardingCompleted = false,
   });
 
@@ -116,6 +137,15 @@ class AppSettings {
     bool? hapticFeedbackEnabled,
     StartScreen? startScreen,
     String? lastUsedAccountId,
+    bool? selectLastCategory,
+    bool? selectLastAccount,
+    int? accountsFoldedCount,
+    bool? showAddAccountButton,
+    bool? showAddCategoryButton,
+    TransactionType? defaultTransactionType,
+    bool? allowZeroAmount,
+    String? lastUsedIncomeCategoryId,
+    String? lastUsedExpenseCategoryId,
     bool? onboardingCompleted,
   }) {
     return AppSettings(
@@ -132,6 +162,15 @@ class AppSettings {
       hapticFeedbackEnabled: hapticFeedbackEnabled ?? this.hapticFeedbackEnabled,
       startScreen: startScreen ?? this.startScreen,
       lastUsedAccountId: lastUsedAccountId ?? this.lastUsedAccountId,
+      selectLastCategory: selectLastCategory ?? this.selectLastCategory,
+      selectLastAccount: selectLastAccount ?? this.selectLastAccount,
+      accountsFoldedCount: accountsFoldedCount ?? this.accountsFoldedCount,
+      showAddAccountButton: showAddAccountButton ?? this.showAddAccountButton,
+      showAddCategoryButton: showAddCategoryButton ?? this.showAddCategoryButton,
+      defaultTransactionType: defaultTransactionType ?? this.defaultTransactionType,
+      allowZeroAmount: allowZeroAmount ?? this.allowZeroAmount,
+      lastUsedIncomeCategoryId: lastUsedIncomeCategoryId ?? this.lastUsedIncomeCategoryId,
+      lastUsedExpenseCategoryId: lastUsedExpenseCategoryId ?? this.lastUsedExpenseCategoryId,
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
     );
   }

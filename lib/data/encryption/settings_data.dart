@@ -52,6 +52,33 @@ class SettingsData with _$SettingsData {
 
     /// Last used account ID for transaction form
     String? lastUsedAccountId,
+
+    /// Whether to pre-select last used category
+    @Default(false) bool selectLastCategory,
+
+    /// Whether to pre-select last used account
+    @Default(true) bool selectLastAccount,
+
+    /// Number of accounts shown before "More" button
+    @Default(3) int accountsFoldedCount,
+
+    /// Whether to show "New Account" button in form
+    @Default(true) bool showAddAccountButton,
+
+    /// Whether to show "New" category button in form
+    @Default(true) bool showAddCategoryButton,
+
+    /// Default transaction type: 'income' or 'expense'
+    @Default('expense') String defaultTransactionType,
+
+    /// Whether to allow saving with amount = 0
+    @Default(true) bool allowZeroAmount,
+
+    /// Last used category ID for income transactions
+    String? lastUsedIncomeCategoryId,
+
+    /// Last used category ID for expense transactions
+    String? lastUsedExpenseCategoryId,
   }) = _SettingsData;
 
   factory SettingsData.fromJson(Map<String, dynamic> json) =>

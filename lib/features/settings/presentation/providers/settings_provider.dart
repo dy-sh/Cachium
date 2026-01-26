@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/database_providers.dart';
+import '../../../transactions/data/models/transaction.dart';
 import '../../data/models/app_settings.dart';
 
 class SettingsNotifier extends AsyncNotifier<AppSettings> {
@@ -108,6 +109,59 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     await _saveAndUpdate(current.copyWith(lastUsedAccountId: accountId));
   }
 
+  // Transactions
+  Future<void> setSelectLastCategory(bool enabled) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    await _saveAndUpdate(current.copyWith(selectLastCategory: enabled));
+  }
+
+  Future<void> setSelectLastAccount(bool enabled) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    await _saveAndUpdate(current.copyWith(selectLastAccount: enabled));
+  }
+
+  Future<void> setAccountsFoldedCount(int count) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    await _saveAndUpdate(current.copyWith(accountsFoldedCount: count));
+  }
+
+  Future<void> setShowAddAccountButton(bool enabled) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    await _saveAndUpdate(current.copyWith(showAddAccountButton: enabled));
+  }
+
+  Future<void> setShowAddCategoryButton(bool enabled) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    await _saveAndUpdate(current.copyWith(showAddCategoryButton: enabled));
+  }
+
+  Future<void> setDefaultTransactionType(TransactionType type) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    await _saveAndUpdate(current.copyWith(defaultTransactionType: type));
+  }
+
+  Future<void> setAllowZeroAmount(bool allowed) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    await _saveAndUpdate(current.copyWith(allowZeroAmount: allowed));
+  }
+
+  Future<void> setLastUsedCategoryId(TransactionType type, String? categoryId) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    if (type == TransactionType.income) {
+      await _saveAndUpdate(current.copyWith(lastUsedIncomeCategoryId: categoryId));
+    } else {
+      await _saveAndUpdate(current.copyWith(lastUsedExpenseCategoryId: categoryId));
+    }
+  }
+
   // Onboarding
   Future<void> setOnboardingCompleted(bool completed) async {
     final current = state.valueOrNull;
@@ -197,4 +251,50 @@ final lastUsedAccountIdProvider = Provider<String?>((ref) {
 final onboardingCompletedProvider = Provider<bool>((ref) {
   final settingsAsync = ref.watch(settingsProvider);
   return settingsAsync.valueOrNull?.onboardingCompleted ?? false;
+});
+
+// Transaction settings providers
+final selectLastCategoryProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.selectLastCategory ?? false;
+});
+
+final selectLastAccountProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.selectLastAccount ?? true;
+});
+
+final accountsFoldedCountProvider = Provider<int>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.accountsFoldedCount ?? 3;
+});
+
+final showAddAccountButtonProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.showAddAccountButton ?? true;
+});
+
+final showAddCategoryButtonProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.showAddCategoryButton ?? true;
+});
+
+final defaultTransactionTypeProvider = Provider<TransactionType>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.defaultTransactionType ?? TransactionType.expense;
+});
+
+final allowZeroAmountProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.allowZeroAmount ?? true;
+});
+
+final lastUsedIncomeCategoryIdProvider = Provider<String?>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.lastUsedIncomeCategoryId;
+});
+
+final lastUsedExpenseCategoryIdProvider = Provider<String?>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.lastUsedExpenseCategoryId;
 });

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../../core/database/app_database.dart' as db;
 import '../../features/settings/data/models/app_settings.dart' as ui;
+import '../../features/transactions/data/models/transaction.dart';
 import '../encryption/settings_data.dart';
 
 /// Repository for managing app settings storage.
@@ -36,6 +37,15 @@ class SettingsRepository {
       hapticFeedbackEnabled: settings.hapticFeedbackEnabled,
       startScreen: settings.startScreen.name,
       lastUsedAccountId: settings.lastUsedAccountId,
+      selectLastCategory: settings.selectLastCategory,
+      selectLastAccount: settings.selectLastAccount,
+      accountsFoldedCount: settings.accountsFoldedCount,
+      showAddAccountButton: settings.showAddAccountButton,
+      showAddCategoryButton: settings.showAddCategoryButton,
+      defaultTransactionType: settings.defaultTransactionType.name,
+      allowZeroAmount: settings.allowZeroAmount,
+      lastUsedIncomeCategoryId: settings.lastUsedIncomeCategoryId,
+      lastUsedExpenseCategoryId: settings.lastUsedExpenseCategoryId,
     );
   }
 
@@ -73,6 +83,18 @@ class SettingsRepository {
         orElse: () => ui.StartScreen.home,
       ),
       lastUsedAccountId: data.lastUsedAccountId,
+      selectLastCategory: data.selectLastCategory,
+      selectLastAccount: data.selectLastAccount,
+      accountsFoldedCount: data.accountsFoldedCount,
+      showAddAccountButton: data.showAddAccountButton,
+      showAddCategoryButton: data.showAddCategoryButton,
+      defaultTransactionType: TransactionType.values.firstWhere(
+        (e) => e.name == data.defaultTransactionType,
+        orElse: () => TransactionType.expense,
+      ),
+      allowZeroAmount: data.allowZeroAmount,
+      lastUsedIncomeCategoryId: data.lastUsedIncomeCategoryId,
+      lastUsedExpenseCategoryId: data.lastUsedExpenseCategoryId,
     );
   }
 

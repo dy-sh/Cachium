@@ -94,6 +94,11 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     final recentAccountIds = ref.watch(recentlyUsedAccountIdsProvider);
     final intensity = ref.watch(colorIntensityProvider);
 
+    // Transaction settings
+    final accountsFoldedCount = ref.watch(accountsFoldedCountProvider);
+    final showAddAccountButton = ref.watch(showAddAccountButtonProvider);
+    final showAddCategoryButton = ref.watch(showAddCategoryButtonProvider);
+
     final categories = formState.type == TransactionType.income
         ? incomeCategories
         : expenseCategories;
@@ -170,7 +175,9 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                       onChanged: (id) {
                         ref.read(transactionFormProvider.notifier).setCategory(id);
                       },
-                      onCreatePressed: () => _createNewCategory(context, ref, formState.type),
+                      onCreatePressed: showAddCategoryButton
+                          ? () => _createNewCategory(context, ref, formState.type)
+                          : null,
                     ),
                     const SizedBox(height: AppSpacing.xxl),
 
@@ -180,10 +187,13 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                       accounts: accounts,
                       selectedId: formState.accountId,
                       recentAccountIds: recentAccountIds,
+                      initialVisibleCount: accountsFoldedCount,
                       onChanged: (id) {
                         ref.read(transactionFormProvider.notifier).setAccount(id);
                       },
-                      onCreatePressed: () => _createNewAccount(context, ref),
+                      onCreatePressed: showAddAccountButton
+                          ? () => _createNewAccount(context, ref)
+                          : null,
                     ),
                     const SizedBox(height: AppSpacing.xxl),
 
@@ -233,8 +243,12 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                     label: isEditing ? 'Save Changes' : 'Save Transaction',
                     onPressed: formState.canSave
                         ? () async {
-                            // Save last used account
+                            // Save last used account and category
                             ref.read(settingsProvider.notifier).setLastUsedAccountId(formState.accountId);
+                            ref.read(settingsProvider.notifier).setLastUsedCategoryId(
+                              formState.type,
+                              formState.categoryId,
+                            );
 
                             if (isEditing) {
                               // Update existing transaction

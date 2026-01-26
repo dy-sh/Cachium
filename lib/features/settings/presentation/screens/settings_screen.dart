@@ -96,6 +96,13 @@ class SettingsScreen extends ConsumerWidget {
                         iconColor: AppColors.getAccentColor(7, intensity), // Green
                         onTap: () => context.push('/settings/preferences'),
                       ),
+                      SettingsTile(
+                        title: 'Transactions',
+                        description: 'Defaults, validation, display',
+                        icon: LucideIcons.receipt,
+                        iconColor: AppColors.getAccentColor(5, intensity), // Teal
+                        onTap: () => context.push('/settings/transactions'),
+                      ),
                     ],
                   ),
                 ),

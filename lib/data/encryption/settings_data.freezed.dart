@@ -63,6 +63,33 @@ mixin _$SettingsData {
   /// Last used account ID for transaction form
   String? get lastUsedAccountId => throw _privateConstructorUsedError;
 
+  /// Whether to pre-select last used category
+  bool get selectLastCategory => throw _privateConstructorUsedError;
+
+  /// Whether to pre-select last used account
+  bool get selectLastAccount => throw _privateConstructorUsedError;
+
+  /// Number of accounts shown before "More" button
+  int get accountsFoldedCount => throw _privateConstructorUsedError;
+
+  /// Whether to show "New Account" button in form
+  bool get showAddAccountButton => throw _privateConstructorUsedError;
+
+  /// Whether to show "New" category button in form
+  bool get showAddCategoryButton => throw _privateConstructorUsedError;
+
+  /// Default transaction type: 'income' or 'expense'
+  String get defaultTransactionType => throw _privateConstructorUsedError;
+
+  /// Whether to allow saving with amount = 0
+  bool get allowZeroAmount => throw _privateConstructorUsedError;
+
+  /// Last used category ID for income transactions
+  String? get lastUsedIncomeCategoryId => throw _privateConstructorUsedError;
+
+  /// Last used category ID for expense transactions
+  String? get lastUsedExpenseCategoryId => throw _privateConstructorUsedError;
+
   /// Serializes this SettingsData to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
@@ -95,6 +122,15 @@ abstract class $SettingsDataCopyWith<$Res> {
     bool hapticFeedbackEnabled,
     String startScreen,
     String? lastUsedAccountId,
+    bool selectLastCategory,
+    bool selectLastAccount,
+    int accountsFoldedCount,
+    bool showAddAccountButton,
+    bool showAddCategoryButton,
+    String defaultTransactionType,
+    bool allowZeroAmount,
+    String? lastUsedIncomeCategoryId,
+    String? lastUsedExpenseCategoryId,
   });
 }
 
@@ -127,6 +163,15 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
     Object? hapticFeedbackEnabled = null,
     Object? startScreen = null,
     Object? lastUsedAccountId = freezed,
+    Object? selectLastCategory = null,
+    Object? selectLastAccount = null,
+    Object? accountsFoldedCount = null,
+    Object? showAddAccountButton = null,
+    Object? showAddCategoryButton = null,
+    Object? defaultTransactionType = null,
+    Object? allowZeroAmount = null,
+    Object? lastUsedIncomeCategoryId = freezed,
+    Object? lastUsedExpenseCategoryId = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -186,6 +231,42 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
                 ? _value.lastUsedAccountId
                 : lastUsedAccountId // ignore: cast_nullable_to_non_nullable
                       as String?,
+            selectLastCategory: null == selectLastCategory
+                ? _value.selectLastCategory
+                : selectLastCategory // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            selectLastAccount: null == selectLastAccount
+                ? _value.selectLastAccount
+                : selectLastAccount // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            accountsFoldedCount: null == accountsFoldedCount
+                ? _value.accountsFoldedCount
+                : accountsFoldedCount // ignore: cast_nullable_to_non_nullable
+                      as int,
+            showAddAccountButton: null == showAddAccountButton
+                ? _value.showAddAccountButton
+                : showAddAccountButton // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            showAddCategoryButton: null == showAddCategoryButton
+                ? _value.showAddCategoryButton
+                : showAddCategoryButton // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            defaultTransactionType: null == defaultTransactionType
+                ? _value.defaultTransactionType
+                : defaultTransactionType // ignore: cast_nullable_to_non_nullable
+                      as String,
+            allowZeroAmount: null == allowZeroAmount
+                ? _value.allowZeroAmount
+                : allowZeroAmount // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            lastUsedIncomeCategoryId: freezed == lastUsedIncomeCategoryId
+                ? _value.lastUsedIncomeCategoryId
+                : lastUsedIncomeCategoryId // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            lastUsedExpenseCategoryId: freezed == lastUsedExpenseCategoryId
+                ? _value.lastUsedExpenseCategoryId
+                : lastUsedExpenseCategoryId // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
@@ -216,6 +297,15 @@ abstract class _$$SettingsDataImplCopyWith<$Res>
     bool hapticFeedbackEnabled,
     String startScreen,
     String? lastUsedAccountId,
+    bool selectLastCategory,
+    bool selectLastAccount,
+    int accountsFoldedCount,
+    bool showAddAccountButton,
+    bool showAddCategoryButton,
+    String defaultTransactionType,
+    bool allowZeroAmount,
+    String? lastUsedIncomeCategoryId,
+    String? lastUsedExpenseCategoryId,
   });
 }
 
@@ -247,6 +337,15 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
     Object? hapticFeedbackEnabled = null,
     Object? startScreen = null,
     Object? lastUsedAccountId = freezed,
+    Object? selectLastCategory = null,
+    Object? selectLastAccount = null,
+    Object? accountsFoldedCount = null,
+    Object? showAddAccountButton = null,
+    Object? showAddCategoryButton = null,
+    Object? defaultTransactionType = null,
+    Object? allowZeroAmount = null,
+    Object? lastUsedIncomeCategoryId = freezed,
+    Object? lastUsedExpenseCategoryId = freezed,
   }) {
     return _then(
       _$SettingsDataImpl(
@@ -306,6 +405,42 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
             ? _value.lastUsedAccountId
             : lastUsedAccountId // ignore: cast_nullable_to_non_nullable
                   as String?,
+        selectLastCategory: null == selectLastCategory
+            ? _value.selectLastCategory
+            : selectLastCategory // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        selectLastAccount: null == selectLastAccount
+            ? _value.selectLastAccount
+            : selectLastAccount // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        accountsFoldedCount: null == accountsFoldedCount
+            ? _value.accountsFoldedCount
+            : accountsFoldedCount // ignore: cast_nullable_to_non_nullable
+                  as int,
+        showAddAccountButton: null == showAddAccountButton
+            ? _value.showAddAccountButton
+            : showAddAccountButton // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        showAddCategoryButton: null == showAddCategoryButton
+            ? _value.showAddCategoryButton
+            : showAddCategoryButton // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        defaultTransactionType: null == defaultTransactionType
+            ? _value.defaultTransactionType
+            : defaultTransactionType // ignore: cast_nullable_to_non_nullable
+                  as String,
+        allowZeroAmount: null == allowZeroAmount
+            ? _value.allowZeroAmount
+            : allowZeroAmount // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        lastUsedIncomeCategoryId: freezed == lastUsedIncomeCategoryId
+            ? _value.lastUsedIncomeCategoryId
+            : lastUsedIncomeCategoryId // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        lastUsedExpenseCategoryId: freezed == lastUsedExpenseCategoryId
+            ? _value.lastUsedExpenseCategoryId
+            : lastUsedExpenseCategoryId // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -329,6 +464,15 @@ class _$SettingsDataImpl implements _SettingsData {
     this.hapticFeedbackEnabled = true,
     this.startScreen = 'home',
     this.lastUsedAccountId,
+    this.selectLastCategory = false,
+    this.selectLastAccount = true,
+    this.accountsFoldedCount = 3,
+    this.showAddAccountButton = true,
+    this.showAddCategoryButton = true,
+    this.defaultTransactionType = 'expense',
+    this.allowZeroAmount = true,
+    this.lastUsedIncomeCategoryId,
+    this.lastUsedExpenseCategoryId,
   });
 
   factory _$SettingsDataImpl.fromJson(Map<String, dynamic> json) =>
@@ -402,9 +546,52 @@ class _$SettingsDataImpl implements _SettingsData {
   @override
   final String? lastUsedAccountId;
 
+  /// Whether to pre-select last used category
+  @override
+  @JsonKey()
+  final bool selectLastCategory;
+
+  /// Whether to pre-select last used account
+  @override
+  @JsonKey()
+  final bool selectLastAccount;
+
+  /// Number of accounts shown before "More" button
+  @override
+  @JsonKey()
+  final int accountsFoldedCount;
+
+  /// Whether to show "New Account" button in form
+  @override
+  @JsonKey()
+  final bool showAddAccountButton;
+
+  /// Whether to show "New" category button in form
+  @override
+  @JsonKey()
+  final bool showAddCategoryButton;
+
+  /// Default transaction type: 'income' or 'expense'
+  @override
+  @JsonKey()
+  final String defaultTransactionType;
+
+  /// Whether to allow saving with amount = 0
+  @override
+  @JsonKey()
+  final bool allowZeroAmount;
+
+  /// Last used category ID for income transactions
+  @override
+  final String? lastUsedIncomeCategoryId;
+
+  /// Last used category ID for expense transactions
+  @override
+  final String? lastUsedExpenseCategoryId;
+
   @override
   String toString() {
-    return 'SettingsData(id: $id, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, currencySymbol: $currencySymbol, customCurrencySymbol: $customCurrencySymbol, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId)';
+    return 'SettingsData(id: $id, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, currencySymbol: $currencySymbol, customCurrencySymbol: $customCurrencySymbol, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId)';
   }
 
   @override
@@ -438,12 +625,36 @@ class _$SettingsDataImpl implements _SettingsData {
             (identical(other.startScreen, startScreen) ||
                 other.startScreen == startScreen) &&
             (identical(other.lastUsedAccountId, lastUsedAccountId) ||
-                other.lastUsedAccountId == lastUsedAccountId));
+                other.lastUsedAccountId == lastUsedAccountId) &&
+            (identical(other.selectLastCategory, selectLastCategory) ||
+                other.selectLastCategory == selectLastCategory) &&
+            (identical(other.selectLastAccount, selectLastAccount) ||
+                other.selectLastAccount == selectLastAccount) &&
+            (identical(other.accountsFoldedCount, accountsFoldedCount) ||
+                other.accountsFoldedCount == accountsFoldedCount) &&
+            (identical(other.showAddAccountButton, showAddAccountButton) ||
+                other.showAddAccountButton == showAddAccountButton) &&
+            (identical(other.showAddCategoryButton, showAddCategoryButton) ||
+                other.showAddCategoryButton == showAddCategoryButton) &&
+            (identical(other.defaultTransactionType, defaultTransactionType) ||
+                other.defaultTransactionType == defaultTransactionType) &&
+            (identical(other.allowZeroAmount, allowZeroAmount) ||
+                other.allowZeroAmount == allowZeroAmount) &&
+            (identical(
+                  other.lastUsedIncomeCategoryId,
+                  lastUsedIncomeCategoryId,
+                ) ||
+                other.lastUsedIncomeCategoryId == lastUsedIncomeCategoryId) &&
+            (identical(
+                  other.lastUsedExpenseCategoryId,
+                  lastUsedExpenseCategoryId,
+                ) ||
+                other.lastUsedExpenseCategoryId == lastUsedExpenseCategoryId));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     runtimeType,
     id,
     colorIntensity,
@@ -459,7 +670,16 @@ class _$SettingsDataImpl implements _SettingsData {
     hapticFeedbackEnabled,
     startScreen,
     lastUsedAccountId,
-  );
+    selectLastCategory,
+    selectLastAccount,
+    accountsFoldedCount,
+    showAddAccountButton,
+    showAddCategoryButton,
+    defaultTransactionType,
+    allowZeroAmount,
+    lastUsedIncomeCategoryId,
+    lastUsedExpenseCategoryId,
+  ]);
 
   /// Create a copy of SettingsData
   /// with the given fields replaced by the non-null parameter values.
@@ -491,6 +711,15 @@ abstract class _SettingsData implements SettingsData {
     final bool hapticFeedbackEnabled,
     final String startScreen,
     final String? lastUsedAccountId,
+    final bool selectLastCategory,
+    final bool selectLastAccount,
+    final int accountsFoldedCount,
+    final bool showAddAccountButton,
+    final bool showAddCategoryButton,
+    final String defaultTransactionType,
+    final bool allowZeroAmount,
+    final String? lastUsedIncomeCategoryId,
+    final String? lastUsedExpenseCategoryId,
   }) = _$SettingsDataImpl;
 
   factory _SettingsData.fromJson(Map<String, dynamic> json) =
@@ -551,6 +780,42 @@ abstract class _SettingsData implements SettingsData {
   /// Last used account ID for transaction form
   @override
   String? get lastUsedAccountId;
+
+  /// Whether to pre-select last used category
+  @override
+  bool get selectLastCategory;
+
+  /// Whether to pre-select last used account
+  @override
+  bool get selectLastAccount;
+
+  /// Number of accounts shown before "More" button
+  @override
+  int get accountsFoldedCount;
+
+  /// Whether to show "New Account" button in form
+  @override
+  bool get showAddAccountButton;
+
+  /// Whether to show "New" category button in form
+  @override
+  bool get showAddCategoryButton;
+
+  /// Default transaction type: 'income' or 'expense'
+  @override
+  String get defaultTransactionType;
+
+  /// Whether to allow saving with amount = 0
+  @override
+  bool get allowZeroAmount;
+
+  /// Last used category ID for income transactions
+  @override
+  String? get lastUsedIncomeCategoryId;
+
+  /// Last used category ID for expense transactions
+  @override
+  String? get lastUsedExpenseCategoryId;
 
   /// Create a copy of SettingsData
   /// with the given fields replaced by the non-null parameter values.
