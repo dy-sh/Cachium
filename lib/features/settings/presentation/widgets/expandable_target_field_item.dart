@@ -227,7 +227,7 @@ class ExpandableForeignKeyItem extends ConsumerWidget {
                             summary,
                             style: AppTypography.labelSmall.copyWith(
                               color: isConfigured
-                                  ? accentColor.withValues(alpha: 0.8)
+                                  ? accentColor
                                   : AppColors.textTertiary,
                             ),
                             overflow: TextOverflow.ellipsis,

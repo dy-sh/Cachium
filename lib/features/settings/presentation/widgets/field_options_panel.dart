@@ -300,13 +300,13 @@ class _MappableSubField extends StatelessWidget {
                       fontWeight: isMapped || isSelected ? FontWeight.w600 : FontWeight.w500,
                     ),
                   ),
-                  if (isMapped)
-                    Text(
-                      '"$mappedColumn"',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: accentColor,
-                      ),
+                  // Reserve space for mapped column name
+                  Text(
+                    isMapped ? '"$mappedColumn"' : '',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: accentColor,
                     ),
+                  ),
                 ],
               ),
             ),

@@ -126,14 +126,13 @@ class TargetFieldListItem extends StatelessWidget {
                         ],
                       ],
                     ),
-                    // Show mapped CSV column name
-                    if (isMapped && mappedCsvColumn != null)
-                      Text(
-                        '"$mappedCsvColumn"',
-                        style: AppTypography.labelSmall.copyWith(
-                          color: fieldColor,
-                        ),
+                    // Show mapped CSV column name, reserve space when not mapped
+                    Text(
+                      isMapped && mappedCsvColumn != null ? '"$mappedCsvColumn"' : '',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: fieldColor,
                       ),
+                    ),
                   ],
                 ),
               ),
