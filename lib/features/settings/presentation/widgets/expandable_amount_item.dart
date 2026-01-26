@@ -26,12 +26,16 @@ class ExpandableAmountItem extends ConsumerWidget {
   final ColorIntensity intensity;
   final bool hasCsvColumnSelected;
 
+  /// Optional callback to get a GlobalKey for position tracking.
+  final GlobalKey Function(String key)? getPositionKey;
+
   const ExpandableAmountItem({
     super.key,
     required this.isExpanded,
     required this.onToggleExpand,
     required this.intensity,
     this.hasCsvColumnSelected = false,
+    this.getPositionKey,
   });
 
   @override
@@ -143,6 +147,7 @@ class ExpandableAmountItem extends ConsumerWidget {
         if (isExpanded)
           AmountOptionsPanel(
             intensity: intensity,
+            getPositionKey: getPositionKey,
           ),
       ],
     );

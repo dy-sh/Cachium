@@ -127,6 +127,9 @@ class ExpandableForeignKeyItem extends ConsumerWidget {
   final ColorIntensity intensity;
   final bool hasCsvColumnSelected;
 
+  /// Optional callback to get a GlobalKey for position tracking.
+  final GlobalKey Function(String key)? getPositionKey;
+
   const ExpandableForeignKeyItem({
     super.key,
     required this.foreignKey,
@@ -136,6 +139,7 @@ class ExpandableForeignKeyItem extends ConsumerWidget {
     required this.onToggleExpand,
     required this.intensity,
     this.hasCsvColumnSelected = false,
+    this.getPositionKey,
   });
 
   @override
@@ -253,6 +257,7 @@ class ExpandableForeignKeyItem extends ConsumerWidget {
           ForeignKeyOptionsPanel(
             foreignKey: foreignKey,
             intensity: intensity,
+            getPositionKey: getPositionKey,
           ),
       ],
     );

@@ -22,10 +22,15 @@ class ForeignKeyOptionsPanel extends ConsumerWidget {
   final String foreignKey; // 'category' or 'account'
   final ColorIntensity intensity;
 
+  /// Optional callback to get a GlobalKey for position tracking.
+  /// The callback receives the sub-field key (e.g., 'fk:category:name').
+  final GlobalKey Function(String key)? getPositionKey;
+
   const ForeignKeyOptionsPanel({
     super.key,
     required this.foreignKey,
     required this.intensity,
+    this.getPositionKey,
   });
 
   @override
@@ -80,38 +85,44 @@ class ForeignKeyOptionsPanel extends ConsumerWidget {
               padding: const EdgeInsets.only(left: 26),
               child: Column(
                 children: [
-                  _MappableSubField(
-                    label: 'Name',
-                    mappedColumn: config.nameColumn,
-                    isSelected: isNameSelected,
-                    intensity: intensity,
-                    foreignKey: foreignKey,
-                    onTap: () {
-                      if (config.nameColumn != null) {
-                        notifier.clearForeignKeyField(foreignKey, 'name');
-                      } else if (isNameSelected) {
-                        notifier.selectField(null); // Deselect
-                      } else {
-                        notifier.selectForeignKeyField(foreignKey, 'name');
-                      }
-                    },
+                  _PositionTrackedSubField(
+                    positionKey: getPositionKey?.call('fk:$foreignKey:name'),
+                    child: _MappableSubField(
+                      label: 'Name',
+                      mappedColumn: config.nameColumn,
+                      isSelected: isNameSelected,
+                      intensity: intensity,
+                      foreignKey: foreignKey,
+                      onTap: () {
+                        if (config.nameColumn != null) {
+                          notifier.clearForeignKeyField(foreignKey, 'name');
+                        } else if (isNameSelected) {
+                          notifier.selectField(null); // Deselect
+                        } else {
+                          notifier.selectForeignKeyField(foreignKey, 'name');
+                        }
+                      },
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
-                  _MappableSubField(
-                    label: 'ID',
-                    mappedColumn: config.idColumn,
-                    isSelected: isIdSelected,
-                    intensity: intensity,
-                    foreignKey: foreignKey,
-                    onTap: () {
-                      if (config.idColumn != null) {
-                        notifier.clearForeignKeyField(foreignKey, 'id');
-                      } else if (isIdSelected) {
-                        notifier.selectField(null); // Deselect
-                      } else {
-                        notifier.selectForeignKeyField(foreignKey, 'id');
-                      }
-                    },
+                  _PositionTrackedSubField(
+                    positionKey: getPositionKey?.call('fk:$foreignKey:id'),
+                    child: _MappableSubField(
+                      label: 'ID',
+                      mappedColumn: config.idColumn,
+                      isSelected: isIdSelected,
+                      intensity: intensity,
+                      foreignKey: foreignKey,
+                      onTap: () {
+                        if (config.idColumn != null) {
+                          notifier.clearForeignKeyField(foreignKey, 'id');
+                        } else if (isIdSelected) {
+                          notifier.selectField(null); // Deselect
+                        } else {
+                          notifier.selectForeignKeyField(foreignKey, 'id');
+                        }
+                      },
+                    ),
                   ),
                   if (config.nameColumn == null && config.idColumn == null)
                     Padding(
@@ -238,6 +249,28 @@ class ForeignKeyOptionsPanel extends ConsumerWidget {
     final entityName = foreignKey == 'category' ? 'category' : 'account';
     return 'Apply the same $entityName to all imported transactions.\n\n'
         'Useful when importing transactions that all belong to one $entityName.';
+  }
+}
+
+/// A wrapper that adds position tracking via GlobalKey.
+class _PositionTrackedSubField extends StatelessWidget {
+  final GlobalKey? positionKey;
+  final Widget child;
+
+  const _PositionTrackedSubField({
+    required this.positionKey,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (positionKey != null) {
+      return KeyedSubtree(
+        key: positionKey,
+        child: child,
+      );
+    }
+    return child;
   }
 }
 

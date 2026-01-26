@@ -17,9 +17,14 @@ import 'expandable_amount_item.dart';
 class AmountOptionsPanel extends ConsumerWidget {
   final ColorIntensity intensity;
 
+  /// Optional callback to get a GlobalKey for position tracking.
+  /// The callback receives the sub-field key (e.g., 'amount:amount', 'amount:type').
+  final GlobalKey Function(String key)? getPositionKey;
+
   const AmountOptionsPanel({
     super.key,
     required this.intensity,
+    this.getPositionKey,
   });
 
   @override
@@ -74,36 +79,42 @@ class AmountOptionsPanel extends ConsumerWidget {
               padding: const EdgeInsets.only(left: 26),
               child: Column(
                 children: [
-                  _MappableSubField(
-                    label: 'Amount',
-                    mappedColumn: config.amountColumn,
-                    isSelected: isAmountSelected,
-                    intensity: intensity,
-                    onTap: () {
-                      if (config.amountColumn != null) {
-                        notifier.clearAmountField('amount');
-                      } else if (isAmountSelected) {
-                        notifier.selectField(null); // Deselect
-                      } else {
-                        notifier.selectAmountField('amount');
-                      }
-                    },
+                  _PositionTrackedSubField(
+                    positionKey: getPositionKey?.call('amount:amount'),
+                    child: _MappableSubField(
+                      label: 'Amount',
+                      mappedColumn: config.amountColumn,
+                      isSelected: isAmountSelected,
+                      intensity: intensity,
+                      onTap: () {
+                        if (config.amountColumn != null) {
+                          notifier.clearAmountField('amount');
+                        } else if (isAmountSelected) {
+                          notifier.selectField(null); // Deselect
+                        } else {
+                          notifier.selectAmountField('amount');
+                        }
+                      },
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
-                  _MappableSubField(
-                    label: 'Type',
-                    mappedColumn: config.typeColumn,
-                    isSelected: isTypeSelected,
-                    intensity: intensity,
-                    onTap: () {
-                      if (config.typeColumn != null) {
-                        notifier.clearAmountField('type');
-                      } else if (isTypeSelected) {
-                        notifier.selectField(null); // Deselect
-                      } else {
-                        notifier.selectAmountField('type');
-                      }
-                    },
+                  _PositionTrackedSubField(
+                    positionKey: getPositionKey?.call('amount:type'),
+                    child: _MappableSubField(
+                      label: 'Type',
+                      mappedColumn: config.typeColumn,
+                      isSelected: isTypeSelected,
+                      intensity: intensity,
+                      onTap: () {
+                        if (config.typeColumn != null) {
+                          notifier.clearAmountField('type');
+                        } else if (isTypeSelected) {
+                          notifier.selectField(null); // Deselect
+                        } else {
+                          notifier.selectAmountField('type');
+                        }
+                      },
+                    ),
                   ),
                   if (config.amountColumn == null || config.typeColumn == null)
                     Padding(
@@ -148,20 +159,23 @@ class AmountOptionsPanel extends ConsumerWidget {
               padding: const EdgeInsets.only(left: 26),
               child: Column(
                 children: [
-                  _MappableSubField(
-                    label: 'Amount',
-                    mappedColumn: config.amountColumn,
-                    isSelected: isAmountSelected,
-                    intensity: intensity,
-                    onTap: () {
-                      if (config.amountColumn != null) {
-                        notifier.clearAmountField('amount');
-                      } else if (isAmountSelected) {
-                        notifier.selectField(null); // Deselect
-                      } else {
-                        notifier.selectAmountField('amount');
-                      }
-                    },
+                  _PositionTrackedSubField(
+                    positionKey: getPositionKey?.call('amount:amount'),
+                    child: _MappableSubField(
+                      label: 'Amount',
+                      mappedColumn: config.amountColumn,
+                      isSelected: isAmountSelected,
+                      intensity: intensity,
+                      onTap: () {
+                        if (config.amountColumn != null) {
+                          notifier.clearAmountField('amount');
+                        } else if (isAmountSelected) {
+                          notifier.selectField(null); // Deselect
+                        } else {
+                          notifier.selectAmountField('amount');
+                        }
+                      },
+                    ),
                   ),
                   if (config.amountColumn == null)
                     Padding(
@@ -243,6 +257,28 @@ class AmountOptionsPanel extends ConsumerWidget {
         ),
       ],
     );
+  }
+}
+
+/// A wrapper that adds position tracking via GlobalKey.
+class _PositionTrackedSubField extends StatelessWidget {
+  final GlobalKey? positionKey;
+  final Widget child;
+
+  const _PositionTrackedSubField({
+    required this.positionKey,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (positionKey != null) {
+      return KeyedSubtree(
+        key: positionKey,
+        child: child,
+      );
+    }
+    return child;
   }
 }
 
