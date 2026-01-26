@@ -387,7 +387,7 @@ class _TwoPanelMappingViewState extends ConsumerState<TwoPanelMappingView> {
             csvColumn: csvColumn,
             leftY: leftY,
             rightY: rightY,
-            color: getFieldBadgeColor(colorIndex, intensity),
+            color: getFieldColor(field.key, colorIndex, intensity),
           ));
         }
       }

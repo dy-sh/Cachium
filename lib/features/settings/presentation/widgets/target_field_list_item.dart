@@ -6,7 +6,7 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../data/models/app_settings.dart';
-import 'expandable_target_field_item.dart' show getFieldBadgeColor, getFieldIconByKey;
+import 'expandable_target_field_item.dart' show getFieldColor, getFieldIconByKey;
 
 /// A list item representing a target app field in the two-panel mapping view.
 class TargetFieldListItem extends StatelessWidget {
@@ -60,7 +60,7 @@ class TargetFieldListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fieldColor = getFieldBadgeColor(colorIndex, intensity);
+    final fieldColor = getFieldColor(fieldKey, colorIndex, intensity);
     final fieldIcon = getFieldIconByKey(fieldKey);
     // Dim other items when this field or another is selected
     final isDimmed = hasAnySelected && !isSelected && !isMapped;

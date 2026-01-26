@@ -40,6 +40,23 @@ Color getFieldBadgeColor(int badgeNumber, ColorIntensity intensity) {
   return AppColors.getAccentColor(index, intensity);
 }
 
+/// Get color for a specific field, with overrides for certain field keys.
+/// Falls back to position-based color if no override exists.
+Color getFieldColor(String fieldKey, int colorIndex, ColorIntensity intensity) {
+  final key = fieldKey.toLowerCase();
+
+  // Specific field color overrides
+  if (key.contains('note') || key == 'notes' || key == 'description') {
+    return AppColors.getAccentColor(5, intensity); // yellow
+  }
+  if (key.contains('updated') || key.contains('modified')) {
+    return AppColors.getAccentColor(17, intensity); // blue
+  }
+
+  // Fall back to position-based color
+  return getFieldBadgeColor(colorIndex, intensity);
+}
+
 /// Get a semantically meaningful icon for a field based on its key.
 /// Returns icons that represent the field's purpose.
 IconData getFieldIconByKey(String fieldKey) {

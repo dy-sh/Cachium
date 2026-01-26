@@ -8,7 +8,7 @@ import '../../../../core/constants/app_typography.dart';
 import '../../data/models/app_settings.dart';
 import 'expandable_amount_item.dart' show getAmountColor;
 import 'expandable_target_field_item.dart'
-    show getFieldBadgeColor, getForeignKeyColor, getFieldIconByKey;
+    show getFieldColor, getForeignKeyColor, getFieldIconByKey;
 
 /// A list item representing a CSV column in the two-panel mapping view.
 class CsvColumnListItem extends StatelessWidget {
@@ -71,7 +71,7 @@ class CsvColumnListItem extends StatelessWidget {
         : isFkMapped
             ? getForeignKeyColor(fkMappedTo!, intensity)
             : isFieldMapped
-                ? getFieldBadgeColor(mappedFieldColorIndex!, intensity)
+                ? getFieldColor(mappedFieldKey!, mappedFieldColorIndex!, intensity)
                 : AppColors.getAccentColor(0, intensity);
 
     // Get the icon for the mapped field (or FK/amount icon)
