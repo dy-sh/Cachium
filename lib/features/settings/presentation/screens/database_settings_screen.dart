@@ -21,7 +21,13 @@ import '../widgets/settings_section.dart';
 import '../widgets/settings_tile.dart';
 
 class DatabaseSettingsScreen extends ConsumerStatefulWidget {
-  const DatabaseSettingsScreen({super.key});
+  const DatabaseSettingsScreen({
+    super.key,
+    this.importOnly = false,
+  });
+
+  /// When true, shows only the import section with back navigating to welcome.
+  final bool importOnly;
 
   @override
   ConsumerState<DatabaseSettingsScreen> createState() =>
@@ -67,7 +73,13 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
                   Row(
                     children: [
                       GestureDetector(
-                        onTap: () => context.pop(),
+                        onTap: () {
+                          if (widget.importOnly) {
+                            context.go(AppRoutes.settings);
+                          } else {
+                            context.pop();
+                          }
+                        },
                         child: Container(
                           width: 36,
                           height: 36,
@@ -84,7 +96,10 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
                         ),
                       ),
                       const SizedBox(width: AppSpacing.md),
-                      Text('Database', style: AppTypography.h3),
+                      Text(
+                        widget.importOnly ? 'Import Data' : 'Database',
+                        style: AppTypography.h3,
+                      ),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.xxl),
@@ -98,57 +113,59 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Metrics Section
-                    _buildSectionLabel('METRICS'),
-                    const SizedBox(height: AppSpacing.sm),
-                    const DatabaseMetricsCard(),
-                    const SizedBox(height: AppSpacing.xxl),
+                    if (!widget.importOnly) ...[
+                      // Metrics Section
+                      _buildSectionLabel('METRICS'),
+                      const SizedBox(height: AppSpacing.sm),
+                      const DatabaseMetricsCard(),
+                      const SizedBox(height: AppSpacing.xxl),
 
-                    // Maintenance Section
-                    _buildSectionLabel('MAINTENANCE'),
-                    const SizedBox(height: AppSpacing.sm),
-                    const DatabaseConsistencyCard(),
-                    const SizedBox(height: AppSpacing.md),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: AppRadius.card,
-                        border: Border.all(color: AppColors.border),
+                      // Maintenance Section
+                      _buildSectionLabel('MAINTENANCE'),
+                      const SizedBox(height: AppSpacing.sm),
+                      const DatabaseConsistencyCard(),
+                      const SizedBox(height: AppSpacing.md),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: AppRadius.card,
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: SettingsTile(
+                          title: 'Recalculate Balances',
+                          description: 'Refresh from transaction history',
+                          icon: LucideIcons.calculator,
+                          iconColor: AppColors.getAccentColor(5, intensity),
+                          onTap: _loadingAction != null
+                              ? null
+                              : () => _handleRecalculateBalances(context),
+                          isLoading: _loadingAction == _LoadingAction.recalculate,
+                        ),
                       ),
-                      child: SettingsTile(
-                        title: 'Recalculate Balances',
-                        description: 'Refresh from transaction history',
-                        icon: LucideIcons.calculator,
-                        iconColor: AppColors.getAccentColor(5, intensity),
-                        onTap: _loadingAction != null
-                            ? null
-                            : () => _handleRecalculateBalances(context),
-                        isLoading: _loadingAction == _LoadingAction.recalculate,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xxl),
+                      const SizedBox(height: AppSpacing.xxl),
 
-                    // Export Section
-                    SettingsSection(
-                      title: 'Export',
-                      children: [
-                        SettingsTile(
-                          title: 'Export SQLite',
-                          description: 'Database file format',
-                          icon: LucideIcons.database,
-                          iconColor: AppColors.getAccentColor(17, intensity), // blue - database
-                          onTap: () => context.push('/settings/database/export-sqlite'),
-                        ),
-                        SettingsTile(
-                          title: 'Export CSV',
-                          description: 'Spreadsheet format',
-                          icon: LucideIcons.fileSpreadsheet,
-                          iconColor: AppColors.getAccentColor(13, intensity), // cyan - spreadsheet
-                          onTap: () => context.push('/settings/database/export-csv'),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xxl),
+                      // Export Section
+                      SettingsSection(
+                        title: 'Export',
+                        children: [
+                          SettingsTile(
+                            title: 'Export SQLite',
+                            description: 'Database file format',
+                            icon: LucideIcons.database,
+                            iconColor: AppColors.getAccentColor(17, intensity), // blue - database
+                            onTap: () => context.push('/settings/database/export-sqlite'),
+                          ),
+                          SettingsTile(
+                            title: 'Export CSV',
+                            description: 'Spreadsheet format',
+                            icon: LucideIcons.fileSpreadsheet,
+                            iconColor: AppColors.getAccentColor(13, intensity), // cyan - spreadsheet
+                            onTap: () => context.push('/settings/database/export-csv'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.xxl),
+                    ],
 
                     // Import Section
                     SettingsSection(
@@ -187,30 +204,32 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
                     ),
                     const SizedBox(height: AppSpacing.xxl),
 
-                    // Reset Section
-                    SettingsSection(
-                      title: 'Reset',
-                      children: [
-                        SettingsTile(
-                          title: 'Reset Database',
-                          description: 'Delete all data and start fresh',
-                          icon: LucideIcons.refreshCcw,
-                          iconColor: AppColors.expense,
-                          onTap: _loadingAction != null
-                              ? null
-                              : () => _handleResetDatabase(context),
-                          isLoading: _loadingAction == _LoadingAction.reset,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-                      child: Text(
-                        'Use Reset Database to clear all accounts, categories, and transactions. You can then choose to load demo data, default categories, or start empty.',
-                        style: AppTypography.bodySmall,
+                    if (!widget.importOnly) ...[
+                      // Reset Section
+                      SettingsSection(
+                        title: 'Reset',
+                        children: [
+                          SettingsTile(
+                            title: 'Reset Database',
+                            description: 'Delete all data and start fresh',
+                            icon: LucideIcons.refreshCcw,
+                            iconColor: AppColors.expense,
+                            onTap: _loadingAction != null
+                                ? null
+                                : () => _handleResetDatabase(context),
+                            isLoading: _loadingAction == _LoadingAction.reset,
+                          ),
+                        ],
                       ),
-                    ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+                        child: Text(
+                          'Use Reset Database to clear all accounts, categories, and transactions. You can then choose to load demo data, default categories, or start empty.',
+                          style: AppTypography.bodySmall,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: AppSpacing.xxxl),
                   ],
                 ),

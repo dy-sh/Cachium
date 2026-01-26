@@ -175,11 +175,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.databaseSettings,
-        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
-          state,
-          const DatabaseSettingsScreen(),
-          animationsEnabled: ref.read(formAnimationsEnabledProvider),
-        ),
+        pageBuilder: (context, state) {
+          final importOnly = state.uri.queryParameters['importOnly'] == 'true';
+          return PageTransitions.buildSlideLeftTransition(
+            state,
+            DatabaseSettingsScreen(importOnly: importOnly),
+            animationsEnabled: ref.read(formAnimationsEnabledProvider),
+          );
+        },
       ),
       GoRoute(
         path: AppRoutes.exportSqlite,

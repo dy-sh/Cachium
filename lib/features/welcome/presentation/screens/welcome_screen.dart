@@ -52,6 +52,29 @@ class WelcomeScreen extends ConsumerStatefulWidget {
 class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   WelcomeOption? _loadingOption;
 
+  Future<void> _handleImportFromBackup() async {
+    if (_loadingOption != null) return;
+
+    // Mark onboarding as completed with empty database
+    await ref.read(settingsProvider.notifier).setOnboardingCompleted(true);
+    await ref.read(settingsProvider.notifier).setStartScreen(StartScreen.home);
+
+    // Reset the resetting flag if it was set
+    ref.read(isResettingDatabaseProvider.notifier).state = false;
+
+    // Invalidate data providers
+    ref.invalidate(accountsProvider);
+    ref.invalidate(categoriesProvider);
+    ref.invalidate(transactionsProvider);
+    ref.invalidate(databaseMetricsProvider);
+    ref.invalidate(shouldShowWelcomeProvider);
+
+    // Navigate to database settings in import-only mode
+    if (mounted) {
+      ref.read(appRouterProvider).go('${AppRoutes.databaseSettings}?importOnly=true');
+    }
+  }
+
   Future<void> _handleOptionSelected(WelcomeOption option) async {
     if (_loadingOption != null) return;
 
@@ -205,6 +228,30 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                     onTap: () => _handleOptionSelected(WelcomeOption.empty),
                   ),
                 ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              // Import from backup hint
+              GestureDetector(
+                onTap: _handleImportFromBackup,
+                child: Text.rich(
+                  TextSpan(
+                    text: 'Have a backup? ',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textTertiary,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: 'Import data',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textTertiary,
+                          decoration: TextDecoration.underline,
+                          decorationColor: AppColors.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
               const Spacer(flex: 2),
               // Hint
