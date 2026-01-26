@@ -71,18 +71,18 @@ class AmountConfig {
     switch (mode) {
       case AmountResolutionMode.separateAmountAndType:
         if (amountColumn != null && typeColumn != null) {
-          return 'Amount: "$amountColumn", Type: "$typeColumn"';
+          return '"$amountColumn" + "$typeColumn"';
         } else if (amountColumn != null) {
-          return 'Amount: "$amountColumn", Type: select...';
+          return '"$amountColumn"';
         } else if (typeColumn != null) {
-          return 'Amount: select..., Type: "$typeColumn"';
+          return '"$typeColumn"';
         }
-        return 'Select columns...';
+        return 'Select fields...';
       case AmountResolutionMode.signedAmount:
         if (amountColumn != null) {
-          return 'Signed amount: "$amountColumn"';
+          return '"$amountColumn"';
         }
-        return 'Select column...';
+        return 'Select field...';
     }
   }
 

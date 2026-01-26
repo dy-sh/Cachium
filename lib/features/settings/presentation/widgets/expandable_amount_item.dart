@@ -96,7 +96,7 @@ class ExpandableAmountItem extends ConsumerWidget {
                                     ? FontWeight.w600
                                     : FontWeight.w500,
                                 color: isConfigured
-                                    ? accentColor
+                                    ? AppColors.textPrimary
                                     : AppColors.textSecondary,
                               ),
                             ),

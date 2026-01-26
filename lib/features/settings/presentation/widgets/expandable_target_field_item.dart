@@ -205,7 +205,7 @@ class ExpandableForeignKeyItem extends ConsumerWidget {
                                     ? FontWeight.w600
                                     : FontWeight.w500,
                                 color: isConfigured
-                                    ? accentColor
+                                    ? AppColors.textPrimary
                                     : AppColors.textSecondary,
                               ),
                             ),
@@ -262,20 +262,20 @@ class ExpandableForeignKeyItem extends ConsumerWidget {
     switch (config.mode) {
       case ForeignKeyResolutionMode.mapFromCsv:
         if (config.nameColumn != null && config.idColumn != null) {
-          return 'Mapping "${config.nameColumn}" + "${config.idColumn}"';
+          return '"${config.nameColumn}" + "${config.idColumn}"';
         } else if (config.nameColumn != null) {
-          return 'Mapping "${config.nameColumn}"';
+          return '"${config.nameColumn}"';
         } else if (config.idColumn != null) {
-          return 'Mapping "${config.idColumn}"';
+          return '"${config.idColumn}"';
         }
-        return 'Select column to map';
+        return 'Select field...';
 
       case ForeignKeyResolutionMode.useSameForAll:
         if (config.selectedEntityId != null) {
           final name = _getEntityName(ref, config.selectedEntityId!);
-          if (name != null) return 'Using: $name';
+          if (name != null) return name;
         }
-        return 'Select ${foreignKey == 'category' ? 'category' : 'account'}';
+        return 'Select ${foreignKey == 'category' ? 'category' : 'account'}...';
     }
   }
 
