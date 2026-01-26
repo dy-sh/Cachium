@@ -73,13 +73,7 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
                   Row(
                     children: [
                       GestureDetector(
-                        onTap: () {
-                          if (widget.importOnly) {
-                            context.go(AppRoutes.settings);
-                          } else {
-                            context.pop();
-                          }
-                        },
+                        onTap: () => _handleBack(context),
                         child: Container(
                           width: 36,
                           height: 36,
@@ -241,6 +235,29 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
     );
   }
 
+  Future<void> _handleBack(BuildContext context) async {
+    if (!widget.importOnly) {
+      context.pop();
+      return;
+    }
+
+    // In import mode, check if database has data
+    final metrics = await ref.read(databaseMetricsProvider.future);
+    final isEmpty = metrics.transactionCount == 0 &&
+        metrics.accountCount == 0 &&
+        metrics.categoryCount == 0;
+
+    if (!context.mounted) return;
+
+    if (isEmpty) {
+      // Set onboarding incomplete to show welcome screen
+      await ref.read(settingsProvider.notifier).setOnboardingCompleted(false);
+      ref.read(isResettingDatabaseProvider.notifier).state = true;
+    } else {
+      context.go(AppRoutes.home);
+    }
+  }
+
   Widget _buildSectionLabel(String label) {
     return Padding(
       padding: const EdgeInsets.only(left: AppSpacing.xs),
@@ -372,6 +389,8 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
                 'Imported ${result.totalImported} records',
               );
             }
+            // Navigate to home after successful import
+            context.go(AppRoutes.home);
           }
         },
         error: (error, _) {
@@ -445,6 +464,8 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
                 'Imported ${result.totalImported} records$skippedText',
               );
             }
+            // Navigate to home after successful import
+            context.go(AppRoutes.home);
           }
         },
         error: (error, _) {
