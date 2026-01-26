@@ -81,7 +81,7 @@ class ForeignKeyOptionsPanel extends ConsumerWidget {
               child: Column(
                 children: [
                   _MappableSubField(
-                    label: 'Name column',
+                    label: 'Name',
                     mappedColumn: config.nameColumn,
                     isSelected: isNameSelected,
                     intensity: intensity,
@@ -98,7 +98,7 @@ class ForeignKeyOptionsPanel extends ConsumerWidget {
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   _MappableSubField(
-                    label: 'ID column',
+                    label: 'ID',
                     mappedColumn: config.idColumn,
                     isSelected: isIdSelected,
                     intensity: intensity,
@@ -117,7 +117,7 @@ class ForeignKeyOptionsPanel extends ConsumerWidget {
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
-                        'Select at least one column',
+                        'Select at least one field',
                         style: AppTypography.labelSmall.copyWith(
                           color: AppColors.textTertiary,
                           fontStyle: FontStyle.italic,
@@ -229,8 +229,8 @@ class ForeignKeyOptionsPanel extends ConsumerWidget {
     final entityName = foreignKey == 'category' ? 'categories' : 'accounts';
     final entityNameSingular = foreignKey == 'category' ? 'category' : 'account';
     return 'Match $entityName from your CSV to existing ones in the app.\n\n'
-        '- Name column: If your CSV has $entityNameSingular names (recommended)\n'
-        '- ID column: If your CSV has UUIDs\n\n'
+        '- Name: If your CSV has $entityNameSingular names (recommended)\n'
+        '- ID: If your CSV has UUIDs\n\n'
         'Missing names will create new $entityName automatically.';
   }
 

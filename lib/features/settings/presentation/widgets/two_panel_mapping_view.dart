@@ -66,8 +66,17 @@ class TwoPanelMappingView extends ConsumerWidget {
     // Build the list of items for the left panel (target fields)
     final leftPanelItems = <Widget>[];
 
-    // For transactions, add Category, Account, and Amount at the top
+    // For transactions, add Amount, Category, and Account at the top
     if (isTransaction) {
+      leftPanelItems.add(
+        ExpandableAmountItem(
+          isExpanded: expandedForeignKey == 'amount',
+          onToggleExpand: () => _handleToggleExpandedSection(ref, 'amount'),
+          intensity: intensity,
+          hasCsvColumnSelected: selectedFieldKey != null,
+        ),
+      );
+      leftPanelItems.add(const SizedBox(height: AppSpacing.xs));
       leftPanelItems.add(
         ExpandableForeignKeyItem(
           foreignKey: 'category',
@@ -87,15 +96,6 @@ class TwoPanelMappingView extends ConsumerWidget {
           icon: LucideIcons.wallet,
           isExpanded: expandedForeignKey == 'account',
           onToggleExpand: () => _handleToggleExpandedSection(ref, 'account'),
-          intensity: intensity,
-          hasCsvColumnSelected: selectedFieldKey != null,
-        ),
-      );
-      leftPanelItems.add(const SizedBox(height: AppSpacing.xs));
-      leftPanelItems.add(
-        ExpandableAmountItem(
-          isExpanded: expandedForeignKey == 'amount',
-          onToggleExpand: () => _handleToggleExpandedSection(ref, 'amount'),
           intensity: intensity,
           hasCsvColumnSelected: selectedFieldKey != null,
         ),

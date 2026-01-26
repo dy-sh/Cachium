@@ -75,7 +75,7 @@ class AmountOptionsPanel extends ConsumerWidget {
               child: Column(
                 children: [
                   _MappableSubField(
-                    label: 'Amount column',
+                    label: 'Amount',
                     mappedColumn: config.amountColumn,
                     isSelected: isAmountSelected,
                     intensity: intensity,
@@ -91,7 +91,7 @@ class AmountOptionsPanel extends ConsumerWidget {
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   _MappableSubField(
-                    label: 'Type column',
+                    label: 'Type',
                     mappedColumn: config.typeColumn,
                     isSelected: isTypeSelected,
                     intensity: intensity,
@@ -109,7 +109,7 @@ class AmountOptionsPanel extends ConsumerWidget {
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
-                        'Select both columns',
+                        'Select both fields',
                         style: AppTypography.labelSmall.copyWith(
                           color: AppColors.textTertiary,
                           fontStyle: FontStyle.italic,
@@ -149,7 +149,7 @@ class AmountOptionsPanel extends ConsumerWidget {
               child: Column(
                 children: [
                   _MappableSubField(
-                    label: 'Amount column',
+                    label: 'Amount',
                     mappedColumn: config.amountColumn,
                     isSelected: isAmountSelected,
                     intensity: intensity,
@@ -167,7 +167,7 @@ class AmountOptionsPanel extends ConsumerWidget {
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
-                        'Select amount column',
+                        'Select amount',
                         style: AppTypography.labelSmall.copyWith(
                           color: AppColors.textTertiary,
                           fontStyle: FontStyle.italic,
