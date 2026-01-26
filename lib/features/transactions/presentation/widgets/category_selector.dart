@@ -133,7 +133,8 @@ class CategorySelector extends ConsumerStatefulWidget {
   final String? selectedId;
   final ValueChanged<String> onChanged;
   final int initialVisibleCount;
-  final VoidCallback? onCreatePressed;
+  /// Called when the create button is pressed. Passes the current parent ID if viewing children.
+  final ValueChanged<String?>? onCreatePressed;
   final List<String>? recentCategoryIds;
   final CategorySortOption sortOption;
 
@@ -210,7 +211,9 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
         icon: LucideIcons.folderPlus,
         title: 'No categories available',
         subtitle: 'Tap to create a category',
-        onTap: widget.onCreatePressed,
+        onTap: widget.onCreatePressed != null
+            ? () => widget.onCreatePressed!(null)
+            : null,
       );
     }
 
@@ -318,7 +321,9 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
                     onTap: () => setState(() => _navState.setShowAll(true)),
                   );
                 case _GridItemType.create:
-                  return _CreateNewChip(onTap: widget.onCreatePressed!);
+                  return _CreateNewChip(
+                    onTap: () => widget.onCreatePressed!(_navState.viewingParentId),
+                  );
               }
             },
           ),

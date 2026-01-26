@@ -211,7 +211,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                         ref.read(transactionFormProvider.notifier).setCategory(id);
                       },
                       onCreatePressed: showAddCategoryButton
-                          ? () => _createNewCategory(context, ref, formState.type)
+                          ? (parentId) => _createNewCategory(context, ref, formState.type, parentId)
                           : null,
                     ),
                     const SizedBox(height: AppSpacing.xxl),
@@ -385,6 +385,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     BuildContext context,
     WidgetRef ref,
     TransactionType transactionType,
+    String? parentId,
   ) async {
     final categoryType = transactionType == TransactionType.income
         ? CategoryType.income
@@ -394,6 +395,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
       MaterialPageRoute(
         builder: (context) => _CategoryPickerFormScreen(
           type: categoryType,
+          initialParentId: parentId,
           onCategoryCreated: (id) => Navigator.of(context).pop(id),
         ),
       ),
@@ -420,10 +422,12 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
 /// A screen that wraps CategoryFormModal for picker mode.
 class _CategoryPickerFormScreen extends ConsumerWidget {
   final CategoryType type;
+  final String? initialParentId;
   final ValueChanged<String> onCategoryCreated;
 
   const _CategoryPickerFormScreen({
     required this.type,
+    this.initialParentId,
     required this.onCategoryCreated,
   });
 
@@ -431,6 +435,7 @@ class _CategoryPickerFormScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return CategoryFormModal(
       type: type,
+      initialParentId: initialParentId,
       onSave: (name, icon, colorIndex, parentId) async {
         final uuid = const Uuid();
         final newId = uuid.v4();
