@@ -62,6 +62,9 @@ class SettingsData with _$SettingsData {
     /// Number of accounts shown before "More" button
     @Default(3) int accountsFoldedCount,
 
+    /// Number of categories shown before "More" button
+    @Default(6) int categoriesFoldedCount,
+
     /// Whether to show "New Account" button in form
     @Default(true) bool showAddAccountButton,
 
@@ -73,6 +76,9 @@ class SettingsData with _$SettingsData {
 
     /// Whether to allow saving with amount = 0
     @Default(true) bool allowZeroAmount,
+
+    /// Category sort option: 'lastUsed', 'listOrder', 'alphabetical'
+    @Default('lastUsed') String categorySortOption,
 
     /// Last used category ID for income transactions
     String? lastUsedIncomeCategoryId,

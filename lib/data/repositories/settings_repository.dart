@@ -40,10 +40,12 @@ class SettingsRepository {
       selectLastCategory: settings.selectLastCategory,
       selectLastAccount: settings.selectLastAccount,
       accountsFoldedCount: settings.accountsFoldedCount,
+      categoriesFoldedCount: settings.categoriesFoldedCount,
       showAddAccountButton: settings.showAddAccountButton,
       showAddCategoryButton: settings.showAddCategoryButton,
       defaultTransactionType: settings.defaultTransactionType.name,
       allowZeroAmount: settings.allowZeroAmount,
+      categorySortOption: settings.categorySortOption.name,
       lastUsedIncomeCategoryId: settings.lastUsedIncomeCategoryId,
       lastUsedExpenseCategoryId: settings.lastUsedExpenseCategoryId,
     );
@@ -86,6 +88,7 @@ class SettingsRepository {
       selectLastCategory: data.selectLastCategory,
       selectLastAccount: data.selectLastAccount,
       accountsFoldedCount: data.accountsFoldedCount,
+      categoriesFoldedCount: data.categoriesFoldedCount,
       showAddAccountButton: data.showAddAccountButton,
       showAddCategoryButton: data.showAddCategoryButton,
       defaultTransactionType: TransactionType.values.firstWhere(
@@ -93,6 +96,10 @@ class SettingsRepository {
         orElse: () => TransactionType.expense,
       ),
       allowZeroAmount: data.allowZeroAmount,
+      categorySortOption: ui.CategorySortOption.values.firstWhere(
+        (e) => e.name == data.categorySortOption,
+        orElse: () => ui.CategorySortOption.lastUsed,
+      ),
       lastUsedIncomeCategoryId: data.lastUsedIncomeCategoryId,
       lastUsedExpenseCategoryId: data.lastUsedExpenseCategoryId,
     );

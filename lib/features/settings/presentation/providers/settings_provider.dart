@@ -128,6 +128,18 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     await _saveAndUpdate(current.copyWith(accountsFoldedCount: count));
   }
 
+  Future<void> setCategoriesFoldedCount(int count) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    await _saveAndUpdate(current.copyWith(categoriesFoldedCount: count));
+  }
+
+  Future<void> setCategorySortOption(CategorySortOption option) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    await _saveAndUpdate(current.copyWith(categorySortOption: option));
+  }
+
   Future<void> setShowAddAccountButton(bool enabled) async {
     final current = state.valueOrNull;
     if (current == null) return;
@@ -267,6 +279,16 @@ final selectLastAccountProvider = Provider<bool>((ref) {
 final accountsFoldedCountProvider = Provider<int>((ref) {
   final settingsAsync = ref.watch(settingsProvider);
   return settingsAsync.valueOrNull?.accountsFoldedCount ?? 3;
+});
+
+final categoriesFoldedCountProvider = Provider<int>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.categoriesFoldedCount ?? 6;
+});
+
+final categorySortOptionProvider = Provider<CategorySortOption>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.categorySortOption ?? CategorySortOption.lastUsed;
 });
 
 final showAddAccountButtonProvider = Provider<bool>((ref) {

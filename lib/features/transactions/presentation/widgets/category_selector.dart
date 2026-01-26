@@ -69,6 +69,10 @@ class CategoryNavigationState {
     _showAll = !_showAll;
   }
 
+  void setShowAll(bool value) {
+    _showAll = value;
+  }
+
   /// Get the name of the previous parent in the navigation stack.
   String getPreviousParentName(List<Category> categories) {
     if (_navigationStack.length < 2) return 'All Categories';
@@ -82,11 +86,45 @@ class CategoryNavigationState {
   }
 
   /// Get categories to display at the current navigation level.
-  List<Category> getDisplayCategories(List<Category> categories) {
+  List<Category> getDisplayCategories(
+    List<Category> categories, {
+    CategorySortOption sortOption = CategorySortOption.listOrder,
+    List<String>? recentCategoryIds,
+  }) {
     final filtered = _viewingParentId == null
         ? categories.where((c) => c.parentId == null)
         : categories.where((c) => c.parentId == _viewingParentId);
-    return filtered.toList()..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
+    final result = filtered.toList();
+
+    switch (sortOption) {
+      case CategorySortOption.lastUsed:
+        if (recentCategoryIds != null && recentCategoryIds.isNotEmpty) {
+          // Sort by position in recentCategoryIds list
+          result.sort((a, b) {
+            final aIndex = recentCategoryIds.indexOf(a.id);
+            final bIndex = recentCategoryIds.indexOf(b.id);
+            // Categories not in list go to end, sorted by sortOrder
+            if (aIndex == -1 && bIndex == -1) {
+              return a.sortOrder.compareTo(b.sortOrder);
+            }
+            if (aIndex == -1) return 1;
+            if (bIndex == -1) return -1;
+            return aIndex.compareTo(bIndex);
+          });
+        } else {
+          result.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+        }
+        break;
+      case CategorySortOption.listOrder:
+        result.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+        break;
+      case CategorySortOption.alphabetical:
+        result.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        break;
+    }
+
+    return result;
   }
 }
 
@@ -96,14 +134,18 @@ class CategorySelector extends ConsumerStatefulWidget {
   final ValueChanged<String> onChanged;
   final int initialVisibleCount;
   final VoidCallback? onCreatePressed;
+  final List<String>? recentCategoryIds;
+  final CategorySortOption sortOption;
 
   const CategorySelector({
     super.key,
     required this.categories,
     this.selectedId,
     required this.onChanged,
-    this.initialVisibleCount = 9,
+    this.initialVisibleCount = 6,
     this.onCreatePressed,
+    this.recentCategoryIds,
+    this.sortOption = CategorySortOption.lastUsed,
   });
 
   @override
@@ -153,11 +195,32 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
       );
     }
 
-    final displayCategories = _navState.getDisplayCategories(widget.categories);
+    final displayCategories = _navState.getDisplayCategories(
+      widget.categories,
+      sortOption: widget.sortOption,
+      recentCategoryIds: widget.recentCategoryIds,
+    );
     final hasMore = displayCategories.length > widget.initialVisibleCount;
-    final visibleCategories = _navState.showAll || !hasMore
-        ? displayCategories
-        : displayCategories.take(widget.initialVisibleCount).toList();
+
+    // Build grid items similar to AccountSelector
+    final List<_GridItem> gridItems = [];
+
+    if (_navState.showAll || !hasMore) {
+      // Show all categories
+      for (final category in displayCategories) {
+        gridItems.add(_GridItem.category(category));
+      }
+      // Add create button when expanded or when few categories
+      if (widget.onCreatePressed != null) {
+        gridItems.add(_GridItem.create());
+      }
+    } else {
+      // Show limited categories + "More" button
+      for (int i = 0; i < widget.initialVisibleCount; i++) {
+        gridItems.add(_GridItem.category(displayCategories[i]));
+      }
+      gridItems.add(_GridItem.more(displayCategories.length - widget.initialVisibleCount));
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,32 +250,38 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
               crossAxisSpacing: AppSpacing.chipGap,
               mainAxisSpacing: AppSpacing.chipGap,
             ),
-            // Add 1 for the "Create new" button
-            itemCount: visibleCategories.length + (widget.onCreatePressed != null ? 1 : 0),
+            itemCount: gridItems.length,
             itemBuilder: (context, index) {
-              // Last item is the "Create new" button
-              if (index == visibleCategories.length && widget.onCreatePressed != null) {
-                return _CreateNewChip(onTap: widget.onCreatePressed!);
+              final item = gridItems[index];
+              switch (item.type) {
+                case _GridItemType.category:
+                  final category = item.category!;
+                  final isSelected = category.id == widget.selectedId;
+                  final hasChildren = ref.watch(hasChildrenProvider(category.id));
+                  return _CategoryChip(
+                    category: category,
+                    isSelected: isSelected,
+                    hasChildren: hasChildren,
+                    intensity: intensity,
+                    onTap: () => _handleCategoryTap(category, hasChildren),
+                  );
+                case _GridItemType.more:
+                  return _MoreChip(
+                    count: item.moreCount!,
+                    onTap: () => setState(() => _navState.setShowAll(true)),
+                  );
+                case _GridItemType.create:
+                  return _CreateNewChip(onTap: widget.onCreatePressed!);
               }
-              final category = visibleCategories[index];
-              final isSelected = category.id == widget.selectedId;
-              final hasChildren = ref.watch(hasChildrenProvider(category.id));
-              return _CategoryChip(
-                category: category,
-                isSelected: isSelected,
-                hasChildren: hasChildren,
-                intensity: intensity,
-                onTap: () => _handleCategoryTap(category, hasChildren),
-              );
             },
           ),
         ),
-        if (hasMore) ...[
+        if (_navState.showAll && hasMore) ...[
           const SizedBox(height: AppSpacing.sm),
           GestureDetector(
-            onTap: () => setState(() => _navState.toggleShowAll()),
+            onTap: () => setState(() => _navState.setShowAll(false)),
             child: Text(
-              _navState.showAll ? 'Show Less' : 'Show All',
+              'Show Less',
               style: AppTypography.labelSmall.copyWith(
                 color: AppColors.accentPrimary,
               ),
@@ -340,6 +409,24 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
   }
 }
 
+enum _GridItemType { category, more, create }
+
+class _GridItem {
+  final _GridItemType type;
+  final Category? category;
+  final int? moreCount;
+
+  _GridItem._({required this.type, this.category, this.moreCount});
+
+  factory _GridItem.category(Category category) =>
+      _GridItem._(type: _GridItemType.category, category: category);
+
+  factory _GridItem.more(int count) =>
+      _GridItem._(type: _GridItemType.more, moreCount: count);
+
+  factory _GridItem.create() => _GridItem._(type: _GridItemType.create);
+}
+
 class _CategoryChip extends StatelessWidget {
   final Category category;
   final bool isSelected;
@@ -381,6 +468,59 @@ class _CategoryChip extends StatelessWidget {
               color: isSelected ? categoryColor : AppColors.textTertiary,
             )
           : null,
+    );
+  }
+}
+
+class _MoreChip extends StatelessWidget {
+  final int count;
+  final VoidCallback onTap;
+
+  const _MoreChip({required this.count, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        HapticHelper.lightImpact();
+        onTap();
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: AppRadius.smAll,
+          border: Border.all(
+            color: AppColors.border,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceLight,
+                borderRadius: BorderRadius.circular(5),
+              ),
+              child: Icon(
+                LucideIcons.moreHorizontal,
+                size: 10,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              '+$count',
+              style: AppTypography.labelSmall.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

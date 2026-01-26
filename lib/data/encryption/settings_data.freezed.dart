@@ -72,6 +72,9 @@ mixin _$SettingsData {
   /// Number of accounts shown before "More" button
   int get accountsFoldedCount => throw _privateConstructorUsedError;
 
+  /// Number of categories shown before "More" button
+  int get categoriesFoldedCount => throw _privateConstructorUsedError;
+
   /// Whether to show "New Account" button in form
   bool get showAddAccountButton => throw _privateConstructorUsedError;
 
@@ -83,6 +86,9 @@ mixin _$SettingsData {
 
   /// Whether to allow saving with amount = 0
   bool get allowZeroAmount => throw _privateConstructorUsedError;
+
+  /// Category sort option: 'lastUsed', 'listOrder', 'alphabetical'
+  String get categorySortOption => throw _privateConstructorUsedError;
 
   /// Last used category ID for income transactions
   String? get lastUsedIncomeCategoryId => throw _privateConstructorUsedError;
@@ -125,10 +131,12 @@ abstract class $SettingsDataCopyWith<$Res> {
     bool selectLastCategory,
     bool selectLastAccount,
     int accountsFoldedCount,
+    int categoriesFoldedCount,
     bool showAddAccountButton,
     bool showAddCategoryButton,
     String defaultTransactionType,
     bool allowZeroAmount,
+    String categorySortOption,
     String? lastUsedIncomeCategoryId,
     String? lastUsedExpenseCategoryId,
   });
@@ -166,10 +174,12 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
     Object? selectLastCategory = null,
     Object? selectLastAccount = null,
     Object? accountsFoldedCount = null,
+    Object? categoriesFoldedCount = null,
     Object? showAddAccountButton = null,
     Object? showAddCategoryButton = null,
     Object? defaultTransactionType = null,
     Object? allowZeroAmount = null,
+    Object? categorySortOption = null,
     Object? lastUsedIncomeCategoryId = freezed,
     Object? lastUsedExpenseCategoryId = freezed,
   }) {
@@ -243,6 +253,10 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
                 ? _value.accountsFoldedCount
                 : accountsFoldedCount // ignore: cast_nullable_to_non_nullable
                       as int,
+            categoriesFoldedCount: null == categoriesFoldedCount
+                ? _value.categoriesFoldedCount
+                : categoriesFoldedCount // ignore: cast_nullable_to_non_nullable
+                      as int,
             showAddAccountButton: null == showAddAccountButton
                 ? _value.showAddAccountButton
                 : showAddAccountButton // ignore: cast_nullable_to_non_nullable
@@ -259,6 +273,10 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
                 ? _value.allowZeroAmount
                 : allowZeroAmount // ignore: cast_nullable_to_non_nullable
                       as bool,
+            categorySortOption: null == categorySortOption
+                ? _value.categorySortOption
+                : categorySortOption // ignore: cast_nullable_to_non_nullable
+                      as String,
             lastUsedIncomeCategoryId: freezed == lastUsedIncomeCategoryId
                 ? _value.lastUsedIncomeCategoryId
                 : lastUsedIncomeCategoryId // ignore: cast_nullable_to_non_nullable
@@ -300,10 +318,12 @@ abstract class _$$SettingsDataImplCopyWith<$Res>
     bool selectLastCategory,
     bool selectLastAccount,
     int accountsFoldedCount,
+    int categoriesFoldedCount,
     bool showAddAccountButton,
     bool showAddCategoryButton,
     String defaultTransactionType,
     bool allowZeroAmount,
+    String categorySortOption,
     String? lastUsedIncomeCategoryId,
     String? lastUsedExpenseCategoryId,
   });
@@ -340,10 +360,12 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
     Object? selectLastCategory = null,
     Object? selectLastAccount = null,
     Object? accountsFoldedCount = null,
+    Object? categoriesFoldedCount = null,
     Object? showAddAccountButton = null,
     Object? showAddCategoryButton = null,
     Object? defaultTransactionType = null,
     Object? allowZeroAmount = null,
+    Object? categorySortOption = null,
     Object? lastUsedIncomeCategoryId = freezed,
     Object? lastUsedExpenseCategoryId = freezed,
   }) {
@@ -417,6 +439,10 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
             ? _value.accountsFoldedCount
             : accountsFoldedCount // ignore: cast_nullable_to_non_nullable
                   as int,
+        categoriesFoldedCount: null == categoriesFoldedCount
+            ? _value.categoriesFoldedCount
+            : categoriesFoldedCount // ignore: cast_nullable_to_non_nullable
+                  as int,
         showAddAccountButton: null == showAddAccountButton
             ? _value.showAddAccountButton
             : showAddAccountButton // ignore: cast_nullable_to_non_nullable
@@ -433,6 +459,10 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
             ? _value.allowZeroAmount
             : allowZeroAmount // ignore: cast_nullable_to_non_nullable
                   as bool,
+        categorySortOption: null == categorySortOption
+            ? _value.categorySortOption
+            : categorySortOption // ignore: cast_nullable_to_non_nullable
+                  as String,
         lastUsedIncomeCategoryId: freezed == lastUsedIncomeCategoryId
             ? _value.lastUsedIncomeCategoryId
             : lastUsedIncomeCategoryId // ignore: cast_nullable_to_non_nullable
@@ -467,10 +497,12 @@ class _$SettingsDataImpl implements _SettingsData {
     this.selectLastCategory = false,
     this.selectLastAccount = true,
     this.accountsFoldedCount = 3,
+    this.categoriesFoldedCount = 6,
     this.showAddAccountButton = true,
     this.showAddCategoryButton = true,
     this.defaultTransactionType = 'expense',
     this.allowZeroAmount = true,
+    this.categorySortOption = 'lastUsed',
     this.lastUsedIncomeCategoryId,
     this.lastUsedExpenseCategoryId,
   });
@@ -561,6 +593,11 @@ class _$SettingsDataImpl implements _SettingsData {
   @JsonKey()
   final int accountsFoldedCount;
 
+  /// Number of categories shown before "More" button
+  @override
+  @JsonKey()
+  final int categoriesFoldedCount;
+
   /// Whether to show "New Account" button in form
   @override
   @JsonKey()
@@ -581,6 +618,11 @@ class _$SettingsDataImpl implements _SettingsData {
   @JsonKey()
   final bool allowZeroAmount;
 
+  /// Category sort option: 'lastUsed', 'listOrder', 'alphabetical'
+  @override
+  @JsonKey()
+  final String categorySortOption;
+
   /// Last used category ID for income transactions
   @override
   final String? lastUsedIncomeCategoryId;
@@ -591,7 +633,7 @@ class _$SettingsDataImpl implements _SettingsData {
 
   @override
   String toString() {
-    return 'SettingsData(id: $id, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, currencySymbol: $currencySymbol, customCurrencySymbol: $customCurrencySymbol, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId)';
+    return 'SettingsData(id: $id, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, currencySymbol: $currencySymbol, customCurrencySymbol: $customCurrencySymbol, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, categoriesFoldedCount: $categoriesFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, categorySortOption: $categorySortOption, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId)';
   }
 
   @override
@@ -632,6 +674,8 @@ class _$SettingsDataImpl implements _SettingsData {
                 other.selectLastAccount == selectLastAccount) &&
             (identical(other.accountsFoldedCount, accountsFoldedCount) ||
                 other.accountsFoldedCount == accountsFoldedCount) &&
+            (identical(other.categoriesFoldedCount, categoriesFoldedCount) ||
+                other.categoriesFoldedCount == categoriesFoldedCount) &&
             (identical(other.showAddAccountButton, showAddAccountButton) ||
                 other.showAddAccountButton == showAddAccountButton) &&
             (identical(other.showAddCategoryButton, showAddCategoryButton) ||
@@ -640,6 +684,8 @@ class _$SettingsDataImpl implements _SettingsData {
                 other.defaultTransactionType == defaultTransactionType) &&
             (identical(other.allowZeroAmount, allowZeroAmount) ||
                 other.allowZeroAmount == allowZeroAmount) &&
+            (identical(other.categorySortOption, categorySortOption) ||
+                other.categorySortOption == categorySortOption) &&
             (identical(
                   other.lastUsedIncomeCategoryId,
                   lastUsedIncomeCategoryId,
@@ -673,10 +719,12 @@ class _$SettingsDataImpl implements _SettingsData {
     selectLastCategory,
     selectLastAccount,
     accountsFoldedCount,
+    categoriesFoldedCount,
     showAddAccountButton,
     showAddCategoryButton,
     defaultTransactionType,
     allowZeroAmount,
+    categorySortOption,
     lastUsedIncomeCategoryId,
     lastUsedExpenseCategoryId,
   ]);
@@ -714,10 +762,12 @@ abstract class _SettingsData implements SettingsData {
     final bool selectLastCategory,
     final bool selectLastAccount,
     final int accountsFoldedCount,
+    final int categoriesFoldedCount,
     final bool showAddAccountButton,
     final bool showAddCategoryButton,
     final String defaultTransactionType,
     final bool allowZeroAmount,
+    final String categorySortOption,
     final String? lastUsedIncomeCategoryId,
     final String? lastUsedExpenseCategoryId,
   }) = _$SettingsDataImpl;
@@ -793,6 +843,10 @@ abstract class _SettingsData implements SettingsData {
   @override
   int get accountsFoldedCount;
 
+  /// Number of categories shown before "More" button
+  @override
+  int get categoriesFoldedCount;
+
   /// Whether to show "New Account" button in form
   @override
   bool get showAddAccountButton;
@@ -808,6 +862,10 @@ abstract class _SettingsData implements SettingsData {
   /// Whether to allow saving with amount = 0
   @override
   bool get allowZeroAmount;
+
+  /// Category sort option: 'lastUsed', 'listOrder', 'alphabetical'
+  @override
+  String get categorySortOption;
 
   /// Last used category ID for income transactions
   @override

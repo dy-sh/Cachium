@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/exceptions/app_exception.dart';
 import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/providers/database_providers.dart';
+import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../data/models/category.dart';
 import '../../data/models/category_tree_node.dart';
 
@@ -407,4 +408,53 @@ final categoryNameExistsProvider = Provider.family<bool, ({String name, String? 
   return categories.any((c) =>
     c.name.toLowerCase() == nameLower && c.id != params.excludeId
   );
+});
+
+/// Returns category IDs sorted by most recent transaction usage for a specific type.
+/// Categories without transactions appear last, sorted by sort order.
+final recentlyUsedCategoryIdsProvider = Provider.family<List<String>, CategoryType>((ref, type) {
+  final transactions = ref.watch(transactionsProvider).valueOrNull;
+  final categoriesAsync = ref.watch(categoriesProvider);
+  final categories = categoriesAsync.valueOrEmpty;
+
+  final typeCategories = categories.where((c) => c.type == type).toList();
+  if (typeCategories.isEmpty) return [];
+
+  // Get most recent transaction date per category
+  final Map<String, DateTime> lastUsedMap = {};
+  if (transactions != null) {
+    for (final tx in transactions) {
+      // Only consider transactions that match the category type
+      final category = categories.firstWhere(
+        (c) => c.id == tx.categoryId,
+        orElse: () => categories.first,
+      );
+      if (category.type != type) continue;
+
+      final current = lastUsedMap[tx.categoryId];
+      if (current == null || tx.createdAt.isAfter(current)) {
+        lastUsedMap[tx.categoryId] = tx.createdAt;
+      }
+    }
+  }
+
+  // Sort categories: recently used first, then by sort order
+  final sortedCategories = List<Category>.from(typeCategories);
+  sortedCategories.sort((a, b) {
+    final aLastUsed = lastUsedMap[a.id];
+    final bLastUsed = lastUsedMap[b.id];
+
+    // Both have transactions - sort by last used
+    if (aLastUsed != null && bLastUsed != null) {
+      return bLastUsed.compareTo(aLastUsed);
+    }
+    // Only a has transactions
+    if (aLastUsed != null) return -1;
+    // Only b has transactions
+    if (bLastUsed != null) return 1;
+    // Neither has transactions - sort by sort order
+    return a.sortOrder.compareTo(b.sortOrder);
+  });
+
+  return sortedCategories.map((c) => c.id).toList();
 });

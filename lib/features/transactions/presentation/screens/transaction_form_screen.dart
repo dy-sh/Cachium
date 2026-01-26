@@ -17,6 +17,7 @@ import '../../../accounts/presentation/screens/account_form_screen.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/data/models/category.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
+import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../settings/presentation/widgets/category_form_modal.dart';
 import '../../data/models/transaction.dart';
@@ -96,12 +97,20 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
 
     // Transaction settings
     final accountsFoldedCount = ref.watch(accountsFoldedCountProvider);
+    final categoriesFoldedCount = ref.watch(categoriesFoldedCountProvider);
     final showAddAccountButton = ref.watch(showAddAccountButtonProvider);
     final showAddCategoryButton = ref.watch(showAddCategoryButtonProvider);
+    final categorySortOption = ref.watch(categorySortOptionProvider);
 
     final categories = formState.type == TransactionType.income
         ? incomeCategories
         : expenseCategories;
+
+    // Get recently used category IDs for current transaction type
+    final categoryType = formState.type == TransactionType.income
+        ? CategoryType.income
+        : CategoryType.expense;
+    final recentCategoryIds = ref.watch(recentlyUsedCategoryIdsProvider(categoryType));
 
     final isIncome = formState.type == TransactionType.income;
     final isEditing = formState.isEditing;
@@ -172,6 +181,9 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                     CategorySelector(
                       categories: categories,
                       selectedId: formState.categoryId,
+                      initialVisibleCount: categoriesFoldedCount,
+                      sortOption: categorySortOption,
+                      recentCategoryIds: recentCategoryIds,
                       onChanged: (id) {
                         ref.read(transactionFormProvider.notifier).setCategory(id);
                       },

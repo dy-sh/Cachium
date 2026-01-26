@@ -41,6 +41,23 @@ enum AccountCardStyle {
   bright;
 }
 
+enum CategorySortOption {
+  lastUsed,
+  listOrder,
+  alphabetical;
+
+  String get displayName {
+    switch (this) {
+      case CategorySortOption.lastUsed:
+        return 'Last Used';
+      case CategorySortOption.listOrder:
+        return 'List Order';
+      case CategorySortOption.alphabetical:
+        return 'Alphabetical';
+    }
+  }
+}
+
 enum CurrencySymbol {
   usd('\$', 'USD'),
   eur('\u20AC', 'EUR'),
@@ -76,10 +93,12 @@ class AppSettings {
   final bool selectLastCategory;
   final bool selectLastAccount;
   final int accountsFoldedCount;
+  final int categoriesFoldedCount;
   final bool showAddAccountButton;
   final bool showAddCategoryButton;
   final TransactionType defaultTransactionType;
   final bool allowZeroAmount;
+  final CategorySortOption categorySortOption;
   final String? lastUsedIncomeCategoryId;
   final String? lastUsedExpenseCategoryId;
 
@@ -103,10 +122,12 @@ class AppSettings {
     this.selectLastCategory = false,
     this.selectLastAccount = true,
     this.accountsFoldedCount = 3,
+    this.categoriesFoldedCount = 6,
     this.showAddAccountButton = true,
     this.showAddCategoryButton = true,
     this.defaultTransactionType = TransactionType.expense,
     this.allowZeroAmount = true,
+    this.categorySortOption = CategorySortOption.lastUsed,
     this.lastUsedIncomeCategoryId,
     this.lastUsedExpenseCategoryId,
     this.onboardingCompleted = false,
@@ -140,10 +161,12 @@ class AppSettings {
     bool? selectLastCategory,
     bool? selectLastAccount,
     int? accountsFoldedCount,
+    int? categoriesFoldedCount,
     bool? showAddAccountButton,
     bool? showAddCategoryButton,
     TransactionType? defaultTransactionType,
     bool? allowZeroAmount,
+    CategorySortOption? categorySortOption,
     String? lastUsedIncomeCategoryId,
     String? lastUsedExpenseCategoryId,
     bool? onboardingCompleted,
@@ -165,10 +188,12 @@ class AppSettings {
       selectLastCategory: selectLastCategory ?? this.selectLastCategory,
       selectLastAccount: selectLastAccount ?? this.selectLastAccount,
       accountsFoldedCount: accountsFoldedCount ?? this.accountsFoldedCount,
+      categoriesFoldedCount: categoriesFoldedCount ?? this.categoriesFoldedCount,
       showAddAccountButton: showAddAccountButton ?? this.showAddAccountButton,
       showAddCategoryButton: showAddCategoryButton ?? this.showAddCategoryButton,
       defaultTransactionType: defaultTransactionType ?? this.defaultTransactionType,
       allowZeroAmount: allowZeroAmount ?? this.allowZeroAmount,
+      categorySortOption: categorySortOption ?? this.categorySortOption,
       lastUsedIncomeCategoryId: lastUsedIncomeCategoryId ?? this.lastUsedIncomeCategoryId,
       lastUsedExpenseCategoryId: lastUsedExpenseCategoryId ?? this.lastUsedExpenseCategoryId,
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,

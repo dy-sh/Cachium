@@ -25,11 +25,14 @@ _$SettingsDataImpl _$$SettingsDataImplFromJson(Map<String, dynamic> json) =>
       selectLastCategory: json['selectLastCategory'] as bool? ?? false,
       selectLastAccount: json['selectLastAccount'] as bool? ?? true,
       accountsFoldedCount: (json['accountsFoldedCount'] as num?)?.toInt() ?? 3,
+      categoriesFoldedCount:
+          (json['categoriesFoldedCount'] as num?)?.toInt() ?? 6,
       showAddAccountButton: json['showAddAccountButton'] as bool? ?? true,
       showAddCategoryButton: json['showAddCategoryButton'] as bool? ?? true,
       defaultTransactionType:
           json['defaultTransactionType'] as String? ?? 'expense',
       allowZeroAmount: json['allowZeroAmount'] as bool? ?? true,
+      categorySortOption: json['categorySortOption'] as String? ?? 'lastUsed',
       lastUsedIncomeCategoryId: json['lastUsedIncomeCategoryId'] as String?,
       lastUsedExpenseCategoryId: json['lastUsedExpenseCategoryId'] as String?,
     );
@@ -53,10 +56,12 @@ Map<String, dynamic> _$$SettingsDataImplToJson(_$SettingsDataImpl instance) =>
       'selectLastCategory': instance.selectLastCategory,
       'selectLastAccount': instance.selectLastAccount,
       'accountsFoldedCount': instance.accountsFoldedCount,
+      'categoriesFoldedCount': instance.categoriesFoldedCount,
       'showAddAccountButton': instance.showAddAccountButton,
       'showAddCategoryButton': instance.showAddCategoryButton,
       'defaultTransactionType': instance.defaultTransactionType,
       'allowZeroAmount': instance.allowZeroAmount,
+      'categorySortOption': instance.categorySortOption,
       'lastUsedIncomeCategoryId': instance.lastUsedIncomeCategoryId,
       'lastUsedExpenseCategoryId': instance.lastUsedExpenseCategoryId,
     };

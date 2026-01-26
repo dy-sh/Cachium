@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../transactions/data/models/transaction.dart';
+import '../../data/models/app_settings.dart';
 import '../providers/settings_provider.dart';
 import '../widgets/settings_section.dart';
 import '../widgets/settings_tile.dart';
@@ -114,6 +115,8 @@ class TransactionsSettingsScreen extends ConsumerWidget {
                     SettingsSection(
                       title: 'Display',
                       children: [
+                        _buildCategorySortTile(context, ref, settings.categorySortOption),
+                        _buildVisibleCategoriesTile(context, ref, settings.categoriesFoldedCount),
                         _buildVisibleAccountsTile(context, ref, settings.accountsFoldedCount),
                         SettingsToggleTile(
                           title: 'Show Add Account Button',
@@ -165,6 +168,116 @@ class TransactionsSettingsScreen extends ConsumerWidget {
         ref.read(settingsProvider.notifier).setDefaultTransactionType(
               index == 0 ? TransactionType.income : TransactionType.expense,
             );
+        Navigator.pop(context);
+      },
+    );
+
+    if (!animationsEnabled) {
+      Navigator.of(context).push(
+        PageRouteBuilder(
+          opaque: false,
+          barrierDismissible: true,
+          barrierColor: Colors.black54,
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+          pageBuilder: (context, animation, secondaryAnimation) {
+            return Align(
+              alignment: Alignment.bottomCenter,
+              child: Material(
+                color: AppColors.surface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                child: modalContent,
+              ),
+            );
+          },
+        ),
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: AppColors.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (context) => modalContent,
+      );
+    }
+  }
+
+  Widget _buildCategorySortTile(BuildContext context, WidgetRef ref, CategorySortOption currentOption) {
+    return SettingsTile(
+      title: 'Category Sort',
+      description: 'How to sort categories in form',
+      value: currentOption.displayName,
+      onTap: () => _showCategorySortPicker(context, ref, currentOption),
+    );
+  }
+
+  void _showCategorySortPicker(BuildContext context, WidgetRef ref, CategorySortOption currentOption) {
+    final animationsEnabled = ref.read(formAnimationsEnabledProvider);
+    final options = CategorySortOption.values.map((e) => e.displayName).toList();
+    final selectedIndex = CategorySortOption.values.indexOf(currentOption);
+    final modalContent = _OptionPickerSheet(
+      title: 'Category Sort',
+      options: options,
+      selectedIndex: selectedIndex,
+      onSelected: (index) {
+        ref.read(settingsProvider.notifier).setCategorySortOption(CategorySortOption.values[index]);
+        Navigator.pop(context);
+      },
+    );
+
+    if (!animationsEnabled) {
+      Navigator.of(context).push(
+        PageRouteBuilder(
+          opaque: false,
+          barrierDismissible: true,
+          barrierColor: Colors.black54,
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+          pageBuilder: (context, animation, secondaryAnimation) {
+            return Align(
+              alignment: Alignment.bottomCenter,
+              child: Material(
+                color: AppColors.surface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                child: modalContent,
+              ),
+            );
+          },
+        ),
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: AppColors.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (context) => modalContent,
+      );
+    }
+  }
+
+  Widget _buildVisibleCategoriesTile(BuildContext context, WidgetRef ref, int currentCount) {
+    return SettingsTile(
+      title: 'Visible Categories',
+      description: 'Categories shown before "More" button',
+      value: '$currentCount',
+      onTap: () => _showVisibleCategoriesPicker(context, ref, currentCount),
+    );
+  }
+
+  void _showVisibleCategoriesPicker(BuildContext context, WidgetRef ref, int currentCount) {
+    final animationsEnabled = ref.read(formAnimationsEnabledProvider);
+    final options = ['3', '6', '9', '12', '15'];
+    final selectedIndex = options.indexOf('$currentCount');
+    final modalContent = _OptionPickerSheet(
+      title: 'Visible Categories',
+      options: options,
+      selectedIndex: selectedIndex >= 0 ? selectedIndex : 1, // Default to 6
+      onSelected: (index) {
+        ref.read(settingsProvider.notifier).setCategoriesFoldedCount(int.parse(options[index]));
         Navigator.pop(context);
       },
     );
