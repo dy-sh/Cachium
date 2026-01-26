@@ -847,6 +847,8 @@ class _TwoPanelMappingViewState extends ConsumerState<TwoPanelMappingView> {
                 gapEnd: _gapEnd,
                 topClip: _contentTop,
                 bottomClip: _contentBottom,
+                isPreviewActive:
+                    _previewFieldKey != null || _previewCsvColumn != null,
               ),
             ),
           ),

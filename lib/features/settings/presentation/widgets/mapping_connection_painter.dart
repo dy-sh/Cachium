@@ -20,12 +20,17 @@ class MappingConnectionPainter extends CustomPainter {
   /// Bottom of the visible clipping area.
   final double bottomClip;
 
+  /// Whether preview mode is active (holding an element).
+  /// Lines are brighter in preview mode.
+  final bool isPreviewActive;
+
   MappingConnectionPainter({
     required this.connections,
     required this.gapStart,
     required this.gapEnd,
     required this.topClip,
     required this.bottomClip,
+    this.isPreviewActive = false,
   });
 
   @override
@@ -59,29 +64,35 @@ class MappingConnectionPainter extends CustomPainter {
       endY, // End point Y
     );
 
+    // Adjust opacity based on preview mode
+    // Dimmer when not previewing, brighter when previewing
+    final lineOpacity = isPreviewActive ? 1.0 : 0.35;
+    final glowOpacity = isPreviewActive ? 0.3 : 0.1;
+    final dotOpacity = isPreviewActive ? 1.0 : 0.4;
+
     // Draw glow effect first (subtle, for dark theme)
     final glowPaint = Paint()
-      ..color = connection.color.withValues(alpha: 0.3)
-      ..strokeWidth = 6.0
+      ..color = connection.color.withValues(alpha: glowOpacity)
+      ..strokeWidth = isPreviewActive ? 6.0 : 4.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4.0);
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, isPreviewActive ? 4.0 : 2.0);
     canvas.drawPath(path, glowPaint);
 
     // Draw main line
     final mainPaint = Paint()
-      ..color = connection.color
-      ..strokeWidth = 2.0
+      ..color = connection.color.withValues(alpha: lineOpacity)
+      ..strokeWidth = isPreviewActive ? 2.0 : 1.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
     canvas.drawPath(path, mainPaint);
 
     // Draw small circles at connection endpoints
     final dotPaint = Paint()
-      ..color = connection.color
+      ..color = connection.color.withValues(alpha: dotOpacity)
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(startX, startY), 3.0, dotPaint);
-    canvas.drawCircle(Offset(endX, endY), 3.0, dotPaint);
+    canvas.drawCircle(Offset(startX, startY), isPreviewActive ? 3.0 : 2.0, dotPaint);
+    canvas.drawCircle(Offset(endX, endY), isPreviewActive ? 3.0 : 2.0, dotPaint);
   }
 
   @override
@@ -93,6 +104,9 @@ class MappingConnectionPainter extends CustomPainter {
     }
     if (topClip != oldDelegate.topClip ||
         bottomClip != oldDelegate.bottomClip) {
+      return true;
+    }
+    if (isPreviewActive != oldDelegate.isPreviewActive) {
       return true;
     }
     for (var i = 0; i < connections.length; i++) {
