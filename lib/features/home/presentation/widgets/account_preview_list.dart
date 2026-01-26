@@ -11,13 +11,25 @@ import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 
-class AccountPreviewList extends ConsumerWidget {
+class AccountPreviewList extends ConsumerStatefulWidget {
   const AccountPreviewList({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AccountPreviewList> createState() => _AccountPreviewListState();
+}
+
+class _AccountPreviewListState extends ConsumerState<AccountPreviewList> {
+  bool _balancesRevealed = false;
+
+  @override
+  Widget build(BuildContext context) {
     final accountsAsync = ref.watch(accountsProvider);
     final intensity = ref.watch(colorIntensityProvider);
+    final balancesHidden = ref.watch(homeBalancesHiddenByDefaultProvider);
+    final textSize = ref.watch(homeAccountsTextSizeProvider);
+
+    // If balances are hidden by default, use local state to track reveal
+    final showBalances = !balancesHidden || _balancesRevealed;
 
     return accountsAsync.when(
       loading: () => SizedBox(
@@ -50,7 +62,15 @@ class AccountPreviewList extends ConsumerWidget {
           itemCount: accounts.length,
           separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.sm),
           itemBuilder: (context, index) {
-            return _AccountPreviewCard(account: accounts[index], intensity: intensity);
+            return _AccountPreviewCard(
+              account: accounts[index],
+              intensity: intensity,
+              textSize: textSize,
+              showBalance: showBalances,
+              onTap: balancesHidden && !_balancesRevealed
+                  ? () => setState(() => _balancesRevealed = true)
+                  : () => context.push('/account/${accounts[index].id}'),
+            );
           },
         ),
       ),
@@ -61,10 +81,16 @@ class AccountPreviewList extends ConsumerWidget {
 class _AccountPreviewCard extends ConsumerWidget {
   final Account account;
   final ColorIntensity intensity;
+  final AmountDisplaySize textSize;
+  final bool showBalance;
+  final VoidCallback onTap;
 
   const _AccountPreviewCard({
     required this.account,
     required this.intensity,
+    required this.textSize,
+    required this.showBalance,
+    required this.onTap,
   });
 
   @override
@@ -73,6 +99,7 @@ class _AccountPreviewCard extends ConsumerWidget {
     final expenseColor = AppColors.getTransactionColor('expense', intensity);
     final bgOpacity = AppColors.getBgOpacity(intensity);
     final cardStyle = ref.watch(accountCardStyleProvider);
+    final isSmall = textSize == AmountDisplaySize.small;
 
     // Opacity multipliers based on card style
     final gradientStart = cardStyle == AccountCardStyle.bright ? 0.6 : 0.35;
@@ -82,8 +109,21 @@ class _AccountPreviewCard extends ConsumerWidget {
     final shadowBlur = cardStyle == AccountCardStyle.bright ? 12.0 : 8.0;
     final shadowOffset = cardStyle == AccountCardStyle.bright ? 4.0 : 2.0;
 
+    // Balance text styling based on size
+    final balanceStyle = isSmall
+        ? AppTypography.moneyTiny.copyWith(
+            color: account.balance >= 0
+                ? AppColors.textSecondary
+                : expenseColor.withOpacity(0.7),
+            fontWeight: FontWeight.w500,
+          )
+        : AppTypography.moneySmall.copyWith(
+            color: account.balance >= 0 ? AppColors.textPrimary : expenseColor,
+            fontWeight: FontWeight.w700,
+          );
+
     return GestureDetector(
-      onTap: () => context.push('/account/${account.id}'),
+      onTap: onTap,
       child: Container(
       width: 180,
       clipBehavior: Clip.hardEdge,
@@ -173,11 +213,8 @@ class _AccountPreviewCard extends ConsumerWidget {
                   ],
                 ),
                 Text(
-                  CurrencyFormatter.format(account.balance),
-                  style: AppTypography.moneySmall.copyWith(
-                    color: account.balance >= 0 ? AppColors.textPrimary : expenseColor,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  showBalance ? CurrencyFormatter.format(account.balance) : '\u2022\u2022\u2022\u2022',
+                  style: balanceStyle,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

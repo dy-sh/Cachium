@@ -41,6 +41,20 @@ enum AccountCardStyle {
   bright;
 }
 
+enum AmountDisplaySize {
+  large,
+  small;
+
+  String get displayName {
+    switch (this) {
+      case AmountDisplaySize.large:
+        return 'Large';
+      case AmountDisplaySize.small:
+        return 'Small';
+    }
+  }
+}
+
 enum CategorySortOption {
   lastUsed,
   listOrder,
@@ -101,6 +115,16 @@ class AppSettings {
   final CategorySortOption categorySortOption;
   final String? lastUsedIncomeCategoryId;
   final String? lastUsedExpenseCategoryId;
+  final AmountDisplaySize transactionAmountSize;
+
+  // Home Page
+  final bool homeShowAccountsList;
+  final bool homeShowTotalBalance;
+  final bool homeShowQuickActions;
+  final bool homeShowRecentTransactions;
+  final AmountDisplaySize homeAccountsTextSize;
+  final AmountDisplaySize homeTotalBalanceTextSize;
+  final bool homeBalancesHiddenByDefault;
 
   // Onboarding
   final bool onboardingCompleted;
@@ -130,6 +154,14 @@ class AppSettings {
     this.categorySortOption = CategorySortOption.lastUsed,
     this.lastUsedIncomeCategoryId,
     this.lastUsedExpenseCategoryId,
+    this.transactionAmountSize = AmountDisplaySize.large,
+    this.homeShowAccountsList = true,
+    this.homeShowTotalBalance = true,
+    this.homeShowQuickActions = true,
+    this.homeShowRecentTransactions = true,
+    this.homeAccountsTextSize = AmountDisplaySize.large,
+    this.homeTotalBalanceTextSize = AmountDisplaySize.large,
+    this.homeBalancesHiddenByDefault = false,
     this.onboardingCompleted = false,
   });
 
@@ -169,6 +201,14 @@ class AppSettings {
     CategorySortOption? categorySortOption,
     String? lastUsedIncomeCategoryId,
     String? lastUsedExpenseCategoryId,
+    AmountDisplaySize? transactionAmountSize,
+    bool? homeShowAccountsList,
+    bool? homeShowTotalBalance,
+    bool? homeShowQuickActions,
+    bool? homeShowRecentTransactions,
+    AmountDisplaySize? homeAccountsTextSize,
+    AmountDisplaySize? homeTotalBalanceTextSize,
+    bool? homeBalancesHiddenByDefault,
     bool? onboardingCompleted,
   }) {
     return AppSettings(
@@ -196,6 +236,14 @@ class AppSettings {
       categorySortOption: categorySortOption ?? this.categorySortOption,
       lastUsedIncomeCategoryId: lastUsedIncomeCategoryId ?? this.lastUsedIncomeCategoryId,
       lastUsedExpenseCategoryId: lastUsedExpenseCategoryId ?? this.lastUsedExpenseCategoryId,
+      transactionAmountSize: transactionAmountSize ?? this.transactionAmountSize,
+      homeShowAccountsList: homeShowAccountsList ?? this.homeShowAccountsList,
+      homeShowTotalBalance: homeShowTotalBalance ?? this.homeShowTotalBalance,
+      homeShowQuickActions: homeShowQuickActions ?? this.homeShowQuickActions,
+      homeShowRecentTransactions: homeShowRecentTransactions ?? this.homeShowRecentTransactions,
+      homeAccountsTextSize: homeAccountsTextSize ?? this.homeAccountsTextSize,
+      homeTotalBalanceTextSize: homeTotalBalanceTextSize ?? this.homeTotalBalanceTextSize,
+      homeBalancesHiddenByDefault: homeBalancesHiddenByDefault ?? this.homeBalancesHiddenByDefault,
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
     );
   }

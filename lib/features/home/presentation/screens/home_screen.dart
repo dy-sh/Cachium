@@ -7,6 +7,7 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/buttons/circular_button.dart';
 import '../../../../design_system/animations/staggered_list.dart';
 import '../../../../navigation/app_router.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../widgets/account_preview_list.dart';
 import '../widgets/quick_actions.dart';
 import '../widgets/recent_transactions_list.dart';
@@ -17,6 +18,106 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final showAccountsList = ref.watch(homeShowAccountsListProvider);
+    final showTotalBalance = ref.watch(homeShowTotalBalanceProvider);
+    final showQuickActions = ref.watch(homeShowQuickActionsProvider);
+    final showRecentTransactions = ref.watch(homeShowRecentTransactionsProvider);
+
+    // Build visible sections list for staggered animation indexing
+    final visibleSections = <Widget>[];
+    int staggerIndex = 0;
+
+    if (showAccountsList) {
+      visibleSections.add(
+        StaggeredListItem(
+          index: staggerIndex++,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Accounts', style: AppTypography.h4),
+                    GestureDetector(
+                      onTap: () => context.go(AppRoutes.accounts),
+                      child: Text(
+                        'See all',
+                        style: AppTypography.labelMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              const AccountPreviewList(),
+            ],
+          ),
+        ),
+      );
+      visibleSections.add(const SizedBox(height: AppSpacing.xxl));
+    }
+
+    if (showTotalBalance) {
+      visibleSections.add(
+        StaggeredListItem(
+          index: staggerIndex++,
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+            child: TotalBalanceCard(),
+          ),
+        ),
+      );
+      visibleSections.add(const SizedBox(height: AppSpacing.xxl));
+    }
+
+    if (showQuickActions) {
+      visibleSections.add(
+        StaggeredListItem(
+          index: staggerIndex++,
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+            child: QuickActions(),
+          ),
+        ),
+      );
+      visibleSections.add(const SizedBox(height: AppSpacing.xxl));
+    }
+
+    if (showRecentTransactions) {
+      visibleSections.add(
+        StaggeredListItem(
+          index: staggerIndex++,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Recent Transactions', style: AppTypography.h4),
+                    GestureDetector(
+                      onTap: () => context.go(AppRoutes.transactions),
+                      child: Text(
+                        'See all',
+                        style: AppTypography.labelMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              const RecentTransactionsList(),
+            ],
+          ),
+        ),
+      );
+    }
+
     return SafeArea(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,86 +160,7 @@ class HomeScreen extends ConsumerWidget {
               padding: const EdgeInsets.only(bottom: AppSpacing.bottomNavHeight + AppSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Accounts Preview
-                  StaggeredListItem(
-                    index: 0,
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('Accounts', style: AppTypography.h4),
-                              GestureDetector(
-                                onTap: () => context.go(AppRoutes.accounts),
-                                child: Text(
-                                  'See all',
-                                  style: AppTypography.labelMedium.copyWith(
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        const AccountPreviewList(),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
-
-                  // Total Balance Card
-                  StaggeredListItem(
-                    index: 1,
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-                      child: TotalBalanceCard(),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
-
-                  // Quick Actions
-                  StaggeredListItem(
-                    index: 2,
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-                      child: QuickActions(),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
-
-                  // Recent Transactions
-                  StaggeredListItem(
-                    index: 3,
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('Recent Transactions', style: AppTypography.h4),
-                              GestureDetector(
-                                onTap: () => context.go(AppRoutes.transactions),
-                                child: Text(
-                                  'See all',
-                                  style: AppTypography.labelMedium.copyWith(
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        const RecentTransactionsList(),
-                      ],
-                    ),
-                  ),
-                ],
+                children: visibleSections,
               ),
             ),
           ),

@@ -115,6 +115,7 @@ class TransactionsSettingsScreen extends ConsumerWidget {
                     SettingsSection(
                       title: 'Display',
                       children: [
+                        _buildAmountSizeTile(context, ref, settings.transactionAmountSize),
                         _buildCategorySortTile(context, ref, settings.categorySortOption),
                         _buildVisibleCategoriesTile(context, ref, settings.categoriesFoldedCount),
                         _buildVisibleAccountsTile(context, ref, settings.accountsFoldedCount),
@@ -143,6 +144,62 @@ class TransactionsSettingsScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildAmountSizeTile(BuildContext context, WidgetRef ref, AmountDisplaySize currentSize) {
+    return SettingsTile(
+      title: 'Amount Size',
+      description: 'Size of amount field in form',
+      value: currentSize.displayName,
+      onTap: () => _showAmountSizePicker(context, ref, currentSize),
+    );
+  }
+
+  void _showAmountSizePicker(BuildContext context, WidgetRef ref, AmountDisplaySize currentSize) {
+    final animationsEnabled = ref.read(formAnimationsEnabledProvider);
+    final options = AmountDisplaySize.values.map((e) => e.displayName).toList();
+    final selectedIndex = AmountDisplaySize.values.indexOf(currentSize);
+    final modalContent = _OptionPickerSheet(
+      title: 'Amount Size',
+      options: options,
+      selectedIndex: selectedIndex,
+      hint: 'Small is better for privacy',
+      onSelected: (index) {
+        ref.read(settingsProvider.notifier).setTransactionAmountSize(AmountDisplaySize.values[index]);
+        Navigator.pop(context);
+      },
+    );
+
+    if (!animationsEnabled) {
+      Navigator.of(context).push(
+        PageRouteBuilder(
+          opaque: false,
+          barrierDismissible: true,
+          barrierColor: Colors.black54,
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+          pageBuilder: (context, animation, secondaryAnimation) {
+            return Align(
+              alignment: Alignment.bottomCenter,
+              child: Material(
+                color: AppColors.surface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                child: modalContent,
+              ),
+            );
+          },
+        ),
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: AppColors.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (context) => modalContent,
+      );
+    }
   }
 
   Widget _buildDefaultTypeTile(BuildContext context, WidgetRef ref, TransactionType currentType) {

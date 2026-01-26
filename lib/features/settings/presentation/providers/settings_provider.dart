@@ -174,6 +174,55 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     }
   }
 
+  Future<void> setTransactionAmountSize(AmountDisplaySize size) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    await _saveAndUpdate(current.copyWith(transactionAmountSize: size));
+  }
+
+  // Home Page
+  Future<void> setHomeShowAccountsList(bool enabled) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    await _saveAndUpdate(current.copyWith(homeShowAccountsList: enabled));
+  }
+
+  Future<void> setHomeShowTotalBalance(bool enabled) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    await _saveAndUpdate(current.copyWith(homeShowTotalBalance: enabled));
+  }
+
+  Future<void> setHomeShowQuickActions(bool enabled) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    await _saveAndUpdate(current.copyWith(homeShowQuickActions: enabled));
+  }
+
+  Future<void> setHomeShowRecentTransactions(bool enabled) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    await _saveAndUpdate(current.copyWith(homeShowRecentTransactions: enabled));
+  }
+
+  Future<void> setHomeAccountsTextSize(AmountDisplaySize size) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    await _saveAndUpdate(current.copyWith(homeAccountsTextSize: size));
+  }
+
+  Future<void> setHomeTotalBalanceTextSize(AmountDisplaySize size) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    await _saveAndUpdate(current.copyWith(homeTotalBalanceTextSize: size));
+  }
+
+  Future<void> setHomeBalancesHiddenByDefault(bool hidden) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    await _saveAndUpdate(current.copyWith(homeBalancesHiddenByDefault: hidden));
+  }
+
   // Onboarding
   Future<void> setOnboardingCompleted(bool completed) async {
     final current = state.valueOrNull;
@@ -230,6 +279,15 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
       categorySortOption: defaults.categorySortOption,
       lastUsedIncomeCategoryId: defaults.lastUsedIncomeCategoryId,
       lastUsedExpenseCategoryId: defaults.lastUsedExpenseCategoryId,
+      transactionAmountSize: defaults.transactionAmountSize,
+      // Reset Home Page
+      homeShowAccountsList: defaults.homeShowAccountsList,
+      homeShowTotalBalance: defaults.homeShowTotalBalance,
+      homeShowQuickActions: defaults.homeShowQuickActions,
+      homeShowRecentTransactions: defaults.homeShowRecentTransactions,
+      homeAccountsTextSize: defaults.homeAccountsTextSize,
+      homeTotalBalanceTextSize: defaults.homeTotalBalanceTextSize,
+      homeBalancesHiddenByDefault: defaults.homeBalancesHiddenByDefault,
       // Preserve onboarding
       onboardingCompleted: current.onboardingCompleted,
     );
@@ -361,4 +419,45 @@ final lastUsedIncomeCategoryIdProvider = Provider<String?>((ref) {
 final lastUsedExpenseCategoryIdProvider = Provider<String?>((ref) {
   final settingsAsync = ref.watch(settingsProvider);
   return settingsAsync.valueOrNull?.lastUsedExpenseCategoryId;
+});
+
+final transactionAmountSizeProvider = Provider<AmountDisplaySize>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.transactionAmountSize ?? AmountDisplaySize.large;
+});
+
+// Home Page providers
+final homeShowAccountsListProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.homeShowAccountsList ?? true;
+});
+
+final homeShowTotalBalanceProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.homeShowTotalBalance ?? true;
+});
+
+final homeShowQuickActionsProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.homeShowQuickActions ?? true;
+});
+
+final homeShowRecentTransactionsProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.homeShowRecentTransactions ?? true;
+});
+
+final homeAccountsTextSizeProvider = Provider<AmountDisplaySize>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.homeAccountsTextSize ?? AmountDisplaySize.large;
+});
+
+final homeTotalBalanceTextSizeProvider = Provider<AmountDisplaySize>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.homeTotalBalanceTextSize ?? AmountDisplaySize.large;
+});
+
+final homeBalancesHiddenByDefaultProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.homeBalancesHiddenByDefault ?? false;
 });

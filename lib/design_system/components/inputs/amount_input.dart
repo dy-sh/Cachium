@@ -5,6 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../features/settings/data/models/app_settings.dart';
 import '../../../features/settings/presentation/providers/settings_provider.dart';
 
 class AmountInput extends ConsumerStatefulWidget {
@@ -12,6 +13,7 @@ class AmountInput extends ConsumerStatefulWidget {
   final ValueChanged<double>? onChanged;
   final String transactionType;
   final bool autofocus;
+  final AmountDisplaySize? sizeOverride;
 
   const AmountInput({
     super.key,
@@ -19,6 +21,7 @@ class AmountInput extends ConsumerStatefulWidget {
     this.onChanged,
     this.transactionType = 'expense',
     this.autofocus = false,
+    this.sizeOverride,
   });
 
   @override
@@ -76,11 +79,19 @@ class _FMAmountInputState extends ConsumerState<AmountInput> {
   Widget build(BuildContext context) {
     final intensity = ref.watch(colorIntensityProvider);
     final prefixColor = AppColors.getTransactionColor(widget.transactionType, intensity);
+    final amountSize = widget.sizeOverride ?? ref.watch(transactionAmountSizeProvider);
+    final isSmall = amountSize == AmountDisplaySize.small;
+
+    // Typography based on size
+    final textStyle = isSmall ? AppTypography.moneyMedium : AppTypography.moneyLarge;
+    final textColor = isSmall ? AppColors.textSecondary : AppColors.textPrimary;
+    final prefixDisplayColor = isSmall ? prefixColor.withOpacity(0.7) : prefixColor;
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
-      padding: const EdgeInsets.symmetric(
+      padding: EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
-        vertical: AppSpacing.md,
+        vertical: isSmall ? AppSpacing.sm : AppSpacing.md,
       ),
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -95,12 +106,12 @@ class _FMAmountInputState extends ConsumerState<AmountInput> {
         children: [
           Text(
             _prefix,
-            style: AppTypography.moneyLarge.copyWith(color: prefixColor),
+            style: textStyle.copyWith(color: prefixDisplayColor),
           ),
           Text(
             '\$',
-            style: AppTypography.moneyLarge.copyWith(
-              color: AppColors.textSecondary,
+            style: textStyle.copyWith(
+              color: isSmall ? AppColors.textTertiary : AppColors.textSecondary,
             ),
           ),
           const SizedBox(width: AppSpacing.xs),
@@ -117,11 +128,11 @@ class _FMAmountInputState extends ConsumerState<AmountInput> {
                 final amount = double.tryParse(value) ?? 0;
                 widget.onChanged?.call(amount);
               },
-              style: AppTypography.moneyLarge,
+              style: textStyle.copyWith(color: textColor),
               cursorColor: prefixColor,
               decoration: InputDecoration(
                 hintText: '0.00',
-                hintStyle: AppTypography.moneyLarge.copyWith(
+                hintStyle: textStyle.copyWith(
                   color: AppColors.textTertiary,
                 ),
                 border: InputBorder.none,

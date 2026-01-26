@@ -15,6 +15,7 @@ import '../features/settings/presentation/screens/csv_import_screen.dart';
 import '../features/settings/presentation/screens/database_settings_screen.dart';
 import '../features/settings/presentation/screens/export_screen.dart';
 import '../features/settings/presentation/screens/formats_settings_screen.dart';
+import '../features/settings/presentation/screens/home_settings_screen.dart';
 import '../features/settings/presentation/screens/import_preview_screen.dart';
 import '../features/settings/presentation/screens/preferences_settings_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
@@ -33,6 +34,7 @@ class AppRoutes {
   static const formatsSettings = '/settings/formats';
   static const preferencesSettings = '/settings/preferences';
   static const transactionsSettings = '/settings/transactions';
+  static const homeSettings = '/settings/home';
   static const comingSoonSettings = '/settings/coming-soon';
   static const aboutSettings = '/settings/about';
   static const databaseSettings = '/settings/database';
@@ -164,6 +166,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
           state,
           const TransactionsSettingsScreen(),
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.homeSettings,
+        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
+          state,
+          const HomeSettingsScreen(),
           animationsEnabled: ref.read(formAnimationsEnabledProvider),
         ),
       ),

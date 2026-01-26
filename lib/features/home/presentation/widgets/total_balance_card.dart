@@ -7,91 +7,128 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/animations/animated_counter.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
+import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 
-class TotalBalanceCard extends ConsumerWidget {
+class TotalBalanceCard extends ConsumerStatefulWidget {
   const TotalBalanceCard({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TotalBalanceCard> createState() => _TotalBalanceCardState();
+}
+
+class _TotalBalanceCardState extends ConsumerState<TotalBalanceCard> {
+  bool _balanceRevealed = false;
+
+  @override
+  Widget build(BuildContext context) {
     final totalBalance = ref.watch(totalBalanceProvider);
     final intensity = ref.watch(colorIntensityProvider);
     final incomeColor = AppColors.getTransactionColor('income', intensity);
     final expenseColor = AppColors.getTransactionColor('expense', intensity);
     final assets = _getAssets(ref);
     final liabilities = _getLiabilities(ref);
+    final textSize = ref.watch(homeTotalBalanceTextSizeProvider);
+    final balancesHidden = ref.watch(homeBalancesHiddenByDefaultProvider);
+    final isSmall = textSize == AmountDisplaySize.small;
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      decoration: BoxDecoration(
-        borderRadius: AppRadius.lgAll,
-        border: Border.all(
-          color: AppColors.border,
-          width: 1,
-        ),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.surfaceLight.withOpacity(0.5),
-            AppColors.surface.withOpacity(0.3),
-          ],
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header with label
-          Row(
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: totalBalance >= 0 ? incomeColor : expenseColor,
-                  boxShadow: [
-                    BoxShadow(
-                      color: (totalBalance >= 0 ? incomeColor : expenseColor).withOpacity(0.5),
-                      blurRadius: 8,
-                      spreadRadius: 1,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Text(
-                'TOTAL BALANCE',
-                style: AppTypography.labelSmall.copyWith(
-                  color: AppColors.textTertiary,
-                  letterSpacing: 1.5,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+    // If balances are hidden by default, use local state to track reveal
+    final showBalance = !balancesHidden || _balanceRevealed;
+
+    // Typography based on size
+    final mainBalanceStyle = isSmall
+        ? AppTypography.moneyMedium.copyWith(
+            fontSize: 24,
+            fontWeight: FontWeight.w400,
+            color: AppColors.textSecondary,
+            letterSpacing: -0.3,
+          )
+        : AppTypography.moneyLarge.copyWith(
+            fontSize: 38,
+            fontWeight: FontWeight.w400,
+            color: AppColors.textPrimary,
+            letterSpacing: -0.5,
+          );
+
+    return GestureDetector(
+      onTap: balancesHidden && !_balanceRevealed
+          ? () => setState(() => _balanceRevealed = true)
+          : null,
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        decoration: BoxDecoration(
+          borderRadius: AppRadius.lgAll,
+          border: Border.all(
+            color: AppColors.border,
+            width: 1,
+          ),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.surfaceLight.withOpacity(0.5),
+              AppColors.surface.withOpacity(0.3),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
-
-          // Main balance amount
-          AnimatedCounter(
-            value: totalBalance,
-            style: AppTypography.moneyLarge.copyWith(
-              fontSize: 38,
-              fontWeight: FontWeight.w400,
-              color: AppColors.textPrimary,
-              letterSpacing: -0.5,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header with label
+            Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: totalBalance >= 0 ? incomeColor : expenseColor,
+                    boxShadow: [
+                      BoxShadow(
+                        color: (totalBalance >= 0 ? incomeColor : expenseColor).withOpacity(0.5),
+                        blurRadius: 8,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  'TOTAL BALANCE',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: AppColors.textTertiary,
+                    letterSpacing: 1.5,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.md),
 
-          // Assets and Liabilities breakdown
-          _BalanceBreakdown(
-            assets: assets,
-            liabilities: liabilities,
-            incomeColor: incomeColor,
-            expenseColor: expenseColor,
-          ),
-        ],
+            // Main balance amount
+            if (showBalance)
+              AnimatedCounter(
+                value: totalBalance,
+                style: mainBalanceStyle,
+              )
+            else
+              Text(
+                '\u2022\u2022\u2022\u2022\u2022\u2022',
+                style: mainBalanceStyle,
+              ),
+            const SizedBox(height: AppSpacing.xl),
+
+            // Assets and Liabilities breakdown
+            _BalanceBreakdown(
+              assets: assets,
+              liabilities: liabilities,
+              incomeColor: incomeColor,
+              expenseColor: expenseColor,
+              isSmall: isSmall,
+              showBalance: showBalance,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -116,12 +153,16 @@ class _BalanceBreakdown extends StatelessWidget {
   final double liabilities;
   final Color incomeColor;
   final Color expenseColor;
+  final bool isSmall;
+  final bool showBalance;
 
   const _BalanceBreakdown({
     required this.assets,
     required this.liabilities,
     required this.incomeColor,
     required this.expenseColor,
+    required this.isSmall,
+    required this.showBalance,
   });
 
   @override
@@ -139,6 +180,8 @@ class _BalanceBreakdown extends StatelessWidget {
                 label: 'Assets',
                 value: assets,
                 color: incomeColor,
+                isSmall: isSmall,
+                showBalance: showBalance,
               ),
             ),
             Container(
@@ -152,6 +195,8 @@ class _BalanceBreakdown extends StatelessWidget {
                 value: liabilities,
                 color: expenseColor,
                 alignRight: true,
+                isSmall: isSmall,
+                showBalance: showBalance,
               ),
             ),
           ],
@@ -166,16 +211,30 @@ class _BalanceItem extends StatelessWidget {
   final double value;
   final Color color;
   final bool alignRight;
+  final bool isSmall;
+  final bool showBalance;
 
   const _BalanceItem({
     required this.label,
     required this.value,
     required this.color,
     this.alignRight = false,
+    required this.isSmall,
+    required this.showBalance,
   });
 
   @override
   Widget build(BuildContext context) {
+    final valueStyle = isSmall
+        ? AppTypography.moneyTiny.copyWith(
+            color: color.withOpacity(0.7),
+            fontWeight: FontWeight.w500,
+          )
+        : AppTypography.moneySmall.copyWith(
+            color: color,
+            fontWeight: FontWeight.w500,
+          );
+
     return Padding(
       padding: EdgeInsets.only(
         left: alignRight ? AppSpacing.md : 0,
@@ -218,13 +277,16 @@ class _BalanceItem extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
-          AnimatedCounter(
-            value: value,
-            style: AppTypography.moneySmall.copyWith(
-              color: color,
-              fontWeight: FontWeight.w500,
+          if (showBalance)
+            AnimatedCounter(
+              value: value,
+              style: valueStyle,
+            )
+          else
+            Text(
+              '\u2022\u2022\u2022\u2022',
+              style: valueStyle,
             ),
-          ),
         ],
       ),
     );

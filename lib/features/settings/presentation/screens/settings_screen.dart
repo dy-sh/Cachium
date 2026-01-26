@@ -115,6 +115,13 @@ class SettingsScreen extends ConsumerWidget {
                         onTap: () => context.push('/settings/transactions'),
                       ),
                       SettingsTile(
+                        title: 'Home Page',
+                        description: 'Visibility, privacy, layout',
+                        icon: LucideIcons.home,
+                        iconColor: AppColors.getAccentColor(9, intensity), // Rose
+                        onTap: () => context.push('/settings/home'),
+                      ),
+                      SettingsTile(
                         title: 'Reset to Defaults',
                         description: 'Restore all settings',
                         icon: LucideIcons.rotateCcw,
