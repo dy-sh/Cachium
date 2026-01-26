@@ -624,7 +624,7 @@ class _AccountTypeGrid extends ConsumerWidget {
                 const SizedBox(width: 6),
                 Text(
                   type.displayName,
-                  style: AppTypography.labelSmall.copyWith(
+                  style: AppTypography.labelMedium.copyWith(
                     color: isSelected ? displayColor : AppColors.textSecondary,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   ),
