@@ -76,7 +76,7 @@ class AccountPickerModal extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Create new option
-                  _buildCreateOption(context),
+                  _buildCreateOption(context, ref),
                   const SizedBox(height: AppSpacing.md),
 
                   // Accounts grouped by type
@@ -113,11 +113,26 @@ class AccountPickerModal extends ConsumerWidget {
     );
   }
 
-  Widget _buildCreateOption(BuildContext context) {
+  Widget _buildCreateOption(BuildContext context, WidgetRef ref) {
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
+        // Get existing account IDs before navigation
+        final existingIds = ref.read(accountsProvider).valueOrNull
+            ?.map((a) => a.id).toSet() ?? <String>{};
+
         Navigator.pop(context);
-        context.push(AppRoutes.accountForm);
+        await context.push(AppRoutes.accountForm);
+
+        // After returning, check for new account
+        if (!context.mounted) return;
+        final currentAccounts = ref.read(accountsProvider).valueOrNull ?? [];
+        final newAccount = currentAccounts.where(
+          (a) => !existingIds.contains(a.id)
+        ).firstOrNull;
+
+        if (newAccount != null) {
+          onSelected(newAccount.id);
+        }
       },
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),

@@ -292,9 +292,8 @@ class ImportPreviewScreen extends ConsumerWidget {
         .take(4)
         .toList();
 
-    return Wrap(
-      spacing: AppSpacing.md,
-      runSpacing: AppSpacing.xs,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: entries.map((entry) {
         String valueStr;
         if (entry.value is DateTime) {
@@ -303,31 +302,34 @@ class ImportPreviewScreen extends ConsumerWidget {
         } else if (entry.value is double) {
           valueStr = '\$${entry.value.toStringAsFixed(2)}';
         } else if (entry.value?.toString().startsWith('CREATE:') == true) {
-          valueStr = entry.value.toString().substring(7) + ' (new)';
+          valueStr = '${entry.value.toString().substring(7)} (new)';
         } else {
           valueStr = entry.value?.toString() ?? 'null';
         }
 
-        if (valueStr.length > 30) {
-          valueStr = '${valueStr.substring(0, 27)}...';
-        }
-
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              '${entry.key}: ',
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.textTertiary,
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 2),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${entry.key}: ',
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textTertiary,
+                ),
               ),
-            ),
-            Text(
-              valueStr,
-              style: AppTypography.bodySmall.copyWith(
-                fontWeight: FontWeight.w500,
+              Expanded(
+                child: Text(
+                  valueStr,
+                  style: AppTypography.bodySmall.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       }).toList(),
     );
@@ -442,8 +444,8 @@ class ImportPreviewScreen extends ConsumerWidget {
                   label: 'Done',
                   onPressed: () {
                     ref.read(flexibleCsvImportProvider.notifier).reset();
-                    // Go back to main settings (preserves navigation hierarchy)
-                    context.go(AppRoutes.settings);
+                    // Go to home page (same as SQLite import)
+                    context.go(AppRoutes.home);
                   },
                 ),
               ),

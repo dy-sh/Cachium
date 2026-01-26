@@ -159,9 +159,24 @@ class _CategoryPickerModalState extends ConsumerState<CategoryPickerModal> {
 
   Widget _buildCreateOption(BuildContext context) {
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
+        // Get existing category IDs before navigation
+        final existingIds = ref.read(categoriesProvider).valueOrNull
+            ?.map((c) => c.id).toSet() ?? <String>{};
+
         Navigator.pop(context);
-        context.push(AppRoutes.categoryManagement);
+        await context.push(AppRoutes.categoryManagement);
+
+        // After returning, check for new category
+        if (!context.mounted) return;
+        final currentCategories = ref.read(categoriesProvider).valueOrNull ?? [];
+        final newCategory = currentCategories.where(
+          (c) => !existingIds.contains(c.id)
+        ).firstOrNull;
+
+        if (newCategory != null) {
+          widget.onSelected(newCategory.id);
+        }
       },
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),

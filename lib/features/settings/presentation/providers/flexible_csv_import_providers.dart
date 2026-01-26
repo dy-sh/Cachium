@@ -12,6 +12,7 @@ import '../../data/models/field_mapping_options.dart';
 import '../../data/models/flexible_csv_import_config.dart';
 import '../../data/models/flexible_csv_import_state.dart';
 import '../../data/models/import_preset.dart';
+import 'database_management_providers.dart';
 
 /// Provider for the flexible CSV import service.
 final flexibleCsvImportServiceProvider = Provider<FlexibleCsvImportService>((ref) {
@@ -657,6 +658,11 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
       ref.invalidate(accountsProvider);
       ref.invalidate(transactionsProvider);
 
+      // Recalculate account balances if transactions were imported
+      if (state.config!.entityType == ImportEntityType.transaction && result.imported > 0) {
+        await _recalculateAccountBalances();
+      }
+
       state = state.copyWith(
         importResult: result,
         step: ImportWizardStep.complete,
@@ -672,6 +678,13 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
       );
       return false;
     }
+  }
+
+  /// Recalculate account balances based on transaction history.
+  Future<void> _recalculateAccountBalances() async {
+    final recalculator = ref.read(recalculateBalancesProvider.notifier);
+    await recalculator.calculatePreview();
+    await recalculator.applyChanges();
   }
 
   /// Reset the wizard to start over.
