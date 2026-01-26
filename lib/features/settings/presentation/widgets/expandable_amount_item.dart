@@ -32,6 +32,12 @@ class ExpandableAmountItem extends ConsumerWidget {
   /// Optional callback to get a GlobalKey for position tracking.
   final GlobalKey Function(String key)? getPositionKey;
 
+  /// Callback when a sub-field preview starts (long press).
+  final void Function(String key)? onPreviewStart;
+
+  /// Callback when a sub-field preview ends.
+  final VoidCallback? onPreviewEnd;
+
   const ExpandableAmountItem({
     super.key,
     required this.isExpanded,
@@ -40,6 +46,8 @@ class ExpandableAmountItem extends ConsumerWidget {
     this.hasCsvColumnSelected = false,
     this.isHighlighted = false,
     this.getPositionKey,
+    this.onPreviewStart,
+    this.onPreviewEnd,
   });
 
   @override
@@ -154,6 +162,8 @@ class ExpandableAmountItem extends ConsumerWidget {
           AmountOptionsPanel(
             intensity: intensity,
             getPositionKey: getPositionKey,
+            onPreviewStart: onPreviewStart,
+            onPreviewEnd: onPreviewEnd,
           ),
       ],
     );

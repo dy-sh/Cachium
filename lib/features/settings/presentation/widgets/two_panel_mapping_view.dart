@@ -577,23 +577,38 @@ class _TwoPanelMappingViewState extends ConsumerState<TwoPanelMappingView> {
 
     // For transactions, add Amount, Category, and Account at the top
     if (isTransaction) {
-      // Check if Amount section should be highlighted (its CSV column is being previewed)
+      // Check if Amount section should be highlighted
       final amountConfig = state.amountConfig;
-      final isAmountHighlighted = _previewCsvColumn != null &&
-          (_previewCsvColumn == amountConfig.amountColumn ||
-              _previewCsvColumn == amountConfig.typeColumn);
+      final isAmountHighlighted =
+          // Highlighted when holding this header
+          (_previewFieldKey == 'amount:header' ||
+              _previewFieldKey?.startsWith('amount:') == true) ||
+          // Highlighted when holding a paired CSV column
+          (_previewCsvColumn != null &&
+              (_previewCsvColumn == amountConfig.amountColumn ||
+                  _previewCsvColumn == amountConfig.typeColumn));
 
       // Check if Category section should be highlighted
       final categoryConfig = state.categoryConfig;
-      final isCategoryHighlighted = _previewCsvColumn != null &&
-          (_previewCsvColumn == categoryConfig.nameColumn ||
-              _previewCsvColumn == categoryConfig.idColumn);
+      final isCategoryHighlighted =
+          // Highlighted when holding this header
+          (_previewFieldKey == 'fk:category:header' ||
+              _previewFieldKey?.startsWith('fk:category:') == true) ||
+          // Highlighted when holding a paired CSV column
+          (_previewCsvColumn != null &&
+              (_previewCsvColumn == categoryConfig.nameColumn ||
+                  _previewCsvColumn == categoryConfig.idColumn));
 
       // Check if Account section should be highlighted
       final accountConfig = state.accountConfig;
-      final isAccountHighlighted = _previewCsvColumn != null &&
-          (_previewCsvColumn == accountConfig.nameColumn ||
-              _previewCsvColumn == accountConfig.idColumn);
+      final isAccountHighlighted =
+          // Highlighted when holding this header
+          (_previewFieldKey == 'fk:account:header' ||
+              _previewFieldKey?.startsWith('fk:account:') == true) ||
+          // Highlighted when holding a paired CSV column
+          (_previewCsvColumn != null &&
+              (_previewCsvColumn == accountConfig.nameColumn ||
+                  _previewCsvColumn == accountConfig.idColumn));
 
       leftPanelItems.add(
         GestureDetector(
@@ -611,6 +626,8 @@ class _TwoPanelMappingViewState extends ConsumerState<TwoPanelMappingView> {
                   _previewCsvColumn != null,
               isHighlighted: isAmountHighlighted,
               getPositionKey: _getLeftItemKey,
+              onPreviewStart: _setPreviewField,
+              onPreviewEnd: _clearPreview,
             ),
           ),
         ),
@@ -636,6 +653,8 @@ class _TwoPanelMappingViewState extends ConsumerState<TwoPanelMappingView> {
                   _previewCsvColumn != null,
               isHighlighted: isCategoryHighlighted,
               getPositionKey: _getLeftItemKey,
+              onPreviewStart: _setPreviewField,
+              onPreviewEnd: _clearPreview,
             ),
           ),
         ),
@@ -660,6 +679,8 @@ class _TwoPanelMappingViewState extends ConsumerState<TwoPanelMappingView> {
                   _previewCsvColumn != null,
               isHighlighted: isAccountHighlighted,
               getPositionKey: _getLeftItemKey,
+              onPreviewStart: _setPreviewField,
+              onPreviewEnd: _clearPreview,
             ),
           ),
         ),

@@ -21,10 +21,18 @@ class AmountOptionsPanel extends ConsumerWidget {
   /// The callback receives the sub-field key (e.g., 'amount:amount', 'amount:type').
   final GlobalKey Function(String key)? getPositionKey;
 
+  /// Callback when a sub-field preview starts (long press).
+  final void Function(String key)? onPreviewStart;
+
+  /// Callback when a sub-field preview ends.
+  final VoidCallback? onPreviewEnd;
+
   const AmountOptionsPanel({
     super.key,
     required this.intensity,
     this.getPositionKey,
+    this.onPreviewStart,
+    this.onPreviewEnd,
   });
 
   @override
@@ -81,6 +89,10 @@ class AmountOptionsPanel extends ConsumerWidget {
                 children: [
                   _PositionTrackedSubField(
                     positionKey: getPositionKey?.call('amount:amount'),
+                    onPreviewStart: onPreviewStart != null
+                        ? () => onPreviewStart!('amount:amount')
+                        : null,
+                    onPreviewEnd: onPreviewEnd,
                     child: _MappableSubField(
                       label: 'Amount',
                       mappedColumn: config.amountColumn,
@@ -100,6 +112,10 @@ class AmountOptionsPanel extends ConsumerWidget {
                   const SizedBox(height: AppSpacing.xs),
                   _PositionTrackedSubField(
                     positionKey: getPositionKey?.call('amount:type'),
+                    onPreviewStart: onPreviewStart != null
+                        ? () => onPreviewStart!('amount:type')
+                        : null,
+                    onPreviewEnd: onPreviewEnd,
                     child: _MappableSubField(
                       label: 'Type',
                       mappedColumn: config.typeColumn,
@@ -161,6 +177,10 @@ class AmountOptionsPanel extends ConsumerWidget {
                 children: [
                   _PositionTrackedSubField(
                     positionKey: getPositionKey?.call('amount:amount'),
+                    onPreviewStart: onPreviewStart != null
+                        ? () => onPreviewStart!('amount:amount')
+                        : null,
+                    onPreviewEnd: onPreviewEnd,
                     child: _MappableSubField(
                       label: 'Amount',
                       mappedColumn: config.amountColumn,
@@ -260,25 +280,41 @@ class AmountOptionsPanel extends ConsumerWidget {
   }
 }
 
-/// A wrapper that adds position tracking via GlobalKey.
+/// A wrapper that adds position tracking via GlobalKey and long press for preview.
 class _PositionTrackedSubField extends StatelessWidget {
   final GlobalKey? positionKey;
   final Widget child;
+  final VoidCallback? onPreviewStart;
+  final VoidCallback? onPreviewEnd;
 
   const _PositionTrackedSubField({
     required this.positionKey,
     required this.child,
+    this.onPreviewStart,
+    this.onPreviewEnd,
   });
 
   @override
   Widget build(BuildContext context) {
+    Widget result = child;
+
     if (positionKey != null) {
-      return KeyedSubtree(
+      result = KeyedSubtree(
         key: positionKey,
-        child: child,
+        child: result,
       );
     }
-    return child;
+
+    if (onPreviewStart != null || onPreviewEnd != null) {
+      result = GestureDetector(
+        onLongPressStart: onPreviewStart != null ? (_) => onPreviewStart!() : null,
+        onLongPressEnd: onPreviewEnd != null ? (_) => onPreviewEnd!() : null,
+        onLongPressCancel: onPreviewEnd,
+        child: result,
+      );
+    }
+
+    return result;
   }
 }
 

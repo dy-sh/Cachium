@@ -133,6 +133,12 @@ class ExpandableForeignKeyItem extends ConsumerWidget {
   /// Optional callback to get a GlobalKey for position tracking.
   final GlobalKey Function(String key)? getPositionKey;
 
+  /// Callback when a sub-field preview starts (long press).
+  final void Function(String key)? onPreviewStart;
+
+  /// Callback when a sub-field preview ends.
+  final VoidCallback? onPreviewEnd;
+
   const ExpandableForeignKeyItem({
     super.key,
     required this.foreignKey,
@@ -144,6 +150,8 @@ class ExpandableForeignKeyItem extends ConsumerWidget {
     this.hasCsvColumnSelected = false,
     this.isHighlighted = false,
     this.getPositionKey,
+    this.onPreviewStart,
+    this.onPreviewEnd,
   });
 
   @override
@@ -264,6 +272,8 @@ class ExpandableForeignKeyItem extends ConsumerWidget {
             foreignKey: foreignKey,
             intensity: intensity,
             getPositionKey: getPositionKey,
+            onPreviewStart: onPreviewStart,
+            onPreviewEnd: onPreviewEnd,
           ),
       ],
     );
