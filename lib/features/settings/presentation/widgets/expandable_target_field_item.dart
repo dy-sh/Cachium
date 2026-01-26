@@ -27,14 +27,14 @@ Color getForeignKeyColor(String foreignKey, ColorIntensity intensity) {
 /// Get a distinct color for regular field badges.
 /// New 24-color palette indices (15° spacing on color wheel):
 ///   0: white, 1: red, 2: vermilion, 3: orange*, 4: amber, 5: yellow, 6: chartreuse,
-///   7: lime, 8: harlequin, 9: green, 10: emerald, 11: jade, 12: aquamarine,
+///   7: lime, 8: harlequin, 9: green*, 10: emerald, 11: jade, 12: aquamarine,
 ///   13: cyan*, 14: sky, 15: azure, 16: cerulean, 17: blue, 18: indigo,
 ///   19: violet, 20: purple, 21: magenta, 22: fuchsia, 23: rose
-/// (* = reserved for FK fields: cyan for Category, orange for Account)
+/// (* = reserved: cyan for Category, orange for Account, green for Amount)
 Color getFieldBadgeColor(int badgeNumber, ColorIntensity intensity) {
-  // Pick colors ~45° apart for max distinction, avoiding cyan(13) and orange(3):
-  // red(1), yellow(5), green(9), blue(17), purple(20), fuchsia(22), azure(15), indigo(18), lime(7), rose(23)
-  const distinctIndices = [1, 5, 9, 17, 20, 22, 15, 18, 7, 23];
+  // Pick distinct colors avoiding: cyan(13), orange(3), green(9), blue tones, yellow tones, red tones
+  // Using: violet(19), magenta(21), purple(20), fuchsia(22), emerald(10), jade(11), aquamarine(12), lime(7), rose(23), harlequin(8)
+  const distinctIndices = [19, 21, 20, 22, 10, 11, 12, 7, 23, 8];
   final index = distinctIndices[(badgeNumber - 1) % distinctIndices.length];
   return AppColors.getAccentColor(index, intensity);
 }

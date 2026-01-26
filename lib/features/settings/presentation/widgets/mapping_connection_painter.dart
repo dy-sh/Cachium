@@ -66,23 +66,23 @@ class MappingConnectionPainter extends CustomPainter {
 
     // Adjust opacity based on preview mode
     // Dimmer when not previewing, brighter when previewing
-    final lineOpacity = isPreviewActive ? 1.0 : 0.35;
-    final glowOpacity = isPreviewActive ? 0.3 : 0.1;
-    final dotOpacity = isPreviewActive ? 1.0 : 0.4;
+    final lineOpacity = isPreviewActive ? 1.0 : 0.4;
+    final glowOpacity = isPreviewActive ? 0.3 : 0.15;
+    final dotOpacity = isPreviewActive ? 1.0 : 0.5;
 
     // Draw glow effect first (subtle, for dark theme)
     final glowPaint = Paint()
       ..color = connection.color.withValues(alpha: glowOpacity)
-      ..strokeWidth = isPreviewActive ? 6.0 : 4.0
+      ..strokeWidth = isPreviewActive ? 6.0 : 5.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, isPreviewActive ? 4.0 : 2.0);
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, isPreviewActive ? 4.0 : 3.0);
     canvas.drawPath(path, glowPaint);
 
     // Draw main line
     final mainPaint = Paint()
       ..color = connection.color.withValues(alpha: lineOpacity)
-      ..strokeWidth = isPreviewActive ? 2.0 : 1.5
+      ..strokeWidth = isPreviewActive ? 2.0 : 2.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
     canvas.drawPath(path, mainPaint);
@@ -91,8 +91,8 @@ class MappingConnectionPainter extends CustomPainter {
     final dotPaint = Paint()
       ..color = connection.color.withValues(alpha: dotOpacity)
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(startX, startY), isPreviewActive ? 3.0 : 2.0, dotPaint);
-    canvas.drawCircle(Offset(endX, endY), isPreviewActive ? 3.0 : 2.0, dotPaint);
+    canvas.drawCircle(Offset(startX, startY), isPreviewActive ? 3.0 : 2.5, dotPaint);
+    canvas.drawCircle(Offset(endX, endY), isPreviewActive ? 3.0 : 2.5, dotPaint);
   }
 
   @override

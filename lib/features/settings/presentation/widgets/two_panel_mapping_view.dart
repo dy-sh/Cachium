@@ -260,6 +260,30 @@ class _TwoPanelMappingViewState extends ConsumerState<TwoPanelMappingView> {
     return null;
   }
 
+  /// Get which section (amount, category, account) a CSV column belongs to.
+  /// Returns null if not mapped to any FK/Amount section.
+  String? _getSectionForCsvColumn(String csvColumn, FlexibleCsvImportState state) {
+    // Check amount
+    if (csvColumn == state.amountConfig.amountColumn ||
+        csvColumn == state.amountConfig.typeColumn) {
+      return 'amount';
+    }
+
+    // Check category FK
+    if (csvColumn == state.categoryConfig.nameColumn ||
+        csvColumn == state.categoryConfig.idColumn) {
+      return 'category';
+    }
+
+    // Check account FK
+    if (csvColumn == state.accountConfig.nameColumn ||
+        csvColumn == state.accountConfig.idColumn) {
+      return 'account';
+    }
+
+    return null;
+  }
+
   List<MappingConnection> _buildConnections(
     FlexibleCsvImportState state,
     Map<String, int> fieldColorIndices,
@@ -791,10 +815,42 @@ class _TwoPanelMappingViewState extends ConsumerState<TwoPanelMappingView> {
 
                         final isPreview = _previewCsvColumn == column;
                         // Highlight if this column's mapped field is being previewed
-                        final isPairedPreview = _previewFieldKey != null &&
-                            _getCsvColumnForPreviewField(
+                        bool isPairedPreview = false;
+                        if (_previewFieldKey != null) {
+                          // Check if previewing an FK/Amount field that this column belongs to
+                          if (_previewFieldKey!.startsWith('amount:') ||
+                              _previewFieldKey == 'amount:header') {
+                            // Highlight all amount-related columns
+                            isPairedPreview =
+                                column == state.amountConfig.amountColumn ||
+                                    column == state.amountConfig.typeColumn;
+                          } else if (_previewFieldKey!.startsWith('fk:category:') ||
+                              _previewFieldKey == 'fk:category:header') {
+                            // Highlight all category-related columns
+                            isPairedPreview =
+                                column == state.categoryConfig.nameColumn ||
+                                    column == state.categoryConfig.idColumn;
+                          } else if (_previewFieldKey!.startsWith('fk:account:') ||
+                              _previewFieldKey == 'fk:account:header') {
+                            // Highlight all account-related columns
+                            isPairedPreview =
+                                column == state.accountConfig.nameColumn ||
+                                    column == state.accountConfig.idColumn;
+                          } else {
+                            // Regular field - check direct mapping
+                            isPairedPreview =
+                                _getCsvColumnForPreviewField(
                                     _previewFieldKey!, state) ==
                                 column;
+                          }
+                        } else if (_previewCsvColumn != null && _previewCsvColumn != column) {
+                          // Check if the previewed CSV column belongs to the same FK/Amount section
+                          final previewedSection = _getSectionForCsvColumn(_previewCsvColumn!, state);
+                          if (previewedSection != null) {
+                            final thisSection = _getSectionForCsvColumn(column, state);
+                            isPairedPreview = previewedSection == thisSection;
+                          }
+                        }
 
                         return GestureDetector(
                           onLongPressStart: (_) => _setPreviewCsvColumn(column),
