@@ -51,6 +51,7 @@ class ColumnMappingScreen extends ConsumerWidget {
               fileName,
               progress,
               intensity,
+              canProceed,
             ),
 
             // Content
@@ -98,9 +99,11 @@ class ColumnMappingScreen extends ConsumerWidget {
     String? fileName,
     (int, int) progress,
     ColorIntensity intensity,
+    bool canProceed,
   ) {
     final (mapped, total) = progress;
     final accentColor = AppColors.getAccentColor(0, intensity);
+    final progressColor = canProceed ? AppColors.income : accentColor;
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -158,15 +161,13 @@ class ColumnMappingScreen extends ConsumerWidget {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: mapped >= total
-                      ? AppColors.income.withValues(alpha: 0.15)
-                      : accentColor.withValues(alpha: 0.15),
+                  color: progressColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  '$mapped/$total mapped',
+                  '$mapped/$total',
                   style: AppTypography.labelSmall.copyWith(
-                    color: mapped >= total ? AppColors.income : accentColor,
+                    color: progressColor,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -189,7 +190,17 @@ class ColumnMappingScreen extends ConsumerWidget {
   ) {
     return Row(
       children: [
-        // Compact file stats badges
+        // Preset selector (on left)
+        if (presets.isNotEmpty)
+          _buildPresetSelector(
+            context,
+            ref,
+            presets,
+            appliedPreset,
+            intensity,
+          ),
+        const Spacer(),
+        // Compact file stats badges (on right)
         _buildStatBadge(
           icon: LucideIcons.alignJustify,
           value: '${config.csvRows.length}',
@@ -201,16 +212,6 @@ class ColumnMappingScreen extends ConsumerWidget {
           value: '${config.csvHeaders.length}',
           label: 'cols',
         ),
-        const Spacer(),
-        // Preset selector (more prominent)
-        if (presets.isNotEmpty)
-          _buildPresetSelector(
-            context,
-            ref,
-            presets,
-            appliedPreset,
-            intensity,
-          ),
       ],
     );
   }

@@ -315,9 +315,8 @@ class ImportFieldDefinitions {
       key: 'id',
       displayName: 'ID',
       type: FieldType.string,
-      isRequired: true,
       isId: true,
-      description: 'Unique identifier (UUID)',
+      description: 'Unique identifier (auto-generated if not mapped)',
     ),
     AppFieldDefinition(
       key: 'amount',
@@ -370,8 +369,7 @@ class ImportFieldDefinitions {
       key: 'date',
       displayName: 'Date',
       type: FieldType.dateTime,
-      isRequired: true,
-      description: 'Transaction date',
+      description: 'Transaction date (uses today if not mapped)',
     ),
     AppFieldDefinition(
       key: 'note',

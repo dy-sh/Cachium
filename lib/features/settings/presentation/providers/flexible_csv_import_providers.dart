@@ -725,7 +725,7 @@ final accountConfigProvider = Provider<ForeignKeyConfig>((ref) {
 /// Provider for mapping progress (mapped count / total required).
 final mappingProgressProvider = Provider<(int mapped, int total)>((ref) {
   final state = ref.watch(flexibleCsvImportProvider);
-  return (state.mappedFieldCount, state.totalRequiredFieldCount);
+  return (state.mappedFieldCount, state.totalFieldCount);
 });
 
 /// Provider for the current CSV file name.

@@ -276,17 +276,40 @@ class FlexibleCsvImportState {
   }
 
   /// Get the count of mapped fields (for progress display).
+  /// Counts non-FK fields that are mapped, plus FK configs that are valid.
   int get mappedFieldCount {
-    if (config == null) return 0;
-    return config!.fieldMappings.values
-        .where((m) => m.csvColumn != null)
+    if (config == null || entityType == null) return 0;
+    final fields = ImportFieldDefinitions.getFieldsForType(entityType!);
+    final nonFkFieldKeys = fields
+        .where((f) => !f.isForeignKey)
+        .map((f) => f.key)
+        .toSet();
+
+    int count = config!.fieldMappings.entries
+        .where((e) => nonFkFieldKeys.contains(e.key) && e.value.csvColumn != null)
         .length;
+
+    // For transactions, add FK configs if valid
+    if (entityType == ImportEntityType.transaction) {
+      if (categoryConfig.isValid) count++;
+      if (accountConfig.isValid) count++;
+    }
+
+    return count;
   }
 
-  /// Get the total required field count.
-  int get totalRequiredFieldCount {
+  /// Get the total field count (visible items in UI).
+  /// For transactions: non-FK fields + 2 consolidated FK items (Category, Account).
+  int get totalFieldCount {
     if (entityType == null) return 0;
     final fields = ImportFieldDefinitions.getFieldsForType(entityType!);
-    return fields.where((f) => f.isRequired && !f.isForeignKey).length;
+    int count = fields.where((f) => !f.isForeignKey).length;
+
+    // For transactions, add 2 for consolidated Category and Account items
+    if (entityType == ImportEntityType.transaction) {
+      count += 2;
+    }
+
+    return count;
   }
 }

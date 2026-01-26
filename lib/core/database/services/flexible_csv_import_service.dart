@@ -193,10 +193,19 @@ class FlexibleCsvImportService {
 
         // Handle missing values
         if (rawValue == null || rawValue.toString().trim().isEmpty || rawValue.toString() == 'null') {
+          // Generate UUID for ID fields
+          if (field.isId) {
+            parsedValues[field.key] = _uuid.v4();
+            continue;
+          }
+          // Use current date for date fields
+          if (field.key == 'date' && field.type == FieldType.dateTime) {
+            parsedValues[field.key] = DateTime.now();
+            continue;
+          }
+          // Handle other required fields
           if (field.isRequired && !field.isForeignKey) {
-            if (field.isId && mapping.missingStrategy == MissingFieldStrategy.generateId) {
-              parsedValues[field.key] = _uuid.v4();
-            } else if (mapping.missingStrategy == MissingFieldStrategy.useDefault && field.defaultValue != null) {
+            if (mapping.missingStrategy == MissingFieldStrategy.useDefault && field.defaultValue != null) {
               parsedValues[field.key] = field.defaultValue;
             } else if (mapping.defaultValue != null) {
               parsedValues[field.key] = mapping.defaultValue;
