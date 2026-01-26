@@ -57,6 +57,30 @@ class ImportPreset {
     // Normalize to lowercase, remove underscores and spaces
     return name.toLowerCase().replaceAll(RegExp(r'[_\s]'), '');
   }
+
+  /// Check if the CSV headers match this preset's expected columns.
+  /// Returns a match score from 0.0 to 1.0.
+  double getMatchScore(List<String> csvHeaders) {
+    if (columnMappings.isEmpty) return 0.0;
+
+    final normalizedHeaders =
+        csvHeaders.map((h) => _normalizeColumnName(h)).toSet();
+
+    int matchCount = 0;
+    for (final expectedColumn in columnMappings.values) {
+      final normalizedExpected = _normalizeColumnName(expectedColumn);
+      if (normalizedHeaders.contains(normalizedExpected)) {
+        matchCount++;
+      }
+    }
+
+    return matchCount / columnMappings.length;
+  }
+
+  /// Check if the CSV headers are a good match for this preset (>= 70% match).
+  bool isGoodMatch(List<String> csvHeaders) {
+    return getMatchScore(csvHeaders) >= 0.7;
+  }
 }
 
 /// Built-in presets for common formats.
@@ -142,5 +166,27 @@ class BuiltInPresets {
       case ImportEntityType.transaction:
         return [cachiumTransactions];
     }
+  }
+
+  /// Detect the best matching preset for the given CSV headers and entity type.
+  /// Returns null if no preset is a good match.
+  static ImportPreset? detectPreset(
+    ImportEntityType type,
+    List<String> csvHeaders,
+  ) {
+    final presets = getPresetsForType(type);
+
+    ImportPreset? bestMatch;
+    double bestScore = 0.0;
+
+    for (final preset in presets) {
+      final score = preset.getMatchScore(csvHeaders);
+      if (score > bestScore && preset.isGoodMatch(csvHeaders)) {
+        bestScore = score;
+        bestMatch = preset;
+      }
+    }
+
+    return bestMatch;
   }
 }

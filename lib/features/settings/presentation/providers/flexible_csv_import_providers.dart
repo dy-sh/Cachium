@@ -95,14 +95,28 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
         return false;
       }
 
-      // Auto-detect mappings
-      final mappings = _service.autoDetectMappings(
+      // Load existing entities for FK resolution
+      await _loadExistingEntities();
+
+      // Try to detect a matching preset
+      final detectedPreset = BuiltInPresets.detectPreset(
         state.entityType!,
         parsed.headers,
       );
 
-      // Load existing entities for FK resolution
-      await _loadExistingEntities();
+      // Use preset mappings if detected, otherwise auto-detect
+      Map<String, FieldMapping> mappings;
+      ImportPreset? appliedPreset;
+
+      if (detectedPreset != null) {
+        mappings = detectedPreset.applyToHeaders(parsed.headers);
+        appliedPreset = detectedPreset;
+      } else {
+        mappings = _service.autoDetectMappings(
+          state.entityType!,
+          parsed.headers,
+        );
+      }
 
       final config = FlexibleCsvImportConfig(
         entityType: state.entityType!,
@@ -110,9 +124,10 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
         csvHeaders: parsed.headers,
         csvRows: parsed.rows,
         fieldMappings: mappings,
+        presetName: appliedPreset?.name,
       );
 
-      // For transactions, populate FK configs from auto-detected mappings
+      // For transactions, populate FK configs from mappings
       ForeignKeyConfig categoryConfig = const ForeignKeyConfig();
       ForeignKeyConfig accountConfig = const ForeignKeyConfig();
 
@@ -146,6 +161,7 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
         isLoading: false,
         categoryConfig: categoryConfig,
         accountConfig: accountConfig,
+        appliedPreset: appliedPreset,
       );
 
       return true;
