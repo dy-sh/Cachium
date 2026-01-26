@@ -124,6 +124,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     final showAddAccountButton = ref.watch(showAddAccountButtonProvider);
     final showAddCategoryButton = ref.watch(showAddCategoryButtonProvider);
     final categorySortOption = ref.watch(categorySortOptionProvider);
+    final allowSelectParentCategory = ref.watch(allowSelectParentCategoryProvider);
 
     final categories = formState.type == TransactionType.income
         ? incomeCategories
@@ -207,6 +208,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                       initialVisibleCount: categoriesFoldedCount,
                       sortOption: categorySortOption,
                       recentCategoryIds: recentCategoryIds,
+                      allowSelectParentCategory: allowSelectParentCategory,
                       onChanged: (id) {
                         ref.read(transactionFormProvider.notifier).setCategory(id);
                       },

@@ -180,6 +180,12 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     await _saveAndUpdate(current.copyWith(transactionAmountSize: size));
   }
 
+  Future<void> setAllowSelectParentCategory(bool allowed) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    await _saveAndUpdate(current.copyWith(allowSelectParentCategory: allowed));
+  }
+
   // Home Page
   Future<void> setHomeShowAccountsList(bool enabled) async {
     final current = state.valueOrNull;
@@ -280,6 +286,7 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
       lastUsedIncomeCategoryId: defaults.lastUsedIncomeCategoryId,
       lastUsedExpenseCategoryId: defaults.lastUsedExpenseCategoryId,
       transactionAmountSize: defaults.transactionAmountSize,
+      allowSelectParentCategory: defaults.allowSelectParentCategory,
       // Reset Home Page
       homeShowAccountsList: defaults.homeShowAccountsList,
       homeShowTotalBalance: defaults.homeShowTotalBalance,
@@ -424,6 +431,11 @@ final lastUsedExpenseCategoryIdProvider = Provider<String?>((ref) {
 final transactionAmountSizeProvider = Provider<AmountDisplaySize>((ref) {
   final settingsAsync = ref.watch(settingsProvider);
   return settingsAsync.valueOrNull?.transactionAmountSize ?? AmountDisplaySize.large;
+});
+
+final allowSelectParentCategoryProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.allowSelectParentCategory ?? true;
 });
 
 // Home Page providers

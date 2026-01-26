@@ -116,6 +116,7 @@ class AppSettings {
   final String? lastUsedIncomeCategoryId;
   final String? lastUsedExpenseCategoryId;
   final AmountDisplaySize transactionAmountSize;
+  final bool allowSelectParentCategory;
 
   // Home Page
   final bool homeShowAccountsList;
@@ -155,6 +156,7 @@ class AppSettings {
     this.lastUsedIncomeCategoryId,
     this.lastUsedExpenseCategoryId,
     this.transactionAmountSize = AmountDisplaySize.large,
+    this.allowSelectParentCategory = true,
     this.homeShowAccountsList = true,
     this.homeShowTotalBalance = true,
     this.homeShowQuickActions = true,
@@ -202,6 +204,7 @@ class AppSettings {
     String? lastUsedIncomeCategoryId,
     String? lastUsedExpenseCategoryId,
     AmountDisplaySize? transactionAmountSize,
+    bool? allowSelectParentCategory,
     bool? homeShowAccountsList,
     bool? homeShowTotalBalance,
     bool? homeShowQuickActions,
@@ -237,6 +240,7 @@ class AppSettings {
       lastUsedIncomeCategoryId: lastUsedIncomeCategoryId ?? this.lastUsedIncomeCategoryId,
       lastUsedExpenseCategoryId: lastUsedExpenseCategoryId ?? this.lastUsedExpenseCategoryId,
       transactionAmountSize: transactionAmountSize ?? this.transactionAmountSize,
+      allowSelectParentCategory: allowSelectParentCategory ?? this.allowSelectParentCategory,
       homeShowAccountsList: homeShowAccountsList ?? this.homeShowAccountsList,
       homeShowTotalBalance: homeShowTotalBalance ?? this.homeShowTotalBalance,
       homeShowQuickActions: homeShowQuickActions ?? this.homeShowQuickActions,

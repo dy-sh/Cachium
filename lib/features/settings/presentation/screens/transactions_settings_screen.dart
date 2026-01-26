@@ -133,6 +133,13 @@ class TransactionsSettingsScreen extends ConsumerWidget {
                           onChanged: (value) =>
                               ref.read(settingsProvider.notifier).setShowAddCategoryButton(value),
                         ),
+                        SettingsToggleTile(
+                          title: 'Allow Select Parent Category',
+                          description: 'Select parent categories directly',
+                          value: settings.allowSelectParentCategory,
+                          onChanged: (value) =>
+                              ref.read(settingsProvider.notifier).setAllowSelectParentCategory(value),
+                        ),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.xxxl),

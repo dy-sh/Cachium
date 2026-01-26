@@ -137,6 +137,8 @@ class CategorySelector extends ConsumerStatefulWidget {
   final ValueChanged<String?>? onCreatePressed;
   final List<String>? recentCategoryIds;
   final CategorySortOption sortOption;
+  /// Whether parent categories can be selected. If false, clicking a parent only navigates into children.
+  final bool allowSelectParentCategory;
 
   const CategorySelector({
     super.key,
@@ -147,6 +149,7 @@ class CategorySelector extends ConsumerStatefulWidget {
     this.onCreatePressed,
     this.recentCategoryIds,
     this.sortOption = CategorySortOption.lastUsed,
+    this.allowSelectParentCategory = true,
   });
 
   @override
@@ -344,14 +347,26 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
   void _handleCategoryTap(Category category, bool hasChildren) {
     HapticHelper.lightImpact();
     final wasSearching = _searchQuery.isNotEmpty;
-    _lastSelectedId = category.id;
-    widget.onChanged(category.id);
+    final canSelectParent = widget.allowSelectParentCategory;
+
+    // Determine if we should select or just navigate
+    final shouldSelect = !hasChildren || canSelectParent;
+
+    if (shouldSelect) {
+      _lastSelectedId = category.id;
+      widget.onChanged(category.id);
+    }
 
     setState(() {
-      // Clear search and unfocus when selecting a category
+      // Clear search and unfocus when interacting with a category
       _clearSearch();
 
-      if (wasSearching && category.parentId != null) {
+      if (wasSearching && hasChildren && !canSelectParent) {
+        // When clicking a parent from search with selection disabled, navigate into it
+        final ancestors = ref.read(categoryAncestorsProvider(category.id));
+        _navState.initializeFor(widget.categories, category.id, ancestors);
+        _navState.navigateTo(category.id);
+      } else if (wasSearching && category.parentId != null) {
         // When selecting from search, navigate to show parent level (siblings visible)
         final ancestors = ref.read(categoryAncestorsProvider(category.id));
         _navState.initializeFor(widget.categories, category.id, ancestors);
@@ -420,65 +435,76 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
           ),
         ),
         const Spacer(),
-        // Parent category indicator
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
-          ),
-          decoration: BoxDecoration(
-            borderRadius: AppRadius.mdAll,
-            gradient: isParentSelected
-                ? LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      categoryColor.withValues(alpha: bgOpacity * 0.4),
-                      categoryColor.withValues(alpha: bgOpacity * 0.2),
-                    ],
-                  )
-                : null,
-            color: isParentSelected ? null : AppColors.surface,
-            border: Border.all(
-              color: isParentSelected ? categoryColor : AppColors.border,
-              width: isParentSelected ? 1.5 : 1,
+        // Parent category indicator - tappable to select the parent
+        GestureDetector(
+          onTap: widget.allowSelectParentCategory
+              ? () {
+                  HapticHelper.lightImpact();
+                  _lastSelectedId = parentCategory.id;
+                  widget.onChanged(parentCategory.id);
+                  setState(() {});
+                }
+              : null,
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
             ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: isParentSelected
-                      ? categoryColor.withValues(alpha: 0.9)
-                      : AppColors.surfaceLight,
-                  borderRadius: BorderRadius.circular(7),
-                ),
-                child: Icon(
-                  parentCategory.icon,
-                  size: 14,
-                  color: isParentSelected ? AppColors.background : AppColors.textSecondary,
-                ),
+            decoration: BoxDecoration(
+              borderRadius: AppRadius.mdAll,
+              gradient: isParentSelected
+                  ? LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        categoryColor.withValues(alpha: bgOpacity * 0.4),
+                        categoryColor.withValues(alpha: bgOpacity * 0.2),
+                      ],
+                    )
+                  : null,
+              color: isParentSelected ? null : AppColors.surface,
+              border: Border.all(
+                color: isParentSelected ? categoryColor : AppColors.border,
+                width: isParentSelected ? 1.5 : 1,
               ),
-              const SizedBox(width: AppSpacing.sm),
-              Text(
-                parentCategory.name,
-                style: AppTypography.labelMedium.copyWith(
-                  color: isParentSelected ? categoryColor : AppColors.textPrimary,
-                  fontWeight: isParentSelected ? FontWeight.w600 : FontWeight.w500,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: isParentSelected
+                        ? categoryColor.withValues(alpha: 0.9)
+                        : AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                  child: Icon(
+                    parentCategory.icon,
+                    size: 14,
+                    color: isParentSelected ? AppColors.background : AppColors.textSecondary,
+                  ),
                 ),
-              ),
-              if (isParentSelected) ...[
-                const SizedBox(width: AppSpacing.xs),
-                Icon(
-                  LucideIcons.check,
-                  size: 16,
-                  color: categoryColor,
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  parentCategory.name,
+                  style: AppTypography.labelMedium.copyWith(
+                    color: isParentSelected ? categoryColor : AppColors.textPrimary,
+                    fontWeight: isParentSelected ? FontWeight.w600 : FontWeight.w500,
+                  ),
                 ),
+                if (isParentSelected) ...[
+                  const SizedBox(width: AppSpacing.xs),
+                  Icon(
+                    LucideIcons.check,
+                    size: 16,
+                    color: categoryColor,
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ],
