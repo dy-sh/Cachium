@@ -122,7 +122,7 @@ class AppSettings {
     this.selectLastCategory = false,
     this.selectLastAccount = true,
     this.accountsFoldedCount = 3,
-    this.categoriesFoldedCount = 6,
+    this.categoriesFoldedCount = 5,
     this.showAddAccountButton = true,
     this.showAddCategoryButton = true,
     this.defaultTransactionType = TransactionType.expense,

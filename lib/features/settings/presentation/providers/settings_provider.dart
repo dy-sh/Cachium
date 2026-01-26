@@ -283,7 +283,7 @@ final accountsFoldedCountProvider = Provider<int>((ref) {
 
 final categoriesFoldedCountProvider = Provider<int>((ref) {
   final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.categoriesFoldedCount ?? 6;
+  return settingsAsync.valueOrNull?.categoriesFoldedCount ?? 5;
 });
 
 final categorySortOptionProvider = Provider<CategorySortOption>((ref) {

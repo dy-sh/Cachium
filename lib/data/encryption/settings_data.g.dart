@@ -26,7 +26,7 @@ _$SettingsDataImpl _$$SettingsDataImplFromJson(Map<String, dynamic> json) =>
       selectLastAccount: json['selectLastAccount'] as bool? ?? true,
       accountsFoldedCount: (json['accountsFoldedCount'] as num?)?.toInt() ?? 3,
       categoriesFoldedCount:
-          (json['categoriesFoldedCount'] as num?)?.toInt() ?? 6,
+          (json['categoriesFoldedCount'] as num?)?.toInt() ?? 5,
       showAddAccountButton: json['showAddAccountButton'] as bool? ?? true,
       showAddCategoryButton: json['showAddCategoryButton'] as bool? ?? true,
       defaultTransactionType:

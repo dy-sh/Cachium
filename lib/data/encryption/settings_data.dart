@@ -63,7 +63,7 @@ class SettingsData with _$SettingsData {
     @Default(3) int accountsFoldedCount,
 
     /// Number of categories shown before "More" button
-    @Default(6) int categoriesFoldedCount,
+    @Default(5) int categoriesFoldedCount,
 
     /// Whether to show "New Account" button in form
     @Default(true) bool showAddAccountButton,

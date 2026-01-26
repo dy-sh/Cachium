@@ -270,12 +270,12 @@ class TransactionsSettingsScreen extends ConsumerWidget {
 
   void _showVisibleCategoriesPicker(BuildContext context, WidgetRef ref, int currentCount) {
     final animationsEnabled = ref.read(formAnimationsEnabledProvider);
-    final options = ['3', '6', '9', '12', '15'];
+    final options = ['2', '5', '8', '11', '14', '17', '20', '23'];
     final selectedIndex = options.indexOf('$currentCount');
     final modalContent = _OptionPickerSheet(
       title: 'Visible Categories',
       options: options,
-      selectedIndex: selectedIndex >= 0 ? selectedIndex : 1, // Default to 6
+      selectedIndex: selectedIndex >= 0 ? selectedIndex : 1, // Default to 5
       onSelected: (index) {
         ref.read(settingsProvider.notifier).setCategoriesFoldedCount(int.parse(options[index]));
         Navigator.pop(context);
@@ -325,7 +325,7 @@ class TransactionsSettingsScreen extends ConsumerWidget {
 
   void _showVisibleAccountsPicker(BuildContext context, WidgetRef ref, int currentCount) {
     final animationsEnabled = ref.read(formAnimationsEnabledProvider);
-    final options = ['2', '3', '4', '5', '6'];
+    final options = ['1', '3', '5', '7', '9', '11', '13'];
     final selectedIndex = options.indexOf('$currentCount');
     final modalContent = _OptionPickerSheet(
       title: 'Visible Accounts',
