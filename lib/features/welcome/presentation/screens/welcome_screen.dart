@@ -177,7 +177,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 children: [
                   WelcomeOptionCard(
                     icon: LucideIcons.sparkles,
-                    iconColor: AppColors.getAccentColor(11, intensity),
+                    iconColor: AppColors.getAccentColor(19, intensity), // violet - demo/magic
                     title: 'Create Demo Data',
                     description:
                         'Load sample accounts, categories, and transactions. Perfect for exploring the app\'s features.',
@@ -187,7 +187,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                   const SizedBox(height: AppSpacing.md),
                   WelcomeOptionCard(
                     icon: LucideIcons.layoutGrid,
-                    iconColor: AppColors.getAccentColor(3, intensity),
+                    iconColor: AppColors.getAccentColor(9, intensity), // green - ready/go
                     title: 'Quick Start',
                     description:
                         'Create default categories and basic accounts (Cash, Credit Card). A great starting point.',
@@ -197,7 +197,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                   const SizedBox(height: AppSpacing.md),
                   WelcomeOptionCard(
                     icon: LucideIcons.plus,
-                    iconColor: AppColors.getAccentColor(7, intensity),
+                    iconColor: AppColors.getAccentColor(13, intensity), // cyan - fresh/clean
                     title: 'Start from Scratch',
                     description:
                         'Begin with a completely empty database. Full control from the start.',

@@ -143,7 +143,7 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
                           title: 'Export CSV',
                           description: 'Spreadsheet format',
                           icon: LucideIcons.fileSpreadsheet,
-                          iconColor: AppColors.getAccentColor(9, intensity), // green - spreadsheet
+                          iconColor: AppColors.getAccentColor(13, intensity), // cyan - spreadsheet
                           onTap: () => context.push('/settings/database/export-csv'),
                         ),
                       ],
@@ -168,7 +168,7 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
                           title: 'Import CSV',
                           description: 'Import from spreadsheets',
                           icon: LucideIcons.fileUp,
-                          iconColor: AppColors.getAccentColor(9, intensity), // green - spreadsheet
+                          iconColor: AppColors.getAccentColor(13, intensity), // cyan - spreadsheet
                           onTap: _loadingAction != null
                               ? null
                               : () => _handleImportCsv(context),
@@ -178,7 +178,7 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
                           title: 'CSV Import (External)',
                           description: 'Import from other apps',
                           icon: LucideIcons.fileInput,
-                          iconColor: AppColors.getAccentColor(11, intensity), // jade - external/third-party
+                          iconColor: AppColors.getAccentColor(14, intensity), // sky - external
                           onTap: _loadingAction != null
                               ? null
                               : () => context.push(AppRoutes.csvImport),
