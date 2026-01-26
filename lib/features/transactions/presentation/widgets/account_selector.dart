@@ -38,12 +38,20 @@ class AccountSelector extends ConsumerStatefulWidget {
 class _AccountSelectorState extends ConsumerState<AccountSelector> {
   bool _showAll = false;
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   String _searchQuery = '';
 
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    _searchQuery = '';
+    _searchFocusNode.unfocus();
   }
 
   @override
@@ -93,8 +101,16 @@ class _AccountSelectorState extends ConsumerState<AccountSelector> {
         if (_showAll) ...[
           InputField(
             controller: _searchController,
+            focusNode: _searchFocusNode,
             hint: 'Search accounts...',
             prefix: Icon(LucideIcons.search, size: 16, color: AppColors.textSecondary),
+            suffix: _searchQuery.isNotEmpty
+                ? GestureDetector(
+                    onTap: () => setState(_clearSearch),
+                    child: Icon(LucideIcons.x, size: 16, color: AppColors.textSecondary),
+                  )
+                : null,
+            showClearButton: false,
             onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -125,6 +141,8 @@ class _AccountSelectorState extends ConsumerState<AccountSelector> {
                     onTap: () {
                       HapticHelper.lightImpact();
                       widget.onChanged(account.id);
+                      // Clear search and unfocus when selecting an account
+                      setState(_clearSearch);
                     },
                   );
                 case _GridItemType.more:
@@ -143,8 +161,7 @@ class _AccountSelectorState extends ConsumerState<AccountSelector> {
           GestureDetector(
             onTap: () => setState(() {
               _showAll = false;
-              _searchController.clear();
-              _searchQuery = '';
+              _clearSearch();
             }),
             child: Text(
               'Show Less',

@@ -156,6 +156,7 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
   final _navState = CategoryNavigationState();
   String? _lastSelectedId;
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   String _searchQuery = '';
 
   @override
@@ -167,7 +168,14 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    _searchQuery = '';
+    _searchFocusNode.unfocus();
   }
 
   @override
@@ -248,8 +256,16 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
         if (_navState.showAll) ...[
           InputField(
             controller: _searchController,
+            focusNode: _searchFocusNode,
             hint: 'Search categories...',
             prefix: Icon(LucideIcons.search, size: 16, color: AppColors.textSecondary),
+            suffix: _searchQuery.isNotEmpty
+                ? GestureDetector(
+                    onTap: () => setState(_clearSearch),
+                    child: Icon(LucideIcons.x, size: 16, color: AppColors.textSecondary),
+                  )
+                : null,
+            showClearButton: false,
             onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -311,8 +327,7 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
           GestureDetector(
             onTap: () => setState(() {
               _navState.setShowAll(false);
-              _searchController.clear();
-              _searchQuery = '';
+              _clearSearch();
             }),
             child: Text(
               'Show Less',
@@ -331,9 +346,14 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
     _lastSelectedId = category.id;
     widget.onChanged(category.id);
 
-    if (hasChildren) {
-      setState(() => _navState.navigateTo(category.id));
-    }
+    setState(() {
+      // Clear search and unfocus when selecting a category
+      _clearSearch();
+
+      if (hasChildren) {
+        _navState.navigateTo(category.id);
+      }
+    });
   }
 
   void _navigateBack() {
