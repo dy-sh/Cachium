@@ -507,9 +507,5 @@ final shouldShowWelcomeProvider = FutureProvider<bool>((ref) async {
 
   // Check if database is empty
   final metrics = await ref.watch(databaseMetricsProvider.future);
-  final isEmpty = metrics.accountCount == 0 &&
-      metrics.categoryCount == 0 &&
-      metrics.transactionCount == 0;
-
-  return isEmpty;
+  return metrics.isEmpty;
 });

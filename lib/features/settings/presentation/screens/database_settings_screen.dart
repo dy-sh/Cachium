@@ -243,13 +243,10 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
 
     // In import mode, check if database has data
     final metrics = await ref.read(databaseMetricsProvider.future);
-    final isEmpty = metrics.transactionCount == 0 &&
-        metrics.accountCount == 0 &&
-        metrics.categoryCount == 0;
 
     if (!context.mounted) return;
 
-    if (isEmpty) {
+    if (metrics.isEmpty) {
       // Set onboarding incomplete to show welcome screen
       await ref.read(settingsProvider.notifier).setOnboardingCompleted(false);
       ref.read(isResettingDatabaseProvider.notifier).state = true;
