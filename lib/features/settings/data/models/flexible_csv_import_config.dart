@@ -126,6 +126,7 @@ class FlexibleCsvImportConfig {
     List<List<dynamic>>? csvRows,
     Map<String, FieldMapping>? fieldMappings,
     String? presetName,
+    bool clearPresetName = false,
   }) {
     return FlexibleCsvImportConfig(
       entityType: entityType ?? this.entityType,
@@ -133,7 +134,7 @@ class FlexibleCsvImportConfig {
       csvHeaders: csvHeaders ?? this.csvHeaders,
       csvRows: csvRows ?? this.csvRows,
       fieldMappings: fieldMappings ?? this.fieldMappings,
-      presetName: presetName ?? this.presetName,
+      presetName: clearPresetName ? null : (presetName ?? this.presetName),
     );
   }
 

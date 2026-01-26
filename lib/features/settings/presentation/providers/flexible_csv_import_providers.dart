@@ -219,6 +219,104 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
     }
   }
 
+  /// Clear all field mappings (remove all bindings).
+  void clearAllMappings() {
+    if (state.config == null) return;
+
+    final fields = ImportFieldDefinitions.getFieldsForType(state.config!.entityType);
+    final newMappings = <String, FieldMapping>{};
+
+    for (final field in fields) {
+      newMappings[field.key] = FieldMapping(
+        fieldKey: field.key,
+        csvColumn: null,
+        missingStrategy: field.isId
+            ? MissingFieldStrategy.generateId
+            : (field.defaultValue != null
+                ? MissingFieldStrategy.useDefault
+                : MissingFieldStrategy.skip),
+        defaultValue: field.defaultValue,
+      );
+    }
+
+    // Clear FK configs for transactions
+    ForeignKeyConfig clearedCategoryConfig = const ForeignKeyConfig();
+    ForeignKeyConfig clearedAccountConfig = const ForeignKeyConfig();
+    AmountConfig clearedAmountConfig = const AmountConfig();
+
+    state = state.copyWith(
+      config: state.config!.copyWith(
+        fieldMappings: newMappings,
+        clearPresetName: true,
+      ),
+      clearAppliedPreset: true,
+      categoryConfig: clearedCategoryConfig,
+      accountConfig: clearedAccountConfig,
+      amountConfig: clearedAmountConfig,
+    );
+  }
+
+  /// Apply automatic field detection based on CSV headers.
+  void applyAutoDetect() {
+    if (state.config == null) return;
+
+    final mappings = _service.autoDetectMappings(
+      state.config!.entityType,
+      state.config!.csvHeaders,
+    );
+
+    // For transactions, populate FK and amount configs from auto-detected mappings
+    ForeignKeyConfig categoryConfig = const ForeignKeyConfig();
+    ForeignKeyConfig accountConfig = const ForeignKeyConfig();
+    AmountConfig amountConfig = const AmountConfig();
+
+    if (state.config!.entityType == ImportEntityType.transaction) {
+      final categoryIdMapping = mappings['categoryId'];
+      final categoryNameMapping = mappings['categoryName'];
+      if (categoryIdMapping?.csvColumn != null ||
+          categoryNameMapping?.csvColumn != null) {
+        categoryConfig = ForeignKeyConfig(
+          mode: ForeignKeyResolutionMode.mapFromCsv,
+          idColumn: categoryIdMapping?.csvColumn,
+          nameColumn: categoryNameMapping?.csvColumn,
+        );
+      }
+
+      final accountIdMapping = mappings['accountId'];
+      final accountNameMapping = mappings['accountName'];
+      if (accountIdMapping?.csvColumn != null ||
+          accountNameMapping?.csvColumn != null) {
+        accountConfig = ForeignKeyConfig(
+          mode: ForeignKeyResolutionMode.mapFromCsv,
+          idColumn: accountIdMapping?.csvColumn,
+          nameColumn: accountNameMapping?.csvColumn,
+        );
+      }
+
+      // Populate amount config from mappings
+      final amountMapping = mappings['amount'];
+      final typeMapping = mappings['type'];
+      if (amountMapping?.csvColumn != null) {
+        amountConfig = AmountConfig(
+          mode: AmountResolutionMode.separateAmountAndType,
+          amountColumn: amountMapping?.csvColumn,
+          typeColumn: typeMapping?.csvColumn,
+        );
+      }
+    }
+
+    state = state.copyWith(
+      config: state.config!.copyWith(
+        fieldMappings: mappings,
+        clearPresetName: true,
+      ),
+      clearAppliedPreset: true,
+      categoryConfig: categoryConfig,
+      accountConfig: accountConfig,
+      amountConfig: amountConfig,
+    );
+  }
+
   /// Apply a preset to the current config.
   void applyPreset(ImportPreset preset) {
     if (state.config == null) return;

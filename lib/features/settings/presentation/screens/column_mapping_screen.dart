@@ -355,6 +355,53 @@ class ColumnMappingScreen extends ConsumerWidget {
                 child: Text('Quick Presets', style: AppTypography.h4),
               ),
               const SizedBox(height: AppSpacing.md),
+              // Clear option
+              ListTile(
+                leading: Icon(
+                  LucideIcons.eraser,
+                  color: AppColors.textSecondary,
+                ),
+                title: Text(
+                  'Clear',
+                  style: AppTypography.bodyMedium,
+                ),
+                subtitle: Text(
+                  'Remove all column bindings',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textTertiary,
+                  ),
+                ),
+                onTap: () {
+                  ref
+                      .read(flexibleCsvImportProvider.notifier)
+                      .clearAllMappings();
+                  Navigator.pop(context);
+                },
+              ),
+              // Automatic option
+              ListTile(
+                leading: Icon(
+                  LucideIcons.wand2,
+                  color: AppColors.textSecondary,
+                ),
+                title: Text(
+                  'Automatic',
+                  style: AppTypography.bodyMedium,
+                ),
+                subtitle: Text(
+                  'Auto-detect column mappings',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textTertiary,
+                  ),
+                ),
+                onTap: () {
+                  ref
+                      .read(flexibleCsvImportProvider.notifier)
+                      .applyAutoDetect();
+                  Navigator.pop(context);
+                },
+              ),
+              // Built-in presets
               ...presets.map((preset) {
                 final isApplied = appliedPreset?.id == preset.id;
                 return ListTile(
