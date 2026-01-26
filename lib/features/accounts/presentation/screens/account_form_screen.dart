@@ -123,7 +123,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                       label: 'Account Name',
                       hint: 'Enter account name...',
                       controller: _nameController,
-                      autofocus: false,
+                      autofocus: !isEditing,
                       onChanged: (value) {
                         ref.read(accountFormProvider.notifier).setName(value);
                       },
@@ -591,7 +591,7 @@ class _AccountTypeGrid extends ConsumerWidget {
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: AppSpacing.sm,
       mainAxisSpacing: AppSpacing.sm,
-      childAspectRatio: 1.1,
+      childAspectRatio: 2.2,
       children: AccountType.values.map((type) {
         final isSelected = type == selectedType;
         final defaultTypeColor = AppColors.getAccountColor(type.name, intensity);
@@ -605,7 +605,7 @@ class _AccountTypeGrid extends ConsumerWidget {
             duration: AppAnimations.normal,
             decoration: BoxDecoration(
               color: isSelected
-                  ? displayColor.withOpacity(bgOpacity)
+                  ? displayColor.withValues(alpha: bgOpacity)
                   : AppColors.surface,
               borderRadius: AppRadius.mdAll,
               border: Border.all(
@@ -613,15 +613,15 @@ class _AccountTypeGrid extends ConsumerWidget {
                 width: isSelected ? 1.5 : 1,
               ),
             ),
-            child: Column(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
                   type.icon,
                   color: isSelected ? displayColor : AppColors.textSecondary,
-                  size: 28,
+                  size: 18,
                 ),
-                const SizedBox(height: AppSpacing.sm),
+                const SizedBox(width: 6),
                 Text(
                   type.displayName,
                   style: AppTypography.labelSmall.copyWith(
