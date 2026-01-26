@@ -16,11 +16,29 @@ import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/transaction.dart';
 import '../providers/transactions_provider.dart';
 
-class TransactionsScreen extends ConsumerWidget {
+class TransactionsScreen extends ConsumerStatefulWidget {
   const TransactionsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TransactionsScreen> createState() => _TransactionsScreenState();
+}
+
+class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
+  bool _isInitialLoad = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // Disable staggered animation after initial items have animated
+    Future.delayed(const Duration(milliseconds: 600), () {
+      if (mounted) {
+        setState(() => _isInitialLoad = false);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final groupsAsync = ref.watch(searchedTransactionsProvider);
     final filter = ref.watch(transactionFilterProvider);
 
@@ -150,7 +168,14 @@ class TransactionsScreen extends ConsumerWidget {
                       ),
                       itemCount: groups.length,
                       itemBuilder: (context, index) {
-                        return _TransactionGroupWidget(group: groups[index]);
+                        final child = _TransactionGroupWidget(group: groups[index]);
+                        if (_isInitialLoad) {
+                          return StaggeredListItem(
+                            index: index,
+                            child: child,
+                          );
+                        }
+                        return child;
                       },
                     ),
             ),
