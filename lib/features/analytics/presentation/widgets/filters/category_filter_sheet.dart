@@ -156,9 +156,13 @@ class _CategoryFilterSheetState extends ConsumerState<CategoryFilterSheet> {
               height: AppSpacing.buttonHeight,
               child: ElevatedButton(
                 onPressed: () {
-                  ref
-                      .read(analyticsFilterProvider.notifier)
-                      .setCategories(_selectedIds);
+                  final allCategories = categoriesAsync.valueOrNull ?? [];
+                  final allSelected = _selectedIds.length >= allCategories.length;
+                  if (allSelected) {
+                    ref.read(analyticsFilterProvider.notifier).clearCategoryFilter();
+                  } else {
+                    ref.read(analyticsFilterProvider.notifier).setCategories(_selectedIds);
+                  }
                   Navigator.of(context).pop();
                 },
                 style: ElevatedButton.styleFrom(
@@ -169,7 +173,7 @@ class _CategoryFilterSheetState extends ConsumerState<CategoryFilterSheet> {
                   ),
                 ),
                 child: Text(
-                  _selectedIds.isEmpty
+                  _selectedIds.isEmpty || _selectedIds.length >= (categoriesAsync.valueOrNull?.length ?? 0)
                       ? 'Show All'
                       : 'Apply (${_selectedIds.length} selected)',
                   style: AppTypography.button.copyWith(
