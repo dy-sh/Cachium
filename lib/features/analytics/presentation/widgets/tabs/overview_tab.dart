@@ -19,47 +19,37 @@ class OverviewTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScrollAnchoredList(
-      children: [
+      sections: [
         const PeriodSummaryCards(),
-        const SizedBox(height: AppSpacing.lg),
         const FinancialInsightsSection(),
-        const SizedBox(height: AppSpacing.lg),
         const SpendingTrendsSection(),
-        const SizedBox(height: AppSpacing.lg),
         Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.screenPadding,
           ),
           child: const BalanceLineChart(),
         ),
-        const SizedBox(height: AppSpacing.lg),
         Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.screenPadding,
           ),
           child: const IncomeExpenseChart(),
         ),
-        const SizedBox(height: AppSpacing.lg),
         Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.screenPadding,
           ),
           child: const CategoryPieChart(),
         ),
-        const SizedBox(height: AppSpacing.lg),
         Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.screenPadding,
           ),
           child: const TopCategoriesList(limit: 5),
         ),
-        const SizedBox(height: AppSpacing.lg),
         const SankeyFlowSection(),
-        const SizedBox(height: AppSpacing.lg),
         const AccountFlowSection(),
-        const SizedBox(height: AppSpacing.lg),
         const CashFlowCalendar(),
-        const SizedBox(height: AppSpacing.lg),
         const BudgetProgressSection(),
       ],
     );

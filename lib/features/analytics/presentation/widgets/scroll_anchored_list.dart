@@ -6,16 +6,18 @@ import '../providers/analytics_filter_provider.dart';
 /// A scrollable list that preserves the visible section's screen position
 /// when filter changes cause widgets to resize.
 ///
-/// Each child is assigned a stable [GlobalKey]. When [analyticsFilterProvider]
-/// changes, the widget records which section is currently visible and where it
-/// sits on screen, then after the rebuild + layout pass it adjusts the scroll
-/// offset so that same section stays at the same screen position.
+/// Accepts a list of **section** widgets (no spacers needed — spacing is added
+/// automatically). Only real sections get [GlobalKey]s, so the anchor is always
+/// a meaningful content widget rather than a spacer.
+///
+/// After a filter change, the correction runs across several frames to handle
+/// widgets that load data asynchronously and settle over multiple layout passes.
 class ScrollAnchoredList extends ConsumerStatefulWidget {
-  final List<Widget> children;
+  final List<Widget> sections;
 
   const ScrollAnchoredList({
     super.key,
-    required this.children,
+    required this.sections,
   });
 
   @override
@@ -27,18 +29,22 @@ class _ScrollAnchoredListState extends ConsumerState<ScrollAnchoredList> {
   final _scrollController = ScrollController();
   late List<GlobalKey> _keys;
 
+  /// Number of post-frame correction passes after a filter change.
+  static const _correctionFrames = 5;
+
   @override
   void initState() {
     super.initState();
-    _keys = List.generate(widget.children.length, (_) => GlobalKey());
+    _keys = List.generate(widget.sections.length, (_) => GlobalKey());
   }
 
   @override
   void didUpdateWidget(ScrollAnchoredList oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.children.length != _keys.length) {
-      _keys = List.generate(widget.children.length, (i) {
-        return i < _keys.length ? _keys[i] : GlobalKey();
+    if (widget.sections.length != _keys.length) {
+      final oldKeys = _keys;
+      _keys = List.generate(widget.sections.length, (i) {
+        return i < oldKeys.length ? oldKeys[i] : GlobalKey();
       });
     }
   }
@@ -50,9 +56,14 @@ class _ScrollAnchoredListState extends ConsumerState<ScrollAnchoredList> {
   }
 
   /// Find the first section whose bottom edge is below the top of the
-  /// viewport — i.e. it's at least partially visible.
+  /// scroll viewport — i.e. it's at least partially visible.
   (int, double)? _findVisibleSection() {
     if (!_scrollController.hasClients) return null;
+
+    // Get the top of the scrollable area in global coordinates.
+    final scrollContext = _scrollController.position.context.storageContext;
+    final scrollBox = scrollContext.findRenderObject() as RenderBox?;
+    final viewportTop = scrollBox?.localToGlobal(Offset.zero).dy ?? 0;
 
     for (int i = 0; i < _keys.length; i++) {
       final ctx = _keys[i].currentContext;
@@ -63,7 +74,8 @@ class _ScrollAnchoredListState extends ConsumerState<ScrollAnchoredList> {
       final screenY = box.localToGlobal(Offset.zero).dy;
       final bottomY = screenY + box.size.height;
 
-      if (bottomY > 0) {
+      // Section is at least partially visible below the viewport top.
+      if (bottomY > viewportTop) {
         return (i, screenY);
       }
     }
@@ -75,6 +87,12 @@ class _ScrollAnchoredListState extends ConsumerState<ScrollAnchoredList> {
     if (anchor == null) return;
     final (index, screenY) = anchor;
 
+    _scheduleCorrection(index, screenY, _correctionFrames);
+  }
+
+  void _scheduleCorrection(int index, double targetScreenY, int remaining) {
+    if (remaining <= 0) return;
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_scrollController.hasClients) return;
 
@@ -83,16 +101,19 @@ class _ScrollAnchoredListState extends ConsumerState<ScrollAnchoredList> {
       final box = ctx.findRenderObject() as RenderBox?;
       if (box == null || !box.attached) return;
 
-      final newScreenY = box.localToGlobal(Offset.zero).dy;
-      final delta = newScreenY - screenY;
+      final currentScreenY = box.localToGlobal(Offset.zero).dy;
+      final delta = currentScreenY - targetScreenY;
 
-      if (delta.abs() > 1) {
+      if (delta.abs() > 0.5) {
         final newOffset = (_scrollController.offset + delta).clamp(
           0.0,
           _scrollController.position.maxScrollExtent,
         );
         _scrollController.jumpTo(newOffset);
       }
+
+      // Schedule another pass — widgets may still be settling.
+      _scheduleCorrection(index, targetScreenY, remaining - 1);
     });
   }
 
@@ -100,17 +121,24 @@ class _ScrollAnchoredListState extends ConsumerState<ScrollAnchoredList> {
   Widget build(BuildContext context) {
     ref.listen(analyticsFilterProvider, (_, __) => _onFilterChanged());
 
+    // Build a flat list: section, spacing, section, spacing, …, section.
+    final itemCount = widget.sections.length * 2 - 1;
+
     return ListView.builder(
       controller: _scrollController,
       padding: EdgeInsets.only(
         top: AppSpacing.md,
         bottom: AppSpacing.bottomNavHeight + AppSpacing.lg,
       ),
-      itemCount: widget.children.length,
+      itemCount: itemCount,
       itemBuilder: (context, index) {
+        if (index.isOdd) {
+          return const SizedBox(height: AppSpacing.lg);
+        }
+        final sectionIndex = index ~/ 2;
         return KeyedSubtree(
-          key: _keys[index],
-          child: widget.children[index],
+          key: _keys[sectionIndex],
+          child: widget.sections[sectionIndex],
         );
       },
     );
