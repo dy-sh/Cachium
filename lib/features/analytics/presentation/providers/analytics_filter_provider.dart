@@ -64,9 +64,30 @@ class AnalyticsFilterNotifier extends Notifier<AnalyticsFilter> {
 
   void shiftDateRange(int direction) {
     final range = state.dateRange;
-    final duration = range.end.difference(range.start);
-    final shift = Duration(days: duration.inDays + 1);
+    final preset = state.preset;
 
+    final monthShift = _getMonthShift(preset);
+    if (monthShift != null) {
+      final newStart = DateTime(
+        range.start.year,
+        range.start.month + monthShift * direction,
+        1,
+      );
+      final newEnd = DateTime(
+        newStart.year,
+        newStart.month + monthShift,
+        0,
+        23, 59, 59,
+      );
+      state = state.copyWith(
+        preset: preset,
+        dateRange: DateRange(start: newStart, end: newEnd),
+      );
+      return;
+    }
+
+    // Day-based presets: shift by range length
+    final shift = Duration(days: range.end.difference(range.start).inDays + 1);
     final newStart = direction > 0
         ? range.start.add(shift)
         : range.start.subtract(shift);
@@ -78,6 +99,25 @@ class AnalyticsFilterNotifier extends Notifier<AnalyticsFilter> {
       preset: DateRangePreset.custom,
       dateRange: DateRange(start: newStart, end: newEnd),
     );
+  }
+
+  /// Returns the number of months for month/year-aligned presets, or null.
+  int? _getMonthShift(DateRangePreset preset) {
+    switch (preset) {
+      case DateRangePreset.thisMonth:
+      case DateRangePreset.lastMonth:
+        return 1;
+      case DateRangePreset.last3Months:
+        return 3;
+      case DateRangePreset.last6Months:
+        return 6;
+      case DateRangePreset.last12Months:
+        return 12;
+      case DateRangePreset.thisYear:
+        return 12;
+      default:
+        return null;
+    }
   }
 
   void resetFilters() {

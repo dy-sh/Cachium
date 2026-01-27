@@ -5,6 +5,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
+import '../../../../../design_system/components/inputs/date_range_picker/date_range_picker.dart';
+import '../../../data/models/date_range_preset.dart';
 import '../../providers/analytics_filter_provider.dart';
 import 'account_filter_chips.dart';
 import 'category_filter_popup.dart';
@@ -41,10 +43,14 @@ class AnalyticsFilterBar extends ConsumerWidget {
                 ),
               ),
               Expanded(
-                child: Text(
-                  _formatDateRange(filter.dateRange.start, filter.dateRange.end),
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
+                child: GestureDetector(
+                  onTap: () => _pickCustomRange(context, ref, filter.dateRange),
+                  child: Text(
+                    _formatDateRange(filter.dateRange.start, filter.dateRange.end),
+                    textAlign: TextAlign.center,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ),
               ),
@@ -89,6 +95,28 @@ class AnalyticsFilterBar extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.lg),
       ],
+    );
+  }
+
+  Future<void> _pickCustomRange(
+    BuildContext context,
+    WidgetRef ref,
+    DateRange currentRange,
+  ) async {
+    final picked = await showFMDateRangePicker(
+      context: context,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+      initialStart: currentRange.start,
+      initialEnd: currentRange.end,
+    );
+    if (picked == null || !context.mounted) return;
+
+    ref.read(analyticsFilterProvider.notifier).setCustomDateRange(
+      DateRange(
+        start: picked.start,
+        end: DateTime(picked.end.year, picked.end.month, picked.end.day, 23, 59, 59),
+      ),
     );
   }
 
