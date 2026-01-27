@@ -37,6 +37,7 @@ class AccountFilterChips extends ConsumerWidget {
                 return _FilterChip(
                   label: 'All Accounts',
                   isSelected: isAllSelected,
+                  dimmed: true,
                   accentColor: accentColor,
                   onTap: () {
                     ref.read(analyticsFilterProvider.notifier).clearAccountFilter();
@@ -53,6 +54,7 @@ class AccountFilterChips extends ConsumerWidget {
                 icon: account.icon,
                 iconColor: accountColor,
                 isSelected: isSelected,
+                dimmed: !isSelected,
                 accentColor: accountColor,
                 onTap: () {
                   ref.read(analyticsFilterProvider.notifier).toggleAccount(account.id);
@@ -73,6 +75,7 @@ class _FilterChip extends StatefulWidget {
   final IconData? icon;
   final Color? iconColor;
   final bool isSelected;
+  final bool dimmed;
   final Color accentColor;
   final VoidCallback onTap;
 
@@ -81,6 +84,7 @@ class _FilterChip extends StatefulWidget {
     this.icon,
     this.iconColor,
     required this.isSelected,
+    this.dimmed = false,
     required this.accentColor,
     required this.onTap,
   });
@@ -118,7 +122,21 @@ class _FilterChipState extends State<_FilterChip>
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = widget.isSelected ? widget.accentColor : AppColors.border;
+    final selectedDimmed = widget.isSelected && widget.dimmed;
+    final borderColor = widget.isSelected
+        ? selectedDimmed
+            ? widget.accentColor.withValues(alpha: 0.3)
+            : widget.accentColor
+        : widget.dimmed
+            ? AppColors.border.withValues(alpha: 0.5)
+            : AppColors.border;
+    final contentColor = widget.isSelected
+        ? selectedDimmed
+            ? widget.accentColor.withValues(alpha: 0.5)
+            : widget.accentColor
+        : widget.dimmed
+            ? AppColors.textSecondary
+            : AppColors.textPrimary;
 
     return GestureDetector(
       onTapDown: (_) => _controller.forward(),
@@ -161,9 +179,7 @@ class _FilterChipState extends State<_FilterChip>
               Text(
                 widget.label,
                 style: AppTypography.labelMedium.copyWith(
-                  color: widget.isSelected
-                      ? widget.accentColor
-                      : AppColors.textPrimary,
+                  color: contentColor,
                   fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
                 ),
               ),

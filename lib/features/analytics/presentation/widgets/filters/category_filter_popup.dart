@@ -32,7 +32,7 @@ class CategoryFilterPopup extends ConsumerWidget {
           color: hasFilter ? accentColor.withValues(alpha: 0.1) : AppColors.surface,
           borderRadius: AppRadius.chip,
           border: Border.all(
-            color: hasFilter ? accentColor : AppColors.border,
+            color: hasFilter ? accentColor : AppColors.border.withValues(alpha: 0.5),
             width: hasFilter ? 1.5 : 1,
           ),
         ),
@@ -48,7 +48,7 @@ class CategoryFilterPopup extends ConsumerWidget {
             Text(
               hasFilter ? 'Categories ($count)' : 'Categories',
               style: AppTypography.labelMedium.copyWith(
-                color: hasFilter ? accentColor : AppColors.textPrimary,
+                color: hasFilter ? accentColor : AppColors.textSecondary,
                 fontWeight: hasFilter ? FontWeight.w600 : FontWeight.w500,
               ),
             ),
