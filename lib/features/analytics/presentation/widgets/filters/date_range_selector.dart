@@ -176,7 +176,7 @@ class _PresetChipState extends State<_PresetChip>
             borderRadius: AppRadius.chip,
             border: Border.all(
               color: borderColor,
-              width: bright ? 1.5 : 1,
+              width: 1.5,
             ),
           ),
           child: Row(
