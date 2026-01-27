@@ -30,7 +30,6 @@ class IncomeExpenseChart extends ConsumerWidget {
       return periodMax > max ? periodMax : max;
     });
 
-    final showValueLabels = periods.length <= 8;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.cardPadding),
@@ -65,7 +64,49 @@ class IncomeExpenseChart extends ConsumerWidget {
             height: 200,
             child: Stack(
               children: [
-                // Bar chart
+                // Dashed net-income line (behind bars)
+                IgnorePointer(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 50, bottom: 30),
+                    child: LineChart(
+                      LineChartData(
+                        minY: -(maxValue * 0.1),
+                        maxY: maxValue * 1.1,
+                        gridData: const FlGridData(show: false),
+                        titlesData: const FlTitlesData(
+                          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        ),
+                        borderData: FlBorderData(show: false),
+                        lineTouchData: const LineTouchData(enabled: false),
+                        minX: 0,
+                        maxX: (periods.length - 1).toDouble(),
+                        lineBarsData: [
+                          LineChartBarData(
+                            spots: periods.asMap().entries.map((entry) {
+                              return FlSpot(
+                                entry.key.toDouble(),
+                                entry.value.net.clamp(-(maxValue * 0.1), maxValue * 1.1),
+                              );
+                            }).toList(),
+                            isCurved: true,
+                            curveSmoothness: 0.3,
+                            color: accentColor,
+                            barWidth: 2,
+                            dashArray: [6, 4],
+                            dotData: const FlDotData(show: false),
+                            belowBarData: BarAreaData(show: false),
+                          ),
+                        ],
+                      ),
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeInOut,
+                    ),
+                  ),
+                ),
+                // Bar chart (on top, so tooltips render above the line)
                 BarChart(
                   BarChartData(
                     alignment: BarChartAlignment.spaceAround,
@@ -95,7 +136,7 @@ class IncomeExpenseChart extends ConsumerWidget {
                             ),
                           ),
                         ],
-                        showingTooltipIndicators: showValueLabels ? [0, 1] : [],
+                        showingTooltipIndicators: [],
                       );
                     }).toList(),
                     gridData: FlGridData(
@@ -172,48 +213,6 @@ class IncomeExpenseChart extends ConsumerWidget {
                   ),
                   swapAnimationDuration: const Duration(milliseconds: 400),
                   swapAnimationCurve: Curves.easeInOut,
-                ),
-                // Overlay: dashed net-income line
-                IgnorePointer(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 50, bottom: 30),
-                    child: LineChart(
-                      LineChartData(
-                        minY: -(maxValue * 0.1),
-                        maxY: maxValue * 1.1,
-                        gridData: const FlGridData(show: false),
-                        titlesData: const FlTitlesData(
-                          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        ),
-                        borderData: FlBorderData(show: false),
-                        lineTouchData: const LineTouchData(enabled: false),
-                        minX: 0,
-                        maxX: (periods.length - 1).toDouble(),
-                        lineBarsData: [
-                          LineChartBarData(
-                            spots: periods.asMap().entries.map((entry) {
-                              return FlSpot(
-                                entry.key.toDouble(),
-                                entry.value.net.clamp(-(maxValue * 0.1), maxValue * 1.1),
-                              );
-                            }).toList(),
-                            isCurved: true,
-                            curveSmoothness: 0.3,
-                            color: accentColor,
-                            barWidth: 2,
-                            dashArray: [6, 4],
-                            dotData: const FlDotData(show: false),
-                            belowBarData: BarAreaData(show: false),
-                          ),
-                        ],
-                      ),
-                      duration: const Duration(milliseconds: 400),
-                      curve: Curves.easeInOut,
-                    ),
-                  ),
                 ),
               ],
             ),
