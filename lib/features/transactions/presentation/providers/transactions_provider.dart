@@ -344,6 +344,20 @@ final recentTransactionsProvider = Provider<AsyncValue<List<Transaction>>>((ref)
   });
 });
 
+final transactionDateBoundsProvider = Provider<({DateTime? earliest, DateTime? latest})>((ref) {
+  final transactions = ref.watch(transactionsProvider).valueOrNull;
+  if (transactions == null || transactions.isEmpty) {
+    return (earliest: null, latest: null);
+  }
+  DateTime earliest = transactions.first.date;
+  DateTime latest = transactions.first.date;
+  for (final tx in transactions) {
+    if (tx.date.isBefore(earliest)) earliest = tx.date;
+    if (tx.date.isAfter(latest)) latest = tx.date;
+  }
+  return (earliest: earliest, latest: latest);
+});
+
 final transactionSearchQueryProvider = StateProvider<String>((ref) => '');
 
 final transactionByIdProvider = Provider.family<Transaction?, String>((ref, id) {
