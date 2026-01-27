@@ -252,7 +252,7 @@ class _CategoryPickerModalState extends ConsumerState<CategoryPickerModal> {
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: isSelected
-                ? categoryColor.withOpacity(0.1)
+                ? categoryColor.withValues(alpha: 0.1)
                 : AppColors.surfaceLight,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
@@ -294,7 +294,7 @@ class _CategoryPickerModalState extends ConsumerState<CategoryPickerModal> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: categoryColor.withOpacity(bgOpacity),
+                  color: categoryColor.withValues(alpha: bgOpacity),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(

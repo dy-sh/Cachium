@@ -137,7 +137,7 @@ class _FilterChipState extends State<_FilterChip>
           ),
           decoration: BoxDecoration(
             color: widget.isSelected
-                ? widget.accentColor.withOpacity(0.1)
+                ? widget.accentColor.withValues(alpha: 0.1)
                 : AppColors.surface,
             borderRadius: AppRadius.chip,
             border: Border.all(

@@ -52,7 +52,7 @@ class SettingsTile extends ConsumerWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: (iconColor ?? AppColors.textSecondary).withOpacity(bgOpacity),
+                  color: (iconColor ?? AppColors.textSecondary).withValues(alpha: bgOpacity),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(

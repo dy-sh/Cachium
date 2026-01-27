@@ -28,8 +28,8 @@ class ConsistencyDetailsDialog extends StatelessWidget {
             height: 40,
             decoration: BoxDecoration(
               color: consistency.isConsistent
-                  ? AppColors.income.withOpacity(0.1)
-                  : AppColors.expense.withOpacity(0.1),
+                  ? AppColors.income.withValues(alpha: 0.1)
+                  : AppColors.expense.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(

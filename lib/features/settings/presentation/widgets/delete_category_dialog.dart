@@ -102,7 +102,7 @@ class DeleteCategoryDialog extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isDanger
-                ? AppColors.expense.withOpacity(0.3)
+                ? AppColors.expense.withValues(alpha: 0.3)
                 : AppColors.border,
           ),
         ),
@@ -112,7 +112,7 @@ class DeleteCategoryDialog extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.1),
+                color: iconColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(

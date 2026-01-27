@@ -231,10 +231,10 @@ class _CategoryTransactionsReassignScreenState
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: AppColors.background.withOpacity(0.8),
+                    color: AppColors.background.withValues(alpha: 0.8),
                     border: Border(
                       top: BorderSide(
-                        color: AppColors.border.withOpacity(0.5),
+                        color: AppColors.border.withValues(alpha: 0.5),
                         width: 1,
                       ),
                     ),
@@ -337,7 +337,7 @@ class _CategoryReassignRowState extends ConsumerState<_CategoryReassignRow> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: categoryColor.withOpacity(bgOpacity),
+                  color: categoryColor.withValues(alpha: bgOpacity),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
@@ -382,12 +382,12 @@ class _CategoryReassignRowState extends ConsumerState<_CategoryReassignRow> {
               padding: const EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
                 color: isMoveSelected
-                    ? ref.watch(accentColorProvider).withOpacity(0.08)
+                    ? ref.watch(accentColorProvider).withValues(alpha: 0.08)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: isMoveSelected
-                      ? ref.watch(accentColorProvider).withOpacity(0.3)
+                      ? ref.watch(accentColorProvider).withValues(alpha: 0.3)
                       : Colors.transparent,
                 ),
               ),
@@ -463,12 +463,12 @@ class _CategoryReassignRowState extends ConsumerState<_CategoryReassignRow> {
               padding: const EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
                 color: isDeleteSelected
-                    ? AppColors.expense.withOpacity(0.08)
+                    ? AppColors.expense.withValues(alpha: 0.08)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: isDeleteSelected
-                      ? AppColors.expense.withOpacity(0.3)
+                      ? AppColors.expense.withValues(alpha: 0.3)
                       : Colors.transparent,
                 ),
               ),
@@ -587,12 +587,12 @@ class CategoryDropdownState extends ConsumerState<_CategoryDropdown> {
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
         decoration: BoxDecoration(
           color: selectedCategory != null
-              ? categoryColor!.withOpacity(bgOpacity * 0.5)
+              ? categoryColor!.withValues(alpha: bgOpacity * 0.5)
               : AppColors.surfaceLight,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: selectedCategory != null
-                ? categoryColor!.withOpacity(0.3)
+                ? categoryColor!.withValues(alpha: 0.3)
                 : AppColors.border,
           ),
         ),
@@ -603,7 +603,7 @@ class CategoryDropdownState extends ConsumerState<_CategoryDropdown> {
                 width: 24,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: categoryColor!.withOpacity(bgOpacity),
+                  color: categoryColor!.withValues(alpha: bgOpacity),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Icon(
@@ -746,12 +746,12 @@ class _CategoryPickerSheetState extends State<_CategoryPickerSheet> {
                       padding: const EdgeInsets.all(AppSpacing.md),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? categoryColor.withOpacity(bgOpacity)
+                            ? categoryColor.withValues(alpha: bgOpacity)
                             : AppColors.surfaceLight,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: isSelected
-                              ? categoryColor.withOpacity(0.5)
+                              ? categoryColor.withValues(alpha: 0.5)
                               : AppColors.border,
                         ),
                       ),
@@ -789,7 +789,7 @@ class _CategoryPickerSheetState extends State<_CategoryPickerSheet> {
                             width: 36,
                             height: 36,
                             decoration: BoxDecoration(
-                              color: categoryColor.withOpacity(bgOpacity),
+                              color: categoryColor.withValues(alpha: bgOpacity),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(

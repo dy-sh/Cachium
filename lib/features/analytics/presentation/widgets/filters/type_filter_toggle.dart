@@ -128,7 +128,7 @@ class _ToggleItemState extends State<_ToggleItem>
           ),
           decoration: BoxDecoration(
             color: widget.isSelected
-                ? widget.color.withOpacity(0.15)
+                ? widget.color.withValues(alpha: 0.15)
                 : Colors.transparent,
             borderRadius: AppRadius.smAll,
           ),

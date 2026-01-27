@@ -15,7 +15,6 @@ import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/budget.dart';
 import '../../data/models/budget_progress.dart';
 import '../providers/budget_provider.dart';
-import '../providers/budget_form_provider.dart';
 
 class BudgetSettingsScreen extends ConsumerStatefulWidget {
   const BudgetSettingsScreen({super.key});
@@ -213,9 +212,9 @@ class _AddBudgetButton extends ConsumerWidget {
       child: Container(
         height: AppSpacing.buttonHeight,
         decoration: BoxDecoration(
-          color: accentColor.withOpacity(0.1),
+          color: accentColor.withValues(alpha: 0.1),
           borderRadius: AppRadius.button,
-          border: Border.all(color: accentColor.withOpacity(0.3)),
+          border: Border.all(color: accentColor.withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -443,7 +442,7 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
                       ),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? catColor.withOpacity(0.15)
+                            ? catColor.withValues(alpha: 0.15)
                             : Colors.transparent,
                         borderRadius: AppRadius.chip,
                         border: Border.all(

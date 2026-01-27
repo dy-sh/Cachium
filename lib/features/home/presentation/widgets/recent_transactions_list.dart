@@ -118,7 +118,7 @@ class _TransactionItem extends ConsumerWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: categoryColor.withOpacity(bgOpacity),
+                color: categoryColor.withValues(alpha: bgOpacity),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(

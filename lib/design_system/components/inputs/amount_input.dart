@@ -85,7 +85,7 @@ class _FMAmountInputState extends ConsumerState<AmountInput> {
     // Typography based on size
     final textStyle = isSmall ? AppTypography.moneyMedium : AppTypography.moneyLarge;
     final textColor = isSmall ? AppColors.textSecondary : AppColors.textPrimary;
-    final prefixDisplayColor = isSmall ? prefixColor.withOpacity(0.7) : prefixColor;
+    final prefixDisplayColor = isSmall ? prefixColor.withValues(alpha: 0.7) : prefixColor;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),

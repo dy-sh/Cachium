@@ -247,7 +247,7 @@ class AppearanceSettingsScreen extends ConsumerWidget {
             colors: accentOptions,
             selectedColor: settings.accentColor,
             onColorSelected: (color) {
-              final index = accentOptions.indexWhere((c) => c.value == color.value);
+              final index = accentOptions.indexWhere((c) => c.toARGB32() == color.toARGB32());
               if (index >= 0) {
                 ref.read(settingsProvider.notifier).setAccentColorIndex(index);
               }
@@ -342,8 +342,8 @@ class AppearanceSettingsScreen extends ConsumerWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            previewColor.withOpacity(bgOpacity * gradientStart),
-            previewColor.withOpacity(bgOpacity * gradientEnd),
+            previewColor.withValues(alpha: bgOpacity * gradientStart),
+            previewColor.withValues(alpha: bgOpacity * gradientEnd),
           ],
         ),
       ),
@@ -357,7 +357,7 @@ class AppearanceSettingsScreen extends ConsumerWidget {
               height: 40,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: previewColor.withOpacity(bgOpacity * circleOpacity),
+                color: previewColor.withValues(alpha: bgOpacity * circleOpacity),
               ),
             ),
           ),
@@ -369,7 +369,7 @@ class AppearanceSettingsScreen extends ConsumerWidget {
                   width: 20,
                   height: 20,
                   decoration: BoxDecoration(
-                    color: previewColor.withOpacity(0.9),
+                    color: previewColor.withValues(alpha: 0.9),
                     borderRadius: BorderRadius.circular(5),
                   ),
                   child: Icon(
@@ -388,7 +388,7 @@ class AppearanceSettingsScreen extends ConsumerWidget {
                         height: 6,
                         width: 50,
                         decoration: BoxDecoration(
-                          color: AppColors.textPrimary.withOpacity(0.6),
+                          color: AppColors.textPrimary.withValues(alpha: 0.6),
                           borderRadius: BorderRadius.circular(3),
                         ),
                       ),
@@ -397,7 +397,7 @@ class AppearanceSettingsScreen extends ConsumerWidget {
                         height: 4,
                         width: 30,
                         decoration: BoxDecoration(
-                          color: AppColors.textSecondary.withOpacity(0.4),
+                          color: AppColors.textSecondary.withValues(alpha: 0.4),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),

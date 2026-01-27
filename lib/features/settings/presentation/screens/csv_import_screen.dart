@@ -101,10 +101,10 @@ class _CsvImportScreenState extends ConsumerState<CsvImportScreen> {
                     Container(
                       padding: const EdgeInsets.all(AppSpacing.md),
                       decoration: BoxDecoration(
-                        color: AppColors.cyan.withOpacity(0.1),
+                        color: AppColors.cyan.withValues(alpha: 0.1),
                         borderRadius: AppRadius.card,
                         border: Border.all(
-                          color: AppColors.cyan.withOpacity(0.3),
+                          color: AppColors.cyan.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Row(
@@ -259,7 +259,7 @@ class _EntityTypeCard extends ConsumerWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: color.withOpacity(bgOpacity),
+                color: color.withValues(alpha: bgOpacity),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(

@@ -29,7 +29,7 @@ class CategoryFilterPopup extends ConsumerWidget {
           vertical: AppSpacing.sm,
         ),
         decoration: BoxDecoration(
-          color: hasFilter ? accentColor.withOpacity(0.1) : AppColors.surface,
+          color: hasFilter ? accentColor.withValues(alpha: 0.1) : AppColors.surface,
           borderRadius: AppRadius.chip,
           border: Border.all(
             color: hasFilter ? accentColor : AppColors.border,

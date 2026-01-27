@@ -66,8 +66,8 @@ class _TotalBalanceCardState extends ConsumerState<TotalBalanceCard> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              AppColors.surfaceLight.withOpacity(0.5),
-              AppColors.surface.withOpacity(0.3),
+              AppColors.surfaceLight.withValues(alpha: 0.5),
+              AppColors.surface.withValues(alpha: 0.3),
             ],
           ),
         ),
@@ -85,7 +85,7 @@ class _TotalBalanceCardState extends ConsumerState<TotalBalanceCard> {
                     color: totalBalance >= 0 ? incomeColor : expenseColor,
                     boxShadow: [
                       BoxShadow(
-                        color: (totalBalance >= 0 ? incomeColor : expenseColor).withOpacity(0.5),
+                        color: (totalBalance >= 0 ? incomeColor : expenseColor).withValues(alpha: 0.5),
                         blurRadius: 8,
                         spreadRadius: 1,
                       ),
@@ -167,8 +167,6 @@ class _BalanceBreakdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final total = assets + liabilities;
-    final assetsRatio = total > 0 ? assets / total : 0.5;
 
     return Column(
       children: [
@@ -227,7 +225,7 @@ class _BalanceItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final valueStyle = isSmall
         ? AppTypography.moneyTiny.copyWith(
-            color: color.withOpacity(0.7),
+            color: color.withValues(alpha: 0.7),
             fontWeight: FontWeight.w500,
           )
         : AppTypography.moneySmall.copyWith(
@@ -252,7 +250,7 @@ class _BalanceItem extends StatelessWidget {
                   height: 6,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: color.withOpacity(0.8),
+                    color: color.withValues(alpha: 0.8),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.xs),
@@ -270,7 +268,7 @@ class _BalanceItem extends StatelessWidget {
                   height: 6,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: color.withOpacity(0.8),
+                    color: color.withValues(alpha: 0.8),
                   ),
                 ),
               ],

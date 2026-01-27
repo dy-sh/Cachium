@@ -114,7 +114,7 @@ class _AccountPreviewCard extends ConsumerWidget {
         ? AppTypography.moneyTiny.copyWith(
             color: account.balance >= 0
                 ? AppColors.textSecondary
-                : expenseColor.withOpacity(0.7),
+                : expenseColor.withValues(alpha: 0.7),
             fontWeight: FontWeight.w500,
           )
         : AppTypography.moneySmall.copyWith(
@@ -133,13 +133,13 @@ class _AccountPreviewCard extends ConsumerWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            accountColor.withOpacity(bgOpacity * gradientStart),
-            accountColor.withOpacity(bgOpacity * gradientEnd),
+            accountColor.withValues(alpha: bgOpacity * gradientStart),
+            accountColor.withValues(alpha: bgOpacity * gradientEnd),
           ],
         ),
         boxShadow: [
           BoxShadow(
-            color: accountColor.withOpacity(shadowOpacity),
+            color: accountColor.withValues(alpha: shadowOpacity),
             blurRadius: shadowBlur,
             offset: Offset(0, shadowOffset),
           ),
@@ -156,7 +156,7 @@ class _AccountPreviewCard extends ConsumerWidget {
               height: 80,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: accountColor.withOpacity(bgOpacity * circleOpacity),
+                color: accountColor.withValues(alpha: bgOpacity * circleOpacity),
               ),
             ),
           ),
@@ -173,7 +173,7 @@ class _AccountPreviewCard extends ConsumerWidget {
                       width: 28,
                       height: 28,
                       decoration: BoxDecoration(
-                        color: accountColor.withOpacity(0.9),
+                        color: accountColor.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(7),
                       ),
                       child: Icon(
@@ -201,7 +201,7 @@ class _AccountPreviewCard extends ConsumerWidget {
                           Text(
                             account.type.displayName,
                             style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.textSecondary.withOpacity(0.7),
+                              color: AppColors.textSecondary.withValues(alpha: 0.7),
                               height: 1.2,
                             ),
                             maxLines: 1,

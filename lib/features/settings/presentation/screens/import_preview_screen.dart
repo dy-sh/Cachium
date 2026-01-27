@@ -169,7 +169,7 @@ class ImportPreviewScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppRadius.card,
-        border: Border.all(color: AppColors.expense.withOpacity(0.3)),
+        border: Border.all(color: AppColors.expense.withValues(alpha: 0.3)),
       ),
       constraints: const BoxConstraints(maxHeight: 200),
       child: ListView.separated(
@@ -193,7 +193,7 @@ class ImportPreviewScreen extends ConsumerWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.expense.withOpacity(0.15),
+                      color: AppColors.expense.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -263,7 +263,7 @@ class ImportPreviewScreen extends ConsumerWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.income.withOpacity(0.15),
+                      color: AppColors.income.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(

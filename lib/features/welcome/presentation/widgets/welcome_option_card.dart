@@ -61,7 +61,7 @@ class _WelcomeOptionCardState extends ConsumerState<WelcomeOptionCard>
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: widget.iconColor.withOpacity(0.1),
+                  color: widget.iconColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: widget.isLoading

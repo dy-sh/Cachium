@@ -204,7 +204,9 @@ class FlexibleCsvImportState {
       if (field.isForeignKey) continue; // Handled above for transactions
       // Skip amount and type for transactions - handled by amountConfig
       if (entityType == ImportEntityType.transaction &&
-          (field.key == 'amount' || field.key == 'type')) continue;
+          (field.key == 'amount' || field.key == 'type')) {
+        continue;
+      }
 
       final mapping = mappings[field.key];
       if (mapping == null) return false;

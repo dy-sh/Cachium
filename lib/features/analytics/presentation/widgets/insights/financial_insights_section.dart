@@ -77,7 +77,7 @@ class _InsightRow extends StatelessWidget {
           width: 28,
           height: 28,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: AppRadius.xsAll,
           ),
           child: Icon(insight.icon, size: 14, color: color),

@@ -39,7 +39,7 @@ class _DeleteDatabaseDialogState extends State<DeleteDatabaseDialog> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.expense.withOpacity(0.1),
+              color: AppColors.expense.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(

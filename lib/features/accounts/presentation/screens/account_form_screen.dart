@@ -104,7 +104,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
-                          color: AppColors.expense.withOpacity(0.1),
+                          color: AppColors.expense.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
@@ -244,10 +244,10 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                       Container(
                         padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
-                          color: AppColors.accentPrimary.withOpacity(0.05),
+                          color: AppColors.accentPrimary.withValues(alpha: 0.05),
                           borderRadius: AppRadius.smAll,
                           border: Border.all(
-                            color: AppColors.accentPrimary.withOpacity(0.2),
+                            color: AppColors.accentPrimary.withValues(alpha: 0.2),
                           ),
                         ),
                         child: Row(
@@ -532,7 +532,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
     } else if (formState.originalCustomColor != null) {
       // Try to find the original color in the palette
       final originalColorIndex = accentColors.indexWhere(
-        (c) => c.value == formState.originalCustomColor!.value,
+        (c) => c.toARGB32() == formState.originalCustomColor!.toARGB32(),
       );
       if (originalColorIndex != -1) {
         selectedColor = accentColors[originalColorIndex];

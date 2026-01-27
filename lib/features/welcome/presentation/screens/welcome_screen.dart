@@ -168,7 +168,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 width: 72,
                 height: 72,
                 decoration: BoxDecoration(
-                  color: accentColor.withOpacity(0.1),
+                  color: accentColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Icon(

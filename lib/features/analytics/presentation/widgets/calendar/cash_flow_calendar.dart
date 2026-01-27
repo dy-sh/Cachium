@@ -167,11 +167,11 @@ class _DayCell extends StatelessWidget {
   Widget build(BuildContext context) {
     Color color;
     if (day.net == 0 && day.income == 0 && day.expense == 0) {
-      color = AppColors.border.withOpacity(0.3);
+      color = AppColors.border.withValues(alpha: 0.3);
     } else if (day.net >= 0) {
-      color = incomeColor.withOpacity(0.15 + (day.intensity * 0.2));
+      color = incomeColor.withValues(alpha: 0.15 + (day.intensity * 0.2));
     } else {
-      color = expenseColor.withOpacity(0.15 + (day.intensity * 0.2));
+      color = expenseColor.withValues(alpha: 0.15 + (day.intensity * 0.2));
     }
 
     return GestureDetector(
@@ -204,7 +204,7 @@ class _LegendItem extends StatelessWidget {
           width: 10,
           height: 10,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.5),
+            color: color.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(2),
           ),
         ),

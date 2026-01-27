@@ -133,8 +133,8 @@ class BalanceLineChart extends ConsumerWidget {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          accentColor.withOpacity(0.3),
-                          accentColor.withOpacity(0.0),
+                          accentColor.withValues(alpha: 0.3),
+                          accentColor.withValues(alpha: 0.0),
                         ],
                       ),
                     ),

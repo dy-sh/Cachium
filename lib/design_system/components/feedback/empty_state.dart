@@ -34,9 +34,9 @@ class EmptyState extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           borderRadius: AppRadius.mdAll,
-          color: effectiveColor.withOpacity(0.08),
+          color: effectiveColor.withValues(alpha: 0.08),
           border: Border.all(
-            color: effectiveColor.withOpacity(0.3),
+            color: effectiveColor.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -46,7 +46,7 @@ class EmptyState extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: effectiveColor.withOpacity(0.15),
+                color: effectiveColor.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -71,7 +71,7 @@ class EmptyState extends StatelessWidget {
                   Text(
                     subtitle,
                     style: AppTypography.labelSmall.copyWith(
-                      color: effectiveColor.withOpacity(0.7),
+                      color: effectiveColor.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -81,7 +81,7 @@ class EmptyState extends StatelessWidget {
               Icon(
                 LucideIcons.chevronRight,
                 size: 18,
-                color: effectiveColor.withOpacity(0.6),
+                color: effectiveColor.withValues(alpha: 0.6),
               ),
           ],
         ),

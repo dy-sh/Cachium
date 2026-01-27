@@ -41,6 +41,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
   CategoryTreeNode? _draggedNode;
   String? _currentTargetParentId; // Parent ID where item will be placed
   String? _hoverTargetNodeId; // Node ID we're currently hovering over
+  // ignore: unused_field
   int? _currentHoverDepth; // Current depth when hovering
   final ValueNotifier<bool> _showDragPlaceholderNotifier = ValueNotifier(true);
   final ValueNotifier<int> _previewDepthNotifier = ValueNotifier(0);
@@ -349,9 +350,9 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            color: parentColor.withOpacity(bgOpacity),
+            color: parentColor.withValues(alpha: bgOpacity),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: parentColor.withOpacity(0.3)),
+            border: Border.all(color: parentColor.withValues(alpha: 0.3)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,

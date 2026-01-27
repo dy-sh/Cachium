@@ -94,7 +94,7 @@ class DateSelector extends StatelessWidget {
               surface: AppColors.surface,
               onSurface: AppColors.textPrimary,
             ),
-            dialogBackgroundColor: AppColors.surface,
+            dialogTheme: DialogThemeData(backgroundColor: AppColors.surface),
           ),
           child: child!,
         );

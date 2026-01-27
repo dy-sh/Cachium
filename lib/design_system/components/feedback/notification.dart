@@ -148,12 +148,12 @@ class _FMNotificationState extends State<Notification>
             color: AppColors.surface,
             borderRadius: AppRadius.mdAll,
             border: Border.all(
-              color: color.withOpacity(0.3),
+              color: color.withValues(alpha: 0.3),
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -166,7 +166,7 @@ class _FMNotificationState extends State<Notification>
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
+                  color: color.withValues(alpha: 0.15),
                   borderRadius: AppRadius.smAll,
                 ),
                 child: Icon(

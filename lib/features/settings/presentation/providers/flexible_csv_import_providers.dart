@@ -570,7 +570,9 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
   /// Connect a CSV column to the selected FK sub-field.
   void connectCsvColumnToForeignKey(String csvColumn) {
     if (state.selectedFieldKey == null ||
-        !state.selectedFieldKey!.startsWith('fk:')) return;
+        !state.selectedFieldKey!.startsWith('fk:')) {
+      return;
+    }
 
     final parts = state.selectedFieldKey!.split(':');
     if (parts.length != 3) return;
@@ -672,7 +674,9 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
   /// Connect a CSV column to the selected amount sub-field.
   void connectCsvColumnToAmount(String csvColumn) {
     if (state.selectedFieldKey == null ||
-        !state.selectedFieldKey!.startsWith('amount:')) return;
+        !state.selectedFieldKey!.startsWith('amount:')) {
+      return;
+    }
 
     final subField = state.selectedFieldKey!.split(':')[1];
 

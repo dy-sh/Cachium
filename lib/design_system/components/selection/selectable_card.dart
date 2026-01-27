@@ -62,8 +62,8 @@ class SelectableCard extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    color.withOpacity(bgOpacity * 0.4),
-                    color.withOpacity(bgOpacity * 0.2),
+                    color.withValues(alpha: bgOpacity * 0.4),
+                    color.withValues(alpha: bgOpacity * 0.2),
                   ],
                 )
               : null,
@@ -80,7 +80,7 @@ class SelectableCard extends StatelessWidget {
               height: 24,
               decoration: BoxDecoration(
                 color: isSelected
-                    ? color.withOpacity(0.9)
+                    ? color.withValues(alpha: 0.9)
                     : (unselectedIconBgColor ?? AppColors.surfaceLight),
                 borderRadius: BorderRadius.circular(6),
               ),

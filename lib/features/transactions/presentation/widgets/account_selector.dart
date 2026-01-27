@@ -250,7 +250,7 @@ class _AccountCard extends StatelessWidget {
       bgOpacity: bgOpacity,
       icon: account.icon,
       onTap: onTap,
-      unselectedIconBgColor: accountColor.withOpacity(0.6),
+      unselectedIconBgColor: accountColor.withValues(alpha: 0.6),
       unselectedIconColor: AppColors.background,
       selectedIconColor: AppColors.background,
       content: Column(
@@ -268,7 +268,7 @@ class _AccountCard extends StatelessWidget {
           Text(
             '\$${account.balance.toStringAsFixed(0)}',
             style: AppTypography.labelSmall.copyWith(
-              color: AppColors.textSecondary.withOpacity(0.7),
+              color: AppColors.textSecondary.withValues(alpha: 0.7),
               fontSize: 10,
             ),
           ),

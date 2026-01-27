@@ -17,7 +17,6 @@ import '../../../accounts/presentation/screens/account_form_screen.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/data/models/category.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
-import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../settings/presentation/widgets/category_form_modal.dart';
 import '../../data/models/transaction.dart';
@@ -153,7 +152,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
-                          color: AppColors.expense.withOpacity(0.1),
+                          color: AppColors.expense.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
@@ -262,10 +261,10 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: AppColors.background.withOpacity(0.8),
+                    color: AppColors.background.withValues(alpha: 0.8),
                     border: Border(
                       top: BorderSide(
-                        color: AppColors.border.withOpacity(0.5),
+                        color: AppColors.border.withValues(alpha: 0.5),
                         width: 1,
                       ),
                     ),

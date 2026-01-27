@@ -86,10 +86,10 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                     Container(
                       padding: const EdgeInsets.all(AppSpacing.md),
                       decoration: BoxDecoration(
-                        color: AppColors.accentPrimary.withOpacity(0.1),
+                        color: AppColors.accentPrimary.withValues(alpha: 0.1),
                         borderRadius: AppRadius.card,
                         border: Border.all(
-                          color: AppColors.accentPrimary.withOpacity(0.2),
+                          color: AppColors.accentPrimary.withValues(alpha: 0.2),
                         ),
                       ),
                       child: Row(
@@ -148,10 +148,10 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                       Container(
                         padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
-                          color: AppColors.expense.withOpacity(0.1),
+                          color: AppColors.expense.withValues(alpha: 0.1),
                           borderRadius: AppRadius.card,
                           border: Border.all(
-                            color: AppColors.expense.withOpacity(0.2),
+                            color: AppColors.expense.withValues(alpha: 0.2),
                           ),
                         ),
                         child: Column(
@@ -180,7 +180,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                             Text(
                               exportState.error.toString(),
                               style: AppTypography.labelSmall.copyWith(
-                                color: AppColors.expense.withOpacity(0.8),
+                                color: AppColors.expense.withValues(alpha: 0.8),
                               ),
                             ),
                           ],

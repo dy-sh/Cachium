@@ -316,7 +316,7 @@ class _Checkbox extends StatelessWidget {
       width: 20,
       height: 20,
       decoration: BoxDecoration(
-        color: isChecked ? color.withOpacity(0.2) : Colors.transparent,
+        color: isChecked ? color.withValues(alpha: 0.2) : Colors.transparent,
         borderRadius: AppRadius.xsAll,
         border: Border.all(
           color: isChecked || isPartial ? color : AppColors.border,

@@ -52,8 +52,8 @@ class AccountsScreen extends ConsumerWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    AppColors.surfaceLight.withOpacity(0.5),
-                    AppColors.surface.withOpacity(0.3),
+                    AppColors.surfaceLight.withValues(alpha: 0.5),
+                    AppColors.surface.withValues(alpha: 0.3),
                   ],
                 ),
               ),
@@ -76,7 +76,7 @@ class AccountsScreen extends ConsumerWidget {
                               color: (totalBalance >= 0
                                       ? AppColors.getTransactionColor('income', intensity)
                                       : AppColors.getTransactionColor('expense', intensity))
-                                  .withOpacity(0.5),
+                                  .withValues(alpha: 0.5),
                               blurRadius: 8,
                               spreadRadius: 1,
                             ),
@@ -219,13 +219,13 @@ class _AccountCard extends ConsumerWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            accountColor.withOpacity(bgOpacity * gradientStart),
-            accountColor.withOpacity(bgOpacity * gradientEnd),
+            accountColor.withValues(alpha: bgOpacity * gradientStart),
+            accountColor.withValues(alpha: bgOpacity * gradientEnd),
           ],
         ),
         boxShadow: [
           BoxShadow(
-            color: accountColor.withOpacity(shadowOpacity),
+            color: accountColor.withValues(alpha: shadowOpacity),
             blurRadius: shadowBlur,
             offset: Offset(0, shadowOffset),
           ),
@@ -242,7 +242,7 @@ class _AccountCard extends ConsumerWidget {
               height: 80,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: accountColor.withOpacity(bgOpacity * circleOpacity),
+                color: accountColor.withValues(alpha: bgOpacity * circleOpacity),
               ),
             ),
           ),
@@ -259,7 +259,7 @@ class _AccountCard extends ConsumerWidget {
                       width: 28,
                       height: 28,
                       decoration: BoxDecoration(
-                        color: accountColor.withOpacity(0.9),
+                        color: accountColor.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(7),
                       ),
                       child: Icon(
@@ -287,7 +287,7 @@ class _AccountCard extends ConsumerWidget {
                           Text(
                             account.type.displayName,
                             style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.textSecondary.withOpacity(0.7),
+                              color: AppColors.textSecondary.withValues(alpha: 0.7),
                               height: 1.2,
                             ),
                             maxLines: 1,

@@ -106,7 +106,7 @@ class DeleteAccountDialog extends ConsumerWidget {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isDanger
-                ? AppColors.expense.withOpacity(0.3)
+                ? AppColors.expense.withValues(alpha: 0.3)
                 : AppColors.border,
           ),
         ),
@@ -116,7 +116,7 @@ class DeleteAccountDialog extends ConsumerWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.1),
+                color: iconColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
@@ -320,7 +320,7 @@ class _AccountOption extends ConsumerWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: account.color.withOpacity(0.2),
+                color: account.color.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(

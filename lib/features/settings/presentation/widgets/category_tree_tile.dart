@@ -120,9 +120,9 @@ class CategoryTreeTile extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: isDropTarget
-            ? categoryColor.withOpacity(0.1)
+            ? categoryColor.withValues(alpha: 0.1)
             : isTargetParent
-                ? highlightColor.withOpacity(0.08)
+                ? highlightColor.withValues(alpha: 0.08)
                 : AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: isTargetParent
@@ -169,7 +169,7 @@ class CategoryTreeTile extends StatelessWidget {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: categoryColor.withOpacity(bgOpacity),
+                      color: categoryColor.withValues(alpha: bgOpacity),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(

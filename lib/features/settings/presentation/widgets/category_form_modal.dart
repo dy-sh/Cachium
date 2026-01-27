@@ -122,7 +122,7 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
                       child: Container(
                         padding: const EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
-                          color: AppColors.expense.withOpacity(0.1),
+                          color: AppColors.expense.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
@@ -149,7 +149,7 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
                           width: 56,
                           height: 56,
                           decoration: BoxDecoration(
-                            color: selectedColor.withOpacity(0.15),
+                            color: selectedColor.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(color: selectedColor, width: 1.5),
                           ),
@@ -203,7 +203,7 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
                               height: 32,
                               decoration: BoxDecoration(
                                 color: categoryName.isNotEmpty
-                                    ? selectedColor.withOpacity(0.15)
+                                    ? selectedColor.withValues(alpha: 0.15)
                                     : AppColors.surfaceLight,
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -280,10 +280,10 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: AppColors.background.withOpacity(0.8),
+                    color: AppColors.background.withValues(alpha: 0.8),
                     border: Border(
                       top: BorderSide(
-                        color: AppColors.border.withOpacity(0.5),
+                        color: AppColors.border.withValues(alpha: 0.5),
                         width: 1,
                       ),
                     ),
@@ -389,7 +389,7 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: parentColor!.withOpacity(bgOpacity),
+                      color: parentColor!.withValues(alpha: bgOpacity),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(

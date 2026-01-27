@@ -197,7 +197,7 @@ class AccountPickerModal extends ConsumerWidget {
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: isSelected
-                ? accountColor.withOpacity(0.1)
+                ? accountColor.withValues(alpha: 0.1)
                 : AppColors.surfaceLight,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
@@ -212,7 +212,7 @@ class AccountPickerModal extends ConsumerWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: accountColor.withOpacity(bgOpacity),
+                  color: accountColor.withValues(alpha: bgOpacity),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(

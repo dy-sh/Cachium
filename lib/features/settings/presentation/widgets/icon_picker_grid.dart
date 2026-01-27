@@ -99,7 +99,7 @@ class IconPickerGrid extends StatelessWidget {
             duration: AppAnimations.normal,
             decoration: BoxDecoration(
               color: isSelected
-                  ? selectedColor.withOpacity(0.15)
+                  ? selectedColor.withValues(alpha: 0.15)
                   : AppColors.background,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(

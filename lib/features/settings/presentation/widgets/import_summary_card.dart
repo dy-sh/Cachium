@@ -44,8 +44,8 @@ class ImportSummaryCard extends ConsumerWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: parseResult.hasErrors
-                        ? AppColors.yellow.withOpacity(0.15)
-                        : AppColors.income.withOpacity(0.15),
+                        ? AppColors.yellow.withValues(alpha: 0.15)
+                        : AppColors.income.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
@@ -273,10 +273,10 @@ class ImportSummaryCard extends ConsumerWidget {
                 vertical: 4,
               ),
               decoration: BoxDecoration(
-                color: AppColors.getAccentColor(0, intensity).withOpacity(0.1),
+                color: AppColors.getAccentColor(0, intensity).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                  color: AppColors.getAccentColor(0, intensity).withOpacity(0.3),
+                  color: AppColors.getAccentColor(0, intensity).withValues(alpha: 0.3),
                 ),
               ),
               child: Row(
@@ -351,8 +351,8 @@ class ImportResultCard extends ConsumerWidget {
                   height: 48,
                   decoration: BoxDecoration(
                     color: hasErrors
-                        ? AppColors.yellow.withOpacity(0.15)
-                        : AppColors.income.withOpacity(0.15),
+                        ? AppColors.yellow.withValues(alpha: 0.15)
+                        : AppColors.income.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -468,7 +468,7 @@ class ImportResultCard extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(AppSpacing.sm),
                     decoration: BoxDecoration(
-                      color: AppColors.expense.withOpacity(0.05),
+                      color: AppColors.expense.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     constraints: const BoxConstraints(maxHeight: 150),

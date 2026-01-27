@@ -126,7 +126,7 @@ class _TrendIndicator extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: AppRadius.smAll,
       ),
       child: Column(
@@ -182,7 +182,7 @@ class _ChangeChip extends StatelessWidget {
         vertical: 2,
       ),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: AppRadius.xsAll,
       ),
       child: Row(

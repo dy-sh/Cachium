@@ -26,7 +26,7 @@ class ColorPickerGrid extends StatelessWidget {
       spacing: AppSpacing.sm,
       runSpacing: AppSpacing.sm,
       children: colors.map((color) {
-        final isSelected = color.value == selectedColor.value;
+        final isSelected = color.toARGB32() == selectedColor.toARGB32();
         return GestureDetector(
           onTap: onColorSelected != null ? () => onColorSelected!(color) : null,
           child: AnimatedContainer(

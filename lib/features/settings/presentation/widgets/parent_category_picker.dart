@@ -199,7 +199,7 @@ class _ParentCategoryPickerState extends ConsumerState<ParentCategoryPicker> {
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.accentPrimary.withOpacity(0.1)
+              ? AppColors.accentPrimary.withValues(alpha: 0.1)
               : AppColors.surfaceLight,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
@@ -265,7 +265,7 @@ class _ParentCategoryPickerState extends ConsumerState<ParentCategoryPicker> {
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: isSelected
-              ? categoryColor.withOpacity(0.1)
+              ? categoryColor.withValues(alpha: 0.1)
               : AppColors.surfaceLight,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
@@ -299,7 +299,7 @@ class _ParentCategoryPickerState extends ConsumerState<ParentCategoryPicker> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: categoryColor.withOpacity(bgOpacity),
+                color: categoryColor.withValues(alpha: bgOpacity),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(

@@ -31,7 +31,7 @@ class RecalculatePreviewDialog extends ConsumerWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.accentPrimary.withOpacity(0.1),
+              color: AppColors.accentPrimary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(

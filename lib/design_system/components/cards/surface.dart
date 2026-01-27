@@ -69,7 +69,7 @@ class _FMCardState extends ConsumerState<Surface>
             boxShadow: widget.isSelected
                 ? [
                     BoxShadow(
-                      color: borderColor.withOpacity(0.2),
+                      color: borderColor.withValues(alpha: 0.2),
                       blurRadius: 8,
                       spreadRadius: 0,
                     ),
