@@ -19,7 +19,11 @@ import '../widgets/filters/type_filter_toggle.dart';
 import '../widgets/insights/financial_insights_section.dart';
 import '../widgets/summary/period_summary_cards.dart';
 import '../widgets/comparison/year_over_year_section.dart';
+import '../widgets/comparison/period_comparison_section.dart';
+import '../widgets/comparison/category_comparison_section.dart';
+import '../widgets/comparison/account_comparison_section.dart';
 import '../widgets/flow/account_flow_section.dart';
+import '../widgets/flow/sankey_flow_section.dart';
 import '../widgets/trends/spending_trends_section.dart';
 
 class AnalyticsScreen extends ConsumerWidget {
@@ -162,6 +166,42 @@ class AnalyticsScreen extends ConsumerWidget {
           // 10b. Year-over-Year Comparison
           const SliverToBoxAdapter(
             child: YearOverYearSection(),
+          ),
+
+          const SliverToBoxAdapter(
+            child: SizedBox(height: AppSpacing.lg),
+          ),
+
+          // 10c. Period Comparison
+          const SliverToBoxAdapter(
+            child: PeriodComparisonSection(),
+          ),
+
+          const SliverToBoxAdapter(
+            child: SizedBox(height: AppSpacing.lg),
+          ),
+
+          // 10d. Category Comparison
+          const SliverToBoxAdapter(
+            child: CategoryComparisonSection(),
+          ),
+
+          const SliverToBoxAdapter(
+            child: SizedBox(height: AppSpacing.lg),
+          ),
+
+          // 10e. Account Comparison
+          const SliverToBoxAdapter(
+            child: AccountComparisonSection(),
+          ),
+
+          const SliverToBoxAdapter(
+            child: SizedBox(height: AppSpacing.lg),
+          ),
+
+          // 10f. Sankey Flow
+          const SliverToBoxAdapter(
+            child: SankeyFlowSection(),
           ),
 
           const SliverToBoxAdapter(
