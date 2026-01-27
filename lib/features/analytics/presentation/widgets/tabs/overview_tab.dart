@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_spacing.dart';
-import '../filters/analytics_filter_bar.dart';
 import '../summary/period_summary_cards.dart';
 import '../insights/financial_insights_section.dart';
 import '../trends/spending_trends_section.dart';
@@ -24,7 +23,6 @@ class OverviewTab extends StatelessWidget {
         bottom: AppSpacing.bottomNavHeight + AppSpacing.lg,
       ),
       children: [
-        const AnalyticsFilterBar(),
         const PeriodSummaryCards(),
         const SizedBox(height: AppSpacing.lg),
         const FinancialInsightsSection(),

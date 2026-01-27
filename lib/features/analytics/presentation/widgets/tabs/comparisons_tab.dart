@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_spacing.dart';
-import '../filters/analytics_filter_bar.dart';
 import '../comparison/year_over_year_section.dart';
 import '../comparison/period_comparison_section.dart';
 import '../comparison/category_comparison_section.dart';
@@ -17,7 +16,6 @@ class ComparisonsTab extends StatelessWidget {
         bottom: AppSpacing.bottomNavHeight + AppSpacing.lg,
       ),
       children: const [
-        AnalyticsFilterBar(),
         YearOverYearSection(),
         SizedBox(height: AppSpacing.lg),
         PeriodComparisonSection(),
