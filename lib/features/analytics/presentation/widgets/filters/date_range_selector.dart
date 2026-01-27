@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../core/constants/app_animations.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
+import '../../../../../design_system/components/inputs/date_picker/date_picker.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
 import '../../../data/models/date_range_preset.dart';
 import '../../providers/analytics_filter_provider.dart';
@@ -26,27 +28,67 @@ class DateRangeSelector extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final filter = ref.watch(analyticsFilterProvider);
     final accentColor = ref.watch(accentColorProvider);
+    final isCustom = filter.preset == DateRangePreset.custom;
 
     return SizedBox(
       height: 36,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-        itemCount: _presets.length,
+        itemCount: _presets.length + 1,
         separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
         itemBuilder: (context, index) {
-          final preset = _presets[index];
-          final isSelected = filter.preset == preset;
+          if (index < _presets.length) {
+            final preset = _presets[index];
+            final isSelected = filter.preset == preset;
+
+            return _PresetChip(
+              label: preset.displayName,
+              isSelected: isSelected,
+              accentColor: accentColor,
+              onTap: () {
+                ref.read(analyticsFilterProvider.notifier).setDateRangePreset(preset);
+              },
+            );
+          }
 
           return _PresetChip(
-            label: preset.displayName,
-            isSelected: isSelected,
+            label: 'Custom',
+            isSelected: isCustom,
             accentColor: accentColor,
-            onTap: () {
-              ref.read(analyticsFilterProvider.notifier).setDateRangePreset(preset);
-            },
+            icon: LucideIcons.calendarRange,
+            onTap: () => _pickCustomRange(context, ref, filter.dateRange),
           );
         },
+      ),
+    );
+  }
+
+  Future<void> _pickCustomRange(
+    BuildContext context,
+    WidgetRef ref,
+    DateRange currentRange,
+  ) async {
+    final start = await showFMDatePicker(
+      context: context,
+      initialDate: currentRange.start,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+    if (start == null || !context.mounted) return;
+
+    final end = await showFMDatePicker(
+      context: context,
+      initialDate: currentRange.end,
+      firstDate: start,
+      lastDate: DateTime.now(),
+    );
+    if (end == null || !context.mounted) return;
+
+    ref.read(analyticsFilterProvider.notifier).setCustomDateRange(
+      DateRange(
+        start: start,
+        end: DateTime(end.year, end.month, end.day, 23, 59, 59),
       ),
     );
   }
@@ -57,12 +99,14 @@ class _PresetChip extends StatefulWidget {
   final bool isSelected;
   final Color accentColor;
   final VoidCallback onTap;
+  final IconData? icon;
 
   const _PresetChip({
     required this.label,
     required this.isSelected,
     required this.accentColor,
     required this.onTap,
+    this.icon,
   });
 
   @override
@@ -125,14 +169,29 @@ class _PresetChipState extends State<_PresetChip>
               width: widget.isSelected ? 1.5 : 1,
             ),
           ),
-          child: Text(
-            widget.label,
-            style: AppTypography.labelMedium.copyWith(
-              color: widget.isSelected
-                  ? widget.accentColor
-                  : AppColors.textPrimary,
-              fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (widget.icon != null) ...[
+                Icon(
+                  widget.icon,
+                  size: 14,
+                  color: widget.isSelected
+                      ? widget.accentColor
+                      : AppColors.textPrimary,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+              ],
+              Text(
+                widget.label,
+                style: AppTypography.labelMedium.copyWith(
+                  color: widget.isSelected
+                      ? widget.accentColor
+                      : AppColors.textPrimary,
+                  fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
+                ),
+              ),
+            ],
           ),
         ),
       ),
