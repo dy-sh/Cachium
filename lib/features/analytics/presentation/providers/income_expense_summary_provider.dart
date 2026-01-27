@@ -52,6 +52,16 @@ final periodSummariesProvider = Provider<List<PeriodSummary>>((ref) {
   }
 });
 
+void _addTransaction(Map<dynamic, PeriodSummary> periods, dynamic key, Transaction tx) {
+  final existing = periods[key];
+  if (existing == null) return;
+  if (tx.type == TransactionType.income) {
+    periods[key] = existing.copyWith(income: existing.income + tx.amount);
+  } else {
+    periods[key] = existing.copyWith(expense: existing.expense + tx.amount);
+  }
+}
+
 List<PeriodSummary> _groupByDay(
   List<Transaction> transactions,
   DateTime start,
@@ -77,27 +87,7 @@ List<PeriodSummary> _groupByDay(
   for (final tx in transactions) {
     final txDate = DateTime(tx.date.year, tx.date.month, tx.date.day);
     final key = '${txDate.month}/${txDate.day}';
-
-    final existing = periods[key];
-    if (existing != null) {
-      if (tx.type == TransactionType.income) {
-        periods[key] = PeriodSummary(
-          periodStart: existing.periodStart,
-          periodEnd: existing.periodEnd,
-          label: existing.label,
-          income: existing.income + tx.amount,
-          expense: existing.expense,
-        );
-      } else {
-        periods[key] = PeriodSummary(
-          periodStart: existing.periodStart,
-          periodEnd: existing.periodEnd,
-          label: existing.label,
-          income: existing.income,
-          expense: existing.expense + tx.amount,
-        );
-      }
-    }
+    _addTransaction(periods, key, tx);
   }
 
   final result = periods.values.toList();
@@ -138,30 +128,13 @@ List<PeriodSummary> _groupByWeek(
   }
 
   for (final tx in transactions) {
-    // Find which week this transaction belongs to
     for (final entry in periods.entries) {
       final period = entry.value;
       final txDate = DateTime(tx.date.year, tx.date.month, tx.date.day);
 
       if (!txDate.isBefore(period.periodStart) &&
           !txDate.isAfter(period.periodEnd)) {
-        if (tx.type == TransactionType.income) {
-          periods[entry.key] = PeriodSummary(
-            periodStart: period.periodStart,
-            periodEnd: period.periodEnd,
-            label: period.label,
-            income: period.income + tx.amount,
-            expense: period.expense,
-          );
-        } else {
-          periods[entry.key] = PeriodSummary(
-            periodStart: period.periodStart,
-            periodEnd: period.periodEnd,
-            label: period.label,
-            income: period.income,
-            expense: period.expense + tx.amount,
-          );
-        }
+        _addTransaction(periods, entry.key, tx);
         break;
       }
     }
@@ -202,27 +175,7 @@ List<PeriodSummary> _groupByMonth(
 
   for (final tx in transactions) {
     final key = '${tx.date.year}-${tx.date.month}';
-
-    final existing = periods[key];
-    if (existing != null) {
-      if (tx.type == TransactionType.income) {
-        periods[key] = PeriodSummary(
-          periodStart: existing.periodStart,
-          periodEnd: existing.periodEnd,
-          label: existing.label,
-          income: existing.income + tx.amount,
-          expense: existing.expense,
-        );
-      } else {
-        periods[key] = PeriodSummary(
-          periodStart: existing.periodStart,
-          periodEnd: existing.periodEnd,
-          label: existing.label,
-          income: existing.income,
-          expense: existing.expense + tx.amount,
-        );
-      }
-    }
+    _addTransaction(periods, key, tx);
   }
 
   final result = periods.values.toList();

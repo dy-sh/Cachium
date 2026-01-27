@@ -84,4 +84,20 @@ class PeriodSummary {
   });
 
   double get net => income - expense;
+
+  PeriodSummary copyWith({
+    DateTime? periodStart,
+    DateTime? periodEnd,
+    String? label,
+    double? income,
+    double? expense,
+  }) {
+    return PeriodSummary(
+      periodStart: periodStart ?? this.periodStart,
+      periodEnd: periodEnd ?? this.periodEnd,
+      label: label ?? this.label,
+      income: income ?? this.income,
+      expense: expense ?? this.expense,
+    );
+  }
 }
