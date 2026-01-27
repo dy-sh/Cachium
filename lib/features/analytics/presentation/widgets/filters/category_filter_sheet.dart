@@ -200,6 +200,7 @@ class _CategoryFilterSheetState extends ConsumerState<CategoryFilterSheet> {
     final allSelected = allIds.every(_selectedIds.contains);
     final someSelected =
         !allSelected && allIds.any(_selectedIds.contains);
+    final isActive = allSelected || someSelected || _selectedIds.isEmpty;
 
     return Column(
       children: [
@@ -225,12 +226,14 @@ class _CategoryFilterSheetState extends ConsumerState<CategoryFilterSheet> {
                   color: parentColor,
                 ),
                 const SizedBox(width: AppSpacing.md),
-                Icon(parent.icon, size: 18, color: parentColor),
+                Icon(parent.icon, size: 18, color: isActive ? parentColor : parentColor.withValues(alpha: 0.5)),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
                     parent.name,
-                    style: AppTypography.bodyMedium,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: isActive ? AppColors.textPrimary : AppColors.textSecondary,
+                    ),
                   ),
                 ),
                 if (children.isNotEmpty)
@@ -268,6 +271,7 @@ class _CategoryFilterSheetState extends ConsumerState<CategoryFilterSheet> {
   Widget _buildChildTile(Category child, ColorIntensity colorIntensity) {
     final childColor = child.getColor(colorIntensity);
     final isSelected = _selectedIds.contains(child.id);
+    final isActive = isSelected || _selectedIds.isEmpty;
 
     return GestureDetector(
       onTap: () {
@@ -287,12 +291,12 @@ class _CategoryFilterSheetState extends ConsumerState<CategoryFilterSheet> {
             children: [
               _Checkbox(isChecked: isSelected, color: childColor),
               const SizedBox(width: AppSpacing.md),
-              Icon(child.icon, size: 16, color: childColor),
+              Icon(child.icon, size: 16, color: isActive ? childColor : childColor.withValues(alpha: 0.5)),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 child.name,
                 style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textPrimary,
+                  color: isActive ? AppColors.textPrimary : AppColors.textSecondary,
                 ),
               ),
             ],
