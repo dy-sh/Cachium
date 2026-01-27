@@ -18,6 +18,8 @@ import '../widgets/filters/date_range_selector.dart';
 import '../widgets/filters/type_filter_toggle.dart';
 import '../widgets/insights/financial_insights_section.dart';
 import '../widgets/summary/period_summary_cards.dart';
+import '../widgets/comparison/year_over_year_section.dart';
+import '../widgets/flow/account_flow_section.dart';
 import '../widgets/trends/spending_trends_section.dart';
 
 class AnalyticsScreen extends ConsumerWidget {
@@ -157,6 +159,15 @@ class AnalyticsScreen extends ConsumerWidget {
             child: SizedBox(height: AppSpacing.lg),
           ),
 
+          // 10b. Year-over-Year Comparison
+          const SliverToBoxAdapter(
+            child: YearOverYearSection(),
+          ),
+
+          const SliverToBoxAdapter(
+            child: SizedBox(height: AppSpacing.lg),
+          ),
+
           // 11. Cash Flow Calendar
           const SliverToBoxAdapter(
             child: CashFlowCalendar(),
@@ -183,6 +194,15 @@ class AnalyticsScreen extends ConsumerWidget {
               ),
               child: const CategoryPieChart(),
             ),
+          ),
+
+          const SliverToBoxAdapter(
+            child: SizedBox(height: AppSpacing.lg),
+          ),
+
+          // 13b. Account Flow
+          const SliverToBoxAdapter(
+            child: AccountFlowSection(),
           ),
 
           const SliverToBoxAdapter(
