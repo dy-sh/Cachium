@@ -15,6 +15,18 @@ class DateRangeNavigator extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final filter = ref.watch(analyticsFilterProvider);
+    final isAllTime = filter.preset == DateRangePreset.allTime;
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final endDay = DateTime(
+      filter.dateRange.end.year,
+      filter.dateRange.end.month,
+      filter.dateRange.end.day,
+    );
+
+    final canGoPrev = !isAllTime;
+    final canGoNext = !isAllTime && endDay.isBefore(today);
 
     return Padding(
       padding: const EdgeInsets.only(
@@ -26,13 +38,17 @@ class DateRangeNavigator extends ConsumerWidget {
       child: Row(
         children: [
           GestureDetector(
-            onTap: () => ref.read(analyticsFilterProvider.notifier).shiftDateRange(-1),
-            child: const Padding(
-              padding: EdgeInsets.only(right: AppSpacing.sm),
+            onTap: canGoPrev
+                ? () => ref.read(analyticsFilterProvider.notifier).shiftDateRange(-1)
+                : null,
+            child: Padding(
+              padding: const EdgeInsets.only(right: AppSpacing.sm),
               child: Icon(
                 LucideIcons.chevronLeft,
                 size: 18,
-                color: AppColors.textSecondary,
+                color: canGoPrev
+                    ? AppColors.textSecondary
+                    : AppColors.textTertiary.withValues(alpha: 0.3),
               ),
             ),
           ),
@@ -49,13 +65,17 @@ class DateRangeNavigator extends ConsumerWidget {
             ),
           ),
           GestureDetector(
-            onTap: () => ref.read(analyticsFilterProvider.notifier).shiftDateRange(1),
-            child: const Padding(
-              padding: EdgeInsets.only(left: AppSpacing.sm),
+            onTap: canGoNext
+                ? () => ref.read(analyticsFilterProvider.notifier).shiftDateRange(1)
+                : null,
+            child: Padding(
+              padding: const EdgeInsets.only(left: AppSpacing.sm),
               child: Icon(
                 LucideIcons.chevronRight,
                 size: 18,
-                color: AppColors.textSecondary,
+                color: canGoNext
+                    ? AppColors.textSecondary
+                    : AppColors.textTertiary.withValues(alpha: 0.3),
               ),
             ),
           ),
