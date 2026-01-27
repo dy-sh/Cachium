@@ -129,3 +129,25 @@ final analyticsFilterProvider =
     NotifierProvider<AnalyticsFilterNotifier, AnalyticsFilter>(() {
   return AnalyticsFilterNotifier();
 });
+
+final hasActiveFilterProvider = Provider<bool>((ref) {
+  final filter = ref.watch(analyticsFilterProvider);
+
+  // Some categories selected (not none = no filter, not all handled by clearCategoryFilter)
+  if (filter.selectedCategoryIds.isNotEmpty) return true;
+
+  // Some accounts selected
+  if (filter.selectedAccountIds.isNotEmpty) return true;
+
+  // Date range doesn't include today
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final endDay = DateTime(
+    filter.dateRange.end.year,
+    filter.dateRange.end.month,
+    filter.dateRange.end.day,
+  );
+  if (endDay.isBefore(today)) return true;
+
+  return false;
+});

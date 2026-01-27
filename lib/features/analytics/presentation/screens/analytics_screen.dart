@@ -8,6 +8,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/layout/page_layout.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
+import '../providers/analytics_filter_provider.dart';
 import '../widgets/filters/analytics_filter_bar.dart';
 import '../widgets/filters/date_range_navigator.dart';
 import '../widgets/tabs/overview_tab.dart';
@@ -67,6 +68,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
   @override
   Widget build(BuildContext context) {
     final accentColor = ref.watch(accentColorProvider);
+    final hasFilter = ref.watch(hasActiveFilterProvider);
 
     return PageLayout(
       title: 'Analytics',
@@ -84,7 +86,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
           );
         }),
         _FilterToggleButton(
-          isActive: _filtersVisible,
+          isOpen: _filtersVisible,
+          hasFilter: hasFilter,
           accentColor: accentColor,
           onTap: _toggleFilters,
         ),
@@ -116,12 +119,14 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
 }
 
 class _FilterToggleButton extends StatefulWidget {
-  final bool isActive;
+  final bool isOpen;
+  final bool hasFilter;
   final Color accentColor;
   final VoidCallback onTap;
 
   const _FilterToggleButton({
-    required this.isActive,
+    required this.isOpen,
+    required this.hasFilter,
     required this.accentColor,
     required this.onTap,
   });
@@ -172,19 +177,19 @@ class _FilterToggleButtonState extends State<_FilterToggleButton>
           duration: AppAnimations.normal,
           padding: const EdgeInsets.all(AppSpacing.sm),
           decoration: BoxDecoration(
-            color: widget.isActive
+            color: widget.isOpen
                 ? widget.accentColor.withValues(alpha: 0.1)
                 : AppColors.surface,
             borderRadius: AppRadius.chip,
             border: Border.all(
-              color: widget.isActive ? widget.accentColor : AppColors.border,
-              width: widget.isActive ? 1.5 : 1,
+              color: widget.isOpen ? widget.accentColor : AppColors.border,
+              width: widget.isOpen ? 1.5 : 1,
             ),
           ),
           child: Icon(
             LucideIcons.slidersHorizontal,
             size: 16,
-            color: widget.isActive
+            color: widget.hasFilter
                 ? widget.accentColor
                 : AppColors.textSecondary,
           ),
