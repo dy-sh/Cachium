@@ -59,7 +59,7 @@ class DateRangeNavigator extends ConsumerWidget {
                 _formatDateRange(filter.dateRange.start, filter.dateRange.end),
                 textAlign: TextAlign.center,
                 style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
+                  color: !canGoNext ? AppColors.textPrimary : AppColors.textSecondary,
                 ),
               ),
             ),

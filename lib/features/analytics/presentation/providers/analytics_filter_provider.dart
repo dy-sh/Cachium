@@ -96,7 +96,7 @@ class AnalyticsFilterNotifier extends Notifier<AnalyticsFilter> {
         : range.end.subtract(shift);
 
     state = state.copyWith(
-      preset: DateRangePreset.custom,
+      preset: preset,
       dateRange: DateRange(start: newStart, end: newEnd),
     );
   }
