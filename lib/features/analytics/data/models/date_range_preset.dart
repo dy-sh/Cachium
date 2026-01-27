@@ -5,6 +5,7 @@ enum DateRangePreset {
   lastMonth,
   last3Months,
   last6Months,
+  last12Months,
   thisYear,
   allTime,
   custom,
@@ -25,6 +26,8 @@ extension DateRangePresetExtension on DateRangePreset {
         return '3M';
       case DateRangePreset.last6Months:
         return '6M';
+      case DateRangePreset.last12Months:
+        return '12M';
       case DateRangePreset.thisYear:
         return 'Year';
       case DateRangePreset.allTime:
@@ -69,6 +72,11 @@ extension DateRangePresetExtension on DateRangePreset {
       case DateRangePreset.last6Months:
         return DateRange(
           start: DateTime(now.year, now.month - 5, 1),
+          end: today,
+        );
+      case DateRangePreset.last12Months:
+        return DateRange(
+          start: DateTime(now.year - 1, now.month + 1, 1),
           end: today,
         );
       case DateRangePreset.thisYear:

@@ -62,6 +62,24 @@ class AnalyticsFilterNotifier extends Notifier<AnalyticsFilter> {
     state = state.copyWith(typeFilter: typeFilter);
   }
 
+  void shiftDateRange(int direction) {
+    final range = state.dateRange;
+    final duration = range.end.difference(range.start);
+    final shift = Duration(days: duration.inDays + 1);
+
+    final newStart = direction > 0
+        ? range.start.add(shift)
+        : range.start.subtract(shift);
+    final newEnd = direction > 0
+        ? range.end.add(shift)
+        : range.end.subtract(shift);
+
+    state = state.copyWith(
+      preset: DateRangePreset.custom,
+      dateRange: DateRange(start: newStart, end: newEnd),
+    );
+  }
+
   void resetFilters() {
     state = AnalyticsFilter.initial();
   }

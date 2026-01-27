@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
@@ -26,11 +27,39 @@ class AnalyticsFilterBar extends ConsumerWidget {
             right: AppSpacing.screenPadding,
             bottom: AppSpacing.sm,
           ),
-          child: Text(
-            _formatDateRange(filter.dateRange.start, filter.dateRange.end),
-            style: AppTypography.bodySmall.copyWith(
-              color: AppColors.textSecondary,
-            ),
+          child: Row(
+            children: [
+              GestureDetector(
+                onTap: () => ref.read(analyticsFilterProvider.notifier).shiftDateRange(-1),
+                child: const Padding(
+                  padding: EdgeInsets.only(right: AppSpacing.sm),
+                  child: Icon(
+                    LucideIcons.chevronLeft,
+                    size: 18,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  _formatDateRange(filter.dateRange.start, filter.dateRange.end),
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: () => ref.read(analyticsFilterProvider.notifier).shiftDateRange(1),
+                child: const Padding(
+                  padding: EdgeInsets.only(left: AppSpacing.sm),
+                  child: Icon(
+                    LucideIcons.chevronRight,
+                    size: 18,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         const DateRangeSelector(),

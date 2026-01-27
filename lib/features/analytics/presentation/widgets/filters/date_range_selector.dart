@@ -19,7 +19,7 @@ class DateRangeSelector extends ConsumerWidget {
     DateRangePreset.last30Days,
     DateRangePreset.thisMonth,
     DateRangePreset.last3Months,
-    DateRangePreset.last6Months,
+    DateRangePreset.last12Months,
     DateRangePreset.thisYear,
     DateRangePreset.allTime,
   ];
