@@ -9,6 +9,7 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/layout/page_layout.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../widgets/filters/analytics_filter_bar.dart';
+import '../widgets/filters/date_range_navigator.dart';
 import '../widgets/tabs/overview_tab.dart';
 import '../widgets/tabs/comparisons_tab.dart';
 
@@ -90,6 +91,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
       ],
       body: Column(
         children: [
+          const DateRangeNavigator(),
           SizeTransition(
             sizeFactor: _filterSlideAnimation,
             axisAlignment: -1.0,
