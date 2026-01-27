@@ -29,6 +29,9 @@ class DateRangeSelector extends ConsumerWidget {
     final filter = ref.watch(analyticsFilterProvider);
     final accentColor = ref.watch(accentColorProvider);
     final isCustom = filter.preset == DateRangePreset.custom;
+    final isShifted = filter.preset != DateRangePreset.custom &&
+        filter.preset != DateRangePreset.allTime &&
+        filter.dateRange != filter.preset.getDateRange();
 
     return SizedBox(
       height: 36,
@@ -45,6 +48,7 @@ class DateRangeSelector extends ConsumerWidget {
             return _PresetChip(
               label: preset.displayName,
               isSelected: isSelected,
+              dimmed: isSelected && isShifted,
               accentColor: accentColor,
               onTap: () {
                 ref.read(analyticsFilterProvider.notifier).setDateRangePreset(preset);
@@ -90,6 +94,7 @@ class DateRangeSelector extends ConsumerWidget {
 class _PresetChip extends StatefulWidget {
   final String label;
   final bool isSelected;
+  final bool dimmed;
   final Color accentColor;
   final VoidCallback onTap;
   final IconData? icon;
@@ -97,6 +102,7 @@ class _PresetChip extends StatefulWidget {
   const _PresetChip({
     required this.label,
     required this.isSelected,
+    this.dimmed = false,
     required this.accentColor,
     required this.onTap,
     this.icon,
@@ -135,7 +141,20 @@ class _PresetChipState extends State<_PresetChip>
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = widget.isSelected ? widget.accentColor : AppColors.border;
+    final bright = widget.isSelected && !widget.dimmed;
+    final borderColor = bright
+        ? widget.accentColor
+        : widget.dimmed
+            ? widget.accentColor.withValues(alpha: 0.3)
+            : AppColors.border.withValues(alpha: 0.5);
+    final chipColor = bright
+        ? widget.accentColor.withValues(alpha: 0.1)
+        : AppColors.surface;
+    final contentColor = bright
+        ? widget.accentColor
+        : widget.dimmed
+            ? widget.accentColor
+            : AppColors.textSecondary;
 
     return GestureDetector(
       onTapDown: (_) => _controller.forward(),
@@ -153,13 +172,11 @@ class _PresetChipState extends State<_PresetChip>
             vertical: AppSpacing.sm,
           ),
           decoration: BoxDecoration(
-            color: widget.isSelected
-                ? widget.accentColor.withValues(alpha: 0.1)
-                : AppColors.surface,
+            color: chipColor,
             borderRadius: AppRadius.chip,
             border: Border.all(
               color: borderColor,
-              width: widget.isSelected ? 1.5 : 1,
+              width: bright ? 1.5 : 1,
             ),
           ),
           child: Row(
@@ -169,19 +186,15 @@ class _PresetChipState extends State<_PresetChip>
                 Icon(
                   widget.icon,
                   size: 14,
-                  color: widget.isSelected
-                      ? widget.accentColor
-                      : AppColors.textPrimary,
+                  color: contentColor,
                 ),
                 const SizedBox(width: AppSpacing.xs),
               ],
               Text(
                 widget.label,
                 style: AppTypography.labelMedium.copyWith(
-                  color: widget.isSelected
-                      ? widget.accentColor
-                      : AppColors.textPrimary,
-                  fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
+                  color: contentColor,
+                  fontWeight: bright ? FontWeight.w600 : FontWeight.w500,
                 ),
               ),
             ],
