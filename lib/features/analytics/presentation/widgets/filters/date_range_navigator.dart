@@ -107,19 +107,35 @@ class DateRangeNavigator extends ConsumerWidget {
   }
 
   String _formatDateRange(DateTime start, DateTime end) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final startDay = DateTime(start.year, start.month, start.day);
+    final endDay = DateTime(end.year, end.month, end.day);
+    final startIsToday = startDay == today;
+    final endIsToday = endDay == today;
+
     final startFormat = DateFormat('MMM d');
     final endFormat = DateFormat('MMM d, yyyy');
 
-    if (start.year == end.year &&
-        start.month == end.month &&
-        start.day == end.day) {
-      return endFormat.format(end);
+    if (startDay == endDay) {
+      final text = endFormat.format(end);
+      return endIsToday ? '$text (Today)' : text;
     }
+
+    final startText = startIsToday
+        ? '${startFormat.format(start)} (Today)'
+        : startFormat.format(start);
+    final endText = endIsToday
+        ? '${endFormat.format(end)} (Today)'
+        : endFormat.format(end);
 
     if (start.year == end.year) {
-      return '${startFormat.format(start)} - ${endFormat.format(end)}';
+      return '$startText - $endText';
     }
 
-    return '${DateFormat('MMM d, yyyy').format(start)} - ${endFormat.format(end)}';
+    final startFullText = startIsToday
+        ? '${DateFormat('MMM d, yyyy').format(start)} (Today)'
+        : DateFormat('MMM d, yyyy').format(start);
+    return '$startFullText - $endText';
   }
 }
