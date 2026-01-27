@@ -54,10 +54,13 @@ class CategoryFilterPopup extends ConsumerWidget {
             ),
             if (hasFilter) ...[
               const SizedBox(width: AppSpacing.xs),
-              Icon(
-                LucideIcons.x,
-                size: 12,
-                color: accentColor,
+              GestureDetector(
+                onTap: () => ref.read(analyticsFilterProvider.notifier).clearCategoryFilter(),
+                child: Icon(
+                  LucideIcons.x,
+                  size: 12,
+                  color: accentColor,
+                ),
               ),
             ],
           ],

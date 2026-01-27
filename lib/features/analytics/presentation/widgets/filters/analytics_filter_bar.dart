@@ -24,16 +24,7 @@ class AnalyticsFilterBar extends StatelessWidget {
           child: Row(
             children: const [
               CategoryFilterPopup(),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.screenPadding,
-          ),
-          child: Row(
-            children: const [
+              Spacer(),
               TypeFilterToggle(),
             ],
           ),
