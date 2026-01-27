@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:cryptography/cryptography.dart';
 
 import '../../../data/encryption/account_data.dart';
+import '../../../data/encryption/budget_data.dart';
 import '../../../data/encryption/category_data.dart';
 import '../../../data/encryption/transaction_data.dart';
 import '../../exceptions/security_exception.dart';
@@ -167,6 +168,41 @@ class EncryptionService {
     final data = AccountData.fromJson(json);
 
     // Integrity check: verify decrypted data matches row metadata
+    if (data.id != expectedId) {
+      throw SecurityException(
+        rowId: expectedId,
+        fieldName: 'id',
+        expectedValue: expectedId,
+        actualValue: data.id,
+      );
+    }
+
+    if (data.createdAtMillis != expectedCreatedAtMillis) {
+      throw SecurityException(
+        rowId: expectedId,
+        fieldName: 'createdAtMillis',
+        expectedValue: expectedCreatedAtMillis.toString(),
+        actualValue: data.createdAtMillis.toString(),
+      );
+    }
+
+    return data;
+  }
+
+  /// Encrypts budget data into a binary blob.
+  Future<Uint8List> encryptBudget(BudgetData data) async {
+    return encryptJson(data.toJson());
+  }
+
+  /// Decrypts an encrypted blob back to budget data.
+  Future<BudgetData> decryptBudget(
+    Uint8List encryptedBlob, {
+    required String expectedId,
+    required int expectedCreatedAtMillis,
+  }) async {
+    final json = await decryptJson(encryptedBlob);
+    final data = BudgetData.fromJson(json);
+
     if (data.id != expectedId) {
       throw SecurityException(
         rowId: expectedId,

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/repositories/account_repository.dart';
+import '../../data/repositories/budget_repository.dart';
 import '../../data/repositories/category_repository.dart';
 import '../../data/repositories/settings_repository.dart';
 import '../../data/repositories/transaction_repository.dart';
@@ -58,6 +59,14 @@ final accountRepositoryProvider = Provider<AccountRepository>((ref) {
 /// Combines database operations with encryption/decryption.
 final categoryRepositoryProvider = Provider<CategoryRepository>((ref) {
   return CategoryRepository(
+    database: ref.watch(databaseProvider),
+    encryptionService: ref.watch(encryptionServiceProvider),
+  );
+});
+
+/// Provider for the budget repository.
+final budgetRepositoryProvider = Provider<BudgetRepository>((ref) {
+  return BudgetRepository(
     database: ref.watch(databaseProvider),
     encryptionService: ref.watch(encryptionServiceProvider),
   );

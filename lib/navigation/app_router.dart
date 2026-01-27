@@ -20,6 +20,7 @@ import '../features/settings/presentation/screens/import_preview_screen.dart';
 import '../features/settings/presentation/screens/preferences_settings_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/settings/presentation/screens/transactions_settings_screen.dart';
+import '../features/budgets/presentation/screens/budget_settings_screen.dart';
 import '../features/transactions/presentation/screens/transaction_form_screen.dart';
 import '../features/transactions/presentation/screens/transactions_screen.dart';
 import 'navigation_shell.dart';
@@ -40,6 +41,7 @@ class AppRoutes {
   static const databaseSettings = '/settings/database';
   static const exportSqlite = '/settings/database/export-sqlite';
   static const exportCsv = '/settings/database/export-csv';
+  static const budgetSettings = '/settings/budgets';
   static const csvImport = '/settings/csv-import';
   static const csvImportMapping = '/settings/csv-import/mapping';
   static const csvImportPreview = '/settings/csv-import/preview';
@@ -216,6 +218,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
           state,
           const ExportScreen(format: ExportFormat.csv),
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.budgetSettings,
+        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
+          state,
+          const BudgetSettingsScreen(),
           animationsEnabled: ref.read(formAnimationsEnabledProvider),
         ),
       ),
