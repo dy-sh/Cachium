@@ -9,7 +9,9 @@ import '../../../data/models/analytics_filter.dart';
 import '../../providers/analytics_filter_provider.dart';
 import '../../providers/category_breakdown_provider.dart';
 
-class TopCategoriesList extends ConsumerWidget {
+enum _SortMode { byAmount, byCount }
+
+class TopCategoriesList extends ConsumerStatefulWidget {
   final int limit;
 
   const TopCategoriesList({
@@ -18,8 +20,15 @@ class TopCategoriesList extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final breakdowns = ref.watch(topCategoriesProvider(limit));
+  ConsumerState<TopCategoriesList> createState() => _TopCategoriesListState();
+}
+
+class _TopCategoriesListState extends ConsumerState<TopCategoriesList> {
+  _SortMode _sortMode = _SortMode.byAmount;
+
+  @override
+  Widget build(BuildContext context) {
+    var breakdowns = ref.watch(topCategoriesProvider(widget.limit));
     final filter = ref.watch(analyticsFilterProvider);
     final currencySymbol = ref.watch(currencySymbolProvider);
 
@@ -27,7 +36,13 @@ class TopCategoriesList extends ConsumerWidget {
       return const SizedBox.shrink();
     }
 
-    final maxAmount = breakdowns.first.amount;
+    // Apply sort
+    if (_sortMode == _SortMode.byCount) {
+      breakdowns = List.from(breakdowns)
+        ..sort((a, b) => b.transactionCount.compareTo(a.transactionCount));
+    }
+
+    final maxAmount = breakdowns.fold(0.0, (max, b) => b.amount > max ? b.amount : max);
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.cardPadding),
@@ -39,11 +54,39 @@ class TopCategoriesList extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            filter.typeFilter == AnalyticsTypeFilter.income
-                ? 'Top Income Sources'
-                : 'Top Spending Categories',
-            style: AppTypography.labelLarge,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                filter.typeFilter == AnalyticsTypeFilter.income
+                    ? 'Top Income Sources'
+                    : 'Top Spending Categories',
+                style: AppTypography.labelLarge,
+              ),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _sortMode = _sortMode == _SortMode.byAmount
+                        ? _SortMode.byCount
+                        : _SortMode.byAmount;
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    _sortMode == _SortMode.byAmount ? 'By amount' : 'By count',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 10,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: AppSpacing.md),
           ...breakdowns.asMap().entries.map((entry) {
@@ -53,15 +96,22 @@ class TopCategoriesList extends ConsumerWidget {
               padding: EdgeInsets.only(
                 bottom: index < breakdowns.length - 1 ? AppSpacing.md : 0,
               ),
-              child: _CategoryRow(
-                rank: index + 1,
-                icon: breakdown.icon,
-                name: breakdown.name,
-                amount: breakdown.amount,
-                percentage: breakdown.percentage,
-                color: breakdown.color,
-                maxAmount: maxAmount,
-                currencySymbol: currencySymbol,
+              child: GestureDetector(
+                onTap: () {
+                  ref.read(analyticsFilterProvider.notifier).setCategories({breakdown.categoryId});
+                },
+                child: _CategoryRow(
+                  rank: index + 1,
+                  icon: breakdown.icon,
+                  name: breakdown.name,
+                  amount: breakdown.amount,
+                  percentage: breakdown.percentage,
+                  color: breakdown.color,
+                  maxAmount: maxAmount,
+                  currencySymbol: currencySymbol,
+                  transactionCount: breakdown.transactionCount,
+                  sortMode: _sortMode,
+                ),
               ),
             );
           }),
@@ -80,6 +130,8 @@ class _CategoryRow extends StatelessWidget {
   final Color color;
   final double maxAmount;
   final String currencySymbol;
+  final int transactionCount;
+  final _SortMode sortMode;
 
   const _CategoryRow({
     required this.rank,
@@ -90,6 +142,8 @@ class _CategoryRow extends StatelessWidget {
     required this.color,
     required this.maxAmount,
     required this.currencySymbol,
+    required this.transactionCount,
+    required this.sortMode,
   });
 
   @override
@@ -136,7 +190,9 @@ class _CategoryRow extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '$currencySymbol${_formatAmount(amount)}',
+                    sortMode == _SortMode.byCount
+                        ? '$transactionCount txns'
+                        : '$currencySymbol${_formatAmount(amount)}',
                     style: AppTypography.moneyTiny.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -147,14 +203,21 @@ class _CategoryRow extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(2),
-                      child: LinearProgressIndicator(
-                        value: progress,
-                        backgroundColor: AppColors.border,
-                        valueColor: AlwaysStoppedAnimation<Color>(color),
-                        minHeight: 4,
-                      ),
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0, end: progress),
+                      duration: const Duration(milliseconds: 600),
+                      curve: Curves.easeOut,
+                      builder: (context, value, _) {
+                        return ClipRRect(
+                          borderRadius: BorderRadius.circular(2),
+                          child: LinearProgressIndicator(
+                            value: value,
+                            backgroundColor: AppColors.border,
+                            valueColor: AlwaysStoppedAnimation<Color>(color),
+                            minHeight: 4,
+                          ),
+                        );
+                      },
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),

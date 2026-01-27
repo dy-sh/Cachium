@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
@@ -21,10 +23,9 @@ class _CashFlowCalendarState extends ConsumerState<CashFlowCalendar> {
   @override
   Widget build(BuildContext context) {
     final days = ref.watch(cashFlowCalendarProvider);
+    final displayMonth = ref.watch(calendarDisplayMonthProvider);
     final colorIntensity = ref.watch(colorIntensityProvider);
     final currencySymbol = ref.watch(currencySymbolProvider);
-
-    if (days.isEmpty) return const SizedBox.shrink();
 
     final incomeColor = AppColors.getTransactionColor('income', colorIntensity);
     final expenseColor = AppColors.getTransactionColor('expense', colorIntensity);
@@ -43,6 +44,33 @@ class _CashFlowCalendarState extends ConsumerState<CashFlowCalendar> {
           children: [
             Text('Cash Flow Calendar', style: AppTypography.h4),
             const SizedBox(height: AppSpacing.md),
+            // Month navigation
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                GestureDetector(
+                  onTap: () => ref.read(calendarMonthOffsetProvider.notifier).state--,
+                  child: const Icon(
+                    LucideIcons.chevronLeft,
+                    size: 20,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                Text(
+                  DateFormat('MMMM yyyy').format(displayMonth),
+                  style: AppTypography.labelLarge,
+                ),
+                GestureDetector(
+                  onTap: () => ref.read(calendarMonthOffsetProvider.notifier).state++,
+                  child: const Icon(
+                    LucideIcons.chevronRight,
+                    size: 20,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
             // Day labels
             Row(
               children: ['M', 'T', 'W', 'T', 'F', 'S', 'S']
@@ -57,17 +85,50 @@ class _CashFlowCalendarState extends ConsumerState<CashFlowCalendar> {
                   .toList(),
             ),
             const SizedBox(height: AppSpacing.xs),
-            // Calendar grid
-            _buildGrid(days, incomeColor, expenseColor),
+            // Calendar grid with fade transition
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: days.isEmpty
+                  ? Padding(
+                      key: ValueKey('empty-$displayMonth'),
+                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxl),
+                      child: Center(
+                        child: Text('No data', style: AppTypography.bodySmall),
+                      ),
+                    )
+                  : _buildGrid(days, incomeColor, expenseColor, displayMonth),
+            ),
             const SizedBox(height: AppSpacing.md),
-            // Legend
+            // Gradient intensity bar
             Row(
               children: [
-                _LegendItem(label: 'Income', color: incomeColor),
-                const SizedBox(width: AppSpacing.lg),
-                _LegendItem(label: 'Expense', color: expenseColor),
-                const SizedBox(width: AppSpacing.lg),
-                _LegendItem(label: 'None', color: AppColors.border),
+                Text('Low', style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.textTertiary, fontSize: 9,
+                )),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: SizedBox(
+                    height: 8,
+                    child: Row(
+                      children: List.generate(5, (i) {
+                        final alpha = 0.1 + (i * 0.2);
+                        return Expanded(
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 1),
+                            decoration: BoxDecoration(
+                              color: incomeColor.withValues(alpha: alpha),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Text('High', style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.textTertiary, fontSize: 9,
+                )),
               ],
             ),
             // Selected day tooltip
@@ -117,6 +178,7 @@ class _CashFlowCalendarState extends ConsumerState<CashFlowCalendar> {
     List<CalendarDayData> days,
     Color incomeColor,
     Color expenseColor,
+    DateTime displayMonth,
   ) {
     if (days.isEmpty) return const SizedBox.shrink();
 
@@ -138,6 +200,7 @@ class _CashFlowCalendarState extends ConsumerState<CashFlowCalendar> {
     ];
 
     return GridView.count(
+      key: ValueKey('grid-$displayMonth'),
       crossAxisCount: 7,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -185,32 +248,6 @@ class _DayCell extends StatelessWidget {
               : null,
         ),
       ),
-    );
-  }
-}
-
-class _LegendItem extends StatelessWidget {
-  final String label;
-  final Color color;
-
-  const _LegendItem({required this.label, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-        const SizedBox(width: AppSpacing.xs),
-        Text(label, style: AppTypography.labelSmall),
-      ],
     );
   }
 }

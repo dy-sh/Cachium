@@ -49,7 +49,7 @@ class AccountFlowSection extends ConsumerWidget {
                 ),
               )
             else ...[
-              FlowDiagram(flowData: flowData),
+              FlowDiagram(flowData: flowData, currencySymbol: currencySymbol),
               const SizedBox(height: AppSpacing.lg),
               FlowBreakdownList(
                 flowData: flowData,

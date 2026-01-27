@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
@@ -31,6 +32,14 @@ class BalanceLineChart extends ConsumerWidget {
     final range = maxY - minY;
     final padding = range * 0.1;
 
+    // Trend calculation: first→last point percentage change
+    final firstBalance = historyPoints.first.totalBalance;
+    final lastBalance = historyPoints.last.totalBalance;
+    final trendPercent = firstBalance != 0
+        ? ((lastBalance - firstBalance) / firstBalance.abs() * 100)
+        : (lastBalance > 0 ? 100.0 : 0.0);
+    final trendIsUp = trendPercent >= 0;
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.cardPadding),
       decoration: BoxDecoration(
@@ -41,9 +50,55 @@ class BalanceLineChart extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Balance Over Time',
-            style: AppTypography.labelLarge,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Balance Over Time',
+                    style: AppTypography.labelLarge,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '$currencySymbol${lastBalance.toStringAsFixed(2)}',
+                    style: AppTypography.moneySmall.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: (trendIsUp ? AppColors.green : AppColors.red)
+                      .withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      trendIsUp
+                          ? LucideIcons.trendingUp
+                          : LucideIcons.trendingDown,
+                      size: 12,
+                      color: trendIsUp ? AppColors.green : AppColors.red,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${trendIsUp ? '+' : ''}${trendPercent.toStringAsFixed(1)}%',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: trendIsUp ? AppColors.green : AppColors.red,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: AppSpacing.lg),
           SizedBox(
@@ -163,6 +218,8 @@ class BalanceLineChart extends ConsumerWidget {
                   handleBuiltInTouches: true,
                 ),
               ),
+              duration: const Duration(milliseconds: 600),
+              curve: Curves.easeInOut,
             ),
           ),
         ],

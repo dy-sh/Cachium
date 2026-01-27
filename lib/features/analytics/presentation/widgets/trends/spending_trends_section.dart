@@ -1,3 +1,4 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -41,7 +42,7 @@ class SpendingTrendsSection extends ConsumerWidget {
               style: AppTypography.bodySmall,
             ),
             const SizedBox(height: AppSpacing.lg),
-            // Overall income/expense change
+            // Overall income/expense change with sparklines
             Row(
               children: [
                 Expanded(
@@ -49,6 +50,7 @@ class SpendingTrendsSection extends ConsumerWidget {
                     label: 'Income',
                     percent: trend.incomeChangePercent,
                     color: incomeColor,
+                    history: trend.incomeHistory,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
@@ -57,6 +59,7 @@ class SpendingTrendsSection extends ConsumerWidget {
                     label: 'Expenses',
                     percent: trend.expenseChangePercent,
                     color: expenseColor,
+                    history: trend.expenseHistory,
                   ),
                 ),
               ],
@@ -111,11 +114,13 @@ class _TrendIndicator extends StatelessWidget {
   final String label;
   final double percent;
   final Color color;
+  final List<double> history;
 
   const _TrendIndicator({
     required this.label,
     required this.percent,
     required this.color,
+    this.history = const [],
   });
 
   @override
@@ -132,11 +137,22 @@ class _TrendIndicator extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: AppTypography.labelMedium.copyWith(
-              color: AppColors.textSecondary,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                label,
+                style: AppTypography.labelMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              if (history.length >= 2)
+                SizedBox(
+                  width: 60,
+                  height: 24,
+                  child: _Sparkline(data: history, color: color),
+                ),
+            ],
           ),
           const SizedBox(height: AppSpacing.xs),
           Row(
@@ -154,6 +170,67 @@ class _TrendIndicator extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _Sparkline extends StatelessWidget {
+  final List<double> data;
+  final Color color;
+
+  const _Sparkline({required this.data, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    if (data.length < 2) return const SizedBox.shrink();
+
+    final spots = data.asMap().entries.map((e) {
+      return FlSpot(e.key.toDouble(), e.value);
+    }).toList();
+
+    final minY = data.reduce((a, b) => a < b ? a : b);
+    final maxY = data.reduce((a, b) => a > b ? a : b);
+    final range = maxY - minY;
+    final padding = range * 0.1;
+
+    return LineChart(
+      LineChartData(
+        gridData: const FlGridData(show: false),
+        titlesData: const FlTitlesData(
+          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        ),
+        borderData: FlBorderData(show: false),
+        lineTouchData: const LineTouchData(enabled: false),
+        minX: 0,
+        maxX: (data.length - 1).toDouble(),
+        minY: minY - padding,
+        maxY: maxY + padding,
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            isCurved: true,
+            curveSmoothness: 0.3,
+            color: color,
+            barWidth: 1.5,
+            dotData: const FlDotData(show: false),
+            belowBarData: BarAreaData(
+              show: true,
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  color.withValues(alpha: 0.2),
+                  color.withValues(alpha: 0.0),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      duration: Duration.zero,
     );
   }
 }

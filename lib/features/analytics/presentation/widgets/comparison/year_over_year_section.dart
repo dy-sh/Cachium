@@ -75,7 +75,35 @@ class YearOverYearSection extends ConsumerWidget {
                   );
                 }).toList(),
               ),
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.sm),
+            // Color legend
+            if (data.isNotEmpty && selectedYears.isNotEmpty)
+              Wrap(
+                spacing: AppSpacing.md,
+                runSpacing: AppSpacing.xs,
+                children: data.asMap().entries.map((entry) {
+                  final color = AppColors.getAccentColor(entry.key + 1, colorIntensity);
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${entry.value.year}',
+                        style: AppTypography.labelSmall.copyWith(color: color),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
+            const SizedBox(height: AppSpacing.md),
             if (data.isEmpty || selectedYears.isEmpty)
               _buildEmptyState()
             else ...[
@@ -206,6 +234,8 @@ class YearOverYearSection extends ConsumerWidget {
             ),
           ),
         ),
+        swapAnimationDuration: const Duration(milliseconds: 400),
+        swapAnimationCurve: Curves.easeInOut,
       ),
     );
   }
@@ -221,25 +251,32 @@ class YearOverYearSection extends ConsumerWidget {
         Text('Summary', style: AppTypography.labelMedium),
         const SizedBox(height: AppSpacing.sm),
         // Header row
-        Row(
-          children: [
-            const Expanded(flex: 2, child: SizedBox()),
-            ...data.map((d) => Expanded(
-              flex: 2,
-              child: Text(
-                '${d.year}',
-                style: AppTypography.labelSmall.copyWith(
-                  color: AppColors.getAccentColor(data.indexOf(d) + 1, colorIntensity),
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceLight.withValues(alpha: 0.5),
+            borderRadius: AppRadius.xsAll,
+          ),
+          child: Row(
+            children: [
+              const Expanded(flex: 2, child: SizedBox()),
+              ...data.map((d) => Expanded(
+                flex: 2,
+                child: Text(
+                  '${d.year}',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: AppColors.getAccentColor(data.indexOf(d) + 1, colorIntensity),
+                  ),
+                  textAlign: TextAlign.right,
                 ),
-                textAlign: TextAlign.right,
-              ),
-            )),
-          ],
+              )),
+            ],
+          ),
         ),
         const SizedBox(height: AppSpacing.xs),
-        _summaryRow('Income', data.map((d) => d.totalIncome).toList(), currencySymbol),
-        _summaryRow('Expense', data.map((d) => d.totalExpense).toList(), currencySymbol),
-        _summaryRow('Net', data.map((d) => d.totalNet).toList(), currencySymbol),
+        _summaryRow('Income', data.map((d) => d.totalIncome).toList(), currencySymbol, 0),
+        _summaryRow('Expense', data.map((d) => d.totalExpense).toList(), currencySymbol, 1),
+        _summaryRow('Net', data.map((d) => d.totalNet).toList(), currencySymbol, 2),
         // % change row
         if (data.length >= 2) ...[
           const SizedBox(height: AppSpacing.xs),
@@ -273,9 +310,15 @@ class YearOverYearSection extends ConsumerWidget {
     );
   }
 
-  Widget _summaryRow(String label, List<double> values, String currencySymbol) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+  Widget _summaryRow(String label, List<double> values, String currencySymbol, int index) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 0),
+      decoration: BoxDecoration(
+        color: index.isOdd
+            ? AppColors.surfaceLight.withValues(alpha: 0.3)
+            : Colors.transparent,
+        borderRadius: AppRadius.xsAll,
+      ),
       child: Row(
         children: [
           Expanded(

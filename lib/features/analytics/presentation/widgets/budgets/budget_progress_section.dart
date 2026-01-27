@@ -25,6 +25,10 @@ class BudgetProgressSection extends ConsumerWidget {
     final currencySymbol = ref.watch(currencySymbolProvider);
     final accentColor = ref.watch(accentColorProvider);
 
+    // Calculate % of month elapsed
+    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+    final monthElapsedPercent = now.day / daysInMonth * 100;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
       child: Container(
@@ -62,6 +66,7 @@ class BudgetProgressSection extends ConsumerWidget {
                       progress: p,
                       currencySymbol: currencySymbol,
                       colorIntensity: colorIntensity,
+                      monthElapsedPercent: monthElapsedPercent,
                     ),
                   )),
           ],
@@ -102,11 +107,13 @@ class _BudgetBar extends StatelessWidget {
   final BudgetProgress progress;
   final String currencySymbol;
   final ColorIntensity colorIntensity;
+  final double monthElapsedPercent;
 
   const _BudgetBar({
     required this.progress,
     required this.currencySymbol,
     required this.colorIntensity,
+    required this.monthElapsedPercent,
   });
 
   @override
@@ -116,6 +123,12 @@ class _BudgetBar extends StatelessWidget {
         : progress.percentage <= 100
             ? AppColors.yellow
             : AppColors.getTransactionColor('expense', colorIntensity);
+
+    // Pace: compare % budget used vs % of month elapsed
+    final isOverPace = progress.percentage > monthElapsedPercent;
+    final paceColor = isOverPace
+        ? AppColors.getTransactionColor('expense', colorIntensity)
+        : AppColors.getTransactionColor('income', colorIntensity);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,7 +165,44 @@ class _BudgetBar extends StatelessWidget {
             minHeight: 4,
           ),
         ),
+        const SizedBox(height: 4),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '$currencySymbol${_formatAmount(progress.spent)} / $currencySymbol${_formatAmount(progress.budget.amount)}',
+              style: AppTypography.labelSmall.copyWith(
+                color: AppColors.textTertiary,
+                fontSize: 10,
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              decoration: BoxDecoration(
+                color: paceColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                isOverPace ? 'Over pace' : 'On track',
+                style: AppTypography.labelSmall.copyWith(
+                  color: paceColor,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
       ],
     );
+  }
+
+  String _formatAmount(double value) {
+    if (value.abs() >= 1000000) {
+      return '${(value / 1000000).toStringAsFixed(1)}M';
+    } else if (value.abs() >= 1000) {
+      return '${(value / 1000).toStringAsFixed(1)}K';
+    }
+    return value.toStringAsFixed(0);
   }
 }

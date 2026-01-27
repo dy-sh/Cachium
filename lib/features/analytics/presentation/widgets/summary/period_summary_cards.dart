@@ -21,8 +21,10 @@ class PeriodSummaryCards extends ConsumerWidget {
     final expenseColor = AppColors.getTransactionColor('expense', colorIntensity);
     final netColor = summary.netAmount >= 0 ? incomeColor : expenseColor;
 
+    final hasPreviousData = summary.previousTotalIncome > 0 || summary.previousTotalExpense > 0;
+
     return SizedBox(
-      height: 90,
+      height: hasPreviousData ? 108 : 90,
       child: ListView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
@@ -33,6 +35,8 @@ class PeriodSummaryCards extends ConsumerWidget {
             icon: LucideIcons.trendingUp,
             color: incomeColor,
             currencySymbol: currencySymbol,
+            changePercent: hasPreviousData ? summary.incomeChangePercent : null,
+            changeIsGood: true, // income increase is good
           ),
           const SizedBox(width: AppSpacing.sm),
           _SummaryCard(
@@ -41,6 +45,8 @@ class PeriodSummaryCards extends ConsumerWidget {
             icon: LucideIcons.trendingDown,
             color: expenseColor,
             currencySymbol: currencySymbol,
+            changePercent: hasPreviousData ? summary.expenseChangePercent : null,
+            changeIsGood: false, // expense increase is bad
           ),
           const SizedBox(width: AppSpacing.sm),
           _SummaryCard(
@@ -50,6 +56,8 @@ class PeriodSummaryCards extends ConsumerWidget {
             color: netColor,
             currencySymbol: currencySymbol,
             showSign: true,
+            changePercent: hasPreviousData ? summary.netChangePercent : null,
+            changeIsGood: true, // net increase is good
           ),
           const SizedBox(width: AppSpacing.sm),
           _SummaryCard(
@@ -72,6 +80,8 @@ class _SummaryCard extends StatelessWidget {
   final Color color;
   final String currencySymbol;
   final bool showSign;
+  final double? changePercent;
+  final bool changeIsGood;
 
   const _SummaryCard({
     required this.title,
@@ -80,6 +90,8 @@ class _SummaryCard extends StatelessWidget {
     required this.color,
     required this.currencySymbol,
     this.showSign = false,
+    this.changePercent,
+    this.changeIsGood = true,
   });
 
   @override
@@ -132,8 +144,38 @@ class _SummaryCard extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
+          if (changePercent != null) _buildChangeRow(),
         ],
       ),
+    );
+  }
+
+  Widget _buildChangeRow() {
+    final pct = changePercent!;
+    final isUp = pct > 0;
+    // For income/net: up=green, down=red. For expenses: up=red, down=green.
+    final isGood = changeIsGood ? isUp : !isUp;
+    final changeColor = pct == 0
+        ? AppColors.textTertiary
+        : (isGood ? AppColors.green : AppColors.red);
+
+    return Row(
+      children: [
+        if (pct != 0)
+          Icon(
+            isUp ? LucideIcons.arrowUp : LucideIcons.arrowDown,
+            size: 10,
+            color: changeColor,
+          ),
+        const SizedBox(width: 2),
+        Text(
+          '${isUp ? '+' : ''}${pct.toStringAsFixed(0)}%',
+          style: AppTypography.labelSmall.copyWith(
+            color: changeColor,
+            fontSize: 10,
+          ),
+        ),
+      ],
     );
   }
 }

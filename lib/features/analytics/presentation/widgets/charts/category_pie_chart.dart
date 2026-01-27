@@ -17,8 +17,31 @@ class CategoryPieChart extends ConsumerStatefulWidget {
   ConsumerState<CategoryPieChart> createState() => _CategoryPieChartState();
 }
 
-class _CategoryPieChartState extends ConsumerState<CategoryPieChart> {
+class _CategoryPieChartState extends ConsumerState<CategoryPieChart>
+    with SingleTickerProviderStateMixin {
   int touchedIndex = -1;
+  late AnimationController _animController;
+  late Animation<double> _radiusAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _radiusAnimation = CurvedAnimation(
+      parent: _animController,
+      curve: Curves.easeOutBack,
+    );
+    _animController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,8 +53,11 @@ class _CategoryPieChartState extends ConsumerState<CategoryPieChart> {
       return _buildEmptyState(filter);
     }
 
-    // Limit to top 6 categories, combine rest as "Other"
+    // Prepare chart data (top 6 + Other)
     final displayBreakdowns = _prepareChartData(breakdowns);
+
+    // Compute total for center display
+    final total = displayBreakdowns.fold(0.0, (sum, b) => sum + b.amount);
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.cardPadding),
@@ -55,65 +81,96 @@ class _CategoryPieChartState extends ConsumerState<CategoryPieChart> {
               SizedBox(
                 width: 140,
                 height: 140,
-                child: PieChart(
-                  PieChartData(
-                    pieTouchData: PieTouchData(
-                      touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                        setState(() {
-                          if (!event.isInterestedForInteractions ||
-                              pieTouchResponse == null ||
-                              pieTouchResponse.touchedSection == null) {
-                            touchedIndex = -1;
-                            return;
-                          }
-                          touchedIndex = pieTouchResponse
-                              .touchedSection!.touchedSectionIndex;
-                        });
-                      },
-                    ),
-                    startDegreeOffset: -90,
-                    sectionsSpace: 2,
-                    centerSpaceRadius: 35,
-                    sections: displayBreakdowns.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final breakdown = entry.value;
-                      final isTouched = index == touchedIndex;
+                child: AnimatedBuilder(
+                  animation: _radiusAnimation,
+                  builder: (context, child) {
+                    return Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        PieChart(
+                          PieChartData(
+                            pieTouchData: PieTouchData(
+                              touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                                setState(() {
+                                  if (!event.isInterestedForInteractions ||
+                                      pieTouchResponse == null ||
+                                      pieTouchResponse.touchedSection == null) {
+                                    touchedIndex = -1;
+                                    return;
+                                  }
+                                  touchedIndex = pieTouchResponse
+                                      .touchedSection!.touchedSectionIndex;
+                                });
+                              },
+                            ),
+                            startDegreeOffset: -90,
+                            sectionsSpace: 2,
+                            centerSpaceRadius: 45,
+                            sections: displayBreakdowns.asMap().entries.map((entry) {
+                              final index = entry.key;
+                              final breakdown = entry.value;
+                              final isTouched = index == touchedIndex;
+                              final baseRadius = isTouched ? 30.0 : 25.0;
 
-                      return PieChartSectionData(
-                        color: breakdown.color,
-                        value: breakdown.amount,
-                        title: '',
-                        radius: isTouched ? 45 : 40,
-                        badgeWidget: isTouched
-                            ? Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.surfaceLight,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  '${breakdown.percentage.toStringAsFixed(1)}%',
-                                  style: AppTypography.labelSmall.copyWith(
-                                    color: AppColors.textPrimary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              )
-                            : null,
-                        badgePositionPercentageOffset: 1.2,
-                      );
-                    }).toList(),
-                  ),
+                              return PieChartSectionData(
+                                color: breakdown.color,
+                                value: breakdown.amount,
+                                title: '',
+                                radius: baseRadius * _radiusAnimation.value,
+                                badgeWidget: isTouched
+                                    ? Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.surfaceLight,
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          '${breakdown.percentage.toStringAsFixed(1)}%',
+                                          style: AppTypography.labelSmall.copyWith(
+                                            color: AppColors.textPrimary,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      )
+                                    : null,
+                                badgePositionPercentageOffset: 1.2,
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                        // Center total
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Total',
+                              style: AppTypography.labelSmall.copyWith(
+                                color: AppColors.textTertiary,
+                                fontSize: 9,
+                              ),
+                            ),
+                            Text(
+                              '$currencySymbol${_formatCompact(total)}',
+                              style: AppTypography.moneyTiny.copyWith(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
               const SizedBox(width: AppSpacing.lg),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: displayBreakdowns.take(5).map((breakdown) {
+                  children: displayBreakdowns.map((breakdown) {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                       child: _LegendRow(
@@ -194,6 +251,12 @@ class _CategoryPieChartState extends ConsumerState<CategoryPieChart> {
       ),
     );
   }
+
+  String _formatCompact(double value) {
+    if (value.abs() >= 1000000) return '${(value / 1000000).toStringAsFixed(1)}M';
+    if (value.abs() >= 1000) return '${(value / 1000).toStringAsFixed(1)}K';
+    return value.toStringAsFixed(0);
+  }
 }
 
 class _ChartData {
@@ -246,12 +309,29 @@ class _LegendRow extends StatelessWidget {
           ),
         ),
         Text(
-          '${percentage.toStringAsFixed(0)}%',
+          '$currencySymbol${_formatCompact(amount)}',
           style: AppTypography.labelSmall.copyWith(
             color: AppColors.textSecondary,
           ),
         ),
+        const SizedBox(width: 4),
+        SizedBox(
+          width: 30,
+          child: Text(
+            '${percentage.toStringAsFixed(0)}%',
+            style: AppTypography.labelSmall.copyWith(
+              color: AppColors.textTertiary,
+            ),
+            textAlign: TextAlign.right,
+          ),
+        ),
       ],
     );
+  }
+
+  String _formatCompact(double value) {
+    if (value.abs() >= 1000000) return '${(value / 1000000).toStringAsFixed(1)}M';
+    if (value.abs() >= 1000) return '${(value / 1000).toStringAsFixed(1)}K';
+    return value.toStringAsFixed(0);
   }
 }

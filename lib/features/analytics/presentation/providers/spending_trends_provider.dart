@@ -25,6 +25,8 @@ final spendingTrendsProvider = Provider<OverallTrend>((ref) {
       incomeChangePercent: 0,
       expenseChangePercent: 0,
       topCategoryChanges: [],
+      incomeHistory: [],
+      expenseHistory: [],
     );
   }
 
@@ -113,6 +115,31 @@ final spendingTrendsProvider = Provider<OverallTrend>((ref) {
   // Sort by absolute change percent descending, take top 5
   trends.sort((a, b) => b.changePercent.abs().compareTo(a.changePercent.abs()));
 
+  // Build historical data for sparklines (last 6 equal-length periods)
+  final incomeHistory = <double>[];
+  final expenseHistory = <double>[];
+
+  for (int i = 5; i >= 0; i--) {
+    final periodEnd = currentRange.start.subtract(Duration(days: dayCount * i));
+    final periodStart = periodEnd.subtract(Duration(days: dayCount - 1));
+    final range = DateRange(
+      start: DateTime(periodStart.year, periodStart.month, periodStart.day),
+      end: DateTime(periodEnd.year, periodEnd.month, periodEnd.day, 23, 59, 59),
+    );
+
+    double inc = 0;
+    double exp = 0;
+    for (final tx in transactions.where((tx) => range.contains(tx.date) && matchesFilters(tx))) {
+      if (tx.type == TransactionType.income) {
+        inc += tx.amount;
+      } else {
+        exp += tx.amount;
+      }
+    }
+    incomeHistory.add(inc);
+    expenseHistory.add(exp);
+  }
+
   return OverallTrend(
     currentIncome: currentIncome,
     previousIncome: previousIncome,
@@ -121,5 +148,7 @@ final spendingTrendsProvider = Provider<OverallTrend>((ref) {
     incomeChangePercent: changePercent(currentIncome, previousIncome),
     expenseChangePercent: changePercent(currentExpense, previousExpense),
     topCategoryChanges: trends.take(5).toList(),
+    incomeHistory: incomeHistory,
+    expenseHistory: expenseHistory,
   );
 });

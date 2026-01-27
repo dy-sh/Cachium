@@ -24,6 +24,8 @@ class OverallTrend {
   final double incomeChangePercent;
   final double expenseChangePercent;
   final List<SpendingTrend> topCategoryChanges;
+  final List<double> incomeHistory;
+  final List<double> expenseHistory;
 
   const OverallTrend({
     required this.currentIncome,
@@ -33,6 +35,8 @@ class OverallTrend {
     required this.incomeChangePercent,
     required this.expenseChangePercent,
     required this.topCategoryChanges,
+    this.incomeHistory = const [],
+    this.expenseHistory = const [],
   });
 
   bool get hasData => currentIncome > 0 || currentExpense > 0 || previousIncome > 0 || previousExpense > 0;

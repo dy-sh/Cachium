@@ -4,20 +4,31 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
+import '../../../../../design_system/animations/staggered_list.dart';
 import '../../../../settings/data/models/app_settings.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
 import '../../../data/models/financial_insight.dart';
 import '../../providers/financial_insights_provider.dart';
 
-class FinancialInsightsSection extends ConsumerWidget {
+class FinancialInsightsSection extends ConsumerStatefulWidget {
   const FinancialInsightsSection({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<FinancialInsightsSection> createState() => _FinancialInsightsSectionState();
+}
+
+class _FinancialInsightsSectionState extends ConsumerState<FinancialInsightsSection> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
     final insights = ref.watch(financialInsightsProvider);
     final colorIntensity = ref.watch(colorIntensityProvider);
 
     if (insights.isEmpty) return const SizedBox.shrink();
+
+    final displayInsights = _expanded ? insights : insights.take(3).toList();
+    final hasMore = insights.length > 3;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
@@ -33,13 +44,30 @@ class FinancialInsightsSection extends ConsumerWidget {
           children: [
             Text('Insights', style: AppTypography.h4),
             const SizedBox(height: AppSpacing.md),
-            ...insights.map((insight) => Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                  child: _InsightRow(
-                    insight: insight,
-                    colorIntensity: colorIntensity,
+            StaggeredList(
+              children: displayInsights.map((insight) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    child: _InsightRow(
+                      insight: insight,
+                      colorIntensity: colorIntensity,
+                    ),
+                  )).toList(),
+            ),
+            if (hasMore)
+              GestureDetector(
+                onTap: () => setState(() => _expanded = !_expanded),
+                child: Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.xs),
+                  child: Center(
+                    child: Text(
+                      _expanded ? 'Show less' : 'Show more (${insights.length - 3})',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.accentPrimary,
+                      ),
+                    ),
                   ),
-                )),
+                ),
+              ),
           ],
         ),
       ),

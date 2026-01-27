@@ -1,22 +1,34 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../transactions/data/models/transaction.dart';
+import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../data/models/calendar_day_data.dart';
 import 'analytics_filter_provider.dart';
-import 'filtered_transactions_provider.dart';
+
+// Month offset for calendar navigation (0 = current filter month)
+final calendarMonthOffsetProvider = StateProvider<int>((ref) => 0);
 
 final cashFlowCalendarProvider = Provider<List<CalendarDayData>>((ref) {
-  final transactions = ref.watch(filteredAnalyticsTransactionsProvider);
   final filter = ref.watch(analyticsFilterProvider);
+  final monthOffset = ref.watch(calendarMonthOffsetProvider);
+  final transactionsAsync = ref.watch(transactionsProvider);
 
-  if (transactions.isEmpty) return [];
+  final allTransactions = transactionsAsync.valueOrNull;
+  if (allTransactions == null) return [];
 
-  final start = filter.dateRange.start;
-  final end = filter.dateRange.end;
+  // Determine the month to display
+  final baseEnd = filter.dateRange.end;
+  final targetMonth = DateTime(baseEnd.year, baseEnd.month + monthOffset, 1);
+  final start = targetMonth;
+  final end = DateTime(targetMonth.year, targetMonth.month + 1, 0); // last day
 
-  // Cap at 3 months
-  final cappedStart = end.difference(start).inDays > 92
-      ? end.subtract(const Duration(days: 92))
-      : start;
+  // Filter transactions to the target month (respecting account/category filters)
+  final transactions = allTransactions.where((tx) {
+    final txDate = DateTime(tx.date.year, tx.date.month, tx.date.day);
+    if (txDate.isBefore(start) || txDate.isAfter(end)) return false;
+    if (filter.hasAccountFilter && !filter.selectedAccountIds.contains(tx.accountId)) return false;
+    if (filter.hasCategoryFilter && !filter.selectedCategoryIds.contains(tx.categoryId)) return false;
+    return true;
+  }).toList();
 
   // Group transactions by day
   final Map<String, double> incomeByDay = {};
@@ -33,12 +45,12 @@ final cashFlowCalendarProvider = Provider<List<CalendarDayData>>((ref) {
 
   // Build day list
   final days = <CalendarDayData>[];
-  final dayCount = end.difference(cappedStart).inDays + 1;
+  final dayCount = end.difference(start).inDays + 1;
 
   final netValues = <double>[];
 
   for (int i = 0; i < dayCount; i++) {
-    final date = cappedStart.add(Duration(days: i));
+    final date = start.add(Duration(days: i));
     final key = '${date.year}-${date.month}-${date.day}';
     final income = incomeByDay[key] ?? 0;
     final expense = expenseByDay[key] ?? 0;
@@ -86,4 +98,12 @@ final cashFlowCalendarProvider = Provider<List<CalendarDayData>>((ref) {
       intensity: intensity,
     );
   }).toList();
+});
+
+// Current displayed month for the calendar header
+final calendarDisplayMonthProvider = Provider<DateTime>((ref) {
+  final filter = ref.watch(analyticsFilterProvider);
+  final offset = ref.watch(calendarMonthOffsetProvider);
+  final baseEnd = filter.dateRange.end;
+  return DateTime(baseEnd.year, baseEnd.month + offset, 1);
 });

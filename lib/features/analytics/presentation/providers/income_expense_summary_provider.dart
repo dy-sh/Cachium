@@ -1,12 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../transactions/data/models/transaction.dart';
+import '../../data/models/date_range_preset.dart';
 import '../../data/models/income_expense_summary.dart';
 import 'analytics_filter_provider.dart';
 import 'filtered_transactions_provider.dart';
+import '../../../transactions/presentation/providers/transactions_provider.dart';
 
 final incomeExpenseSummaryProvider = Provider<IncomeExpenseSummary>((ref) {
   final transactions = ref.watch(filteredAnalyticsTransactionsProvider);
   final filter = ref.watch(analyticsFilterProvider);
+  final allTransactionsAsync = ref.watch(transactionsProvider);
 
   double totalIncome = 0;
   double totalExpense = 0;
@@ -23,6 +26,34 @@ final incomeExpenseSummaryProvider = Provider<IncomeExpenseSummary>((ref) {
     }
   }
 
+  // Compute previous period
+  double previousTotalIncome = 0;
+  double previousTotalExpense = 0;
+
+  final allTransactions = allTransactionsAsync.valueOrNull;
+  if (allTransactions != null) {
+    final currentRange = filter.dateRange;
+    final dayCount = currentRange.dayCount;
+    final previousEnd = currentRange.start.subtract(const Duration(days: 1));
+    final previousStart = previousEnd.subtract(Duration(days: dayCount - 1));
+    final previousRange = DateRange(
+      start: DateTime(previousStart.year, previousStart.month, previousStart.day),
+      end: DateTime(previousEnd.year, previousEnd.month, previousEnd.day, 23, 59, 59),
+    );
+
+    for (final tx in allTransactions) {
+      if (!previousRange.contains(tx.date)) continue;
+      if (filter.hasAccountFilter && !filter.selectedAccountIds.contains(tx.accountId)) continue;
+      if (filter.hasCategoryFilter && !filter.selectedCategoryIds.contains(tx.categoryId)) continue;
+
+      if (tx.type == TransactionType.income) {
+        previousTotalIncome += tx.amount;
+      } else {
+        previousTotalExpense += tx.amount;
+      }
+    }
+  }
+
   return IncomeExpenseSummary(
     periodStart: filter.dateRange.start,
     periodEnd: filter.dateRange.end,
@@ -30,6 +61,8 @@ final incomeExpenseSummaryProvider = Provider<IncomeExpenseSummary>((ref) {
     totalExpense: totalExpense,
     incomeCount: incomeCount,
     expenseCount: expenseCount,
+    previousTotalIncome: previousTotalIncome,
+    previousTotalExpense: previousTotalExpense,
   );
 });
 

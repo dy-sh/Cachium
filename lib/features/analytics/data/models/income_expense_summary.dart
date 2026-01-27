@@ -5,6 +5,8 @@ class IncomeExpenseSummary {
   final double totalExpense;
   final int incomeCount;
   final int expenseCount;
+  final double previousTotalIncome;
+  final double previousTotalExpense;
 
   const IncomeExpenseSummary({
     required this.periodStart,
@@ -13,6 +15,8 @@ class IncomeExpenseSummary {
     required this.totalExpense,
     required this.incomeCount,
     required this.expenseCount,
+    this.previousTotalIncome = 0,
+    this.previousTotalExpense = 0,
   });
 
   double get netAmount => totalIncome - totalExpense;
@@ -33,6 +37,23 @@ class IncomeExpenseSummary {
   double get savingsRate {
     if (totalIncome == 0) return 0;
     return ((totalIncome - totalExpense) / totalIncome * 100).clamp(-100, 100);
+  }
+
+  double get previousNetAmount => previousTotalIncome - previousTotalExpense;
+
+  double get incomeChangePercent {
+    if (previousTotalIncome == 0) return totalIncome > 0 ? 100 : 0;
+    return (totalIncome - previousTotalIncome) / previousTotalIncome * 100;
+  }
+
+  double get expenseChangePercent {
+    if (previousTotalExpense == 0) return totalExpense > 0 ? 100 : 0;
+    return (totalExpense - previousTotalExpense) / previousTotalExpense * 100;
+  }
+
+  double get netChangePercent {
+    if (previousNetAmount == 0) return netAmount > 0 ? 100 : (netAmount < 0 ? -100 : 0);
+    return (netAmount - previousNetAmount) / previousNetAmount.abs() * 100;
   }
 
   factory IncomeExpenseSummary.empty({
@@ -56,6 +77,8 @@ class IncomeExpenseSummary {
     double? totalExpense,
     int? incomeCount,
     int? expenseCount,
+    double? previousTotalIncome,
+    double? previousTotalExpense,
   }) {
     return IncomeExpenseSummary(
       periodStart: periodStart ?? this.periodStart,
@@ -64,6 +87,8 @@ class IncomeExpenseSummary {
       totalExpense: totalExpense ?? this.totalExpense,
       incomeCount: incomeCount ?? this.incomeCount,
       expenseCount: expenseCount ?? this.expenseCount,
+      previousTotalIncome: previousTotalIncome ?? this.previousTotalIncome,
+      previousTotalExpense: previousTotalExpense ?? this.previousTotalExpense,
     );
   }
 }
