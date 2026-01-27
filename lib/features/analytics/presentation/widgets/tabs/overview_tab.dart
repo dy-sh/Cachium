@@ -11,17 +11,14 @@ import '../flow/sankey_flow_section.dart';
 import '../flow/account_flow_section.dart';
 import '../calendar/cash_flow_calendar.dart';
 import '../budgets/budget_progress_section.dart';
+import '../scroll_anchored_list.dart';
 
 class OverviewTab extends StatelessWidget {
   const OverviewTab({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: EdgeInsets.only(
-        top: AppSpacing.md,
-        bottom: AppSpacing.bottomNavHeight + AppSpacing.lg,
-      ),
+    return ScrollAnchoredList(
       children: [
         const PeriodSummaryCards(),
         const SizedBox(height: AppSpacing.lg),
