@@ -6,7 +6,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
-import '../../../../../design_system/components/inputs/date_picker/date_picker.dart';
+import '../../../../../design_system/components/inputs/date_range_picker/date_range_picker.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
 import '../../../data/models/date_range_preset.dart';
 import '../../providers/analytics_filter_provider.dart';
@@ -69,26 +69,19 @@ class DateRangeSelector extends ConsumerWidget {
     WidgetRef ref,
     DateRange currentRange,
   ) async {
-    final start = await showFMDatePicker(
+    final picked = await showFMDateRangePicker(
       context: context,
-      initialDate: currentRange.start,
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
+      initialStart: currentRange.start,
+      initialEnd: currentRange.end,
     );
-    if (start == null || !context.mounted) return;
-
-    final end = await showFMDatePicker(
-      context: context,
-      initialDate: currentRange.end,
-      firstDate: start,
-      lastDate: DateTime.now(),
-    );
-    if (end == null || !context.mounted) return;
+    if (picked == null || !context.mounted) return;
 
     ref.read(analyticsFilterProvider.notifier).setCustomDateRange(
       DateRange(
-        start: start,
-        end: DateTime(end.year, end.month, end.day, 23, 59, 59),
+        start: picked.start,
+        end: DateTime(picked.end.year, picked.end.month, picked.end.day, 23, 59, 59),
       ),
     );
   }

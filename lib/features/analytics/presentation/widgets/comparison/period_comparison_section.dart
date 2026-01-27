@@ -5,6 +5,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
+import '../../../../../design_system/components/inputs/date_range_picker/date_range_picker.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
 import '../../../data/models/date_range_preset.dart';
 import '../../providers/period_comparison_provider.dart';
@@ -51,11 +52,12 @@ class PeriodComparisonSection extends ConsumerWidget {
                     range: periodA,
                     color: AppColors.accentPrimary,
                     onTap: () async {
-                      final picked = await showDateRangePicker(
+                      final picked = await showFMDateRangePicker(
                         context: context,
                         firstDate: DateTime(2000),
                         lastDate: DateTime.now(),
-                        initialDateRange: DateTimeRange(start: periodA.start, end: periodA.end),
+                        initialStart: periodA.start,
+                        initialEnd: periodA.end,
                       );
                       if (picked != null) {
                         ref.read(comparisonPeriodAProvider.notifier).state = DateRange(
@@ -73,11 +75,12 @@ class PeriodComparisonSection extends ConsumerWidget {
                     range: periodB,
                     color: AppColors.yellow,
                     onTap: () async {
-                      final picked = await showDateRangePicker(
+                      final picked = await showFMDateRangePicker(
                         context: context,
                         firstDate: DateTime(2000),
                         lastDate: DateTime.now(),
-                        initialDateRange: DateTimeRange(start: periodB.start, end: periodB.end),
+                        initialStart: periodB.start,
+                        initialEnd: periodB.end,
                       );
                       if (picked != null) {
                         ref.read(comparisonPeriodBProvider.notifier).state = DateRange(
