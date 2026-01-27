@@ -142,19 +142,20 @@ class _PresetChipState extends State<_PresetChip>
   @override
   Widget build(BuildContext context) {
     final bright = widget.isSelected && !widget.dimmed;
+    final dimmed = widget.isSelected && widget.dimmed;
     final borderColor = bright
         ? widget.accentColor
-        : widget.dimmed
+        : dimmed
             ? widget.accentColor.withValues(alpha: 0.3)
-            : AppColors.border.withValues(alpha: 0.5);
+            : AppColors.border;
     final chipColor = bright
         ? widget.accentColor.withValues(alpha: 0.1)
-        : AppColors.surface;
-    final contentColor = bright
+        : dimmed
+            ? widget.accentColor.withValues(alpha: 0.1)
+            : AppColors.surface;
+    final contentColor = widget.isSelected
         ? widget.accentColor
-        : widget.dimmed
-            ? widget.accentColor
-            : AppColors.textSecondary;
+        : AppColors.textSecondary;
 
     return GestureDetector(
       onTapDown: (_) => _controller.forward(),
