@@ -8,14 +8,23 @@ import '../../../../../core/constants/app_typography.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
 import '../../providers/income_expense_summary_provider.dart';
 
-class SavingsGauge extends ConsumerWidget {
+class SavingsGauge extends ConsumerStatefulWidget {
   const SavingsGauge({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SavingsGauge> createState() => _SavingsGaugeState();
+}
+
+class _SavingsGaugeState extends ConsumerState<SavingsGauge> {
+  bool _showDetails = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final ref = this.ref;
     final summary = ref.watch(incomeExpenseSummaryProvider);
     final colorIntensity = ref.watch(colorIntensityProvider);
     final accentColor = ref.watch(accentColorProvider);
+    final currencySymbol = ref.watch(currencySymbolProvider);
 
     if (summary.totalIncome == 0 && summary.totalExpense == 0) {
       return const SizedBox.shrink();
@@ -42,12 +51,14 @@ class SavingsGauge extends ConsumerWidget {
         children: [
           Text('Financial Health', style: AppTypography.labelLarge),
           const SizedBox(height: AppSpacing.lg),
-          SizedBox(
-            height: 160,
-            child: Center(
-              child: CustomPaint(
-                size: const Size(160, 160),
-                painter: _GaugePainter(
+          GestureDetector(
+            onLongPress: () => setState(() => _showDetails = !_showDetails),
+            child: SizedBox(
+              height: 160,
+              child: Center(
+                child: CustomPaint(
+                  size: const Size(160, 160),
+                  painter: _GaugePainter(
                   rings: [
                     _GaugeRing(
                       label: 'Savings',
@@ -69,7 +80,26 @@ class SavingsGauge extends ConsumerWidget {
               ),
             ),
           ),
+          ),
           const SizedBox(height: AppSpacing.md),
+          if (_showDetails)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceLight,
+                  borderRadius: AppRadius.smAll,
+                ),
+                child: Column(
+                  children: [
+                    _DetailRow(label: 'Income', value: summary.totalIncome, color: incomeColor, currencySymbol: currencySymbol),
+                    _DetailRow(label: 'Expenses', value: summary.totalExpense, color: expenseColor, currencySymbol: currencySymbol),
+                    _DetailRow(label: 'Net', value: summary.netAmount, color: summary.netAmount >= 0 ? incomeColor : expenseColor, currencySymbol: currencySymbol),
+                  ],
+                ),
+              ),
+            ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -177,6 +207,37 @@ class _GaugeLabel extends StatelessWidget {
         const SizedBox(height: 2),
         Text(label, style: AppTypography.labelSmall.copyWith(color: AppColors.textTertiary, fontSize: 9)),
       ],
+    );
+  }
+}
+
+class _DetailRow extends StatelessWidget {
+  final String label;
+  final double value;
+  final Color color;
+  final String currencySymbol;
+
+  const _DetailRow({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.currencySymbol,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: AppTypography.labelSmall.copyWith(color: AppColors.textSecondary)),
+          Text(
+            '$currencySymbol${value.toStringAsFixed(2)}',
+            style: AppTypography.labelSmall.copyWith(color: color, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
     );
   }
 }

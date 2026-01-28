@@ -9,7 +9,9 @@ import '../../../../settings/presentation/providers/settings_provider.dart';
 import '../../../data/models/analytics_filter.dart';
 import '../../providers/analytics_filter_provider.dart';
 import '../../providers/category_breakdown_provider.dart';
+import '../../../data/models/chart_drill_down.dart';
 import '../../providers/chart_highlight_provider.dart';
+import '../../providers/drill_down_provider.dart';
 
 class CategoryPieChart extends ConsumerStatefulWidget {
   const CategoryPieChart({super.key});
@@ -93,17 +95,30 @@ class _CategoryPieChartState extends ConsumerState<CategoryPieChart>
                           PieChartData(
                             pieTouchData: PieTouchData(
                               touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                                setState(() {
-                                  if (!event.isInterestedForInteractions ||
-                                      pieTouchResponse == null ||
-                                      pieTouchResponse.touchedSection == null) {
+                                if (!event.isInterestedForInteractions ||
+                                    pieTouchResponse == null ||
+                                    pieTouchResponse.touchedSection == null) {
+                                  setState(() {
                                     touchedIndex = -1;
                                     ref.read(chartHighlightProvider.notifier).state = null;
-                                    return;
-                                  }
-                                  touchedIndex = pieTouchResponse
-                                      .touchedSection!.touchedSectionIndex;
-                                  final tappedCategoryId = displayBreakdowns[touchedIndex].categoryId;
+                                  });
+                                  return;
+                                }
+                                final newIndex = pieTouchResponse
+                                    .touchedSection!.touchedSectionIndex;
+                                final tappedCategoryId = displayBreakdowns[newIndex].categoryId;
+
+                                // Double-tap: drill down into category transactions
+                                if (event is FlTapUpEvent && touchedIndex == newIndex && tappedCategoryId != null) {
+                                  ref.read(drillDownProvider.notifier).state = ChartDrillDown(
+                                    categoryId: tappedCategoryId,
+                                    transactionType: filter.typeFilter == AnalyticsTypeFilter.income ? 'income' : 'expense',
+                                  );
+                                  return;
+                                }
+
+                                setState(() {
+                                  touchedIndex = newIndex;
                                   ref.read(chartHighlightProvider.notifier).state = tappedCategoryId;
                                 });
                               },

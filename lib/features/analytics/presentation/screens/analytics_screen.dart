@@ -8,11 +8,15 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/layout/page_layout.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/analytics_filter_provider.dart';
+import '../../../analytics/data/models/chart_drill_down.dart';
+import '../providers/drill_down_provider.dart';
 import '../widgets/filters/analytics_filter_bar.dart';
 import '../widgets/filters/date_range_navigator.dart';
 import '../widgets/tabs/overview_tab.dart';
 import '../widgets/tabs/comparisons_tab.dart';
+import '../widgets/tabs/forecasts_tab.dart';
 
 class AnalyticsScreen extends ConsumerStatefulWidget {
   const AnalyticsScreen({super.key});
@@ -30,7 +34,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
   late Animation<double> _filterSlideAnimation;
   late Animation<double> _filterFadeAnimation;
 
-  static const _tabs = ['Overview', 'Comparisons'];
+  static const _tabs = ['Overview', 'Comparisons', 'Forecasts'];
 
   @override
   void initState() {
@@ -69,6 +73,16 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
   Widget build(BuildContext context) {
     final accentColor = ref.watch(accentColorProvider);
     final hasFilter = ref.watch(hasActiveFilterProvider);
+
+    // Watch drill-down and navigate to transactions when set
+    ref.listen<ChartDrillDown?>(drillDownProvider, (_, drillDown) {
+      if (drillDown != null) {
+        final params = drillDown.toQueryParameters();
+        context.push('/transactions', extra: params);
+        // Reset after navigation
+        ref.read(drillDownProvider.notifier).state = null;
+      }
+    });
 
     return PageLayout(
       title: 'Analytics',
@@ -109,6 +123,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
               children: const [
                 OverviewTab(),
                 ComparisonsTab(),
+                ForecastsTab(),
               ],
             ),
           ),

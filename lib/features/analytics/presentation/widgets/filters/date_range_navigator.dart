@@ -28,14 +28,25 @@ class DateRangeNavigator extends ConsumerWidget {
     final canGoPrev = !isAllTime;
     final canGoNext = !isAllTime && endDay.isBefore(today);
 
-    return Padding(
-      padding: const EdgeInsets.only(
-        left: AppSpacing.screenPadding,
-        right: AppSpacing.screenPadding,
-        top: AppSpacing.sm,
-        bottom: AppSpacing.sm,
-      ),
-      child: Row(
+    return GestureDetector(
+      onHorizontalDragEnd: isAllTime
+          ? null
+          : (details) {
+              final velocity = details.primaryVelocity ?? 0;
+              if (velocity > 200 && canGoPrev) {
+                ref.read(analyticsFilterProvider.notifier).shiftDateRange(-1);
+              } else if (velocity < -200 && canGoNext) {
+                ref.read(analyticsFilterProvider.notifier).shiftDateRange(1);
+              }
+            },
+      child: Padding(
+        padding: const EdgeInsets.only(
+          left: AppSpacing.screenPadding,
+          right: AppSpacing.screenPadding,
+          top: AppSpacing.sm,
+          bottom: AppSpacing.sm,
+        ),
+        child: Row(
         children: [
           GestureDetector(
             onTap: canGoPrev
@@ -80,6 +91,7 @@ class DateRangeNavigator extends ConsumerWidget {
             ),
           ),
         ],
+        ),
       ),
     );
   }

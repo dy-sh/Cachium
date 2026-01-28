@@ -6,6 +6,8 @@ import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
+import '../../../data/models/chart_drill_down.dart';
+import '../../providers/drill_down_provider.dart';
 import '../../providers/income_expense_summary_provider.dart';
 
 class IncomeExpenseChart extends ConsumerWidget {
@@ -209,6 +211,22 @@ class IncomeExpenseChart extends ConsumerWidget {
                           );
                         },
                       ),
+                      touchCallback: (FlTouchEvent event, barTouchResponse) {
+                        if (event is FlTapUpEvent &&
+                            barTouchResponse != null &&
+                            barTouchResponse.spot != null) {
+                          final groupIndex = barTouchResponse.spot!.touchedBarGroupIndex;
+                          final rodIndex = barTouchResponse.spot!.touchedRodDataIndex;
+                          if (groupIndex >= 0 && groupIndex < periods.length) {
+                            final period = periods[groupIndex];
+                            ref.read(drillDownProvider.notifier).state = ChartDrillDown(
+                              startDate: period.periodStart,
+                              endDate: period.periodEnd,
+                              transactionType: rodIndex == 0 ? 'income' : 'expense',
+                            );
+                          }
+                        }
+                      },
                     ),
                   ),
                   swapAnimationDuration: const Duration(milliseconds: 400),

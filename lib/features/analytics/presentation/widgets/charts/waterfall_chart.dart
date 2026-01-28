@@ -6,6 +6,8 @@ import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
+import '../../../data/models/chart_drill_down.dart';
+import '../../providers/drill_down_provider.dart';
 import '../../providers/waterfall_provider.dart';
 import '../../../data/models/waterfall_entry.dart';
 
@@ -142,6 +144,21 @@ class WaterfallChart extends ConsumerWidget {
                       );
                     },
                   ),
+                  touchCallback: (FlTouchEvent event, barTouchResponse) {
+                    if (event is FlTapUpEvent &&
+                        barTouchResponse != null &&
+                        barTouchResponse.spot != null) {
+                      final groupIndex = barTouchResponse.spot!.touchedBarGroupIndex;
+                      if (groupIndex >= 0 && groupIndex < entries.length) {
+                        final e = entries[groupIndex];
+                        if (e.type != WaterfallEntryType.netTotal) {
+                          ref.read(drillDownProvider.notifier).state = ChartDrillDown(
+                            transactionType: e.type == WaterfallEntryType.income ? 'income' : 'expense',
+                          );
+                        }
+                      }
+                    }
+                  },
                 ),
               ),
               swapAnimationDuration: const Duration(milliseconds: 400),
