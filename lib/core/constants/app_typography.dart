@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 class AppTypography {
   AppTypography._();
 
-  // Base font families
-  static String get _primaryFont => GoogleFonts.inter().fontFamily!;
-  static String get _monoFont => GoogleFonts.jetBrainsMono().fontFamily!;
+  // Base font families (bundled locally)
+  static const String _primaryFont = 'Inter';
+  static const String _monoFont = 'JetBrainsMono';
 
   // Headings
   static TextStyle get h1 => TextStyle(
