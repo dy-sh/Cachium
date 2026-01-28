@@ -7,7 +7,7 @@ import '../../../../../core/constants/app_typography.dart';
 import '../../../../settings/data/models/app_settings.dart';
 import '../../../data/models/category_time_series.dart';
 
-class CategoryLinesChart extends StatelessWidget {
+class CategoryLinesChart extends StatefulWidget {
   final List<CategoryTimeSeries> seriesList;
   final ColorIntensity colorIntensity;
   final String currencySymbol;
@@ -20,20 +20,28 @@ class CategoryLinesChart extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    if (seriesList.isEmpty) return _buildEmptyState();
+  State<CategoryLinesChart> createState() => _CategoryLinesChartState();
+}
 
-    final accentColors = AppColors.getAccentOptions(colorIntensity);
+class _CategoryLinesChartState extends State<CategoryLinesChart> {
+  final Set<int> _hiddenSeriesIndices = {};
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.seriesList.isEmpty) return _buildEmptyState();
+
+    final accentColors = AppColors.getAccentOptions(widget.colorIntensity);
 
     double maxY = 0;
-    for (final s in seriesList) {
-      for (final p in s.points) {
+    for (int i = 0; i < widget.seriesList.length; i++) {
+      if (_hiddenSeriesIndices.contains(i)) continue;
+      for (final p in widget.seriesList[i].points) {
         if (p.amount > maxY) maxY = p.amount;
       }
     }
     if (maxY == 0) maxY = 1;
 
-    final pointCount = seriesList.first.points.length;
+    final pointCount = widget.seriesList.first.points.length;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.cardPadding),
@@ -52,15 +60,33 @@ class CategoryLinesChart extends StatelessWidget {
               Flexible(
                 child: Wrap(
                   spacing: AppSpacing.sm,
-                  children: seriesList.map((s) {
+                  children: widget.seriesList.asMap().entries.map((entry) {
+                    final i = entry.key;
+                    final s = entry.value;
                     final color = accentColors[s.colorIndex.clamp(0, accentColors.length - 1)];
-                    return Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-                        const SizedBox(width: 4),
-                        Text(s.name, style: AppTypography.labelSmall.copyWith(color: color)),
-                      ],
+                    final hidden = _hiddenSeriesIndices.contains(i);
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          if (hidden) {
+                            _hiddenSeriesIndices.remove(i);
+                          } else {
+                            _hiddenSeriesIndices.add(i);
+                          }
+                        });
+                      },
+                      child: AnimatedOpacity(
+                        opacity: hidden ? 0.3 : 1.0,
+                        duration: const Duration(milliseconds: 200),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+                            const SizedBox(width: 4),
+                            Text(s.name, style: AppTypography.labelSmall.copyWith(color: color)),
+                          ],
+                        ),
+                      ),
                     );
                   }).toList(),
                 ),
@@ -97,7 +123,7 @@ class CategoryLinesChart extends StatelessWidget {
                         if (pointCount > 12 && idx % 2 != 0) return const SizedBox.shrink();
                         return Padding(
                           padding: const EdgeInsets.only(top: AppSpacing.xs),
-                          child: Text(seriesList.first.points[idx].label, style: AppTypography.labelSmall),
+                          child: Text(widget.seriesList.first.points[idx].label, style: AppTypography.labelSmall),
                         );
                       },
                     ),
@@ -114,7 +140,10 @@ class CategoryLinesChart extends StatelessWidget {
                   ),
                 ),
                 borderData: FlBorderData(show: false),
-                lineBarsData: seriesList.map((s) {
+                lineBarsData: widget.seriesList.asMap().entries
+                    .where((entry) => !_hiddenSeriesIndices.contains(entry.key))
+                    .map((entry) {
+                  final s = entry.value;
                   final color = accentColors[s.colorIndex.clamp(0, accentColors.length - 1)];
                   return LineChartBarData(
                     spots: s.points.asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value.amount)).toList(),
@@ -140,9 +169,14 @@ class CategoryLinesChart extends StatelessWidget {
                     getTooltipItems: (touchedSpots) {
                       return touchedSpots.map((spot) {
                         final seriesIdx = spot.barIndex;
-                        final name = seriesIdx < seriesList.length ? seriesList[seriesIdx].name : '';
+                        final visibleIndices = widget.seriesList.asMap().entries
+                            .where((e) => !_hiddenSeriesIndices.contains(e.key))
+                            .map((e) => e.key)
+                            .toList();
+                        final actualIdx = seriesIdx < visibleIndices.length ? visibleIndices[seriesIdx] : seriesIdx;
+                        final name = actualIdx < widget.seriesList.length ? widget.seriesList[actualIdx].name : '';
                         return LineTooltipItem(
-                          '$name\n$currencySymbol${spot.y.toStringAsFixed(2)}',
+                          '$name\n${widget.currencySymbol}${spot.y.toStringAsFixed(2)}',
                           AppTypography.bodySmall.copyWith(color: spot.bar.color),
                         );
                       }).toList();
@@ -180,8 +214,8 @@ class CategoryLinesChart extends StatelessWidget {
   }
 
   String _formatAmount(double value) {
-    if (value.abs() >= 1000000) return '$currencySymbol${(value / 1000000).toStringAsFixed(1)}M';
-    if (value.abs() >= 1000) return '$currencySymbol${(value / 1000).toStringAsFixed(0)}K';
-    return '$currencySymbol${value.toStringAsFixed(0)}';
+    if (value.abs() >= 1000000) return '${widget.currencySymbol}${(value / 1000000).toStringAsFixed(1)}M';
+    if (value.abs() >= 1000) return '${widget.currencySymbol}${(value / 1000).toStringAsFixed(0)}K';
+    return '${widget.currencySymbol}${value.toStringAsFixed(0)}';
   }
 }

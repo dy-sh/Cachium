@@ -9,6 +9,7 @@ import '../../../../settings/presentation/providers/settings_provider.dart';
 import '../../../data/models/analytics_filter.dart';
 import '../../providers/analytics_filter_provider.dart';
 import '../../providers/category_breakdown_provider.dart';
+import '../../providers/chart_highlight_provider.dart';
 
 class CategoryPieChart extends ConsumerStatefulWidget {
   const CategoryPieChart({super.key});
@@ -48,6 +49,7 @@ class _CategoryPieChartState extends ConsumerState<CategoryPieChart>
     final breakdowns = ref.watch(categoryBreakdownProvider);
     final filter = ref.watch(analyticsFilterProvider);
     final currencySymbol = ref.watch(currencySymbolProvider);
+    final highlightedCategory = ref.watch(chartHighlightProvider);
 
     if (breakdowns.isEmpty) {
       return _buildEmptyState(filter);
@@ -96,10 +98,13 @@ class _CategoryPieChartState extends ConsumerState<CategoryPieChart>
                                       pieTouchResponse == null ||
                                       pieTouchResponse.touchedSection == null) {
                                     touchedIndex = -1;
+                                    ref.read(chartHighlightProvider.notifier).state = null;
                                     return;
                                   }
                                   touchedIndex = pieTouchResponse
                                       .touchedSection!.touchedSectionIndex;
+                                  final tappedCategoryId = displayBreakdowns[touchedIndex].categoryId;
+                                  ref.read(chartHighlightProvider.notifier).state = tappedCategoryId;
                                 });
                               },
                             ),
@@ -111,9 +116,13 @@ class _CategoryPieChartState extends ConsumerState<CategoryPieChart>
                               final breakdown = entry.value;
                               final isTouched = index == touchedIndex;
                               final baseRadius = isTouched ? 30.0 : 25.0;
+                              final sectionColor = highlightedCategory != null &&
+                                      breakdown.categoryId != highlightedCategory
+                                  ? breakdown.color.withValues(alpha: 0.2)
+                                  : breakdown.color;
 
                               return PieChartSectionData(
-                                color: breakdown.color,
+                                color: sectionColor,
                                 value: breakdown.amount,
                                 title: '',
                                 radius: baseRadius * _radiusAnimation.value,
@@ -198,6 +207,7 @@ class _CategoryPieChartState extends ConsumerState<CategoryPieChart>
         color: b.color,
         amount: b.amount,
         percentage: b.percentage,
+        categoryId: b.categoryId,
       )).toList();
     }
 
@@ -207,6 +217,7 @@ class _CategoryPieChartState extends ConsumerState<CategoryPieChart>
       color: b.color,
       amount: b.amount,
       percentage: b.percentage,
+      categoryId: b.categoryId,
     )).toList();
 
     final otherAmount = breakdowns.skip(5).fold(0.0, (sum, b) => sum + b.amount);
@@ -264,12 +275,14 @@ class _ChartData {
   final Color color;
   final double amount;
   final double percentage;
+  final String? categoryId;
 
   const _ChartData({
     required this.name,
     required this.color,
     required this.amount,
     required this.percentage,
+    this.categoryId,
   });
 }
 

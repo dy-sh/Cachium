@@ -7,27 +7,42 @@ import '../../../../../core/constants/app_typography.dart';
 import '../../../../settings/data/models/app_settings.dart';
 import '../../../data/models/category_time_series.dart';
 
-class StackedAreaChart extends StatelessWidget {
+class StackedAreaChart extends StatefulWidget {
   final List<CategoryTimeSeries> seriesList;
   final ColorIntensity colorIntensity;
   final String currencySymbol;
+  final String? highlightedCategoryId;
 
   const StackedAreaChart({
     super.key,
     required this.seriesList,
     required this.colorIntensity,
     required this.currencySymbol,
+    this.highlightedCategoryId,
   });
 
   @override
+  State<StackedAreaChart> createState() => _StackedAreaChartState();
+}
+
+class _StackedAreaChartState extends State<StackedAreaChart> {
+  final Set<int> _hiddenSeriesIndices = {};
+
+  List<CategoryTimeSeries> get _visibleSeries {
+    return [
+      for (int i = 0; i < widget.seriesList.length; i++)
+        if (!_hiddenSeriesIndices.contains(i)) widget.seriesList[i],
+    ];
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (seriesList.isEmpty) return _buildEmptyState();
+    if (widget.seriesList.isEmpty) return _buildEmptyState();
 
-    final accentColors = AppColors.getAccentOptions(colorIntensity);
-    final pointCount = seriesList.first.points.length;
-
-    // Compute stacked values
-    final stackedMax = _computeStackedMax();
+    final accentColors = AppColors.getAccentOptions(widget.colorIntensity);
+    final pointCount = widget.seriesList.first.points.length;
+    final visibleSeries = _visibleSeries;
+    final stackedMax = _computeStackedMax(visibleSeries);
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.cardPadding),
@@ -40,7 +55,9 @@ class StackedAreaChart extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Category Proportions', style: AppTypography.labelLarge),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.sm),
+          _buildLegend(accentColors),
+          const SizedBox(height: AppSpacing.md),
           SizedBox(
             height: 200,
             child: LineChart(
@@ -70,7 +87,7 @@ class StackedAreaChart extends StatelessWidget {
                         if (pointCount > 12 && idx % 2 != 0) return const SizedBox.shrink();
                         return Padding(
                           padding: const EdgeInsets.only(top: AppSpacing.xs),
-                          child: Text(seriesList.first.points[idx].label, style: AppTypography.labelSmall),
+                          child: Text(widget.seriesList.first.points[idx].label, style: AppTypography.labelSmall),
                         );
                       },
                     ),
@@ -87,8 +104,33 @@ class StackedAreaChart extends StatelessWidget {
                   ),
                 ),
                 borderData: FlBorderData(show: false),
-                lineBarsData: _buildStackedLines(accentColors),
-                lineTouchData: const LineTouchData(enabled: false),
+                lineBarsData: _buildStackedLines(visibleSeries, accentColors),
+                lineTouchData: LineTouchData(
+                  enabled: true,
+                  touchTooltipData: LineTouchTooltipData(
+                    getTooltipColor: (_) => AppColors.surface,
+                    tooltipBorder: BorderSide(color: AppColors.border),
+                    tooltipRoundedRadius: 8,
+                    getTooltipItems: (touchedSpots) {
+                      return touchedSpots.map((spot) {
+                        final seriesIndex = spot.barIndex;
+                        if (seriesIndex < 0 || seriesIndex >= visibleSeries.length) {
+                          return null;
+                        }
+                        final series = visibleSeries[seriesIndex];
+                        final color = accentColors[series.colorIndex.clamp(0, accentColors.length - 1)];
+                        final pointIdx = spot.x.toInt();
+                        final rawAmount = pointIdx >= 0 && pointIdx < series.points.length
+                            ? series.points[pointIdx].amount
+                            : 0.0;
+                        return LineTooltipItem(
+                          '${series.name}: ${_formatAmount(rawAmount)}',
+                          AppTypography.labelSmall.copyWith(color: color),
+                        );
+                      }).toList();
+                    },
+                  ),
+                ),
               ),
               duration: const Duration(milliseconds: 400),
               curve: Curves.easeInOut,
@@ -99,18 +141,71 @@ class StackedAreaChart extends StatelessWidget {
     );
   }
 
-  List<LineChartBarData> _buildStackedLines(List<Color> accentColors) {
-    final result = <LineChartBarData>[];
-    final pointCount = seriesList.first.points.length;
+  Widget _buildLegend(List<Color> accentColors) {
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.xs,
+      children: List.generate(widget.seriesList.length, (i) {
+        final s = widget.seriesList[i];
+        final color = accentColors[s.colorIndex.clamp(0, accentColors.length - 1)];
+        final isHidden = _hiddenSeriesIndices.contains(i);
+        final isHighlighted = widget.highlightedCategoryId != null &&
+            widget.highlightedCategoryId == s.categoryId;
 
-    // Build cumulative stacks (bottom to top)
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              if (isHidden) {
+                _hiddenSeriesIndices.remove(i);
+              } else {
+                _hiddenSeriesIndices.add(i);
+              }
+            });
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(4),
+              border: isHighlighted ? Border.all(color: color, width: 1.5) : null,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: isHidden ? Colors.transparent : color,
+                    border: Border.all(color: isHidden ? AppColors.textSecondary : color),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  s.name,
+                  style: AppTypography.labelSmall.copyWith(
+                    color: isHidden ? AppColors.textSecondary : null,
+                    decoration: isHidden ? TextDecoration.lineThrough : null,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
+  List<LineChartBarData> _buildStackedLines(List<CategoryTimeSeries> series, List<Color> accentColors) {
+    if (series.isEmpty) return [];
+    final result = <LineChartBarData>[];
+    final pointCount = series.first.points.length;
     final cumulativeValues = List.generate(pointCount, (_) => 0.0);
 
-    for (int i = seriesList.length - 1; i >= 0; i--) {
-      final s = seriesList[i];
+    for (int i = series.length - 1; i >= 0; i--) {
+      final s = series[i];
       final color = accentColors[s.colorIndex.clamp(0, accentColors.length - 1)];
 
-      // Add current series values to cumulative
       final spots = <FlSpot>[];
       for (int j = 0; j < pointCount; j++) {
         cumulativeValues[j] += s.points[j].amount;
@@ -134,13 +229,13 @@ class StackedAreaChart extends StatelessWidget {
     return result.reversed.toList();
   }
 
-  double _computeStackedMax() {
-    if (seriesList.isEmpty) return 1;
-    final pointCount = seriesList.first.points.length;
+  double _computeStackedMax(List<CategoryTimeSeries> series) {
+    if (series.isEmpty) return 1;
+    final pointCount = series.first.points.length;
     double maxVal = 0;
     for (int j = 0; j < pointCount; j++) {
       double sum = 0;
-      for (final s in seriesList) {
+      for (final s in series) {
         sum += s.points[j].amount;
       }
       if (sum > maxVal) maxVal = sum;
@@ -169,8 +264,8 @@ class StackedAreaChart extends StatelessWidget {
   }
 
   String _formatAmount(double value) {
-    if (value.abs() >= 1000000) return '$currencySymbol${(value / 1000000).toStringAsFixed(1)}M';
-    if (value.abs() >= 1000) return '$currencySymbol${(value / 1000).toStringAsFixed(0)}K';
-    return '$currencySymbol${value.toStringAsFixed(0)}';
+    if (value.abs() >= 1000000) return '${widget.currencySymbol}${(value / 1000000).toStringAsFixed(1)}M';
+    if (value.abs() >= 1000) return '${widget.currencySymbol}${(value / 1000).toStringAsFixed(0)}K';
+    return '${widget.currencySymbol}${value.toStringAsFixed(0)}';
   }
 }

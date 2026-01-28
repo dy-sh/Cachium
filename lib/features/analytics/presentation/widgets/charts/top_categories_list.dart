@@ -8,6 +8,7 @@ import '../../../../settings/presentation/providers/settings_provider.dart';
 import '../../../data/models/analytics_filter.dart';
 import '../../providers/analytics_filter_provider.dart';
 import '../../providers/category_breakdown_provider.dart';
+import '../../providers/chart_highlight_provider.dart';
 
 enum _SortMode { byAmount, byCount }
 
@@ -31,6 +32,7 @@ class _TopCategoriesListState extends ConsumerState<TopCategoriesList> {
     var breakdowns = ref.watch(topCategoriesProvider(widget.limit));
     final filter = ref.watch(analyticsFilterProvider);
     final currencySymbol = ref.watch(currencySymbolProvider);
+    final highlightedCategory = ref.watch(chartHighlightProvider);
 
     if (breakdowns.isEmpty) {
       return const SizedBox.shrink();
@@ -99,6 +101,10 @@ class _TopCategoriesListState extends ConsumerState<TopCategoriesList> {
               child: GestureDetector(
                 onTap: () {
                   ref.read(analyticsFilterProvider.notifier).setCategories({breakdown.categoryId});
+                  final notifier = ref.read(chartHighlightProvider.notifier);
+                  notifier.state = notifier.state == breakdown.categoryId
+                      ? null
+                      : breakdown.categoryId;
                 },
                 child: _CategoryRow(
                   rank: index + 1,
@@ -111,6 +117,7 @@ class _TopCategoriesListState extends ConsumerState<TopCategoriesList> {
                   currencySymbol: currencySymbol,
                   transactionCount: breakdown.transactionCount,
                   sortMode: _sortMode,
+                  isHighlighted: highlightedCategory == null || highlightedCategory == breakdown.categoryId,
                 ),
               ),
             );
@@ -132,6 +139,7 @@ class _CategoryRow extends StatelessWidget {
   final String currencySymbol;
   final int transactionCount;
   final _SortMode sortMode;
+  final bool isHighlighted;
 
   const _CategoryRow({
     required this.rank,
@@ -144,13 +152,16 @@ class _CategoryRow extends StatelessWidget {
     required this.currencySymbol,
     required this.transactionCount,
     required this.sortMode,
+    this.isHighlighted = true,
   });
 
   @override
   Widget build(BuildContext context) {
     final progress = maxAmount > 0 ? amount / maxAmount : 0.0;
 
-    return Row(
+    return Opacity(
+      opacity: isHighlighted ? 1.0 : 0.3,
+      child: Row(
       children: [
         SizedBox(
           width: 20,
@@ -237,6 +248,7 @@ class _CategoryRow extends StatelessWidget {
           ),
         ),
       ],
+    ),
     );
   }
 

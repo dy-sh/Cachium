@@ -5,7 +5,7 @@ import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
 import '../../../data/models/sankey_flow.dart';
 
-class SankeyDiagram extends StatelessWidget {
+class SankeyDiagram extends StatefulWidget {
   final SankeyData data;
   final String currencySymbol;
 
@@ -16,8 +16,17 @@ class SankeyDiagram extends StatelessWidget {
   });
 
   @override
+  State<SankeyDiagram> createState() => _SankeyDiagramState();
+}
+
+class _SankeyDiagramState extends State<SankeyDiagram> {
+  String? _selectedNodeId;
+  Offset? _tooltipPosition;
+  SankeyNode? _selectedNode;
+
+  @override
   Widget build(BuildContext context) {
-    if (data.isEmpty) return _buildEmptyState();
+    if (widget.data.isEmpty) return _buildEmptyState();
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.cardPadding),
@@ -33,9 +42,49 @@ class SankeyDiagram extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           SizedBox(
             height: _calculateHeight(),
-            child: CustomPaint(
-              size: Size.infinite,
-              painter: _SankeyPainter(data: data, currencySymbol: currencySymbol),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final painter = _SankeyPainter(
+                  data: widget.data,
+                  currencySymbol: widget.currencySymbol,
+                  selectedNodeId: _selectedNodeId,
+                );
+                return Stack(
+                  children: [
+                    GestureDetector(
+                      onTapDown: (details) => _handleTap(details, constraints.biggest, painter),
+                      child: CustomPaint(
+                        size: Size.infinite,
+                        painter: painter,
+                      ),
+                    ),
+                    if (_selectedNode != null && _tooltipPosition != null)
+                      Positioned(
+                        left: _tooltipPosition!.dx.clamp(0, constraints.maxWidth - 120),
+                        top: (_tooltipPosition!.dy - 40).clamp(0, constraints.maxHeight - 36),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: _selectedNode!.color),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.3),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            '${_selectedNode!.label}: ${_formatAmount(_selectedNode!.amount)}',
+                            style: AppTypography.labelSmall.copyWith(color: AppColors.textPrimary),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
             ),
           ),
         ],
@@ -43,11 +92,63 @@ class SankeyDiagram extends StatelessWidget {
     );
   }
 
+  void _handleTap(TapDownDetails details, Size size, _SankeyPainter painter) {
+    final allPositions = painter.computeAllPositions(size);
+    final tapPoint = details.localPosition;
+
+    for (final entry in allPositions.entries) {
+      // Expand hit area slightly for easier tapping
+      final expandedRect = entry.value.inflate(4);
+      if (expandedRect.contains(tapPoint)) {
+        setState(() {
+          if (_selectedNodeId == entry.key) {
+            _selectedNodeId = null;
+            _selectedNode = null;
+            _tooltipPosition = null;
+          } else {
+            _selectedNodeId = entry.key;
+            _selectedNode = _findNode(entry.key);
+            _tooltipPosition = tapPoint;
+          }
+        });
+        return;
+      }
+    }
+
+    // Tapped empty space - deselect
+    setState(() {
+      _selectedNodeId = null;
+      _selectedNode = null;
+      _tooltipPosition = null;
+    });
+  }
+
+  SankeyNode? _findNode(String id) {
+    for (final n in widget.data.sourceNodes) {
+      if (n.id == id) return n;
+    }
+    for (final n in widget.data.targetNodes) {
+      if (n.id == id) return n;
+    }
+    if (widget.data.middleNodes != null) {
+      for (final n in widget.data.middleNodes!) {
+        if (n.id == id) return n;
+      }
+    }
+    return null;
+  }
+
+  String _formatAmount(double value) {
+    if (value.abs() >= 1000000) return '${widget.currencySymbol}${(value / 1000000).toStringAsFixed(1)}M';
+    if (value.abs() >= 1000) return '${widget.currencySymbol}${(value / 1000).toStringAsFixed(1)}K';
+    return '${widget.currencySymbol}${value.toStringAsFixed(0)}';
+  }
+
   double _calculateHeight() {
-    final nodeCount = (data.sourceNodes.length > data.targetNodes.length
-        ? data.sourceNodes.length
-        : data.targetNodes.length);
-    final middleCount = data.middleNodes?.length ?? 0;
+    final nodeCount = (widget.data.sourceNodes.length > widget.data.targetNodes.length
+        ? widget.data.sourceNodes.length
+        : widget.data.targetNodes.length);
+    final middleCount = widget.data.middleNodes?.length ?? 0;
     final maxCount = nodeCount > middleCount ? nodeCount : middleCount;
     return (maxCount * 36.0 + 20).clamp(120.0, 400.0);
   }
@@ -76,19 +177,37 @@ class SankeyDiagram extends StatelessWidget {
 class _SankeyPainter extends CustomPainter {
   final SankeyData data;
   final String currencySymbol;
+  final String? selectedNodeId;
 
-  _SankeyPainter({required this.data, required this.currencySymbol});
+  _SankeyPainter({
+    required this.data,
+    required this.currencySymbol,
+    this.selectedNodeId,
+  });
+
+  Map<String, Rect> computeAllPositions(Size size) {
+    final hasMiddle = data.middleNodes != null && data.middleNodes!.isNotEmpty;
+    final double leftX = 0;
+    final double rightX = size.width - 80;
+    final double midX = hasMiddle ? size.width / 2 - 40 : 0;
+
+    final sourcePositions = _layoutNodes(data.sourceNodes, size.height, leftX);
+    final targetPositions = _layoutNodes(data.targetNodes, size.height, rightX);
+    Map<String, Rect> middlePositions = {};
+    if (hasMiddle) {
+      middlePositions = _layoutNodes(data.middleNodes!, size.height, midX);
+    }
+    return {...sourcePositions, ...targetPositions, ...middlePositions};
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
     final hasMiddle = data.middleNodes != null && data.middleNodes!.isNotEmpty;
 
-    // Column positions
     final double leftX = 0;
     final double rightX = size.width - 80;
     final double midX = hasMiddle ? size.width / 2 - 40 : 0;
 
-    // Position source nodes
     final sourcePositions = _layoutNodes(data.sourceNodes, size.height, leftX);
     final targetPositions = _layoutNodes(data.targetNodes, size.height, rightX);
     Map<String, Rect> middlePositions = {};
@@ -104,11 +223,14 @@ class _SankeyPainter extends CustomPainter {
       final tgtRect = allPositions[link.targetId];
       if (srcRect == null || tgtRect == null) continue;
 
+      final isConnected = selectedNodeId != null &&
+          (link.sourceId == selectedNodeId || link.targetId == selectedNodeId);
+      final dimmed = selectedNodeId != null && !isConnected;
+
       final paint = Paint()
-        ..color = link.color
+        ..color = dimmed ? link.color.withValues(alpha: 0.15) : link.color
         ..style = PaintingStyle.fill;
 
-      // Compute proportional thickness
       final srcNode = _findNode(link.sourceId);
       final tgtNode = _findNode(link.targetId);
       if (srcNode == null || tgtNode == null) continue;
@@ -201,8 +323,9 @@ class _SankeyPainter extends CustomPainter {
       final rect = positions[node.id];
       if (rect == null) continue;
 
+      final dimmed = selectedNodeId != null && selectedNodeId != node.id;
       final paint = Paint()
-        ..color = node.color
+        ..color = dimmed ? node.color.withValues(alpha: 0.4) : node.color
         ..style = PaintingStyle.fill;
 
       canvas.drawRRect(
@@ -217,10 +340,11 @@ class _SankeyPainter extends CustomPainter {
       final rect = positions[node.id];
       if (rect == null) continue;
 
+      final dimmed = selectedNodeId != null && selectedNodeId != node.id;
       final textSpan = TextSpan(
         text: node.label,
         style: TextStyle(
-          color: AppColors.textSecondary,
+          color: dimmed ? AppColors.textSecondary.withValues(alpha: 0.4) : AppColors.textSecondary,
           fontSize: 10,
         ),
       );
@@ -237,6 +361,6 @@ class _SankeyPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _SankeyPainter oldDelegate) {
-    return oldDelegate.data != data;
+    return oldDelegate.data != data || oldDelegate.selectedNodeId != selectedNodeId;
   }
 }

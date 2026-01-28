@@ -6,19 +6,29 @@ import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
 import '../../../data/models/spending_profile.dart';
 
-class RadarSpendingChart extends StatelessWidget {
+class RadarSpendingChart extends StatefulWidget {
   final List<SpendingProfile> profiles;
   final List<Color> profileColors;
+  final String currencySymbol;
 
   const RadarSpendingChart({
     super.key,
     required this.profiles,
     required this.profileColors,
+    this.currencySymbol = '\$',
   });
 
   @override
+  State<RadarSpendingChart> createState() => _RadarSpendingChartState();
+}
+
+class _RadarSpendingChartState extends State<RadarSpendingChart> {
+  int? _touchedDataSetIndex;
+  int? _touchedEntryIndex;
+
+  @override
   Widget build(BuildContext context) {
-    if (profiles.isEmpty || profiles.first.axes.isEmpty) return _buildEmptyState();
+    if (widget.profiles.isEmpty || widget.profiles.first.axes.isEmpty) return _buildEmptyState();
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.cardPadding),
@@ -35,8 +45,8 @@ class RadarSpendingChart extends StatelessWidget {
             children: [
               Text('Spending Profile', style: AppTypography.labelLarge),
               Row(
-                children: profiles.asMap().entries.map((entry) {
-                  final color = entry.key < profileColors.length ? profileColors[entry.key] : AppColors.textSecondary;
+                children: widget.profiles.asMap().entries.map((entry) {
+                  final color = entry.key < widget.profileColors.length ? widget.profileColors[entry.key] : AppColors.textSecondary;
                   return Padding(
                     padding: EdgeInsets.only(left: entry.key > 0 ? AppSpacing.sm : 0),
                     child: Row(
@@ -53,6 +63,8 @@ class RadarSpendingChart extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
+          if (_touchedDataSetIndex != null && _touchedEntryIndex != null)
+            _buildTooltip(),
           SizedBox(
             height: 240,
             child: RadarChart(
@@ -65,16 +77,16 @@ class RadarSpendingChart extends StatelessWidget {
                 radarBorderData: const BorderSide(color: Colors.transparent),
                 titlePositionPercentageOffset: 0.15,
                 getTitle: (index, angle) {
-                  if (profiles.isEmpty || index >= profiles.first.axes.length) {
+                  if (widget.profiles.isEmpty || index >= widget.profiles.first.axes.length) {
                     return RadarChartTitle(text: '');
                   }
                   return RadarChartTitle(
-                    text: profiles.first.axes[index].categoryName,
+                    text: widget.profiles.first.axes[index].categoryName,
                     angle: 0,
                   );
                 },
-                dataSets: profiles.asMap().entries.map((entry) {
-                  final color = entry.key < profileColors.length ? profileColors[entry.key] : AppColors.textSecondary;
+                dataSets: widget.profiles.asMap().entries.map((entry) {
+                  final color = entry.key < widget.profileColors.length ? widget.profileColors[entry.key] : AppColors.textSecondary;
                   return RadarDataSet(
                     fillColor: color.withValues(alpha: 0.15),
                     borderColor: color,
@@ -84,6 +96,23 @@ class RadarSpendingChart extends StatelessWidget {
                   );
                 }).toList(),
                 titleTextStyle: AppTypography.labelSmall.copyWith(color: AppColors.textSecondary),
+                radarTouchData: RadarTouchData(
+                  enabled: true,
+                  touchSpotThreshold: 20,
+                  touchCallback: (event, response) {
+                    setState(() {
+                      if (response == null || response.touchedSpot == null) {
+                        if (event is FlTapUpEvent || event is FlLongPressEnd || event is FlPanEndEvent) {
+                          _touchedDataSetIndex = null;
+                          _touchedEntryIndex = null;
+                        }
+                        return;
+                      }
+                      _touchedDataSetIndex = response.touchedSpot!.touchedDataSetIndex;
+                      _touchedEntryIndex = response.touchedSpot!.touchedRadarEntryIndex;
+                    });
+                  },
+                ),
               ),
               swapAnimationDuration: const Duration(milliseconds: 400),
               swapAnimationCurve: Curves.easeInOut,
@@ -92,6 +121,38 @@ class RadarSpendingChart extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildTooltip() {
+    final dsIndex = _touchedDataSetIndex!;
+    final entryIndex = _touchedEntryIndex!;
+
+    if (dsIndex >= widget.profiles.length) return const SizedBox.shrink();
+    final profile = widget.profiles[dsIndex];
+    if (entryIndex >= profile.axes.length) return const SizedBox.shrink();
+
+    final axis = profile.axes[entryIndex];
+    final color = dsIndex < widget.profileColors.length ? widget.profileColors[dsIndex] : AppColors.textSecondary;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color),
+      ),
+      child: Text(
+        '${axis.categoryName}: ${_formatAmount(axis.rawAmount)}',
+        style: AppTypography.labelSmall.copyWith(color: color),
+      ),
+    );
+  }
+
+  String _formatAmount(double value) {
+    if (value.abs() >= 1000000) return '${widget.currencySymbol}${(value / 1000000).toStringAsFixed(1)}M';
+    if (value.abs() >= 1000) return '${widget.currencySymbol}${(value / 1000).toStringAsFixed(1)}K';
+    return '${widget.currencySymbol}${value.toStringAsFixed(0)}';
   }
 
   Widget _buildEmptyState() {

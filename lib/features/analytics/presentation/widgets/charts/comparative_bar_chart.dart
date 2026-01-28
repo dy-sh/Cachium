@@ -17,7 +17,7 @@ class ComparativeBarSeries {
   const ComparativeBarSeries({required this.name, required this.color});
 }
 
-class ComparativeBarChart extends StatelessWidget {
+class ComparativeBarChart extends StatefulWidget {
   final String title;
   final List<ComparativeBarSeries> series;
   final List<ComparativeBarGroup> groups;
@@ -32,18 +32,26 @@ class ComparativeBarChart extends StatelessWidget {
   });
 
   @override
+  State<ComparativeBarChart> createState() => _ComparativeBarChartState();
+}
+
+class _ComparativeBarChartState extends State<ComparativeBarChart> {
+  final Set<int> _hiddenSeriesIndices = {};
+
+  @override
   Widget build(BuildContext context) {
-    if (groups.isEmpty) return _buildEmptyState();
+    if (widget.groups.isEmpty) return _buildEmptyState();
 
     double maxY = 0;
-    for (final g in groups) {
-      for (final v in g.values) {
-        if (v > maxY) maxY = v;
+    for (final g in widget.groups) {
+      for (int i = 0; i < g.values.length; i++) {
+        if (_hiddenSeriesIndices.contains(i)) continue;
+        if (g.values[i] > maxY) maxY = g.values[i];
       }
     }
     if (maxY == 0) maxY = 1;
 
-    final barWidth = series.length <= 2 ? 10.0 : 7.0;
+    final barWidth = widget.series.length <= 2 ? 10.0 : 7.0;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.cardPadding),
@@ -58,11 +66,31 @@ class ComparativeBarChart extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(title, style: AppTypography.labelLarge),
+              Text(widget.title, style: AppTypography.labelLarge),
               Flexible(
                 child: Wrap(
                   spacing: AppSpacing.sm,
-                  children: series.map((s) => _LegendDot(color: s.color, label: s.name)).toList(),
+                  children: widget.series.asMap().entries.map((entry) {
+                    final i = entry.key;
+                    final s = entry.value;
+                    final hidden = _hiddenSeriesIndices.contains(i);
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          if (hidden) {
+                            _hiddenSeriesIndices.remove(i);
+                          } else {
+                            _hiddenSeriesIndices.add(i);
+                          }
+                        });
+                      },
+                      child: AnimatedOpacity(
+                        opacity: hidden ? 0.3 : 1.0,
+                        duration: const Duration(milliseconds: 200),
+                        child: _LegendDot(color: s.color, label: s.name),
+                      ),
+                    );
+                  }).toList(),
                 ),
               ),
             ],
@@ -74,13 +102,14 @@ class ComparativeBarChart extends StatelessWidget {
               BarChartData(
                 alignment: BarChartAlignment.spaceAround,
                 maxY: maxY * 1.1,
-                barGroups: groups.asMap().entries.map((entry) {
+                barGroups: widget.groups.asMap().entries.map((entry) {
                   return BarChartGroupData(
                     x: entry.key,
-                    barRods: List.generate(series.length, (i) {
+                    barRods: List.generate(widget.series.length, (i) {
+                      final hidden = _hiddenSeriesIndices.contains(i);
                       return BarChartRodData(
-                        toY: i < entry.value.values.length ? entry.value.values[i] : 0,
-                        color: series[i].color,
+                        toY: hidden ? 0 : (i < entry.value.values.length ? entry.value.values[i] : 0),
+                        color: widget.series[i].color,
                         width: barWidth,
                         borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(3),
@@ -109,10 +138,10 @@ class ComparativeBarChart extends StatelessWidget {
                       reservedSize: 30,
                       getTitlesWidget: (value, meta) {
                         final idx = value.toInt();
-                        if (idx < 0 || idx >= groups.length) return const SizedBox.shrink();
+                        if (idx < 0 || idx >= widget.groups.length) return const SizedBox.shrink();
                         return Padding(
                           padding: const EdgeInsets.only(top: AppSpacing.xs),
-                          child: Text(groups[idx].label, style: AppTypography.labelSmall, overflow: TextOverflow.ellipsis),
+                          child: Text(widget.groups[idx].label, style: AppTypography.labelSmall, overflow: TextOverflow.ellipsis),
                         );
                       },
                     ),
@@ -122,7 +151,7 @@ class ComparativeBarChart extends StatelessWidget {
                       showTitles: true,
                       reservedSize: 50,
                       getTitlesWidget: (value, meta) => Text(
-                        _formatAmount(value, currencySymbol),
+                        _formatAmount(value, widget.currencySymbol),
                         style: AppTypography.labelSmall,
                       ),
                     ),
@@ -134,9 +163,9 @@ class ComparativeBarChart extends StatelessWidget {
                     getTooltipColor: (_) => AppColors.surfaceLight,
                     tooltipRoundedRadius: AppRadius.sm,
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                      final seriesName = rodIndex < series.length ? series[rodIndex].name : '';
+                      final seriesName = rodIndex < widget.series.length ? widget.series[rodIndex].name : '';
                       return BarTooltipItem(
-                        '$seriesName\n$currencySymbol${rod.toY.toStringAsFixed(2)}',
+                        '$seriesName\n${widget.currencySymbol}${rod.toY.toStringAsFixed(2)}',
                         AppTypography.bodySmall.copyWith(color: rod.color),
                       );
                     },
@@ -163,7 +192,7 @@ class ComparativeBarChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: AppTypography.labelLarge),
+          Text(widget.title, style: AppTypography.labelLarge),
           const SizedBox(height: AppSpacing.xxl),
           Center(child: Text('No data available', style: AppTypography.bodySmall)),
           const SizedBox(height: AppSpacing.xxl),
