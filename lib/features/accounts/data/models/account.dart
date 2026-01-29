@@ -29,6 +29,23 @@ extension AccountTypeExtension on AccountType {
     }
   }
 
+  bool get isLiability => this == AccountType.creditCard;
+
+  bool get isAsset => !isLiability;
+
+  bool get isLiquid {
+    switch (this) {
+      case AccountType.bank:
+      case AccountType.cash:
+      case AccountType.savings:
+      case AccountType.wallet:
+        return true;
+      case AccountType.creditCard:
+      case AccountType.investment:
+        return false;
+    }
+  }
+
   Color get color {
     switch (this) {
       case AccountType.bank:

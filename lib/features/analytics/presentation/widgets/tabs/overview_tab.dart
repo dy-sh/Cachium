@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../summary/period_summary_cards.dart';
 import '../charts/savings_gauge.dart';
+import '../health/financial_health_section.dart';
 import '../insights/financial_insights_section.dart';
 import '../trends/spending_trends_section.dart';
 import '../charts/balance_line_chart.dart';
+import '../charts/net_worth_chart.dart';
+import '../charts/asset_liability_pie_chart.dart';
 import '../charts/income_expense_chart.dart';
 import '../charts/waterfall_chart.dart';
 import '../charts/category_pie_chart.dart';
@@ -31,6 +34,7 @@ class OverviewTab extends StatelessWidget {
           ),
           child: const SavingsGauge(),
         ),
+        const FinancialHealthSection(),
         const FinancialInsightsSection(),
         const SpendingTrendsSection(),
         Padding(
@@ -38,6 +42,18 @@ class OverviewTab extends StatelessWidget {
             horizontal: AppSpacing.screenPadding,
           ),
           child: const BalanceLineChart(),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.screenPadding,
+          ),
+          child: const NetWorthChart(),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.screenPadding,
+          ),
+          child: const AssetLiabilityPieChart(),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(

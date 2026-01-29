@@ -6,6 +6,7 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/animations/animated_counter.dart';
+import '../../../accounts/data/models/account.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
@@ -136,14 +137,14 @@ class _TotalBalanceCardState extends ConsumerState<TotalBalanceCard> {
   double _getAssets(WidgetRef ref) {
     final accounts = ref.watch(accountsProvider).valueOrEmpty;
     return accounts
-        .where((a) => a.balance > 0)
+        .where((a) => a.type.isAsset)
         .fold(0.0, (sum, a) => sum + a.balance);
   }
 
   double _getLiabilities(WidgetRef ref) {
     final accounts = ref.watch(accountsProvider).valueOrEmpty;
     return accounts
-        .where((a) => a.balance < 0)
+        .where((a) => a.type.isLiability)
         .fold(0.0, (sum, a) => sum + a.balance.abs());
   }
 }

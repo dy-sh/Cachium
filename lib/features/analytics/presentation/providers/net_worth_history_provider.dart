@@ -1,0 +1,173 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../accounts/data/models/account.dart';
+import '../../../accounts/presentation/providers/accounts_provider.dart';
+import '../../../transactions/data/models/transaction.dart';
+import '../../../transactions/presentation/providers/transactions_provider.dart';
+import '../../data/models/net_worth_point.dart';
+import 'analytics_filter_provider.dart';
+
+final netWorthHistoryProvider = Provider<List<NetWorthPoint>>((ref) {
+  final transactionsAsync = ref.watch(transactionsProvider);
+  final accountsAsync = ref.watch(accountsProvider);
+  final filter = ref.watch(analyticsFilterProvider);
+
+  final transactions = transactionsAsync.valueOrNull;
+  final accounts = accountsAsync.valueOrNull;
+
+  if (transactions == null || accounts == null || accounts.isEmpty) {
+    return [];
+  }
+
+  // Filter accounts if needed
+  final relevantAccounts = filter.hasAccountFilter
+      ? accounts.where((a) => filter.selectedAccountIds.contains(a.id)).toList()
+      : accounts;
+
+  if (relevantAccounts.isEmpty) return [];
+
+  // Get current balances for all relevant accounts
+  final currentBalances = <String, double>{};
+  for (final account in relevantAccounts) {
+    currentBalances[account.id] = account.balance;
+  }
+
+  // Build account type lookup
+  final accountTypes = <String, AccountType>{};
+  for (final account in relevantAccounts) {
+    accountTypes[account.id] = account.type;
+  }
+
+  // Get all transactions sorted by date descending
+  final sortedTransactions = List<Transaction>.from(transactions)
+    ..sort((a, b) => b.date.compareTo(a.date));
+
+  // Filter to only transactions affecting relevant accounts
+  final relevantTransactions = sortedTransactions
+      .where((tx) => currentBalances.containsKey(tx.accountId))
+      .toList();
+
+  // Build daily snapshots by working backwards from current balance
+  final dateRange = filter.dateRange;
+  final points = <NetWorthPoint>[];
+
+  // Start from today and work backwards
+  var currentDate = DateTime(
+    dateRange.end.year,
+    dateRange.end.month,
+    dateRange.end.day,
+  );
+  final startDate = DateTime(
+    dateRange.start.year,
+    dateRange.start.month,
+    dateRange.start.day,
+  );
+
+  // Running balances (start with current)
+  final runningBalances = Map<String, double>.from(currentBalances);
+
+  // Index into sorted transactions
+  int txIndex = 0;
+
+  while (!currentDate.isBefore(startDate)) {
+    // Process all transactions on this date (reverse their effect)
+    while (txIndex < relevantTransactions.length) {
+      final tx = relevantTransactions[txIndex];
+      final txDate = DateTime(tx.date.year, tx.date.month, tx.date.day);
+
+      if (txDate.isAfter(currentDate)) {
+        // Transaction is after current date, reverse it
+        final accountId = tx.accountId;
+        if (runningBalances.containsKey(accountId)) {
+          if (tx.type == TransactionType.income) {
+            runningBalances[accountId] = runningBalances[accountId]! - tx.amount;
+          } else {
+            runningBalances[accountId] = runningBalances[accountId]! + tx.amount;
+          }
+        }
+        txIndex++;
+      } else {
+        break;
+      }
+    }
+
+    // Calculate totals using AccountType classification
+    double totalAssets = 0;
+    double totalLiabilities = 0;
+    final assetBalances = <String, double>{};
+    final liabilityBalances = <String, double>{};
+
+    for (final entry in runningBalances.entries) {
+      final accountId = entry.key;
+      final balance = entry.value;
+      final accountType = accountTypes[accountId];
+
+      if (accountType != null) {
+        if (accountType.isLiability) {
+          // For liabilities, the absolute value of balance represents what's owed
+          // A credit card with -500 means you owe 500
+          totalLiabilities += balance.abs();
+          liabilityBalances[accountId] = balance.abs();
+        } else {
+          // For assets, positive balance is the asset value
+          totalAssets += balance;
+          assetBalances[accountId] = balance;
+        }
+      }
+    }
+
+    final netWorth = totalAssets - totalLiabilities;
+
+    points.add(NetWorthPoint(
+      date: currentDate,
+      totalAssets: totalAssets,
+      totalLiabilities: totalLiabilities,
+      netWorth: netWorth,
+      assetBalances: assetBalances,
+      liabilityBalances: liabilityBalances,
+    ));
+
+    // Move to previous day
+    currentDate = currentDate.subtract(const Duration(days: 1));
+  }
+
+  // Reverse to get chronological order
+  return points.reversed.toList();
+});
+
+// Simplified version that aggregates based on date range length
+final aggregatedNetWorthHistoryProvider = Provider<List<NetWorthPoint>>((ref) {
+  final fullHistory = ref.watch(netWorthHistoryProvider);
+  final filter = ref.watch(analyticsFilterProvider);
+
+  if (fullHistory.isEmpty) return [];
+
+  final dayCount = filter.dateRange.dayCount;
+
+  // Determine aggregation level
+  int aggregationDays;
+  if (dayCount <= 14) {
+    aggregationDays = 1; // Daily
+  } else if (dayCount <= 90) {
+    aggregationDays = 7; // Weekly
+  } else if (dayCount <= 365) {
+    aggregationDays = 30; // Monthly
+  } else {
+    aggregationDays = 90; // Quarterly
+  }
+
+  if (aggregationDays == 1) return fullHistory;
+
+  // Aggregate points
+  final aggregated = <NetWorthPoint>[];
+  for (int i = 0; i < fullHistory.length; i += aggregationDays) {
+    final endIndex = (i + aggregationDays - 1).clamp(0, fullHistory.length - 1);
+    aggregated.add(fullHistory[endIndex]);
+  }
+
+  // Always include the last point
+  if (aggregated.isEmpty || aggregated.last != fullHistory.last) {
+    aggregated.add(fullHistory.last);
+  }
+
+  return aggregated;
+});
