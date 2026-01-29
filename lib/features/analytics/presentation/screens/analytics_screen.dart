@@ -34,7 +34,11 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
   late Animation<double> _filterSlideAnimation;
   late Animation<double> _filterFadeAnimation;
 
-  static const _tabs = ['Overview', 'Comparisons', 'Forecasts'];
+  static const _tabs = [
+    (label: 'Overview', icon: LucideIcons.layoutGrid),
+    (label: 'Compare', icon: LucideIcons.barChart3),
+    (label: 'Forecast', icon: LucideIcons.trendingUp),
+  ];
 
   @override
   void initState() {
@@ -90,9 +94,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
         ...List.generate(_tabs.length, (index) {
           final isSelected = _selectedTab == index;
           return Padding(
-            padding: const EdgeInsets.only(right: AppSpacing.sm),
-            child: _TabChip(
-              label: _tabs[index],
+            padding: const EdgeInsets.only(right: AppSpacing.xs),
+            child: _IconTab(
+              label: _tabs[index].label,
+              icon: _tabs[index].icon,
               isSelected: isSelected,
               accentColor: accentColor,
               onTap: () => setState(() => _selectedTab = index),
@@ -214,24 +219,26 @@ class _FilterToggleButtonState extends State<_FilterToggleButton>
   }
 }
 
-class _TabChip extends StatefulWidget {
+class _IconTab extends StatefulWidget {
   final String label;
+  final IconData icon;
   final bool isSelected;
   final Color accentColor;
   final VoidCallback onTap;
 
-  const _TabChip({
+  const _IconTab({
     required this.label,
+    required this.icon,
     required this.isSelected,
     required this.accentColor,
     required this.onTap,
   });
 
   @override
-  State<_TabChip> createState() => _TabChipState();
+  State<_IconTab> createState() => _IconTabState();
 }
 
-class _TabChipState extends State<_TabChip>
+class _IconTabState extends State<_IconTab>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
@@ -260,8 +267,7 @@ class _TabChipState extends State<_TabChip>
 
   @override
   Widget build(BuildContext context) {
-    final borderColor =
-        widget.isSelected ? widget.accentColor : AppColors.border;
+    final color = widget.isSelected ? widget.accentColor : AppColors.textSecondary;
 
     return GestureDetector(
       onTapDown: (_) => _controller.forward(),
@@ -275,28 +281,26 @@ class _TabChipState extends State<_TabChip>
         child: AnimatedContainer(
           duration: AppAnimations.normal,
           padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.xs,
           ),
-          decoration: BoxDecoration(
-            color: widget.isSelected
-                ? widget.accentColor.withValues(alpha: 0.1)
-                : AppColors.surface,
-            borderRadius: AppRadius.chip,
-            border: Border.all(
-              color: borderColor,
-              width: widget.isSelected ? 1.5 : 1,
-            ),
-          ),
-          child: Text(
-            widget.label,
-            style: AppTypography.labelMedium.copyWith(
-              color: widget.isSelected
-                  ? widget.accentColor
-                  : AppColors.textPrimary,
-              fontWeight:
-                  widget.isSelected ? FontWeight.w600 : FontWeight.w500,
-            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                widget.icon,
+                size: 18,
+                color: color,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                widget.label,
+                style: AppTypography.labelSmall.copyWith(
+                  color: color,
+                  fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
+                ),
+              ),
+            ],
           ),
         ),
       ),
