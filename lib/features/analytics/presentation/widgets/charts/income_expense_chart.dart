@@ -32,7 +32,6 @@ class IncomeExpenseChart extends ConsumerWidget {
       return periodMax > max ? periodMax : max;
     });
 
-
     return Container(
       padding: const EdgeInsets.all(AppSpacing.cardPadding),
       decoration: BoxDecoration(
@@ -61,7 +60,7 @@ class IncomeExpenseChart extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.md),
           SizedBox(
             height: 200,
             child: Stack(

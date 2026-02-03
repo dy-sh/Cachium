@@ -29,6 +29,9 @@ class TransactionData with _$TransactionData {
     /// Optional note/memo for the transaction
     String? note,
 
+    /// Optional merchant/payee name
+    String? merchant,
+
     /// Currency code (default: USD)
     @Default('USD') String currency,
 

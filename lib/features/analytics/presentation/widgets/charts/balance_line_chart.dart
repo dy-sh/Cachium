@@ -100,7 +100,7 @@ class BalanceLineChart extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.md),
           SizedBox(
             height: 200,
             child: LineChart(

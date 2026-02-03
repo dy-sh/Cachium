@@ -22,6 +22,7 @@ class Transaction {
   final String accountId;
   final DateTime date;
   final String? note;
+  final String? merchant;
   final DateTime createdAt;
 
   const Transaction({
@@ -32,6 +33,7 @@ class Transaction {
     required this.accountId,
     required this.date,
     this.note,
+    this.merchant,
     required this.createdAt,
   });
 
@@ -43,6 +45,7 @@ class Transaction {
     String? accountId,
     DateTime? date,
     String? note,
+    String? merchant,
     DateTime? createdAt,
   }) {
     return Transaction(
@@ -53,6 +56,7 @@ class Transaction {
       accountId: accountId ?? this.accountId,
       date: date ?? this.date,
       note: note ?? this.note,
+      merchant: merchant ?? this.merchant,
       createdAt: createdAt ?? this.createdAt,
     );
   }

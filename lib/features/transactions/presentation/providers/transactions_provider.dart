@@ -20,6 +20,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     required String accountId,
     required DateTime date,
     String? note,
+    String? merchant,
   }) async {
     final repo = ref.read(transactionRepositoryProvider);
     final db = ref.read(databaseProvider);
@@ -32,6 +33,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
       accountId: accountId,
       date: date,
       note: note,
+      merchant: merchant,
       createdAt: DateTime.now(),
     );
 
@@ -400,7 +402,8 @@ final searchedTransactionsProvider = Provider<AsyncValue<List<TransactionGroup>>
     return groups.map((group) {
       final filteredTxs = group.transactions.where((tx) {
         final note = tx.note?.toLowerCase() ?? '';
-        return note.contains(query);
+        final merchant = tx.merchant?.toLowerCase() ?? '';
+        return note.contains(query) || merchant.contains(query);
       }).toList();
 
       return TransactionGroup(date: group.date, transactions: filteredTxs);

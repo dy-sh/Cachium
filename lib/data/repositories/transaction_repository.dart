@@ -33,6 +33,7 @@ class TransactionRepository {
       accountId: transaction.accountId,
       type: transaction.type.name, // 'income' or 'expense'
       note: transaction.note,
+      merchant: transaction.merchant,
       currency: 'USD', // Default for now
       dateMillis: transaction.date.millisecondsSinceEpoch,
       createdAtMillis: transaction.createdAt.millisecondsSinceEpoch,
@@ -51,6 +52,7 @@ class TransactionRepository {
       accountId: data.accountId,
       date: DateTime.fromMillisecondsSinceEpoch(data.dateMillis),
       note: data.note,
+      merchant: data.merchant,
       createdAt: DateTime.fromMillisecondsSinceEpoch(data.createdAtMillis),
     );
   }
@@ -113,6 +115,7 @@ class TransactionRepository {
         accountId: transaction.accountId,
         type: transaction.type.name,
         note: transaction.note,
+        merchant: transaction.merchant,
         currency: currency,
         dateMillis: transaction.date.millisecondsSinceEpoch,
         createdAtMillis: transaction.createdAt.millisecondsSinceEpoch,

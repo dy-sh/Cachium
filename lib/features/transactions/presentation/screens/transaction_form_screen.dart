@@ -40,16 +40,19 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   bool _initialized = false;
   bool _accountApplied = false;
   late TextEditingController _noteController;
+  late TextEditingController _merchantController;
 
   @override
   void initState() {
     super.initState();
     _noteController = TextEditingController();
+    _merchantController = TextEditingController();
   }
 
   @override
   void dispose() {
     _noteController.dispose();
+    _merchantController.dispose();
     super.dispose();
   }
 
@@ -60,6 +63,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     if (transaction != null) {
       ref.read(transactionFormProvider.notifier).initForEdit(transaction);
       _noteController.text = transaction.note ?? '';
+      _merchantController.text = transaction.merchant ?? '';
       _initialized = true;
     }
   }
@@ -242,6 +246,17 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                     const SizedBox(height: AppSpacing.xxl),
 
                     InputField(
+                      key: ValueKey('merchant_${formState.editingTransactionId}'),
+                      label: 'Merchant (optional)',
+                      hint: 'e.g. Amazon, Starbucks...',
+                      controller: _merchantController,
+                      onChanged: (value) {
+                        ref.read(transactionFormProvider.notifier).setMerchant(value);
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+
+                    InputField(
                       key: ValueKey('note_${formState.editingTransactionId}'),
                       label: 'Note (optional)',
                       hint: 'Add a note...',
@@ -299,6 +314,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                                   accountId: formState.accountId,
                                   date: formState.date,
                                   note: formState.note,
+                                  merchant: formState.merchant,
                                 );
                                 await ref.read(transactionsProvider.notifier)
                                     .updateTransaction(updatedTransaction);
@@ -312,6 +328,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                                     accountId: formState.accountId!,
                                     date: formState.date,
                                     note: formState.note,
+                                    merchant: formState.merchant,
                                   );
                             }
                             if (context.mounted) {

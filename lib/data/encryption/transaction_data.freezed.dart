@@ -39,6 +39,9 @@ mixin _$TransactionData {
   /// Optional note/memo for the transaction
   String? get note => throw _privateConstructorUsedError;
 
+  /// Optional merchant/payee name
+  String? get merchant => throw _privateConstructorUsedError;
+
   /// Currency code (default: USD)
   String get currency => throw _privateConstructorUsedError;
 
@@ -74,6 +77,7 @@ abstract class $TransactionDataCopyWith<$Res> {
     String accountId,
     String type,
     String? note,
+    String? merchant,
     String currency,
     int dateMillis,
     int createdAtMillis,
@@ -101,6 +105,7 @@ class _$TransactionDataCopyWithImpl<$Res, $Val extends TransactionData>
     Object? accountId = null,
     Object? type = null,
     Object? note = freezed,
+    Object? merchant = freezed,
     Object? currency = null,
     Object? dateMillis = null,
     Object? createdAtMillis = null,
@@ -130,6 +135,10 @@ class _$TransactionDataCopyWithImpl<$Res, $Val extends TransactionData>
             note: freezed == note
                 ? _value.note
                 : note // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            merchant: freezed == merchant
+                ? _value.merchant
+                : merchant // ignore: cast_nullable_to_non_nullable
                       as String?,
             currency: null == currency
                 ? _value.currency
@@ -165,6 +174,7 @@ abstract class _$$TransactionDataImplCopyWith<$Res>
     String accountId,
     String type,
     String? note,
+    String? merchant,
     String currency,
     int dateMillis,
     int createdAtMillis,
@@ -191,6 +201,7 @@ class __$$TransactionDataImplCopyWithImpl<$Res>
     Object? accountId = null,
     Object? type = null,
     Object? note = freezed,
+    Object? merchant = freezed,
     Object? currency = null,
     Object? dateMillis = null,
     Object? createdAtMillis = null,
@@ -221,6 +232,10 @@ class __$$TransactionDataImplCopyWithImpl<$Res>
             ? _value.note
             : note // ignore: cast_nullable_to_non_nullable
                   as String?,
+        merchant: freezed == merchant
+            ? _value.merchant
+            : merchant // ignore: cast_nullable_to_non_nullable
+                  as String?,
         currency: null == currency
             ? _value.currency
             : currency // ignore: cast_nullable_to_non_nullable
@@ -248,6 +263,7 @@ class _$TransactionDataImpl implements _TransactionData {
     required this.accountId,
     required this.type,
     this.note,
+    this.merchant,
     this.currency = 'USD',
     required this.dateMillis,
     required this.createdAtMillis,
@@ -280,6 +296,10 @@ class _$TransactionDataImpl implements _TransactionData {
   @override
   final String? note;
 
+  /// Optional merchant/payee name
+  @override
+  final String? merchant;
+
   /// Currency code (default: USD)
   @override
   @JsonKey()
@@ -297,7 +317,7 @@ class _$TransactionDataImpl implements _TransactionData {
 
   @override
   String toString() {
-    return 'TransactionData(id: $id, amount: $amount, categoryId: $categoryId, accountId: $accountId, type: $type, note: $note, currency: $currency, dateMillis: $dateMillis, createdAtMillis: $createdAtMillis)';
+    return 'TransactionData(id: $id, amount: $amount, categoryId: $categoryId, accountId: $accountId, type: $type, note: $note, merchant: $merchant, currency: $currency, dateMillis: $dateMillis, createdAtMillis: $createdAtMillis)';
   }
 
   @override
@@ -313,6 +333,8 @@ class _$TransactionDataImpl implements _TransactionData {
                 other.accountId == accountId) &&
             (identical(other.type, type) || other.type == type) &&
             (identical(other.note, note) || other.note == note) &&
+            (identical(other.merchant, merchant) ||
+                other.merchant == merchant) &&
             (identical(other.currency, currency) ||
                 other.currency == currency) &&
             (identical(other.dateMillis, dateMillis) ||
@@ -331,6 +353,7 @@ class _$TransactionDataImpl implements _TransactionData {
     accountId,
     type,
     note,
+    merchant,
     currency,
     dateMillis,
     createdAtMillis,
@@ -361,6 +384,7 @@ abstract class _TransactionData implements TransactionData {
     required final String accountId,
     required final String type,
     final String? note,
+    final String? merchant,
     final String currency,
     required final int dateMillis,
     required final int createdAtMillis,
@@ -392,6 +416,10 @@ abstract class _TransactionData implements TransactionData {
   /// Optional note/memo for the transaction
   @override
   String? get note;
+
+  /// Optional merchant/payee name
+  @override
+  String? get merchant;
 
   /// Currency code (default: USD)
   @override

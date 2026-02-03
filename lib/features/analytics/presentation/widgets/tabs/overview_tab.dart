@@ -13,6 +13,7 @@ import '../charts/waterfall_chart.dart';
 import '../charts/category_pie_chart.dart';
 import '../charts/treemap_chart.dart';
 import '../charts/top_categories_list.dart';
+import '../merchants/merchant_analysis_section.dart';
 import '../flow/sankey_flow_section.dart';
 import '../flow/account_flow_section.dart';
 import '../calendar/cash_flow_calendar.dart';
@@ -84,6 +85,12 @@ class OverviewTab extends StatelessWidget {
             horizontal: AppSpacing.screenPadding,
           ),
           child: const TopCategoriesList(limit: 5),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.screenPadding,
+          ),
+          child: const MerchantAnalysisSection(),
         ),
         const SankeyFlowSection(),
         const AccountFlowSection(),

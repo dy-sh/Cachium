@@ -56,6 +56,7 @@ class DemoData {
   static List<Transaction> get transactions {
     final now = DateTime.now();
     return [
+      // === CONSECUTIVE DAYS FOR STREAKS (today through 7 days ago) ===
       // Today
       Transaction(
         id: '6ba7b810-9dad-11d1-80b4-00c04fd430c1',
@@ -64,7 +65,8 @@ class DemoData {
         categoryId: 'f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c',
         accountId: '550e8400-e29b-41d4-a716-446655440002',
         date: now,
-        note: 'Grocery shopping at Whole Foods',
+        note: 'Grocery shopping',
+        merchant: 'Whole Foods',
         createdAt: now,
       ),
       Transaction(
@@ -74,7 +76,8 @@ class DemoData {
         categoryId: 'a7b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1d',
         accountId: '550e8400-e29b-41d4-a716-446655440003',
         date: now,
-        note: 'Uber to office',
+        note: 'Ride to office',
+        merchant: 'Uber',
         createdAt: now,
       ),
       // Yesterday
@@ -86,16 +89,7 @@ class DemoData {
         accountId: '550e8400-e29b-41d4-a716-446655440001',
         date: now.subtract(const Duration(days: 1)),
         note: 'Monthly salary',
-        createdAt: now.subtract(const Duration(days: 1)),
-      ),
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd430c4',
-        amount: 45.00,
-        type: TransactionType.expense,
-        categoryId: 'd0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a',
-        accountId: '550e8400-e29b-41d4-a716-446655440002',
-        date: now.subtract(const Duration(days: 1)),
-        note: 'Netflix + Spotify subscription',
+        merchant: 'Acme Corp',
         createdAt: now.subtract(const Duration(days: 1)),
       ),
       Transaction(
@@ -106,6 +100,7 @@ class DemoData {
         accountId: '550e8400-e29b-41d4-a716-446655440003',
         date: now.subtract(const Duration(days: 1)),
         note: 'Lunch with colleagues',
+        merchant: 'Chipotle',
         createdAt: now.subtract(const Duration(days: 1)),
       ),
       // 2 days ago
@@ -117,6 +112,7 @@ class DemoData {
         accountId: '550e8400-e29b-41d4-a716-446655440002',
         date: now.subtract(const Duration(days: 2)),
         note: 'New running shoes',
+        merchant: 'Nike',
         createdAt: now.subtract(const Duration(days: 2)),
       ),
       Transaction(
@@ -127,6 +123,7 @@ class DemoData {
         accountId: '550e8400-e29b-41d4-a716-446655440006',
         date: now.subtract(const Duration(days: 2)),
         note: 'Logo design project',
+        merchant: 'Fiverr',
         createdAt: now.subtract(const Duration(days: 2)),
       ),
       // 3 days ago
@@ -138,17 +135,20 @@ class DemoData {
         accountId: '550e8400-e29b-41d4-a716-446655440001',
         date: now.subtract(const Duration(days: 3)),
         note: 'Electric bill',
+        merchant: 'Con Edison',
         createdAt: now.subtract(const Duration(days: 3)),
       ),
+      // 4 days ago (added for consecutive streak)
       Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd430c9',
-        amount: 35.00,
+        id: '6ba7b810-9dad-11d1-80b4-00c04fd4a001',
+        amount: 15.00,
         type: TransactionType.expense,
-        categoryId: 'd1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a',
-        accountId: '550e8400-e29b-41d4-a716-446655440002',
-        date: now.subtract(const Duration(days: 3)),
-        note: 'Gym membership',
-        createdAt: now.subtract(const Duration(days: 3)),
+        categoryId: 'f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c',
+        accountId: '550e8400-e29b-41d4-a716-446655440003',
+        date: now.subtract(const Duration(days: 4)),
+        note: 'Coffee and snacks',
+        merchant: 'Starbucks',
+        createdAt: now.subtract(const Duration(days: 4)),
       ),
       // 5 days ago
       Transaction(
@@ -159,6 +159,7 @@ class DemoData {
         accountId: '550e8400-e29b-41d4-a716-446655440002',
         date: now.subtract(const Duration(days: 5)),
         note: 'Flight tickets to NYC',
+        merchant: 'Delta Airlines',
         createdAt: now.subtract(const Duration(days: 5)),
       ),
       Transaction(
@@ -171,6 +172,18 @@ class DemoData {
         note: 'Birthday gift from grandma',
         createdAt: now.subtract(const Duration(days: 5)),
       ),
+      // 6 days ago (added for consecutive streak)
+      Transaction(
+        id: '6ba7b810-9dad-11d1-80b4-00c04fd4a002',
+        amount: 22.00,
+        type: TransactionType.expense,
+        categoryId: 'f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c',
+        accountId: '550e8400-e29b-41d4-a716-446655440002',
+        date: now.subtract(const Duration(days: 6)),
+        note: 'Fast food',
+        merchant: 'McDonalds',
+        createdAt: now.subtract(const Duration(days: 6)),
+      ),
       // 7 days ago
       Transaction(
         id: '6ba7b810-9dad-11d1-80b4-00c04fd430cc',
@@ -180,6 +193,7 @@ class DemoData {
         accountId: '550e8400-e29b-41d4-a716-446655440001',
         date: now.subtract(const Duration(days: 7)),
         note: 'Online course subscription',
+        merchant: 'Udemy',
         createdAt: now.subtract(const Duration(days: 7)),
       ),
       Transaction(
@@ -189,8 +203,33 @@ class DemoData {
         categoryId: 'f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c',
         accountId: '550e8400-e29b-41d4-a716-446655440002',
         date: now.subtract(const Duration(days: 7)),
-        note: 'Dinner at Italian restaurant',
+        note: 'Dinner',
+        merchant: 'Olive Garden',
         createdAt: now.subtract(const Duration(days: 7)),
+      ),
+      // 8 days ago
+      Transaction(
+        id: '6ba7b810-9dad-11d1-80b4-00c04fd4a003',
+        amount: 8.50,
+        type: TransactionType.expense,
+        categoryId: 'f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c',
+        accountId: '550e8400-e29b-41d4-a716-446655440003',
+        date: now.subtract(const Duration(days: 8)),
+        note: 'Breakfast',
+        merchant: 'Dunkin',
+        createdAt: now.subtract(const Duration(days: 8)),
+      ),
+      // 9 days ago
+      Transaction(
+        id: '6ba7b810-9dad-11d1-80b4-00c04fd4a004',
+        amount: 25.00,
+        type: TransactionType.expense,
+        categoryId: 'f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c',
+        accountId: '550e8400-e29b-41d4-a716-446655440002',
+        date: now.subtract(const Duration(days: 9)),
+        note: 'Takeout dinner',
+        merchant: 'DoorDash',
+        createdAt: now.subtract(const Duration(days: 9)),
       ),
       // 10 days ago
       Transaction(
@@ -201,6 +240,7 @@ class DemoData {
         accountId: '550e8400-e29b-41d4-a716-446655440005',
         date: now.subtract(const Duration(days: 10)),
         note: 'Dividend payment',
+        merchant: 'Fidelity',
         createdAt: now.subtract(const Duration(days: 10)),
       ),
       Transaction(
@@ -211,7 +251,172 @@ class DemoData {
         accountId: '550e8400-e29b-41d4-a716-446655440001',
         date: now.subtract(const Duration(days: 10)),
         note: 'Internet + Phone bill',
+        merchant: 'Verizon',
         createdAt: now.subtract(const Duration(days: 10)),
+      ),
+
+      // === RECURRING SUBSCRIPTIONS (3+ transactions with same amount/category/merchant at ~30 day intervals) ===
+
+      // Netflix subscription - $15.99/month (Entertainment category)
+      Transaction(
+        id: '6ba7b810-9dad-11d1-80b4-00c04fd4s001',
+        amount: 16.00,
+        type: TransactionType.expense,
+        categoryId: 'd0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a',
+        accountId: '550e8400-e29b-41d4-a716-446655440002',
+        date: now.subtract(const Duration(days: 1)),
+        note: 'Monthly subscription',
+        merchant: 'Netflix',
+        createdAt: now.subtract(const Duration(days: 1)),
+      ),
+      Transaction(
+        id: '6ba7b810-9dad-11d1-80b4-00c04fd4s002',
+        amount: 16.00,
+        type: TransactionType.expense,
+        categoryId: 'd0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a',
+        accountId: '550e8400-e29b-41d4-a716-446655440002',
+        date: now.subtract(const Duration(days: 31)),
+        note: 'Monthly subscription',
+        merchant: 'Netflix',
+        createdAt: now.subtract(const Duration(days: 31)),
+      ),
+      Transaction(
+        id: '6ba7b810-9dad-11d1-80b4-00c04fd4s003',
+        amount: 16.00,
+        type: TransactionType.expense,
+        categoryId: 'd0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a',
+        accountId: '550e8400-e29b-41d4-a716-446655440002',
+        date: now.subtract(const Duration(days: 61)),
+        note: 'Monthly subscription',
+        merchant: 'Netflix',
+        createdAt: now.subtract(const Duration(days: 61)),
+      ),
+      Transaction(
+        id: '6ba7b810-9dad-11d1-80b4-00c04fd4s004',
+        amount: 16.00,
+        type: TransactionType.expense,
+        categoryId: 'd0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a',
+        accountId: '550e8400-e29b-41d4-a716-446655440002',
+        date: now.subtract(const Duration(days: 91)),
+        note: 'Monthly subscription',
+        merchant: 'Netflix',
+        createdAt: now.subtract(const Duration(days: 91)),
+      ),
+
+      // Spotify subscription - $10.99/month (Entertainment category)
+      Transaction(
+        id: '6ba7b810-9dad-11d1-80b4-00c04fd4s005',
+        amount: 11.00,
+        type: TransactionType.expense,
+        categoryId: 'd0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a',
+        accountId: '550e8400-e29b-41d4-a716-446655440002',
+        date: now.subtract(const Duration(days: 5)),
+        note: 'Premium subscription',
+        merchant: 'Spotify',
+        createdAt: now.subtract(const Duration(days: 5)),
+      ),
+      Transaction(
+        id: '6ba7b810-9dad-11d1-80b4-00c04fd4s006',
+        amount: 11.00,
+        type: TransactionType.expense,
+        categoryId: 'd0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a',
+        accountId: '550e8400-e29b-41d4-a716-446655440002',
+        date: now.subtract(const Duration(days: 35)),
+        note: 'Premium subscription',
+        merchant: 'Spotify',
+        createdAt: now.subtract(const Duration(days: 35)),
+      ),
+      Transaction(
+        id: '6ba7b810-9dad-11d1-80b4-00c04fd4s007',
+        amount: 11.00,
+        type: TransactionType.expense,
+        categoryId: 'd0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a',
+        accountId: '550e8400-e29b-41d4-a716-446655440002',
+        date: now.subtract(const Duration(days: 65)),
+        note: 'Premium subscription',
+        merchant: 'Spotify',
+        createdAt: now.subtract(const Duration(days: 65)),
+      ),
+
+      // Gym membership - $35/month (Health & Fitness category)
+      Transaction(
+        id: '6ba7b810-9dad-11d1-80b4-00c04fd430c9',
+        amount: 35.00,
+        type: TransactionType.expense,
+        categoryId: 'd1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a',
+        accountId: '550e8400-e29b-41d4-a716-446655440002',
+        date: now.subtract(const Duration(days: 3)),
+        note: 'Gym membership',
+        merchant: 'Planet Fitness',
+        createdAt: now.subtract(const Duration(days: 3)),
+      ),
+      Transaction(
+        id: '6ba7b810-9dad-11d1-80b4-00c04fd4s008',
+        amount: 35.00,
+        type: TransactionType.expense,
+        categoryId: 'd1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a',
+        accountId: '550e8400-e29b-41d4-a716-446655440002',
+        date: now.subtract(const Duration(days: 33)),
+        note: 'Gym membership',
+        merchant: 'Planet Fitness',
+        createdAt: now.subtract(const Duration(days: 33)),
+      ),
+      Transaction(
+        id: '6ba7b810-9dad-11d1-80b4-00c04fd4s009',
+        amount: 35.00,
+        type: TransactionType.expense,
+        categoryId: 'd1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a',
+        accountId: '550e8400-e29b-41d4-a716-446655440002',
+        date: now.subtract(const Duration(days: 63)),
+        note: 'Gym membership',
+        merchant: 'Planet Fitness',
+        createdAt: now.subtract(const Duration(days: 63)),
+      ),
+      Transaction(
+        id: '6ba7b810-9dad-11d1-80b4-00c04fd4s010',
+        amount: 35.00,
+        type: TransactionType.expense,
+        categoryId: 'd1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a',
+        accountId: '550e8400-e29b-41d4-a716-446655440002',
+        date: now.subtract(const Duration(days: 93)),
+        note: 'Gym membership',
+        merchant: 'Planet Fitness',
+        createdAt: now.subtract(const Duration(days: 93)),
+      ),
+
+      // iCloud storage - $2.99/month (Technology category)
+      Transaction(
+        id: '6ba7b810-9dad-11d1-80b4-00c04fd4s011',
+        amount: 3.00,
+        type: TransactionType.expense,
+        categoryId: 'd2e3f4a5-b6c7-4d8e-9f0a-1b2c3d4e5f6a',
+        accountId: '550e8400-e29b-41d4-a716-446655440002',
+        date: now.subtract(const Duration(days: 8)),
+        note: 'iCloud+ storage',
+        merchant: 'Apple',
+        createdAt: now.subtract(const Duration(days: 8)),
+      ),
+      Transaction(
+        id: '6ba7b810-9dad-11d1-80b4-00c04fd4s012',
+        amount: 3.00,
+        type: TransactionType.expense,
+        categoryId: 'd2e3f4a5-b6c7-4d8e-9f0a-1b2c3d4e5f6a',
+        accountId: '550e8400-e29b-41d4-a716-446655440002',
+        date: now.subtract(const Duration(days: 38)),
+        note: 'iCloud+ storage',
+        merchant: 'Apple',
+        createdAt: now.subtract(const Duration(days: 38)),
+      ),
+      Transaction(
+        id: '6ba7b810-9dad-11d1-80b4-00c04fd4s013',
+        amount: 3.00,
+        type: TransactionType.expense,
+        categoryId: 'd2e3f4a5-b6c7-4d8e-9f0a-1b2c3d4e5f6a',
+        accountId: '550e8400-e29b-41d4-a716-446655440002',
+        date: now.subtract(const Duration(days: 68)),
+        note: 'iCloud+ storage',
+        merchant: 'Apple',
+        createdAt: now.subtract(const Duration(days: 68)),
       ),
     ];
   }

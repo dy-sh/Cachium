@@ -9,6 +9,7 @@ class TransactionFormState {
   final String? accountId;
   final DateTime date;
   final String? note;
+  final String? merchant;
   final String? editingTransactionId;
   // Original values for change tracking (only set when editing)
   final TransactionType? originalType;
@@ -17,6 +18,7 @@ class TransactionFormState {
   final String? originalAccountId;
   final DateTime? originalDate;
   final String? originalNote;
+  final String? originalMerchant;
   // Settings-driven validation
   final bool allowZeroAmount;
 
@@ -27,6 +29,7 @@ class TransactionFormState {
     this.accountId,
     required this.date,
     this.note,
+    this.merchant,
     this.editingTransactionId,
     this.originalType,
     this.originalAmount,
@@ -34,6 +37,7 @@ class TransactionFormState {
     this.originalAccountId,
     this.originalDate,
     this.originalNote,
+    this.originalMerchant,
     this.allowZeroAmount = false,
   });
 
@@ -50,7 +54,8 @@ class TransactionFormState {
         categoryId != originalCategoryId ||
         accountId != originalAccountId ||
         !_isSameDateTime(date, originalDate) ||
-        note != originalNote;
+        note != originalNote ||
+        merchant != originalMerchant;
   }
 
   /// Compare dates ignoring seconds/milliseconds (only year, month, day, hour, minute).
@@ -73,6 +78,7 @@ class TransactionFormState {
     String? accountId,
     DateTime? date,
     String? note,
+    String? merchant,
     String? editingTransactionId,
     TransactionType? originalType,
     double? originalAmount,
@@ -80,6 +86,7 @@ class TransactionFormState {
     String? originalAccountId,
     DateTime? originalDate,
     String? originalNote,
+    String? originalMerchant,
     bool? allowZeroAmount,
   }) {
     return TransactionFormState(
@@ -89,6 +96,7 @@ class TransactionFormState {
       accountId: accountId ?? this.accountId,
       date: date ?? this.date,
       note: note ?? this.note,
+      merchant: merchant ?? this.merchant,
       editingTransactionId: editingTransactionId ?? this.editingTransactionId,
       originalType: originalType ?? this.originalType,
       originalAmount: originalAmount ?? this.originalAmount,
@@ -96,6 +104,7 @@ class TransactionFormState {
       originalAccountId: originalAccountId ?? this.originalAccountId,
       originalDate: originalDate ?? this.originalDate,
       originalNote: originalNote ?? this.originalNote,
+      originalMerchant: originalMerchant ?? this.originalMerchant,
       allowZeroAmount: allowZeroAmount ?? this.allowZeroAmount,
     );
   }
@@ -183,6 +192,10 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
     state = state.copyWith(note: note);
   }
 
+  void setMerchant(String? merchant) {
+    state = state.copyWith(merchant: merchant);
+  }
+
   void reset() {
     final defaultType = ref.read(defaultTransactionTypeProvider);
     final selectLastAccount = ref.read(selectLastAccountProvider);
@@ -214,6 +227,7 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
       accountId: transaction.accountId,
       date: transaction.date,
       note: transaction.note,
+      merchant: transaction.merchant,
       editingTransactionId: transaction.id,
       // Store original values for change tracking
       originalType: transaction.type,
@@ -222,6 +236,7 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
       originalAccountId: transaction.accountId,
       originalDate: transaction.date,
       originalNote: transaction.note,
+      originalMerchant: transaction.merchant,
       allowZeroAmount: allowZeroAmount,
     );
   }

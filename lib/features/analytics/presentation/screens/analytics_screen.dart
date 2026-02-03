@@ -17,6 +17,7 @@ import '../widgets/filters/date_range_navigator.dart';
 import '../widgets/tabs/overview_tab.dart';
 import '../widgets/tabs/comparisons_tab.dart';
 import '../widgets/tabs/forecasts_tab.dart';
+import '../widgets/tabs/insights_tab.dart';
 
 class AnalyticsScreen extends ConsumerStatefulWidget {
   const AnalyticsScreen({super.key});
@@ -38,6 +39,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
     (label: 'Overview', icon: LucideIcons.layoutGrid),
     (label: 'Compare', icon: LucideIcons.barChart3),
     (label: 'Forecast', icon: LucideIcons.trendingUp),
+    (label: 'Insights', icon: LucideIcons.lightbulb),
   ];
 
   @override
@@ -129,6 +131,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
                 OverviewTab(),
                 ComparisonsTab(),
                 ForecastsTab(),
+                InsightsTab(),
               ],
             ),
           ),
