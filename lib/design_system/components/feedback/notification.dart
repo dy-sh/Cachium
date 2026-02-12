@@ -53,6 +53,8 @@ class Notification extends StatefulWidget {
   final Duration duration;
   final VoidCallback? onDismiss;
   final bool showCloseButton;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   const Notification({
     super.key,
@@ -61,6 +63,8 @@ class Notification extends StatefulWidget {
     this.duration = const Duration(seconds: 3),
     this.onDismiss,
     this.showCloseButton = true,
+    this.actionLabel,
+    this.onAction,
   });
 
   @override
@@ -185,6 +189,32 @@ class _FMNotificationState extends State<Notification>
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              // Action button
+              if (widget.actionLabel != null && widget.onAction != null) ...[
+                const SizedBox(width: AppSpacing.sm),
+                GestureDetector(
+                  onTap: () {
+                    widget.onAction!();
+                    _dismiss();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.xs,
+                    ),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.15),
+                      borderRadius: AppRadius.smAll,
+                    ),
+                    child: Text(
+                      widget.actionLabel!,
+                      style: AppTypography.labelMedium.copyWith(
+                        color: color,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
               // Close button
               if (widget.showCloseButton) ...[
                 const SizedBox(width: AppSpacing.sm),
@@ -230,12 +260,16 @@ class NotificationOverlay {
     String message, {
     FMNotificationType type = FMNotificationType.info,
     Duration duration = const Duration(seconds: 3),
+    String? actionLabel,
+    VoidCallback? onAction,
   }) {
     _queue.add(_NotificationItem(
       context: context,
       message: message,
       type: type,
       duration: duration,
+      actionLabel: actionLabel,
+      onAction: onAction,
     ));
 
     if (!_isShowing) {
@@ -265,6 +299,8 @@ class NotificationOverlay {
             message: item.message,
             type: item.type,
             duration: item.duration,
+            actionLabel: item.actionLabel,
+            onAction: item.onAction,
             onDismiss: () {
               _currentEntry?.remove();
               _currentEntry = null;
@@ -331,12 +367,16 @@ class _NotificationItem {
   final String message;
   final FMNotificationType type;
   final Duration duration;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   _NotificationItem({
     required this.context,
     required this.message,
     required this.type,
     required this.duration,
+    this.actionLabel,
+    this.onAction,
   });
 }
 
@@ -364,5 +404,16 @@ extension FMNotificationContext on BuildContext {
 
   void showInfoNotification(String message, {Duration? duration}) {
     NotificationOverlay.instance.info(this, message, duration: duration);
+  }
+
+  void showUndoNotification(String message, VoidCallback onUndo) {
+    NotificationOverlay.instance.show(
+      this,
+      message,
+      type: FMNotificationType.success,
+      duration: const Duration(seconds: 5),
+      actionLabel: 'Undo',
+      onAction: onUndo,
+    );
   }
 }

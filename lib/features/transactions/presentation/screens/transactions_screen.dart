@@ -14,6 +14,7 @@ import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/transaction.dart';
+import '../providers/transaction_selection_provider.dart';
 import '../providers/transactions_provider.dart';
 
 class TransactionsScreen extends ConsumerStatefulWidget {
@@ -29,7 +30,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   @override
   void initState() {
     super.initState();
-    // Disable staggered animation after initial items have animated
     Future.delayed(const Duration(milliseconds: 600), () {
       if (mounted) {
         setState(() => _isInitialLoad = false);
@@ -37,21 +37,65 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     });
   }
 
+  void _exitSelectionMode() {
+    ref.read(transactionSelectionModeProvider.notifier).state = false;
+    ref.read(selectedTransactionIdsProvider.notifier).state = {};
+  }
+
+  void _selectAll() {
+    final groups = ref.read(searchedTransactionsProvider).valueOrNull;
+    if (groups == null) return;
+    final allIds = groups.expand((g) => g.transactions).map((t) => t.id).toSet();
+    ref.read(selectedTransactionIdsProvider.notifier).state = allIds;
+  }
+
+  Future<void> _deleteSelected() async {
+    final selectedIds = ref.read(selectedTransactionIdsProvider);
+    if (selectedIds.isEmpty) return;
+
+    // Capture transactions before deletion for undo
+    final allTransactions = ref.read(transactionsProvider).valueOrNull ?? [];
+    final selectedTransactions =
+        allTransactions.where((t) => selectedIds.contains(t.id)).toList();
+
+    final count = selectedIds.length;
+
+    await ref.read(transactionsProvider.notifier).deleteTransactions(selectedIds.toList());
+    _exitSelectionMode();
+
+    if (mounted) {
+      context.showUndoNotification(
+        '$count transaction${count == 1 ? '' : 's'} deleted',
+        () => ref.read(transactionsProvider.notifier).restoreTransactions(selectedTransactions),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final groupsAsync = ref.watch(searchedTransactionsProvider);
     final filter = ref.watch(transactionFilterProvider);
+    final isSelectionMode = ref.watch(transactionSelectionModeProvider);
+    final selectedCount = ref.watch(selectedCountProvider);
 
     return SafeArea(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: AppSpacing.lg),
-          ScreenHeader(
-            title: 'Transactions',
-            onActionPressed: () => context.push(AppRoutes.transactionForm),
-            actionIconColor: ref.watch(accentColorProvider),
-          ),
+          if (isSelectionMode)
+            _SelectionHeader(
+              selectedCount: selectedCount,
+              onCancel: _exitSelectionMode,
+              onSelectAll: _selectAll,
+              onDelete: _deleteSelected,
+            )
+          else
+            ScreenHeader(
+              title: 'Transactions',
+              onActionPressed: () => context.push(AppRoutes.transactionForm),
+              actionIconColor: ref.watch(accentColorProvider),
+            ),
           const SizedBox(height: AppSpacing.lg),
 
           // Search bar
@@ -186,6 +230,96 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   }
 }
 
+class _SelectionHeader extends StatelessWidget {
+  final int selectedCount;
+  final VoidCallback onCancel;
+  final VoidCallback onSelectAll;
+  final VoidCallback onDelete;
+
+  const _SelectionHeader({
+    required this.selectedCount,
+    required this.onCancel,
+    required this.onSelectAll,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: onCancel,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: const Icon(
+                LucideIcons.x,
+                color: AppColors.textPrimary,
+                size: 20,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Text(
+              '$selectedCount selected',
+              style: AppTypography.h2,
+            ),
+          ),
+          GestureDetector(
+            onTap: onSelectAll,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: const Icon(
+                LucideIcons.checkSquare,
+                color: AppColors.textPrimary,
+                size: 20,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          GestureDetector(
+            onTap: selectedCount > 0 ? onDelete : null,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: selectedCount > 0
+                    ? AppColors.red.withValues(alpha: 0.15)
+                    : AppColors.surface,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: selectedCount > 0
+                      ? AppColors.red.withValues(alpha: 0.3)
+                      : AppColors.border,
+                ),
+              ),
+              child: Icon(
+                LucideIcons.trash2,
+                color: selectedCount > 0 ? AppColors.red : AppColors.textTertiary,
+                size: 20,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _TransactionGroupWidget extends ConsumerWidget {
   final TransactionGroup group;
 
@@ -245,84 +379,163 @@ class _TransactionItem extends ConsumerWidget {
     final color = AppColors.getTransactionColor(isIncome ? 'income' : 'expense', intensity);
     final bgOpacity = AppColors.getBgOpacity(intensity);
     final categoryColor = category?.getColor(intensity) ?? AppColors.textSecondary;
+    final isSelectionMode = ref.watch(transactionSelectionModeProvider);
+    final isSelected = ref.watch(isTransactionSelectedProvider(transaction.id));
+    final accentColor = ref.watch(accentColorProvider);
 
-    return GestureDetector(
-      onTap: () => context.push('/transaction/${transaction.id}'),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: AppRadius.mdAll,
-          border: Border.all(color: AppColors.border),
+    Widget itemContent = Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppRadius.mdAll,
+        border: Border.all(
+          color: isSelected ? accentColor.withValues(alpha: 0.5) : AppColors.border,
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
+      ),
+      child: Row(
+        children: [
+          // Selection checkbox
+          if (isSelectionMode) ...[
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 24,
+              height: 24,
               decoration: BoxDecoration(
-                color: categoryColor.withValues(alpha: bgOpacity),
-                borderRadius: BorderRadius.circular(10),
+                color: isSelected ? accentColor : Colors.transparent,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: isSelected ? accentColor : AppColors.textTertiary,
+                  width: 1.5,
+                ),
               ),
-              child: Icon(
-                category?.icon ?? Icons.circle,
-                color: categoryColor,
-                size: 20,
-              ),
+              child: isSelected
+                  ? const Icon(LucideIcons.check, color: AppColors.background, size: 14)
+                  : null,
             ),
             const SizedBox(width: AppSpacing.md),
-            Expanded(
+          ],
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: categoryColor.withValues(alpha: bgOpacity),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              category?.icon ?? Icons.circle,
+              color: categoryColor,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  category?.name ?? 'Unknown',
+                  style: AppTypography.labelLarge,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (transaction.note != null && transaction.note!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      transaction.note!,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Flexible(
+            flex: 0,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 100),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    category?.name ?? 'Unknown',
-                    style: AppTypography.labelLarge,
+                    CurrencyFormatter.formatWithSign(transaction.amount, transaction.type.name),
+                    style: AppTypography.moneySmall.copyWith(color: color),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (transaction.note != null && transaction.note!.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Text(
-                        transaction.note!,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textTertiary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
+                  Text(
+                    account?.name ?? 'Unknown',
+                    style: AppTypography.labelSmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
             ),
-            const SizedBox(width: AppSpacing.sm),
-            Flexible(
-              flex: 0,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 100),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      CurrencyFormatter.formatWithSign(transaction.amount, transaction.type.name),
-                      style: AppTypography.moneySmall.copyWith(color: color),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      account?.name ?? 'Unknown',
-                      style: AppTypography.labelSmall,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+          ),
+        ],
+      ),
+    );
+
+    // In selection mode: tap to toggle selection, long-press does nothing
+    if (isSelectionMode) {
+      return GestureDetector(
+        onTap: () {
+          final ids = ref.read(selectedTransactionIdsProvider);
+          final updated = Set<String>.from(ids);
+          if (updated.contains(transaction.id)) {
+            updated.remove(transaction.id);
+            // Exit selection mode if nothing selected
+            if (updated.isEmpty) {
+              ref.read(transactionSelectionModeProvider.notifier).state = false;
+            }
+          } else {
+            updated.add(transaction.id);
+          }
+          ref.read(selectedTransactionIdsProvider.notifier).state = updated;
+        },
+        child: itemContent,
+      );
+    }
+
+    // Normal mode: swipe to delete, tap to edit, long-press to enter selection
+    return Dismissible(
+      key: ValueKey(transaction.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+        padding: const EdgeInsets.only(right: AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: AppColors.red.withValues(alpha: 0.15),
+          borderRadius: AppRadius.mdAll,
         ),
+        alignment: Alignment.centerRight,
+        child: Icon(
+          LucideIcons.trash2,
+          color: AppColors.red,
+          size: 22,
+        ),
+      ),
+      onDismissed: (_) {
+        final tx = transaction;
+        ref.read(transactionsProvider.notifier).deleteTransaction(tx.id);
+        context.showUndoNotification(
+          'Transaction deleted',
+          () => ref.read(transactionsProvider.notifier).restoreTransaction(tx),
+        );
+      },
+      child: GestureDetector(
+        onTap: () => context.push('/transaction/${transaction.id}'),
+        onLongPress: () {
+          ref.read(transactionSelectionModeProvider.notifier).state = true;
+          ref.read(selectedTransactionIdsProvider.notifier).state = {transaction.id};
+        },
+        child: itemContent,
       ),
     );
   }

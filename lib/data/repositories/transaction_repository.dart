@@ -237,6 +237,24 @@ class TransactionRepository {
     }
   }
 
+  /// Restore a soft-deleted transaction (set isDeleted = false)
+  ///
+  /// Throws [RepositoryException] if database operation fails.
+  Future<void> restoreTransaction(String id) async {
+    try {
+      await database.restoreTransaction(
+        id,
+        DateTime.now().millisecondsSinceEpoch,
+      );
+    } catch (e) {
+      throw RepositoryException.update(
+        entityType: _entityType,
+        entityId: id,
+        cause: e,
+      );
+    }
+  }
+
   /// Watch all transactions (for reactive UI)
   ///
   /// Note: Each emission triggers decryption of all rows.

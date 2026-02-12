@@ -73,6 +73,16 @@ class TransactionDao extends DatabaseAccessor<AppDatabase>
     );
   }
 
+  /// Restore a soft-deleted transaction (set isDeleted = false)
+  Future<void> restore(String id, int lastUpdatedAt) async {
+    await (update(transactions)..where((t) => t.id.equals(id))).write(
+      TransactionsCompanion(
+        isDeleted: const Value(false),
+        lastUpdatedAt: Value(lastUpdatedAt),
+      ),
+    );
+  }
+
   /// Get a single transaction by ID (only if not deleted)
   Future<Transaction?> getById(String id) async {
     return (select(transactions)

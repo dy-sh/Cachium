@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
+import '../../../../design_system/components/feedback/notification.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
@@ -102,55 +105,81 @@ class _TransactionItem extends ConsumerWidget {
     final bgOpacity = AppColors.getBgOpacity(intensity);
     final categoryColor = category?.getColor(intensity) ?? AppColors.textSecondary;
 
-    return GestureDetector(
-      onTap: () => context.push('/transaction/${transaction.id}'),
-      child: Container(
+    return Dismissible(
+      key: ValueKey(transaction.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
         margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: const EdgeInsets.only(right: AppSpacing.lg),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
+          color: AppColors.red.withValues(alpha: 0.15),
+          borderRadius: AppRadius.mdAll,
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: categoryColor.withValues(alpha: bgOpacity),
-                borderRadius: BorderRadius.circular(10),
+        alignment: Alignment.centerRight,
+        child: Icon(
+          LucideIcons.trash2,
+          color: AppColors.red,
+          size: 22,
+        ),
+      ),
+      onDismissed: (_) {
+        final tx = transaction;
+        ref.read(transactionsProvider.notifier).deleteTransaction(tx.id);
+        context.showUndoNotification(
+          'Transaction deleted',
+          () => ref.read(transactionsProvider.notifier).restoreTransaction(tx),
+        );
+      },
+      child: GestureDetector(
+        onTap: () => context.push('/transaction/${transaction.id}'),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: categoryColor.withValues(alpha: bgOpacity),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  category?.icon ?? Icons.circle,
+                  color: categoryColor,
+                  size: 20,
+                ),
               ),
-              child: Icon(
-                category?.icon ?? Icons.circle,
-                color: categoryColor,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    category?.name ?? 'Unknown',
-                    style: AppTypography.labelLarge,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${account?.name ?? 'Unknown'} • ${DateFormatter.formatRelative(transaction.date)}',
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textTertiary,
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      category?.name ?? 'Unknown',
+                      style: AppTypography.labelLarge,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 2),
+                    Text(
+                      '${account?.name ?? 'Unknown'} • ${DateFormatter.formatRelative(transaction.date)}',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Text(
-              CurrencyFormatter.formatWithSign(transaction.amount, transaction.type.name),
-              style: AppTypography.moneySmall.copyWith(color: color),
-            ),
-          ],
+              Text(
+                CurrencyFormatter.formatWithSign(transaction.amount, transaction.type.name),
+                style: AppTypography.moneySmall.copyWith(color: color),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -147,6 +147,89 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     );
   }
 
+  /// Restore a previously soft-deleted transaction
+  Future<void> restoreTransaction(Transaction transaction) async {
+    final repo = ref.read(transactionRepositoryProvider);
+    final db = ref.read(databaseProvider);
+
+    await db.transaction(() async {
+      // Restore in database
+      await repo.restoreTransaction(transaction.id);
+
+      // Re-apply the balance change to the account
+      final balanceChange =
+          transaction.type == TransactionType.income ? transaction.amount : -transaction.amount;
+      await ref.read(accountsProvider.notifier).updateBalance(
+            transaction.accountId,
+            balanceChange,
+          );
+    });
+
+    // Re-insert into local state (sorted by date descending)
+    state = state.whenData((transactions) {
+      final updated = [transaction, ...transactions];
+      updated.sort((a, b) => b.date.compareTo(a.date));
+      return updated;
+    });
+  }
+
+  /// Batch delete multiple transactions
+  Future<void> deleteTransactions(List<String> ids) async {
+    final repo = ref.read(transactionRepositoryProvider);
+    final db = ref.read(databaseProvider);
+
+    final currentState = state.valueOrNull;
+    if (currentState == null) return;
+
+    await db.transaction(() async {
+      for (final id in ids) {
+        final transaction = currentState.firstWhere((t) => t.id == id);
+        await repo.deleteTransaction(id);
+
+        // Reverse the balance change
+        final balanceChange =
+            transaction.type == TransactionType.income ? -transaction.amount : transaction.amount;
+        await ref.read(accountsProvider.notifier).updateBalance(
+              transaction.accountId,
+              balanceChange,
+            );
+      }
+    });
+
+    // Update local state
+    final idSet = ids.toSet();
+    state = state.whenData(
+      (transactions) => transactions.where((t) => !idSet.contains(t.id)).toList(),
+    );
+  }
+
+  /// Batch restore multiple previously soft-deleted transactions
+  Future<void> restoreTransactions(List<Transaction> transactionsToRestore) async {
+    final repo = ref.read(transactionRepositoryProvider);
+    final db = ref.read(databaseProvider);
+
+    await db.transaction(() async {
+      for (final transaction in transactionsToRestore) {
+        await repo.restoreTransaction(transaction.id);
+
+        // Re-apply the balance change
+        final balanceChange =
+            transaction.type == TransactionType.income ? transaction.amount : -transaction.amount;
+        await ref.read(accountsProvider.notifier).updateBalance(
+              transaction.accountId,
+              balanceChange,
+            );
+      }
+    });
+
+    // Re-insert into local state
+    state = state.whenData((transactions) {
+      final updated = [...transactionsToRestore, ...transactions];
+      updated.sort((a, b) => b.date.compareTo(a.date));
+      return updated;
+    });
+  }
+
   /// Refresh transactions from database
   Future<void> refresh() async {
     final repo = ref.read(transactionRepositoryProvider);

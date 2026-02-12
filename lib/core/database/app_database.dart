@@ -206,6 +206,9 @@ class AppDatabase extends _$AppDatabase {
   Future<void> softDeleteTransaction(String id, int lastUpdatedAt) =>
       transactionDao.softDelete(id, lastUpdatedAt);
 
+  Future<void> restoreTransaction(String id, int lastUpdatedAt) =>
+      transactionDao.restore(id, lastUpdatedAt);
+
   Future<Transaction?> getTransaction(String id) => transactionDao.getById(id);
 
   Future<List<Transaction>> getAllTransactions() => transactionDao.getAll();
