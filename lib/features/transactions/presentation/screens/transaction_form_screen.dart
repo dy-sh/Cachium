@@ -9,6 +9,7 @@ import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/buttons/primary_button.dart';
+import '../../../../design_system/components/feedback/notification.dart';
 import '../../../../design_system/components/layout/form_header.dart';
 import '../../../../design_system/components/chips/toggle_chip.dart';
 import '../../../../design_system/components/inputs/amount_input.dart';
@@ -152,7 +153,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
               onClose: () => context.pop(),
               trailing: isEditing
                   ? GestureDetector(
-                      onTap: () => _showDeleteConfirmation(context),
+                      onTap: () => _deleteAndShowUndo(context),
                       child: Container(
                         padding: const EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
@@ -346,57 +347,26 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context) {
-    final parentContext = context;
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Text(
-          'Delete Transaction',
-          style: AppTypography.h4,
-        ),
-        content: Text(
-          'Are you sure you want to delete this transaction? This action cannot be undone.',
-          style: AppTypography.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(
-              'Cancel',
-              style: AppTypography.button.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(dialogContext);
-              final formState = ref.read(transactionFormProvider);
-              if (formState.editingTransactionId != null) {
-                await ref.read(transactionsProvider.notifier)
-                    .deleteTransaction(formState.editingTransactionId!);
-                if (mounted && parentContext.mounted) {
-                  parentContext.pop();
-                }
-              }
-            },
-            child: Text(
-              'Delete',
-              style: AppTypography.button.copyWith(
-                color: AppColors.expense,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  Future<void> _deleteAndShowUndo(BuildContext context) async {
+    final formState = ref.read(transactionFormProvider);
+    if (formState.editingTransactionId == null) return;
+
+    // Capture the full transaction before deleting
+    final tx = ref.read(transactionByIdProvider(formState.editingTransactionId!));
+    if (tx == null) return;
+
+    // Capture notifier before popping (ref won't be valid after dispose)
+    final notifier = ref.read(transactionsProvider.notifier);
+
+    await notifier.deleteTransaction(tx.id);
+
+    if (mounted && context.mounted) {
+      context.pop();
+      context.showUndoNotification(
+        'Transaction deleted',
+        () => notifier.restoreTransaction(tx),
+      );
+    }
   }
 
   Future<void> _createNewCategory(
