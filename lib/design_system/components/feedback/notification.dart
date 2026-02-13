@@ -78,6 +78,13 @@ class _FMNotificationState extends State<Notification>
   late Animation<double> _fadeAnimation;
   Timer? _dismissTimer;
 
+  void resetTimer() {
+    _dismissTimer?.cancel();
+    if (widget.duration > Duration.zero) {
+      _dismissTimer = Timer(widget.duration, _dismiss);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -251,6 +258,8 @@ class NotificationOverlay {
   NotificationOverlay._();
 
   OverlayEntry? _currentEntry;
+  String? _currentMessage;
+  final GlobalKey<_FMNotificationState> _notificationKey = GlobalKey();
   final List<_NotificationItem> _queue = [];
   bool _isShowing = false;
 
@@ -263,6 +272,17 @@ class NotificationOverlay {
     String? actionLabel,
     VoidCallback? onAction,
   }) {
+    // If the same message is already showing, just reset the timer
+    if (_isShowing && _currentMessage == message) {
+      _notificationKey.currentState?.resetTimer();
+      // Also drop any queued duplicates of this message
+      _queue.removeWhere((item) => item.message == message);
+      return;
+    }
+
+    // Also deduplicate from the queue
+    _queue.removeWhere((item) => item.message == message);
+
     _queue.add(_NotificationItem(
       context: context,
       message: message,
@@ -280,11 +300,13 @@ class NotificationOverlay {
   void _showNext() {
     if (_queue.isEmpty) {
       _isShowing = false;
+      _currentMessage = null;
       return;
     }
 
     _isShowing = true;
     final item = _queue.removeAt(0);
+    _currentMessage = item.message;
 
     final overlay = Overlay.of(item.context);
 
@@ -296,6 +318,7 @@ class NotificationOverlay {
         child: Material(
           color: Colors.transparent,
           child: Notification(
+            key: _notificationKey,
             message: item.message,
             type: item.type,
             duration: item.duration,
@@ -304,6 +327,7 @@ class NotificationOverlay {
             onDismiss: () {
               _currentEntry?.remove();
               _currentEntry = null;
+              _currentMessage = null;
               _showNext();
             },
           ),
@@ -358,6 +382,7 @@ class NotificationOverlay {
   void dismiss() {
     _currentEntry?.remove();
     _currentEntry = null;
+    _currentMessage = null;
     _showNext();
   }
 }

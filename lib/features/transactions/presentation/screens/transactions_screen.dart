@@ -71,6 +71,44 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     }
   }
 
+  void _showMoreMenu(BuildContext context) {
+    final RenderBox button = context.findRenderObject() as RenderBox;
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final position = RelativeRect.fromRect(
+      Rect.fromPoints(
+        button.localToGlobal(Offset(button.size.width, 0), ancestor: overlay),
+        button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+      ),
+      Offset.zero & overlay.size,
+    );
+
+    showMenu<String>(
+      context: context,
+      position: position,
+      color: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(color: AppColors.border),
+      ),
+      items: [
+        PopupMenuItem(
+          value: 'deleted',
+          child: Row(
+            children: [
+              Icon(LucideIcons.trash2, size: 18, color: AppColors.textSecondary),
+              const SizedBox(width: AppSpacing.md),
+              Text('Deleted Transactions', style: AppTypography.bodyMedium),
+            ],
+          ),
+        ),
+      ],
+    ).then((value) {
+      if (value == 'deleted' && mounted && context.mounted) {
+        context.push(AppRoutes.deletedTransactions);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final groupsAsync = ref.watch(searchedTransactionsProvider);
@@ -91,10 +129,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               onDelete: _deleteSelected,
             )
           else
-            ScreenHeader(
-              title: 'Transactions',
-              onActionPressed: () => context.push(AppRoutes.transactionForm),
-              actionIconColor: ref.watch(accentColorProvider),
+            _TransactionsHeader(
+              onAdd: () => context.push(AppRoutes.transactionForm),
+              onMore: () => _showMoreMenu(context),
             ),
           const SizedBox(height: AppSpacing.lg),
 
@@ -223,6 +260,70 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                       },
                     ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TransactionsHeader extends ConsumerWidget {
+  final VoidCallback onAdd;
+  final VoidCallback onMore;
+
+  const _TransactionsHeader({
+    required this.onAdd,
+    required this.onMore,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accentColor = ref.watch(accentColorProvider);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('Transactions', style: AppTypography.h2),
+          Row(
+            children: [
+              GestureDetector(
+                onTap: onMore,
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: const Icon(
+                    LucideIcons.moreHorizontal,
+                    color: AppColors.textSecondary,
+                    size: 20,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              GestureDetector(
+                onTap: onAdd,
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Icon(
+                    LucideIcons.plus,
+                    color: accentColor,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

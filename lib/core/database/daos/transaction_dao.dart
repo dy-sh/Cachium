@@ -107,6 +107,14 @@ class TransactionDao extends DatabaseAccessor<AppDatabase>
         .watch();
   }
 
+  /// Get all soft-deleted transactions ordered by lastUpdatedAt descending
+  Future<List<Transaction>> getAllDeleted() async {
+    return (select(transactions)
+          ..where((t) => t.isDeleted.equals(true))
+          ..orderBy([(t) => OrderingTerm.desc(t.lastUpdatedAt)]))
+        .get();
+  }
+
   /// Check if any transactions exist
   Future<bool> hasAny() async {
     final count = await (selectOnly(transactions)

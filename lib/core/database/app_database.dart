@@ -213,6 +213,8 @@ class AppDatabase extends _$AppDatabase {
 
   Future<List<Transaction>> getAllTransactions() => transactionDao.getAll();
 
+  Future<List<Transaction>> getAllDeletedTransactions() => transactionDao.getAllDeleted();
+
   Stream<List<Transaction>> watchAllTransactions() => transactionDao.watchAll();
 
   Future<bool> hasTransactions() => transactionDao.hasAny();

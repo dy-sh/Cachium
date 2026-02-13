@@ -196,6 +196,35 @@ class TransactionRepository {
     }
   }
 
+  /// Get all soft-deleted transactions
+  ///
+  /// Throws [RepositoryException] if fetch or decryption fails.
+  Future<List<ui.Transaction>> getAllDeletedTransactions() async {
+    try {
+      final rows = await database.getAllDeletedTransactions();
+      final transactions = <ui.Transaction>[];
+
+      for (final row in rows) {
+        try {
+          final data = await encryptionService.decrypt(
+            row.encryptedBlob,
+            expectedId: row.id,
+            expectedDateMillis: row.date,
+          );
+          transactions.add(_toTransaction(data));
+        } catch (_) {
+          // Skip corrupted rows
+          continue;
+        }
+      }
+
+      return transactions;
+    } catch (e) {
+      if (e is RepositoryException) rethrow;
+      throw RepositoryException.fetch(entityType: _entityType, cause: e);
+    }
+  }
+
   /// Update an existing transaction (re-encrypt and update)
   ///
   /// Throws [RepositoryException] if encryption or database operation fails.

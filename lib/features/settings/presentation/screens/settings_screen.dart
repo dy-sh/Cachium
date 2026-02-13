@@ -69,6 +69,13 @@ class SettingsScreen extends ConsumerWidget {
                         onTap: () => context.push('/settings/categories'),
                       ),
                       SettingsTile(
+                        title: 'Deleted Transactions',
+                        description: 'View and restore deleted items',
+                        icon: LucideIcons.trash2,
+                        iconColor: AppColors.getAccentColor(9, intensity), // Rose
+                        onTap: () => context.push('/transactions/deleted'),
+                      ),
+                      SettingsTile(
                         title: 'Database',
                         description: 'Export, import, manage data',
                         icon: LucideIcons.database,

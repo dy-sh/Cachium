@@ -145,6 +145,8 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     state = state.whenData(
       (transactions) => transactions.where((t) => t.id != id).toList(),
     );
+
+    ref.invalidate(deletedTransactionsProvider);
   }
 
   /// Restore a previously soft-deleted transaction
@@ -171,6 +173,8 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
       updated.sort((a, b) => b.date.compareTo(a.date));
       return updated;
     });
+
+    ref.invalidate(deletedTransactionsProvider);
   }
 
   /// Batch delete multiple transactions
@@ -201,6 +205,8 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     state = state.whenData(
       (transactions) => transactions.where((t) => !idSet.contains(t.id)).toList(),
     );
+
+    ref.invalidate(deletedTransactionsProvider);
   }
 
   /// Batch restore multiple previously soft-deleted transactions
@@ -228,6 +234,8 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
       updated.sort((a, b) => b.date.compareTo(a.date));
       return updated;
     });
+
+    ref.invalidate(deletedTransactionsProvider);
   }
 
   /// Refresh transactions from database
@@ -372,6 +380,11 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
 final transactionsProvider =
     AsyncNotifierProvider<TransactionsNotifier, List<Transaction>>(() {
   return TransactionsNotifier();
+});
+
+final deletedTransactionsProvider = FutureProvider<List<Transaction>>((ref) async {
+  final repo = ref.watch(transactionRepositoryProvider);
+  return repo.getAllDeletedTransactions();
 });
 
 enum TransactionFilter { all, income, expense }
