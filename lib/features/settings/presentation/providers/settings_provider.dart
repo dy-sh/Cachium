@@ -186,6 +186,31 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     await _saveAndUpdate(current.copyWith(allowSelectParentCategory: allowed));
   }
 
+  // Assets
+  Future<void> setAssetsFoldedCount(int count) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    await _saveAndUpdate(current.copyWith(assetsFoldedCount: count));
+  }
+
+  Future<void> setShowAddAssetButton(bool enabled) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    await _saveAndUpdate(current.copyWith(showAddAssetButton: enabled));
+  }
+
+  Future<void> setAssetSortOption(AssetSortOption option) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    await _saveAndUpdate(current.copyWith(assetSortOption: option));
+  }
+
+  Future<void> setShowAssetSelector(bool enabled) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    await _saveAndUpdate(current.copyWith(showAssetSelector: enabled));
+  }
+
   // Home Page
   Future<void> setHomeShowAccountsList(bool enabled) async {
     final current = state.valueOrNull;
@@ -287,6 +312,11 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
       lastUsedExpenseCategoryId: defaults.lastUsedExpenseCategoryId,
       transactionAmountSize: defaults.transactionAmountSize,
       allowSelectParentCategory: defaults.allowSelectParentCategory,
+      // Reset Assets
+      assetsFoldedCount: defaults.assetsFoldedCount,
+      showAddAssetButton: defaults.showAddAssetButton,
+      assetSortOption: defaults.assetSortOption,
+      showAssetSelector: defaults.showAssetSelector,
       // Reset Home Page
       homeShowAccountsList: defaults.homeShowAccountsList,
       homeShowTotalBalance: defaults.homeShowTotalBalance,
@@ -472,4 +502,25 @@ final homeTotalBalanceTextSizeProvider = Provider<AmountDisplaySize>((ref) {
 final homeBalancesHiddenByDefaultProvider = Provider<bool>((ref) {
   final settingsAsync = ref.watch(settingsProvider);
   return settingsAsync.valueOrNull?.homeBalancesHiddenByDefault ?? false;
+});
+
+// Asset settings providers
+final assetsFoldedCountProvider = Provider<int>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.assetsFoldedCount ?? 5;
+});
+
+final showAddAssetButtonProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.showAddAssetButton ?? true;
+});
+
+final assetSortOptionProvider = Provider<AssetSortOption>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.assetSortOption ?? AssetSortOption.lastUsed;
+});
+
+final showAssetSelectorProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.showAssetSelector ?? true;
 });

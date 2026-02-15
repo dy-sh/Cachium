@@ -4,6 +4,8 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/exceptions/app_exception.dart';
 import '../../../../core/providers/database_providers.dart';
+import '../../../transactions/data/models/transaction.dart';
+import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../data/models/asset.dart';
 
 class AssetsNotifier extends AsyncNotifier<List<Asset>> {
@@ -134,4 +136,57 @@ final assetNameExistsProvider = Provider.family<bool, ({String name, String? exc
   return assets.any((a) =>
     a.name.toLowerCase() == nameLower && a.id != params.excludeId
   );
+});
+
+/// Returns active asset IDs sorted by most recent transaction usage.
+/// Assets without transactions appear last, sorted by creation date.
+final recentlyUsedAssetIdsProvider = Provider<List<String>>((ref) {
+  final transactions = ref.watch(transactionsProvider).valueOrNull;
+  final assets = ref.watch(activeAssetsProvider);
+  if (assets.isEmpty) return [];
+
+  final Map<String, DateTime> lastUsedMap = {};
+  if (transactions != null) {
+    for (final tx in transactions) {
+      if (tx.assetId == null) continue;
+      final current = lastUsedMap[tx.assetId!];
+      if (current == null || tx.createdAt.isAfter(current)) {
+        lastUsedMap[tx.assetId!] = tx.createdAt;
+      }
+    }
+  }
+
+  final sortedAssets = List<Asset>.from(assets);
+  sortedAssets.sort((a, b) {
+    final aLastUsed = lastUsedMap[a.id];
+    final bLastUsed = lastUsedMap[b.id];
+    if (aLastUsed != null && bLastUsed != null) {
+      return bLastUsed.compareTo(aLastUsed);
+    }
+    if (aLastUsed != null) return -1;
+    if (bLastUsed != null) return 1;
+    return b.createdAt.compareTo(a.createdAt);
+  });
+
+  return sortedAssets.map((a) => a.id).toList();
+});
+
+/// Net cost for an asset: total expenses minus total income.
+final assetNetCostProvider = Provider.family<double, String>((ref, assetId) {
+  final transactions = ref.watch(transactionsByAssetProvider(assetId));
+  double totalSpent = 0;
+  double totalIncome = 0;
+  for (final tx in transactions) {
+    if (tx.type == TransactionType.expense) {
+      totalSpent += tx.amount;
+    } else if (tx.type == TransactionType.income) {
+      totalIncome += tx.amount;
+    }
+  }
+  return totalSpent - totalIncome;
+});
+
+/// Count of linked transactions for an asset.
+final assetTransactionCountProvider = Provider.family<int, String>((ref, assetId) {
+  return ref.watch(transactionsByAssetProvider(assetId)).length;
 });

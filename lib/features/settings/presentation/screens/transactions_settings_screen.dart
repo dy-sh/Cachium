@@ -142,6 +142,30 @@ class TransactionsSettingsScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
+                    const SizedBox(height: AppSpacing.xl),
+
+                    // Assets section
+                    SettingsSection(
+                      title: 'Assets',
+                      children: [
+                        SettingsToggleTile(
+                          title: 'Show Asset Selector',
+                          description: 'Show asset section in transaction form',
+                          value: settings.showAssetSelector,
+                          onChanged: (value) =>
+                              ref.read(settingsProvider.notifier).setShowAssetSelector(value),
+                        ),
+                        _buildAssetSortTile(context, ref, settings.assetSortOption),
+                        _buildVisibleAssetsTile(context, ref, settings.assetsFoldedCount),
+                        SettingsToggleTile(
+                          title: 'Show Add Asset Button',
+                          description: 'Show "New" asset in form',
+                          value: settings.showAddAssetButton,
+                          onChanged: (value) =>
+                              ref.read(settingsProvider.notifier).setShowAddAssetButton(value),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: AppSpacing.xxxl),
                   ],
                 ),
@@ -386,6 +410,116 @@ class TransactionsSettingsScreen extends ConsumerWidget {
       value: '$currentCount',
       onTap: () => _showVisibleAccountsPicker(context, ref, currentCount),
     );
+  }
+
+  Widget _buildAssetSortTile(BuildContext context, WidgetRef ref, AssetSortOption currentOption) {
+    return SettingsTile(
+      title: 'Asset Sort',
+      description: 'How to sort assets in form',
+      value: currentOption.displayName,
+      onTap: () => _showAssetSortPicker(context, ref, currentOption),
+    );
+  }
+
+  void _showAssetSortPicker(BuildContext context, WidgetRef ref, AssetSortOption currentOption) {
+    final animationsEnabled = ref.read(formAnimationsEnabledProvider);
+    final options = AssetSortOption.values.map((e) => e.displayName).toList();
+    final selectedIndex = AssetSortOption.values.indexOf(currentOption);
+    final modalContent = _OptionPickerSheet(
+      title: 'Asset Sort',
+      options: options,
+      selectedIndex: selectedIndex,
+      onSelected: (index) {
+        ref.read(settingsProvider.notifier).setAssetSortOption(AssetSortOption.values[index]);
+        Navigator.pop(context);
+      },
+    );
+
+    if (!animationsEnabled) {
+      Navigator.of(context).push(
+        PageRouteBuilder(
+          opaque: false,
+          barrierDismissible: true,
+          barrierColor: Colors.black54,
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+          pageBuilder: (context, animation, secondaryAnimation) {
+            return Align(
+              alignment: Alignment.bottomCenter,
+              child: Material(
+                color: AppColors.surface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                child: modalContent,
+              ),
+            );
+          },
+        ),
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: AppColors.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (context) => modalContent,
+      );
+    }
+  }
+
+  Widget _buildVisibleAssetsTile(BuildContext context, WidgetRef ref, int currentCount) {
+    return SettingsTile(
+      title: 'Visible Assets',
+      description: 'Assets shown before "More" button',
+      value: '$currentCount',
+      onTap: () => _showVisibleAssetsPicker(context, ref, currentCount),
+    );
+  }
+
+  void _showVisibleAssetsPicker(BuildContext context, WidgetRef ref, int currentCount) {
+    final animationsEnabled = ref.read(formAnimationsEnabledProvider);
+    final options = ['2', '5', '8', '11', '14'];
+    final selectedIndex = options.indexOf('$currentCount');
+    final modalContent = _OptionPickerSheet(
+      title: 'Visible Assets',
+      options: options,
+      selectedIndex: selectedIndex >= 0 ? selectedIndex : 1, // Default to 5
+      onSelected: (index) {
+        ref.read(settingsProvider.notifier).setAssetsFoldedCount(int.parse(options[index]));
+        Navigator.pop(context);
+      },
+    );
+
+    if (!animationsEnabled) {
+      Navigator.of(context).push(
+        PageRouteBuilder(
+          opaque: false,
+          barrierDismissible: true,
+          barrierColor: Colors.black54,
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+          pageBuilder: (context, animation, secondaryAnimation) {
+            return Align(
+              alignment: Alignment.bottomCenter,
+              child: Material(
+                color: AppColors.surface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                child: modalContent,
+              ),
+            );
+          },
+        ),
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: AppColors.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (context) => modalContent,
+      );
+    }
   }
 
   void _showVisibleAccountsPicker(BuildContext context, WidgetRef ref, int currentCount) {

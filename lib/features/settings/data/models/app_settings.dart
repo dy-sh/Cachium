@@ -72,6 +72,23 @@ enum CategorySortOption {
   }
 }
 
+enum AssetSortOption {
+  lastUsed,
+  alphabetical,
+  newest;
+
+  String get displayName {
+    switch (this) {
+      case AssetSortOption.lastUsed:
+        return 'Last Used';
+      case AssetSortOption.alphabetical:
+        return 'Alphabetical';
+      case AssetSortOption.newest:
+        return 'Newest';
+    }
+  }
+}
+
 enum CurrencySymbol {
   usd('\$', 'USD'),
   eur('\u20AC', 'EUR'),
@@ -118,6 +135,12 @@ class AppSettings {
   final AmountDisplaySize transactionAmountSize;
   final bool allowSelectParentCategory;
 
+  // Assets
+  final int assetsFoldedCount;
+  final bool showAddAssetButton;
+  final AssetSortOption assetSortOption;
+  final bool showAssetSelector;
+
   // Home Page
   final bool homeShowAccountsList;
   final bool homeShowTotalBalance;
@@ -157,6 +180,10 @@ class AppSettings {
     this.lastUsedExpenseCategoryId,
     this.transactionAmountSize = AmountDisplaySize.large,
     this.allowSelectParentCategory = true,
+    this.assetsFoldedCount = 5,
+    this.showAddAssetButton = true,
+    this.assetSortOption = AssetSortOption.lastUsed,
+    this.showAssetSelector = true,
     this.homeShowAccountsList = true,
     this.homeShowTotalBalance = true,
     this.homeShowQuickActions = true,
@@ -205,6 +232,10 @@ class AppSettings {
     String? lastUsedExpenseCategoryId,
     AmountDisplaySize? transactionAmountSize,
     bool? allowSelectParentCategory,
+    int? assetsFoldedCount,
+    bool? showAddAssetButton,
+    AssetSortOption? assetSortOption,
+    bool? showAssetSelector,
     bool? homeShowAccountsList,
     bool? homeShowTotalBalance,
     bool? homeShowQuickActions,
@@ -241,6 +272,10 @@ class AppSettings {
       lastUsedExpenseCategoryId: lastUsedExpenseCategoryId ?? this.lastUsedExpenseCategoryId,
       transactionAmountSize: transactionAmountSize ?? this.transactionAmountSize,
       allowSelectParentCategory: allowSelectParentCategory ?? this.allowSelectParentCategory,
+      assetsFoldedCount: assetsFoldedCount ?? this.assetsFoldedCount,
+      showAddAssetButton: showAddAssetButton ?? this.showAddAssetButton,
+      assetSortOption: assetSortOption ?? this.assetSortOption,
+      showAssetSelector: showAssetSelector ?? this.showAssetSelector,
       homeShowAccountsList: homeShowAccountsList ?? this.homeShowAccountsList,
       homeShowTotalBalance: homeShowTotalBalance ?? this.homeShowTotalBalance,
       homeShowQuickActions: homeShowQuickActions ?? this.homeShowQuickActions,

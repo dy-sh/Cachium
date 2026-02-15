@@ -147,6 +147,14 @@ class AssetDetailScreen extends ConsumerWidget {
                             textAlign: TextAlign.center,
                           ),
                         ],
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          'Added ${DateFormatter.formatRelative(asset.createdAt)}',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textTertiary,
+                            fontSize: 11,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -181,6 +189,45 @@ class AssetDetailScreen extends ConsumerWidget {
                         ? AppColors.getTransactionColor('expense', intensity)
                         : AppColors.getTransactionColor('income', intensity),
                   ),
+
+                  if (asset.status == AssetStatus.active) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    GestureDetector(
+                      onTap: () async {
+                        final updatedAsset = asset.copyWith(status: AssetStatus.sold);
+                        await ref.read(assetsProvider.notifier).updateAsset(updatedAsset);
+                        if (context.mounted) {
+                          context.showSuccessNotification('Asset marked as sold');
+                        }
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: AppRadius.mdAll,
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              LucideIcons.badgeCheck,
+                              size: 18,
+                              color: AppColors.textSecondary,
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Text(
+                              'Mark as Sold',
+                              style: AppTypography.labelMedium.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
 
                   const SizedBox(height: AppSpacing.xxl),
 

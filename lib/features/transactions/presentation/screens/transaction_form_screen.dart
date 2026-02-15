@@ -24,7 +24,7 @@ import '../../data/models/transaction.dart';
 import '../providers/transaction_form_provider.dart';
 import '../providers/transactions_provider.dart';
 import '../../../assets/presentation/providers/assets_provider.dart';
-import '../../../assets/presentation/screens/asset_form_screen.dart';
+import '../../../assets/presentation/widgets/asset_form_modal.dart';
 import '../../../assets/presentation/widgets/asset_selector.dart';
 import '../widgets/account_selector.dart';
 import '../widgets/category_selector.dart';
@@ -138,6 +138,13 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     final showAddCategoryButton = ref.watch(showAddCategoryButtonProvider);
     final categorySortOption = ref.watch(categorySortOptionProvider);
     final allowSelectParentCategory = ref.watch(allowSelectParentCategoryProvider);
+
+    // Asset settings
+    final showAssetSelector = ref.watch(showAssetSelectorProvider);
+    final assetsFoldedCount = ref.watch(assetsFoldedCountProvider);
+    final showAddAssetButton = ref.watch(showAddAssetButtonProvider);
+    final assetSortOption = ref.watch(assetSortOptionProvider);
+    final recentAssetIds = ref.watch(recentlyUsedAssetIdsProvider);
 
     final isTransfer = formState.type == TransactionType.transfer;
 
@@ -304,12 +311,9 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                     const SizedBox(height: AppSpacing.xxl),
 
                     // Asset selector (optional)
-                    Builder(
+                    if (showAssetSelector) Builder(
                       builder: (context) {
                         final activeAssets = ref.watch(activeAssetsProvider);
-                        if (activeAssets.isEmpty && formState.assetId == null) {
-                          return const SizedBox.shrink();
-                        }
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -318,10 +322,15 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                             AssetSelector(
                               assets: activeAssets,
                               selectedId: formState.assetId,
+                              recentAssetIds: recentAssetIds,
+                              initialVisibleCount: assetsFoldedCount,
+                              sortOption: assetSortOption,
                               onChanged: (id) {
                                 ref.read(transactionFormProvider.notifier).setAsset(id);
                               },
-                              onCreatePressed: () => _createNewAsset(context, ref),
+                              onCreatePressed: showAddAssetButton
+                                  ? () => _createNewAsset(context, ref)
+                                  : null,
                             ),
                             const SizedBox(height: AppSpacing.lg),
                           ],
@@ -482,7 +491,19 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   Future<void> _createNewAsset(BuildContext context, WidgetRef ref) async {
     final newAssetId = await Navigator.of(context).push<String>(
       MaterialPageRoute(
-        builder: (context) => const AssetFormScreen(pickerMode: true),
+        builder: (context) => AssetFormModal(
+          onSave: (name, icon, colorIndex, note) async {
+            final id = await ref.read(assetsProvider.notifier).addAsset(
+              name: name,
+              icon: icon,
+              colorIndex: colorIndex,
+              note: note,
+            );
+            if (context.mounted) {
+              Navigator.of(context).pop(id);
+            }
+          },
+        ),
       ),
     );
 
