@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:cryptography/cryptography.dart';
 
 import '../../../data/encryption/account_data.dart';
+import '../../../data/encryption/asset_data.dart';
 import '../../../data/encryption/budget_data.dart';
 import '../../../data/encryption/category_data.dart';
 import '../../../data/encryption/transaction_data.dart';
@@ -263,6 +264,44 @@ class EncryptionService {
         fieldName: 'sortOrder',
         expectedValue: expectedSortOrder.toString(),
         actualValue: data.sortOrder.toString(),
+      );
+    }
+
+    return data;
+  }
+
+  /// Encrypts asset data into a binary blob.
+  Future<Uint8List> encryptAsset(AssetData data) async {
+    return encryptJson(data.toJson());
+  }
+
+  /// Decrypts an encrypted blob back to asset data.
+  ///
+  /// Performs integrity verification to ensure the decrypted data matches
+  /// the expected row metadata (id and createdAtMillis).
+  Future<AssetData> decryptAsset(
+    Uint8List encryptedBlob, {
+    required String expectedId,
+    required int expectedCreatedAtMillis,
+  }) async {
+    final json = await decryptJson(encryptedBlob);
+    final data = AssetData.fromJson(json);
+
+    if (data.id != expectedId) {
+      throw SecurityException(
+        rowId: expectedId,
+        fieldName: 'id',
+        expectedValue: expectedId,
+        actualValue: data.id,
+      );
+    }
+
+    if (data.createdAtMillis != expectedCreatedAtMillis) {
+      throw SecurityException(
+        rowId: expectedId,
+        fieldName: 'createdAtMillis',
+        expectedValue: expectedCreatedAtMillis.toString(),
+        actualValue: data.createdAtMillis.toString(),
       );
     }
 

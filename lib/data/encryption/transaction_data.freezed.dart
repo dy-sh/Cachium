@@ -45,6 +45,9 @@ mixin _$TransactionData {
   /// For transfers: the destination account ID
   String? get destinationAccountId => throw _privateConstructorUsedError;
 
+  /// Optional link to an asset
+  String? get assetId => throw _privateConstructorUsedError;
+
   /// Currency code (default: USD)
   String get currency => throw _privateConstructorUsedError;
 
@@ -82,6 +85,7 @@ abstract class $TransactionDataCopyWith<$Res> {
     String? note,
     String? merchant,
     String? destinationAccountId,
+    String? assetId,
     String currency,
     int dateMillis,
     int createdAtMillis,
@@ -111,6 +115,7 @@ class _$TransactionDataCopyWithImpl<$Res, $Val extends TransactionData>
     Object? note = freezed,
     Object? merchant = freezed,
     Object? destinationAccountId = freezed,
+    Object? assetId = freezed,
     Object? currency = null,
     Object? dateMillis = null,
     Object? createdAtMillis = null,
@@ -149,6 +154,10 @@ class _$TransactionDataCopyWithImpl<$Res, $Val extends TransactionData>
                 ? _value.destinationAccountId
                 : destinationAccountId // ignore: cast_nullable_to_non_nullable
                       as String?,
+            assetId: freezed == assetId
+                ? _value.assetId
+                : assetId // ignore: cast_nullable_to_non_nullable
+                      as String?,
             currency: null == currency
                 ? _value.currency
                 : currency // ignore: cast_nullable_to_non_nullable
@@ -185,6 +194,7 @@ abstract class _$$TransactionDataImplCopyWith<$Res>
     String? note,
     String? merchant,
     String? destinationAccountId,
+    String? assetId,
     String currency,
     int dateMillis,
     int createdAtMillis,
@@ -213,6 +223,7 @@ class __$$TransactionDataImplCopyWithImpl<$Res>
     Object? note = freezed,
     Object? merchant = freezed,
     Object? destinationAccountId = freezed,
+    Object? assetId = freezed,
     Object? currency = null,
     Object? dateMillis = null,
     Object? createdAtMillis = null,
@@ -251,6 +262,10 @@ class __$$TransactionDataImplCopyWithImpl<$Res>
             ? _value.destinationAccountId
             : destinationAccountId // ignore: cast_nullable_to_non_nullable
                   as String?,
+        assetId: freezed == assetId
+            ? _value.assetId
+            : assetId // ignore: cast_nullable_to_non_nullable
+                  as String?,
         currency: null == currency
             ? _value.currency
             : currency // ignore: cast_nullable_to_non_nullable
@@ -280,6 +295,7 @@ class _$TransactionDataImpl implements _TransactionData {
     this.note,
     this.merchant,
     this.destinationAccountId,
+    this.assetId,
     this.currency = 'USD',
     required this.dateMillis,
     required this.createdAtMillis,
@@ -320,6 +336,10 @@ class _$TransactionDataImpl implements _TransactionData {
   @override
   final String? destinationAccountId;
 
+  /// Optional link to an asset
+  @override
+  final String? assetId;
+
   /// Currency code (default: USD)
   @override
   @JsonKey()
@@ -337,7 +357,7 @@ class _$TransactionDataImpl implements _TransactionData {
 
   @override
   String toString() {
-    return 'TransactionData(id: $id, amount: $amount, categoryId: $categoryId, accountId: $accountId, type: $type, note: $note, merchant: $merchant, destinationAccountId: $destinationAccountId, currency: $currency, dateMillis: $dateMillis, createdAtMillis: $createdAtMillis)';
+    return 'TransactionData(id: $id, amount: $amount, categoryId: $categoryId, accountId: $accountId, type: $type, note: $note, merchant: $merchant, destinationAccountId: $destinationAccountId, assetId: $assetId, currency: $currency, dateMillis: $dateMillis, createdAtMillis: $createdAtMillis)';
   }
 
   @override
@@ -357,6 +377,7 @@ class _$TransactionDataImpl implements _TransactionData {
                 other.merchant == merchant) &&
             (identical(other.destinationAccountId, destinationAccountId) ||
                 other.destinationAccountId == destinationAccountId) &&
+            (identical(other.assetId, assetId) || other.assetId == assetId) &&
             (identical(other.currency, currency) ||
                 other.currency == currency) &&
             (identical(other.dateMillis, dateMillis) ||
@@ -377,6 +398,7 @@ class _$TransactionDataImpl implements _TransactionData {
     note,
     merchant,
     destinationAccountId,
+    assetId,
     currency,
     dateMillis,
     createdAtMillis,
@@ -409,6 +431,7 @@ abstract class _TransactionData implements TransactionData {
     final String? note,
     final String? merchant,
     final String? destinationAccountId,
+    final String? assetId,
     final String currency,
     required final int dateMillis,
     required final int createdAtMillis,
@@ -448,6 +471,10 @@ abstract class _TransactionData implements TransactionData {
   /// For transfers: the destination account ID
   @override
   String? get destinationAccountId;
+
+  /// Optional link to an asset
+  @override
+  String? get assetId;
 
   /// Currency code (default: USD)
   @override

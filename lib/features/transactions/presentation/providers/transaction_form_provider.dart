@@ -11,6 +11,7 @@ class TransactionFormState {
   final DateTime date;
   final String? note;
   final String? merchant;
+  final String? assetId;
   final String? editingTransactionId;
   // Original values for change tracking (only set when editing)
   final TransactionType? originalType;
@@ -18,6 +19,7 @@ class TransactionFormState {
   final String? originalCategoryId;
   final String? originalAccountId;
   final String? originalDestinationAccountId;
+  final String? originalAssetId;
   final DateTime? originalDate;
   final String? originalNote;
   final String? originalMerchant;
@@ -30,6 +32,7 @@ class TransactionFormState {
     this.categoryId,
     this.accountId,
     this.destinationAccountId,
+    this.assetId,
     required this.date,
     this.note,
     this.merchant,
@@ -39,6 +42,7 @@ class TransactionFormState {
     this.originalCategoryId,
     this.originalAccountId,
     this.originalDestinationAccountId,
+    this.originalAssetId,
     this.originalDate,
     this.originalNote,
     this.originalMerchant,
@@ -68,6 +72,7 @@ class TransactionFormState {
         categoryId != originalCategoryId ||
         accountId != originalAccountId ||
         destinationAccountId != originalDestinationAccountId ||
+        assetId != originalAssetId ||
         !_isSameDateTime(date, originalDate) ||
         note != originalNote ||
         merchant != originalMerchant;
@@ -93,6 +98,8 @@ class TransactionFormState {
     String? accountId,
     String? destinationAccountId,
     bool clearDestinationAccountId = false,
+    String? assetId,
+    bool clearAssetId = false,
     DateTime? date,
     String? note,
     String? merchant,
@@ -102,6 +109,7 @@ class TransactionFormState {
     String? originalCategoryId,
     String? originalAccountId,
     String? originalDestinationAccountId,
+    String? originalAssetId,
     DateTime? originalDate,
     String? originalNote,
     String? originalMerchant,
@@ -115,6 +123,7 @@ class TransactionFormState {
       destinationAccountId: clearDestinationAccountId
           ? null
           : (destinationAccountId ?? this.destinationAccountId),
+      assetId: clearAssetId ? null : (assetId ?? this.assetId),
       date: date ?? this.date,
       note: note ?? this.note,
       merchant: merchant ?? this.merchant,
@@ -124,6 +133,7 @@ class TransactionFormState {
       originalCategoryId: originalCategoryId ?? this.originalCategoryId,
       originalAccountId: originalAccountId ?? this.originalAccountId,
       originalDestinationAccountId: originalDestinationAccountId ?? this.originalDestinationAccountId,
+      originalAssetId: originalAssetId ?? this.originalAssetId,
       originalDate: originalDate ?? this.originalDate,
       originalNote: originalNote ?? this.originalNote,
       originalMerchant: originalMerchant ?? this.originalMerchant,
@@ -235,6 +245,14 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
     state = state.copyWith(merchant: merchant);
   }
 
+  void setAsset(String? assetId) {
+    state = state.copyWith(assetId: assetId, clearAssetId: assetId == null);
+  }
+
+  void clearAsset() {
+    state = state.copyWith(clearAssetId: true);
+  }
+
   void reset() {
     final defaultType = ref.read(defaultTransactionTypeProvider);
     final selectLastAccount = ref.read(selectLastAccountProvider);
@@ -265,6 +283,7 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
       categoryId: transaction.categoryId,
       accountId: transaction.accountId,
       destinationAccountId: transaction.destinationAccountId,
+      assetId: transaction.assetId,
       date: transaction.date,
       note: transaction.note,
       merchant: transaction.merchant,
@@ -275,6 +294,7 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
       originalCategoryId: transaction.categoryId,
       originalAccountId: transaction.accountId,
       originalDestinationAccountId: transaction.destinationAccountId,
+      originalAssetId: transaction.assetId,
       originalDate: transaction.date,
       originalNote: transaction.note,
       originalMerchant: transaction.merchant,

@@ -35,6 +35,9 @@ class TransactionData with _$TransactionData {
     /// For transfers: the destination account ID
     String? destinationAccountId,
 
+    /// Optional link to an asset
+    String? assetId,
+
     /// Currency code (default: USD)
     @Default('USD') String currency,
 

@@ -19,6 +19,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     required String categoryId,
     required String accountId,
     String? destinationAccountId,
+    String? assetId,
     required DateTime date,
     String? note,
     String? merchant,
@@ -33,6 +34,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
       categoryId: categoryId,
       accountId: accountId,
       destinationAccountId: destinationAccountId,
+      assetId: assetId,
       date: date,
       note: note,
       merchant: merchant,
@@ -544,6 +546,13 @@ final searchedTransactionsProvider = Provider<AsyncValue<List<TransactionGroup>>
       return TransactionGroup(date: group.date, transactions: filteredTxs);
     }).where((group) => group.transactions.isNotEmpty).toList();
   });
+});
+
+final transactionsByAssetProvider = Provider.family<List<Transaction>, String>((ref, assetId) {
+  final transactions = ref.watch(transactionsProvider).valueOrNull;
+  if (transactions == null) return [];
+  return transactions.where((t) => t.assetId == assetId).toList()
+    ..sort((a, b) => b.date.compareTo(a.date));
 });
 
 /// Provides distinct merchant names from transaction history, sorted by frequency.

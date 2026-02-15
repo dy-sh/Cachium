@@ -23,6 +23,9 @@ import '../../../settings/presentation/widgets/category_form_modal.dart';
 import '../../data/models/transaction.dart';
 import '../providers/transaction_form_provider.dart';
 import '../providers/transactions_provider.dart';
+import '../../../assets/presentation/providers/assets_provider.dart';
+import '../../../assets/presentation/screens/asset_form_screen.dart';
+import '../../../assets/presentation/widgets/asset_selector.dart';
 import '../widgets/account_selector.dart';
 import '../widgets/category_selector.dart';
 import '../widgets/date_selector.dart';
@@ -298,6 +301,33 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                         ref.read(transactionFormProvider.notifier).setNote(value);
                       },
                     ),
+                    const SizedBox(height: AppSpacing.xxl),
+
+                    // Asset selector (optional)
+                    Builder(
+                      builder: (context) {
+                        final activeAssets = ref.watch(activeAssetsProvider);
+                        if (activeAssets.isEmpty && formState.assetId == null) {
+                          return const SizedBox.shrink();
+                        }
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Asset (optional)', style: AppTypography.labelMedium),
+                            const SizedBox(height: AppSpacing.sm),
+                            AssetSelector(
+                              assets: activeAssets,
+                              selectedId: formState.assetId,
+                              onChanged: (id) {
+                                ref.read(transactionFormProvider.notifier).setAsset(id);
+                              },
+                              onCreatePressed: () => _createNewAsset(context, ref),
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                          ],
+                        );
+                      },
+                    ),
                     const SizedBox(height: AppSpacing.xxxl),
                   ],
                 ),
@@ -349,6 +379,8 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                                   accountId: formState.accountId,
                                   destinationAccountId: formState.destinationAccountId,
                                   clearDestinationAccountId: !isTransfer,
+                                  assetId: formState.assetId,
+                                  clearAssetId: formState.assetId == null,
                                   date: formState.date,
                                   note: formState.note,
                                   merchant: formState.merchant,
@@ -364,6 +396,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                                     categoryId: isTransfer ? '' : formState.categoryId!,
                                     accountId: formState.accountId!,
                                     destinationAccountId: formState.destinationAccountId,
+                                    assetId: formState.assetId,
                                     date: formState.date,
                                     note: formState.note,
                                     merchant: formState.merchant,
@@ -443,6 +476,18 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
 
     if (newAccountId != null && mounted) {
       ref.read(transactionFormProvider.notifier).setAccount(newAccountId);
+    }
+  }
+
+  Future<void> _createNewAsset(BuildContext context, WidgetRef ref) async {
+    final newAssetId = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (context) => const AssetFormScreen(pickerMode: true),
+      ),
+    );
+
+    if (newAssetId != null && mounted) {
+      ref.read(transactionFormProvider.notifier).setAsset(newAssetId);
     }
   }
 }

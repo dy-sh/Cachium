@@ -69,6 +69,13 @@ class SettingsScreen extends ConsumerWidget {
                         onTap: () => context.push('/settings/categories'),
                       ),
                       SettingsTile(
+                        title: 'Assets',
+                        description: 'Track physical assets & costs',
+                        icon: LucideIcons.box,
+                        iconColor: AppColors.getAccentColor(5, intensity), // Teal
+                        onTap: () => context.push('/settings/assets'),
+                      ),
+                      SettingsTile(
                         title: 'Deleted Transactions',
                         description: 'View and restore deleted items',
                         icon: LucideIcons.trash2,

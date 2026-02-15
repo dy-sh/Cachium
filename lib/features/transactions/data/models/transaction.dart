@@ -24,6 +24,7 @@ class Transaction {
   final String categoryId;
   final String accountId;
   final String? destinationAccountId; // For transfers: the receiving account
+  final String? assetId; // Optional link to an asset
   final DateTime date;
   final String? note;
   final String? merchant;
@@ -36,6 +37,7 @@ class Transaction {
     required this.categoryId,
     required this.accountId,
     this.destinationAccountId,
+    this.assetId,
     required this.date,
     this.note,
     this.merchant,
@@ -52,6 +54,8 @@ class Transaction {
     String? accountId,
     String? destinationAccountId,
     bool clearDestinationAccountId = false,
+    String? assetId,
+    bool clearAssetId = false,
     DateTime? date,
     String? note,
     String? merchant,
@@ -66,6 +70,7 @@ class Transaction {
       destinationAccountId: clearDestinationAccountId
           ? null
           : (destinationAccountId ?? this.destinationAccountId),
+      assetId: clearAssetId ? null : (assetId ?? this.assetId),
       date: date ?? this.date,
       note: note ?? this.note,
       merchant: merchant ?? this.merchant,

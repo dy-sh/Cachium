@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
 import 'daos/account_dao.dart';
+import 'daos/asset_dao.dart';
 import 'daos/budget_dao.dart';
 import 'daos/category_dao.dart';
 import 'daos/settings_dao.dart';
@@ -98,6 +99,22 @@ class Budgets extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Table for storing encrypted assets.
+///
+/// Only `id`, `createdAt`, `lastUpdatedAt`, and `isDeleted` are stored in plaintext
+/// for querying and sorting. All other asset data is encrypted in `encryptedBlob`.
+@DataClassName('Asset')
+class Assets extends Table {
+  TextColumn get id => text()();
+  IntColumn get createdAt => integer()();
+  IntColumn get lastUpdatedAt => integer()();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BlobColumn get encryptedBlob => blob()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Table for storing app settings.
 ///
 /// Settings are stored as unencrypted JSON since they don't contain sensitive data.
@@ -122,15 +139,15 @@ class AppSettings extends Table {
 /// is stored unencrypted on disk, but all sensitive transaction data is
 /// encrypted at the application layer before being stored.
 @DriftDatabase(
-  tables: [Transactions, Accounts, Categories, Budgets, AppSettings],
-  daos: [TransactionDao, AccountDao, CategoryDao, BudgetDao, SettingsDao],
+  tables: [Transactions, Accounts, Categories, Budgets, Assets, AppSettings],
+  daos: [TransactionDao, AccountDao, CategoryDao, BudgetDao, AssetDao, SettingsDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -356,6 +373,58 @@ class AppDatabase extends _$AppDatabase {
 
   Future<List<BudgetRow>> getAllBudgets() => budgetDao.getAll();
 
+  // CRUD operations for assets (delegates to AssetDao)
+
+  Future<void> insertAsset({
+    required String id,
+    required int createdAt,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+  }) =>
+      assetDao.insert(
+        id: id,
+        createdAt: createdAt,
+        lastUpdatedAt: lastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+      );
+
+  Future<void> upsertAsset({
+    required String id,
+    required int createdAt,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+    bool isDeleted = false,
+  }) =>
+      assetDao.upsert(
+        id: id,
+        createdAt: createdAt,
+        lastUpdatedAt: lastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+        isDeleted: isDeleted,
+      );
+
+  Future<void> updateAsset({
+    required String id,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+  }) =>
+      assetDao.updateRow(
+        id: id,
+        lastUpdatedAt: lastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+      );
+
+  Future<void> softDeleteAsset(String id, int lastUpdatedAt) =>
+      assetDao.softDelete(id, lastUpdatedAt);
+
+  Future<Asset?> getAsset(String id) => assetDao.getById(id);
+
+  Future<List<Asset>> getAllAssets() => assetDao.getAll();
+
+  Stream<List<Asset>> watchAllAssets() => assetDao.watchAll();
+
+  Future<bool> hasAssets() => assetDao.hasAny();
+
   // CRUD operations for app settings (delegates to SettingsDao)
 
   Future<void> upsertSettings({
@@ -383,6 +452,8 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> deleteAllBudgets() => budgetDao.deleteAll();
 
+  Future<void> deleteAllAssets() => assetDao.deleteAll();
+
   Future<void> deleteAllSettings() => settingsDao.deleteAll();
 
   Future<void> deleteAllData({bool includeSettings = false}) async {
@@ -391,6 +462,7 @@ class AppDatabase extends _$AppDatabase {
       await deleteAllAccounts();
       await deleteAllCategories();
       await deleteAllBudgets();
+      await deleteAllAssets();
       if (includeSettings) {
         await deleteAllSettings();
       }
