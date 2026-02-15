@@ -120,11 +120,14 @@ class _QuickActionButtonState extends State<_QuickActionButton>
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              Text(
-                widget.label,
-                style: AppTypography.labelLarge.copyWith(
-                  color: widget.color.withValues(alpha: 0.9),
-                  fontWeight: FontWeight.w500,
+              Flexible(
+                child: Text(
+                  widget.label,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.labelLarge.copyWith(
+                    color: widget.color.withValues(alpha: 0.9),
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ],
