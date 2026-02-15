@@ -1,34 +1,34 @@
 class NetWorthPoint {
   final DateTime date;
-  final double totalAssets;
+  final double totalHoldings;
   final double totalLiabilities;
   final double netWorth;
-  final Map<String, double> assetBalances;
+  final Map<String, double> holdingBalances;
   final Map<String, double> liabilityBalances;
 
   const NetWorthPoint({
     required this.date,
-    required this.totalAssets,
+    required this.totalHoldings,
     required this.totalLiabilities,
     required this.netWorth,
-    this.assetBalances = const {},
+    this.holdingBalances = const {},
     this.liabilityBalances = const {},
   });
 
   NetWorthPoint copyWith({
     DateTime? date,
-    double? totalAssets,
+    double? totalHoldings,
     double? totalLiabilities,
     double? netWorth,
-    Map<String, double>? assetBalances,
+    Map<String, double>? holdingBalances,
     Map<String, double>? liabilityBalances,
   }) {
     return NetWorthPoint(
       date: date ?? this.date,
-      totalAssets: totalAssets ?? this.totalAssets,
+      totalHoldings: totalHoldings ?? this.totalHoldings,
       totalLiabilities: totalLiabilities ?? this.totalLiabilities,
       netWorth: netWorth ?? this.netWorth,
-      assetBalances: assetBalances ?? this.assetBalances,
+      holdingBalances: holdingBalances ?? this.holdingBalances,
       liabilityBalances: liabilityBalances ?? this.liabilityBalances,
     );
   }

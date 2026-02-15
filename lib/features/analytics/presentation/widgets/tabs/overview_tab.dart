@@ -7,7 +7,7 @@ import '../insights/financial_insights_section.dart';
 import '../trends/spending_trends_section.dart';
 import '../charts/balance_line_chart.dart';
 import '../charts/net_worth_chart.dart';
-import '../charts/asset_liability_pie_chart.dart';
+import '../charts/holding_liability_pie_chart.dart';
 import '../charts/income_expense_chart.dart';
 import '../charts/waterfall_chart.dart';
 import '../charts/category_pie_chart.dart';
@@ -54,7 +54,7 @@ class OverviewTab extends StatelessWidget {
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.screenPadding,
           ),
-          child: const AssetLiabilityPieChart(),
+          child: const HoldingLiabilityPieChart(),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(

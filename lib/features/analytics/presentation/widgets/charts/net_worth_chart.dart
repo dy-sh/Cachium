@@ -19,7 +19,7 @@ class NetWorthChart extends ConsumerWidget {
     final colorIntensity = ref.watch(colorIntensityProvider);
     final currencySymbol = ref.watch(currencySymbolProvider);
 
-    final assetColor = AppColors.getTransactionColor('income', colorIntensity);
+    final holdingColor = AppColors.getTransactionColor('income', colorIntensity);
     final liabilityColor = AppColors.getTransactionColor('expense', colorIntensity);
     final netWorthColor = AppColors.cyan;
 
@@ -28,8 +28,8 @@ class NetWorthChart extends ConsumerWidget {
     }
 
     // Build spots for all three lines
-    final assetSpots = historyPoints.asMap().entries.map((entry) {
-      return FlSpot(entry.key.toDouble(), entry.value.totalAssets);
+    final holdingSpots = historyPoints.asMap().entries.map((entry) {
+      return FlSpot(entry.key.toDouble(), entry.value.totalHoldings);
     }).toList();
 
     final liabilitySpots = historyPoints.asMap().entries.map((entry) {
@@ -42,7 +42,7 @@ class NetWorthChart extends ConsumerWidget {
 
     // Calculate Y-axis range
     final allValues = [
-      ...assetSpots.map((s) => s.y),
+      ...holdingSpots.map((s) => s.y),
       ...liabilitySpots.map((s) => s.y),
       ...netWorthSpots.map((s) => s.y),
     ];
@@ -83,7 +83,7 @@ class NetWorthChart extends ConsumerWidget {
                   Text(
                     '$currencySymbol${lastNetWorth.toStringAsFixed(2)}',
                     style: AppTypography.moneySmall.copyWith(
-                      color: lastNetWorth >= 0 ? assetColor : liabilityColor,
+                      color: lastNetWorth >= 0 ? holdingColor : liabilityColor,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -124,7 +124,7 @@ class NetWorthChart extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _LegendItem(color: assetColor, label: 'Assets'),
+              _LegendItem(color: holdingColor, label: 'Holdings'),
               const SizedBox(width: AppSpacing.lg),
               _LegendItem(color: liabilityColor, label: 'Liabilities'),
               const SizedBox(width: AppSpacing.lg),
@@ -195,18 +195,18 @@ class NetWorthChart extends ConsumerWidget {
                 minY: minY - padding,
                 maxY: maxY + padding,
                 lineBarsData: [
-                  // Assets line
+                  // Holdings line
                   LineChartBarData(
-                    spots: assetSpots,
+                    spots: holdingSpots,
                     isCurved: true,
                     curveSmoothness: 0.3,
-                    color: assetColor,
+                    color: holdingColor,
                     barWidth: 2,
                     isStrokeCapRound: true,
                     dotData: const FlDotData(show: false),
                     belowBarData: BarAreaData(
                       show: true,
-                      color: assetColor.withValues(alpha: 0.1),
+                      color: holdingColor.withValues(alpha: 0.1),
                     ),
                   ),
                   // Liabilities line
@@ -257,7 +257,7 @@ class NetWorthChart extends ConsumerWidget {
                         final point = historyPoints[index];
                         String label;
                         if (spot.barIndex == 0) {
-                          label = 'Assets: $currencySymbol${point.totalAssets.toStringAsFixed(2)}';
+                          label = 'Holdings: $currencySymbol${point.totalHoldings.toStringAsFixed(2)}';
                         } else if (spot.barIndex == 1) {
                           label = 'Liabilities: $currencySymbol${point.totalLiabilities.toStringAsFixed(2)}';
                         } else {

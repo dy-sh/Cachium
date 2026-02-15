@@ -31,7 +31,7 @@ extension AccountTypeExtension on AccountType {
 
   bool get isLiability => this == AccountType.creditCard;
 
-  bool get isAsset => !isLiability;
+  bool get isHolding => !isLiability;
 
   bool get isLiquid {
     switch (this) {

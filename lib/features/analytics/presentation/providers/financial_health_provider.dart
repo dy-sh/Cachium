@@ -16,24 +16,24 @@ final financialHealthProvider = Provider<FinancialHealth>((ref) {
   }
 
   // Calculate current totals using AccountType classification
-  double totalAssets = 0;
+  double totalHoldings = 0;
   double totalLiabilities = 0;
-  double liquidAssets = 0;
+  double liquidHoldings = 0;
 
   for (final account in accounts) {
     if (account.type.isLiability) {
       totalLiabilities += account.balance.abs();
     } else {
-      totalAssets += account.balance;
+      totalHoldings += account.balance;
       if (account.type.isLiquid) {
-        liquidAssets += account.balance;
+        liquidHoldings += account.balance;
       }
     }
   }
 
-  // 1. Debt-to-Asset Ratio (25 points)
+  // 1. Debt-to-Holding Ratio (25 points)
   // Lower is better: 0% = 25pts, 50% = 12.5pts, 100%+ = 0pts
-  final debtRatio = totalAssets > 0 ? (totalLiabilities / totalAssets) : 0.0;
+  final debtRatio = totalHoldings > 0 ? (totalLiabilities / totalHoldings) : 0.0;
   final debtRatioScore = ((1 - (debtRatio.clamp(0.0, 1.0))) * 25).round();
 
   // 2. Savings Rate (25 points)
@@ -42,12 +42,12 @@ final financialHealthProvider = Provider<FinancialHealth>((ref) {
   final savingsRateScore = ((savingsRate.clamp(0.0, 20.0) / 20.0) * 25).round();
 
   // 3. Emergency Fund (25 points)
-  // Calculate months of expenses covered by liquid assets
+  // Calculate months of expenses covered by liquid holdings
   // Uses monthly average expense from current period
   final daysInPeriod = summary.periodEnd.difference(summary.periodStart).inDays + 1;
   final dailyExpense = daysInPeriod > 0 ? summary.totalExpense / daysInPeriod : 0.0;
   final monthlyExpense = dailyExpense * 30;
-  final emergencyMonths = monthlyExpense > 0 ? liquidAssets / monthlyExpense : 0.0;
+  final emergencyMonths = monthlyExpense > 0 ? liquidHoldings / monthlyExpense : 0.0;
   // 6 months = full score
   final emergencyScore = ((emergencyMonths.clamp(0.0, 6.0) / 6.0) * 25).round();
 
@@ -77,7 +77,7 @@ final financialHealthProvider = Provider<FinancialHealth>((ref) {
   final healthScore = (debtRatioScore + savingsRateScore + emergencyScore + trendScore).clamp(0, 100);
 
   return FinancialHealth(
-    debtToAssetRatio: debtRatio * 100,
+    debtToHoldingRatio: debtRatio * 100,
     savingsRate: savingsRate,
     emergencyFundMonths: emergencyMonths,
     netWorthTrend: netWorthTrend,

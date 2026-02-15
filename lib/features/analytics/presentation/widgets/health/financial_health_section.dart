@@ -18,7 +18,7 @@ class FinancialHealthSection extends ConsumerWidget {
     final colorIntensity = ref.watch(colorIntensityProvider);
 
     if (health.healthScore == 0 &&
-        health.debtToAssetRatio == 0 &&
+        health.debtToHoldingRatio == 0 &&
         health.savingsRate == 0 &&
         health.emergencyFundMonths == 0) {
       return const SizedBox.shrink();
@@ -82,8 +82,8 @@ class FinancialHealthSection extends ConsumerWidget {
                       _MetricRow(
                         icon: LucideIcons.scale,
                         label: 'Debt Ratio',
-                        value: '${health.debtToAssetRatio.toStringAsFixed(1)}%',
-                        isGood: health.debtToAssetRatio < 50,
+                        value: '${health.debtToHoldingRatio.toStringAsFixed(1)}%',
+                        isGood: health.debtToHoldingRatio < 50,
                         colorIntensity: colorIntensity,
                       ),
                       const SizedBox(height: AppSpacing.sm),

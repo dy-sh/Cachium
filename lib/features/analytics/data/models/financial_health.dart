@@ -1,12 +1,12 @@
 class FinancialHealth {
-  final double debtToAssetRatio;
+  final double debtToHoldingRatio;
   final double savingsRate;
   final double emergencyFundMonths;
   final double netWorthTrend;
   final int healthScore;
 
   const FinancialHealth({
-    required this.debtToAssetRatio,
+    required this.debtToHoldingRatio,
     required this.savingsRate,
     required this.emergencyFundMonths,
     required this.netWorthTrend,
@@ -14,14 +14,14 @@ class FinancialHealth {
   });
 
   FinancialHealth copyWith({
-    double? debtToAssetRatio,
+    double? debtToHoldingRatio,
     double? savingsRate,
     double? emergencyFundMonths,
     double? netWorthTrend,
     int? healthScore,
   }) {
     return FinancialHealth(
-      debtToAssetRatio: debtToAssetRatio ?? this.debtToAssetRatio,
+      debtToHoldingRatio: debtToHoldingRatio ?? this.debtToHoldingRatio,
       savingsRate: savingsRate ?? this.savingsRate,
       emergencyFundMonths: emergencyFundMonths ?? this.emergencyFundMonths,
       netWorthTrend: netWorthTrend ?? this.netWorthTrend,
@@ -30,7 +30,7 @@ class FinancialHealth {
   }
 
   static const empty = FinancialHealth(
-    debtToAssetRatio: 0,
+    debtToHoldingRatio: 0,
     savingsRate: 0,
     emergencyFundMonths: 0,
     netWorthTrend: 0,

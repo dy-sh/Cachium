@@ -6,20 +6,20 @@ import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
-import '../../providers/asset_liability_breakdown_provider.dart';
+import '../../providers/holding_liability_breakdown_provider.dart';
 
-class AssetLiabilityPieChart extends ConsumerStatefulWidget {
-  const AssetLiabilityPieChart({super.key});
+class HoldingLiabilityPieChart extends ConsumerStatefulWidget {
+  const HoldingLiabilityPieChart({super.key});
 
   @override
-  ConsumerState<AssetLiabilityPieChart> createState() =>
-      _AssetLiabilityPieChartState();
+  ConsumerState<HoldingLiabilityPieChart> createState() =>
+      _HoldingLiabilityPieChartState();
 }
 
-class _AssetLiabilityPieChartState
-    extends ConsumerState<AssetLiabilityPieChart>
+class _HoldingLiabilityPieChartState
+    extends ConsumerState<HoldingLiabilityPieChart>
     with SingleTickerProviderStateMixin {
-  int touchedAssetIndex = -1;
+  int touchedHoldingIndex = -1;
   int touchedLiabilityIndex = -1;
   late AnimationController _animController;
   late Animation<double> _radiusAnimation;
@@ -46,15 +46,15 @@ class _AssetLiabilityPieChartState
 
   @override
   Widget build(BuildContext context) {
-    final breakdown = ref.watch(assetLiabilityBreakdownProvider);
+    final breakdown = ref.watch(holdingLiabilityBreakdownProvider);
     final colorIntensity = ref.watch(colorIntensityProvider);
     final currencySymbol = ref.watch(currencySymbolProvider);
 
-    final assetColor = AppColors.getTransactionColor('income', colorIntensity);
+    final holdingColor = AppColors.getTransactionColor('income', colorIntensity);
     final liabilityColor =
         AppColors.getTransactionColor('expense', colorIntensity);
 
-    if (breakdown.assets.isEmpty && breakdown.liabilities.isEmpty) {
+    if (breakdown.holdings.isEmpty && breakdown.liabilities.isEmpty) {
       return _buildEmptyState();
     }
 
@@ -68,7 +68,7 @@ class _AssetLiabilityPieChartState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Asset & Liability Breakdown', style: AppTypography.labelLarge),
+          Text('Holding & Liability Breakdown', style: AppTypography.labelLarge),
           const SizedBox(height: AppSpacing.md),
           // Net worth summary
           Container(
@@ -81,9 +81,9 @@ class _AssetLiabilityPieChartState
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _SummaryItem(
-                  label: 'Assets',
-                  value: breakdown.totalAssets,
-                  color: assetColor,
+                  label: 'Holdings',
+                  value: breakdown.totalHoldings,
+                  color: holdingColor,
                   currencySymbol: currencySymbol,
                 ),
                 Container(width: 1, height: 30, color: AppColors.border),
@@ -97,7 +97,7 @@ class _AssetLiabilityPieChartState
                 _SummaryItem(
                   label: 'Net Worth',
                   value: breakdown.netWorth,
-                  color: breakdown.netWorth >= 0 ? assetColor : liabilityColor,
+                  color: breakdown.netWorth >= 0 ? holdingColor : liabilityColor,
                   currencySymbol: currencySymbol,
                 ),
               ],
@@ -107,15 +107,15 @@ class _AssetLiabilityPieChartState
           // Dual pie charts
           Row(
             children: [
-              // Assets pie
-              if (breakdown.assets.isNotEmpty)
+              // Holdings pie
+              if (breakdown.holdings.isNotEmpty)
                 Expanded(
                   child: Column(
                     children: [
                       Text(
-                        'Assets',
+                        'Holdings',
                         style: AppTypography.labelSmall.copyWith(
-                          color: assetColor,
+                          color: holdingColor,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -135,11 +135,11 @@ class _AssetLiabilityPieChartState
                                         pieTouchResponse == null ||
                                         pieTouchResponse.touchedSection ==
                                             null) {
-                                      setState(() => touchedAssetIndex = -1);
+                                      setState(() => touchedHoldingIndex = -1);
                                       return;
                                     }
                                     setState(() {
-                                      touchedAssetIndex = pieTouchResponse
+                                      touchedHoldingIndex = pieTouchResponse
                                           .touchedSection!.touchedSectionIndex;
                                     });
                                   },
@@ -147,13 +147,13 @@ class _AssetLiabilityPieChartState
                                 startDegreeOffset: -90,
                                 sectionsSpace: 2,
                                 centerSpaceRadius: 25,
-                                sections: breakdown.assets
+                                sections: breakdown.holdings
                                     .asMap()
                                     .entries
                                     .map((entry) {
                                   final index = entry.key;
                                   final item = entry.value;
-                                  final isTouched = index == touchedAssetIndex;
+                                  final isTouched = index == touchedHoldingIndex;
                                   final baseRadius = isTouched ? 25.0 : 20.0;
 
                                   return PieChartSectionData(
@@ -283,16 +283,16 @@ class _AssetLiabilityPieChartState
           ),
           const SizedBox(height: AppSpacing.md),
           // Legend
-          if (breakdown.assets.isNotEmpty) ...[
+          if (breakdown.holdings.isNotEmpty) ...[
             Text(
-              'Assets',
+              'Holdings',
               style: AppTypography.labelSmall.copyWith(
                 color: AppColors.textSecondary,
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: AppSpacing.xs),
-            ...breakdown.assets.map((item) => Padding(
+            ...breakdown.holdings.map((item) => Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: _LegendRow(
                     color: item.color,
@@ -340,7 +340,7 @@ class _AssetLiabilityPieChartState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Asset & Liability Breakdown', style: AppTypography.labelLarge),
+          Text('Holding & Liability Breakdown', style: AppTypography.labelLarge),
           const SizedBox(height: AppSpacing.xxl),
           Center(
             child: Text(

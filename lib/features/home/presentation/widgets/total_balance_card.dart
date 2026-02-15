@@ -27,7 +27,7 @@ class _TotalBalanceCardState extends ConsumerState<TotalBalanceCard> {
     final intensity = ref.watch(colorIntensityProvider);
     final incomeColor = AppColors.getTransactionColor('income', intensity);
     final expenseColor = AppColors.getTransactionColor('expense', intensity);
-    final assets = _getAssets(ref);
+    final holdings = _getHoldings(ref);
     final liabilities = _getLiabilities(ref);
     final textSize = ref.watch(homeTotalBalanceTextSizeProvider);
     final balancesHidden = ref.watch(homeBalancesHiddenByDefaultProvider);
@@ -119,9 +119,9 @@ class _TotalBalanceCardState extends ConsumerState<TotalBalanceCard> {
               ),
             const SizedBox(height: AppSpacing.xl),
 
-            // Assets and Liabilities breakdown
+            // Holdings and Liabilities breakdown
             _BalanceBreakdown(
-              assets: assets,
+              holdings: holdings,
               liabilities: liabilities,
               incomeColor: incomeColor,
               expenseColor: expenseColor,
@@ -134,10 +134,10 @@ class _TotalBalanceCardState extends ConsumerState<TotalBalanceCard> {
     );
   }
 
-  double _getAssets(WidgetRef ref) {
+  double _getHoldings(WidgetRef ref) {
     final accounts = ref.watch(accountsProvider).valueOrEmpty;
     return accounts
-        .where((a) => a.type.isAsset)
+        .where((a) => a.type.isHolding)
         .fold(0.0, (sum, a) => sum + a.balance);
   }
 
@@ -150,7 +150,7 @@ class _TotalBalanceCardState extends ConsumerState<TotalBalanceCard> {
 }
 
 class _BalanceBreakdown extends StatelessWidget {
-  final double assets;
+  final double holdings;
   final double liabilities;
   final Color incomeColor;
   final Color expenseColor;
@@ -158,7 +158,7 @@ class _BalanceBreakdown extends StatelessWidget {
   final bool showBalance;
 
   const _BalanceBreakdown({
-    required this.assets,
+    required this.holdings,
     required this.liabilities,
     required this.incomeColor,
     required this.expenseColor,
@@ -176,8 +176,8 @@ class _BalanceBreakdown extends StatelessWidget {
           children: [
             Expanded(
               child: _BalanceItem(
-                label: 'Assets',
-                value: assets,
+                label: 'Holdings',
+                value: holdings,
                 color: incomeColor,
                 isSmall: isSmall,
                 showBalance: showBalance,

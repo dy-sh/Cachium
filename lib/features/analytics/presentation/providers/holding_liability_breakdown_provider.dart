@@ -23,38 +23,38 @@ class AccountBreakdownItem {
   });
 }
 
-class AssetLiabilityBreakdown {
-  final double totalAssets;
+class HoldingLiabilityBreakdown {
+  final double totalHoldings;
   final double totalLiabilities;
   final double netWorth;
-  final List<AccountBreakdownItem> assets;
+  final List<AccountBreakdownItem> holdings;
   final List<AccountBreakdownItem> liabilities;
 
-  const AssetLiabilityBreakdown({
-    required this.totalAssets,
+  const HoldingLiabilityBreakdown({
+    required this.totalHoldings,
     required this.totalLiabilities,
     required this.netWorth,
-    required this.assets,
+    required this.holdings,
     required this.liabilities,
   });
 
-  static const empty = AssetLiabilityBreakdown(
-    totalAssets: 0,
+  static const empty = HoldingLiabilityBreakdown(
+    totalHoldings: 0,
     totalLiabilities: 0,
     netWorth: 0,
-    assets: [],
+    holdings: [],
     liabilities: [],
   );
 }
 
-final assetLiabilityBreakdownProvider = Provider<AssetLiabilityBreakdown>((ref) {
+final holdingLiabilityBreakdownProvider = Provider<HoldingLiabilityBreakdown>((ref) {
   final accountsAsync = ref.watch(accountsProvider);
   final filter = ref.watch(analyticsFilterProvider);
   final colorIntensity = ref.watch(colorIntensityProvider);
 
   final accounts = accountsAsync.valueOrNull;
   if (accounts == null || accounts.isEmpty) {
-    return AssetLiabilityBreakdown.empty;
+    return HoldingLiabilityBreakdown.empty;
   }
 
   // Filter accounts if needed
@@ -62,12 +62,12 @@ final assetLiabilityBreakdownProvider = Provider<AssetLiabilityBreakdown>((ref) 
       ? accounts.where((a) => filter.selectedAccountIds.contains(a.id)).toList()
       : accounts;
 
-  if (relevantAccounts.isEmpty) return AssetLiabilityBreakdown.empty;
+  if (relevantAccounts.isEmpty) return HoldingLiabilityBreakdown.empty;
 
   // Separate and calculate totals
-  double totalAssets = 0;
+  double totalHoldings = 0;
   double totalLiabilities = 0;
-  final assetAccounts = <Account>[];
+  final holdingAccounts = <Account>[];
   final liabilityAccounts = <Account>[];
 
   for (final account in relevantAccounts) {
@@ -75,14 +75,14 @@ final assetLiabilityBreakdownProvider = Provider<AssetLiabilityBreakdown>((ref) 
       totalLiabilities += account.balance.abs();
       liabilityAccounts.add(account);
     } else {
-      totalAssets += account.balance;
-      assetAccounts.add(account);
+      totalHoldings += account.balance;
+      holdingAccounts.add(account);
     }
   }
 
-  // Build asset breakdown items
-  final assets = assetAccounts.map((account) {
-    final percentage = totalAssets > 0 ? (account.balance / totalAssets) * 100 : 0.0;
+  // Build holding breakdown items
+  final holdings = holdingAccounts.map((account) {
+    final percentage = totalHoldings > 0 ? (account.balance / totalHoldings) * 100 : 0.0;
     return AccountBreakdownItem(
       accountId: account.id,
       name: account.name,
@@ -108,14 +108,14 @@ final assetLiabilityBreakdownProvider = Provider<AssetLiabilityBreakdown>((ref) 
   }).toList();
 
   // Sort by balance descending
-  assets.sort((a, b) => b.balance.compareTo(a.balance));
+  holdings.sort((a, b) => b.balance.compareTo(a.balance));
   liabilities.sort((a, b) => b.balance.compareTo(a.balance));
 
-  return AssetLiabilityBreakdown(
-    totalAssets: totalAssets,
+  return HoldingLiabilityBreakdown(
+    totalHoldings: totalHoldings,
     totalLiabilities: totalLiabilities,
-    netWorth: totalAssets - totalLiabilities,
-    assets: assets,
+    netWorth: totalHoldings - totalLiabilities,
+    holdings: holdings,
     liabilities: liabilities,
   );
 });

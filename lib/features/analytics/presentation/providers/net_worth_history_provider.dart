@@ -91,9 +91,9 @@ final netWorthHistoryProvider = Provider<List<NetWorthPoint>>((ref) {
     }
 
     // Calculate totals using AccountType classification
-    double totalAssets = 0;
+    double totalHoldings = 0;
     double totalLiabilities = 0;
-    final assetBalances = <String, double>{};
+    final holdingBalances = <String, double>{};
     final liabilityBalances = <String, double>{};
 
     for (final entry in runningBalances.entries) {
@@ -108,21 +108,21 @@ final netWorthHistoryProvider = Provider<List<NetWorthPoint>>((ref) {
           totalLiabilities += balance.abs();
           liabilityBalances[accountId] = balance.abs();
         } else {
-          // For assets, positive balance is the asset value
-          totalAssets += balance;
-          assetBalances[accountId] = balance;
+          // For holdings, positive balance is the holding value
+          totalHoldings += balance;
+          holdingBalances[accountId] = balance;
         }
       }
     }
 
-    final netWorth = totalAssets - totalLiabilities;
+    final netWorth = totalHoldings - totalLiabilities;
 
     points.add(NetWorthPoint(
       date: currentDate,
-      totalAssets: totalAssets,
+      totalHoldings: totalHoldings,
       totalLiabilities: totalLiabilities,
       netWorth: netWorth,
-      assetBalances: assetBalances,
+      holdingBalances: holdingBalances,
       liabilityBalances: liabilityBalances,
     ));
 

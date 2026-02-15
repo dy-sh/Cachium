@@ -39,7 +39,7 @@
   1. Simple delete (no transactions)
   2. Move transactions to another account, then delete
   3. Delete account with all its transactions
-- Account type properties: isLiability (Credit Card), isAsset (others), isLiquid (Bank, Cash, Wallet)
+- Account type properties: isLiability (Credit Card), isHolding (others), isLiquid (Bank, Cash, Wallet)
 - Picker mode: account form can be opened inline from transaction form, returns new account ID
 
 #### 19. Account customization
@@ -97,7 +97,7 @@
 - Spending trends section: trend analysis over time
 - Balance line chart: account balance over time
 - Net worth chart: net worth tracking
-- Asset/liability pie chart: asset vs liability breakdown
+- Holding/liability pie chart: holding vs liability breakdown
 - Income/expense chart: income vs expense comparison
 - Waterfall chart: cash flow waterfall visualization
 - Category pie chart: spending by category
@@ -141,7 +141,7 @@
 - Chart drill-down: tap chart elements to navigate to filtered transaction lists
 
 #### 30. Custom chart widgets (16 types)
-- Asset/Liability Pie, Balance Line, Category Lines, Category Pie
+- Holding/Liability Pie, Balance Line, Category Lines, Category Pie
 - Comparative Bar, Income/Expense, Net Worth, Radar Spending
 - Sankey Diagram, Savings Gauge, Spending Heatmap, Stacked Area
 - Top Categories List, Treemap, Waterfall
@@ -165,7 +165,7 @@
 
 #### 33. Total balance card
 - Animated counter for total balance
-- Assets vs. Liabilities breakdown
+- Holdings vs. Liabilities breakdown
 - Privacy mode: tap-to-reveal when balances hidden by default
 - Configurable text size (large/small)
 
