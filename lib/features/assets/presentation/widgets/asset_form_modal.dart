@@ -6,19 +6,25 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/buttons/primary_button.dart';
+import '../../../../design_system/components/chips/toggle_chip.dart';
 import '../../../../design_system/components/inputs/input_field.dart';
 import '../../../../design_system/components/layout/form_header.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../settings/presentation/widgets/color_picker_grid.dart';
 import '../../../settings/presentation/widgets/icon_picker_grid.dart';
+import '../../data/models/asset.dart';
 import '../providers/assets_provider.dart';
 
 class AssetFormModal extends ConsumerStatefulWidget {
-  final void Function(String name, IconData icon, int colorIndex, String? note) onSave;
+  final Asset? asset;
+  final void Function(String name, IconData icon, int colorIndex, AssetStatus status, String? note) onSave;
+  final VoidCallback? onDelete;
 
   const AssetFormModal({
     super.key,
+    this.asset,
     required this.onSave,
+    this.onDelete,
   });
 
   @override
@@ -31,17 +37,25 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
   late FocusNode _nameFocusNode;
   late IconData _selectedIcon;
   late int _selectedColorIndex;
+  late AssetStatus _selectedStatus;
   bool _isEditingName = false;
+  String _previousName = '';
+
+  bool get _isEditing => widget.asset != null;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController();
-    _noteController = TextEditingController();
+    _nameController = TextEditingController(text: widget.asset?.name ?? '');
+    _noteController = TextEditingController(text: widget.asset?.note ?? '');
     _nameFocusNode = FocusNode();
-    _selectedIcon = LucideIcons.box;
-    _selectedColorIndex = 0;
-    _isEditingName = true;
+    _selectedIcon = widget.asset?.icon ?? LucideIcons.box;
+    _selectedColorIndex = widget.asset?.colorIndex ?? 0;
+    _selectedStatus = widget.asset?.status ?? AssetStatus.active;
+
+    if (!_isEditing) {
+      _isEditingName = true;
+    }
   }
 
   @override
@@ -52,17 +66,34 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
     super.dispose();
   }
 
+  void _startEditingName() {
+    _previousName = _nameController.text;
+    setState(() => _isEditingName = true);
+    _nameFocusNode.requestFocus();
+  }
+
   void _applyName() {
     setState(() => _isEditingName = false);
     _nameFocusNode.unfocus();
   }
 
-  void _startEditingName() {
-    setState(() => _isEditingName = true);
-    _nameFocusNode.requestFocus();
+  void _cancelEditingName() {
+    _nameController.text = _previousName;
+    setState(() => _isEditingName = false);
+    _nameFocusNode.unfocus();
   }
 
   bool get _isValid => _nameController.text.trim().isNotEmpty;
+
+  bool get _hasChanges {
+    if (!_isEditing) return true;
+    final asset = widget.asset!;
+    return _nameController.text.trim() != asset.name ||
+        _selectedIcon != asset.icon ||
+        _selectedColorIndex != asset.colorIndex ||
+        _selectedStatus != asset.status ||
+        (_noteController.text.trim()) != (asset.note ?? '');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +103,7 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
     final assetName = _nameController.text.trim();
 
     final isDuplicateName = assetName.isNotEmpty && ref.watch(
-      assetNameExistsProvider((name: assetName, excludeId: null)),
+      assetNameExistsProvider((name: assetName, excludeId: widget.asset?.id)),
     );
 
     return Scaffold(
@@ -81,8 +112,25 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
         child: Column(
           children: [
             FormHeader(
-              title: 'New Asset',
+              title: _isEditing ? 'Edit Asset' : 'New Asset',
               onClose: () => Navigator.pop(context),
+              trailing: _isEditing && widget.onDelete != null
+                  ? GestureDetector(
+                      onTap: widget.onDelete,
+                      child: Container(
+                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        decoration: BoxDecoration(
+                          color: AppColors.expense.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          LucideIcons.trash2,
+                          size: 18,
+                          color: AppColors.expense,
+                        ),
+                      ),
+                    )
+                  : null,
             ),
 
             Expanded(
@@ -114,7 +162,7 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
                               ? TextField(
                                   controller: _nameController,
                                   focusNode: _nameFocusNode,
-                                  autofocus: true,
+                                  autofocus: !_isEditing,
                                   onChanged: (_) => setState(() {}),
                                   onSubmitted: (_) => _applyName(),
                                   style: AppTypography.h2.copyWith(
@@ -146,7 +194,7 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
                         ),
                         if (_isEditingName)
                           GestureDetector(
-                            onTap: assetName.isNotEmpty ? _applyName : null,
+                            onTap: assetName.isNotEmpty ? _applyName : _cancelEditingName,
                             child: Container(
                               width: 32,
                               height: 32,
@@ -185,6 +233,22 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
                         ),
                       ),
                     const SizedBox(height: AppSpacing.xxl),
+
+                    // Status toggle (edit mode only)
+                    if (_isEditing) ...[
+                      Text('Status', style: AppTypography.labelMedium),
+                      const SizedBox(height: AppSpacing.sm),
+                      ToggleChip(
+                        options: const ['Active', 'Sold'],
+                        selectedIndex: _selectedStatus == AssetStatus.active ? 0 : 1,
+                        onChanged: (index) {
+                          setState(() {
+                            _selectedStatus = index == 0 ? AssetStatus.active : AssetStatus.sold;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: AppSpacing.xxl),
+                    ],
 
                     // Color picker
                     Text('Color', style: AppTypography.labelMedium),
@@ -249,14 +313,15 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
                     bottom: MediaQuery.of(context).padding.bottom + AppSpacing.md,
                   ),
                   child: PrimaryButton(
-                    label: 'Create Asset',
-                    onPressed: _isValid && !isDuplicateName
+                    label: _isEditing ? 'Save Changes' : 'Create Asset',
+                    onPressed: _isValid && !isDuplicateName && _hasChanges
                         ? () {
                             final note = _noteController.text.trim();
                             widget.onSave(
                               _nameController.text.trim(),
                               _selectedIcon,
                               _selectedColorIndex,
+                              _selectedStatus,
                               note.isEmpty ? null : note,
                             );
                           }

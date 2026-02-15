@@ -107,6 +107,7 @@ class Budgets extends Table {
 class Assets extends Table {
   TextColumn get id => text()();
   IntColumn get createdAt => integer()();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
   IntColumn get lastUpdatedAt => integer()();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
   BlobColumn get encryptedBlob => blob()();
@@ -147,7 +148,7 @@ class AppDatabase extends _$AppDatabase {
 
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -159,6 +160,10 @@ class AppDatabase extends _$AppDatabase {
           // Delete and recreate all tables
           await m.deleteTable('transactions');
           await m.deleteTable('accounts');
+          await m.deleteTable('categories');
+          await m.deleteTable('budgets');
+          await m.deleteTable('assets');
+          await m.deleteTable('app_settings');
           await m.createAll();
         },
       );
@@ -378,12 +383,14 @@ class AppDatabase extends _$AppDatabase {
   Future<void> insertAsset({
     required String id,
     required int createdAt,
+    required int sortOrder,
     required int lastUpdatedAt,
     required Uint8List encryptedBlob,
   }) =>
       assetDao.insert(
         id: id,
         createdAt: createdAt,
+        sortOrder: sortOrder,
         lastUpdatedAt: lastUpdatedAt,
         encryptedBlob: encryptedBlob,
       );
@@ -391,6 +398,7 @@ class AppDatabase extends _$AppDatabase {
   Future<void> upsertAsset({
     required String id,
     required int createdAt,
+    required int sortOrder,
     required int lastUpdatedAt,
     required Uint8List encryptedBlob,
     bool isDeleted = false,
@@ -398,6 +406,7 @@ class AppDatabase extends _$AppDatabase {
       assetDao.upsert(
         id: id,
         createdAt: createdAt,
+        sortOrder: sortOrder,
         lastUpdatedAt: lastUpdatedAt,
         encryptedBlob: encryptedBlob,
         isDeleted: isDeleted,
@@ -405,11 +414,13 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> updateAsset({
     required String id,
+    required int sortOrder,
     required int lastUpdatedAt,
     required Uint8List encryptedBlob,
   }) =>
       assetDao.updateRow(
         id: id,
+        sortOrder: sortOrder,
         lastUpdatedAt: lastUpdatedAt,
         encryptedBlob: encryptedBlob,
       );

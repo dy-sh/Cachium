@@ -14,7 +14,10 @@ class AssetsNotifier extends AsyncNotifier<List<Asset>> {
   @override
   Future<List<Asset>> build() async {
     final repo = ref.watch(assetRepositoryProvider);
-    return repo.getAllAssets();
+    final assets = await repo.getAllAssets();
+    // Sort by sortOrder
+    assets.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    return assets;
   }
 
   /// Add a new asset. Returns the new asset's ID.
@@ -29,16 +32,23 @@ class AssetsNotifier extends AsyncNotifier<List<Asset>> {
     try {
       final repo = ref.read(assetRepositoryProvider);
 
+      // Assign sortOrder = max + 1
+      final currentAssets = state.valueOrNull ?? [];
+      final maxSortOrder = currentAssets.isEmpty
+          ? -1
+          : currentAssets.map((a) => a.sortOrder).reduce((a, b) => a > b ? a : b);
+
       final asset = Asset(
         id: _uuid.v4(),
         name: name,
         icon: icon,
         colorIndex: colorIndex,
         note: note,
+        sortOrder: maxSortOrder + 1,
         createdAt: DateTime.now(),
       );
 
-      state = state.whenData((assets) => [asset, ...assets]);
+      state = state.whenData((assets) => [...assets, asset]);
       await repo.createAsset(asset);
       return asset.id;
     } catch (e, st) {
@@ -92,11 +102,57 @@ class AssetsNotifier extends AsyncNotifier<List<Asset>> {
     }
   }
 
+  /// Move an asset to a new position in the list.
+  Future<void> moveAssetToPosition(String assetId, int newIndex) async {
+    final previousState = state;
+    final assets = state.valueOrNull;
+    if (assets == null) return;
+
+    try {
+      final repo = ref.read(assetRepositoryProvider);
+      final db = ref.read(databaseProvider);
+
+      // Build the reordered list
+      final reordered = List<Asset>.from(assets);
+      final oldIndex = reordered.indexWhere((a) => a.id == assetId);
+      if (oldIndex == -1) return;
+
+      final item = reordered.removeAt(oldIndex);
+      reordered.insert(newIndex.clamp(0, reordered.length), item);
+
+      // Assign new sort orders
+      final updated = <Asset>[];
+      for (int i = 0; i < reordered.length; i++) {
+        updated.add(reordered[i].copyWith(sortOrder: i));
+      }
+
+      // Optimistic update
+      state = AsyncData(updated);
+
+      // Persist in a transaction
+      await db.transaction(() async {
+        for (final asset in updated) {
+          if (asset.sortOrder != assets.firstWhere((a) => a.id == asset.id).sortOrder) {
+            await repo.updateAsset(asset);
+          }
+        }
+      });
+    } catch (e, st) {
+      state = previousState;
+      Error.throwWithStackTrace(
+        e is AppException ? e : RepositoryException.update(entityType: 'Asset', entityId: assetId, cause: e),
+        st,
+      );
+    }
+  }
+
   /// Refresh assets from database
   Future<void> refresh() async {
     try {
       final repo = ref.read(assetRepositoryProvider);
-      state = AsyncData(await repo.getAllAssets());
+      final assets = await repo.getAllAssets();
+      assets.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+      state = AsyncData(assets);
     } catch (e, st) {
       state = AsyncError(
         e is AppException ? e : RepositoryException.fetch(entityType: 'Asset', cause: e),

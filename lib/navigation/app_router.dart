@@ -5,7 +5,6 @@ import '../features/accounts/presentation/screens/account_detail_screen.dart';
 import '../features/accounts/presentation/screens/account_form_screen.dart';
 import '../features/accounts/presentation/screens/accounts_screen.dart';
 import '../features/assets/presentation/screens/asset_detail_screen.dart';
-import '../features/assets/presentation/screens/asset_form_screen.dart';
 import '../features/assets/presentation/screens/assets_screen.dart';
 import '../features/analytics/presentation/screens/analytics_screen.dart';
 import '../features/home/presentation/screens/home_screen.dart';
@@ -59,9 +58,7 @@ class AppRoutes {
   static const accountDetail = '/account/:id';
   static const accountEdit = '/account/:id/edit';
   static const assets = '/settings/assets';
-  static const assetForm = '/asset/new';
   static const assetDetail = '/asset/:id';
-  static const assetEdit = '/asset/:id/edit';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -182,31 +179,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
-        path: AppRoutes.assetForm,
-        pageBuilder: (context, state) => PageTransitions.buildSlideUpTransition(
-          state,
-          const AssetFormScreen(),
-          animationsEnabled: ref.read(formAnimationsEnabledProvider),
-        ),
-      ),
-      GoRoute(
         path: AppRoutes.assetDetail,
         pageBuilder: (context, state) {
           final assetId = state.pathParameters['id']!;
           return PageTransitions.buildSlideLeftTransition(
             state,
             AssetDetailScreen(assetId: assetId),
-            animationsEnabled: ref.read(formAnimationsEnabledProvider),
-          );
-        },
-      ),
-      GoRoute(
-        path: AppRoutes.assetEdit,
-        pageBuilder: (context, state) {
-          final assetId = state.pathParameters['id']!;
-          return PageTransitions.buildSlideUpTransition(
-            state,
-            AssetFormScreen(assetId: assetId),
             animationsEnabled: ref.read(formAnimationsEnabledProvider),
           );
         },

@@ -14,6 +14,7 @@ class AssetDao extends DatabaseAccessor<AppDatabase>
   Future<void> insert({
     required String id,
     required int createdAt,
+    required int sortOrder,
     required int lastUpdatedAt,
     required Uint8List encryptedBlob,
   }) async {
@@ -21,6 +22,7 @@ class AssetDao extends DatabaseAccessor<AppDatabase>
       AssetsCompanion.insert(
         id: id,
         createdAt: createdAt,
+        sortOrder: Value(sortOrder),
         lastUpdatedAt: lastUpdatedAt,
         encryptedBlob: encryptedBlob,
       ),
@@ -31,6 +33,7 @@ class AssetDao extends DatabaseAccessor<AppDatabase>
   Future<void> upsert({
     required String id,
     required int createdAt,
+    required int sortOrder,
     required int lastUpdatedAt,
     required Uint8List encryptedBlob,
     bool isDeleted = false,
@@ -39,6 +42,7 @@ class AssetDao extends DatabaseAccessor<AppDatabase>
       AssetsCompanion(
         id: Value(id),
         createdAt: Value(createdAt),
+        sortOrder: Value(sortOrder),
         lastUpdatedAt: Value(lastUpdatedAt),
         encryptedBlob: Value(encryptedBlob),
         isDeleted: Value(isDeleted),
@@ -50,13 +54,25 @@ class AssetDao extends DatabaseAccessor<AppDatabase>
   /// Update an existing asset row
   Future<void> updateRow({
     required String id,
+    required int sortOrder,
     required int lastUpdatedAt,
     required Uint8List encryptedBlob,
   }) async {
     await (update(assets)..where((a) => a.id.equals(id))).write(
       AssetsCompanion(
+        sortOrder: Value(sortOrder),
         lastUpdatedAt: Value(lastUpdatedAt),
         encryptedBlob: Value(encryptedBlob),
+      ),
+    );
+  }
+
+  /// Update only the sort order of an asset
+  Future<void> updateSortOrder(String id, int sortOrder) async {
+    await (update(assets)..where((a) => a.id.equals(id))).write(
+      AssetsCompanion(
+        sortOrder: Value(sortOrder),
+        lastUpdatedAt: Value(DateTime.now().millisecondsSinceEpoch),
       ),
     );
   }
@@ -79,11 +95,11 @@ class AssetDao extends DatabaseAccessor<AppDatabase>
         .getSingleOrNull();
   }
 
-  /// Get all non-deleted assets ordered by createdAt descending
+  /// Get all non-deleted assets ordered by sortOrder ascending
   Future<List<Asset>> getAll() async {
     return (select(assets)
           ..where((a) => a.isDeleted.equals(false))
-          ..orderBy([(a) => OrderingTerm.desc(a.createdAt)]))
+          ..orderBy([(a) => OrderingTerm.asc(a.sortOrder)]))
         .get();
   }
 
@@ -91,7 +107,7 @@ class AssetDao extends DatabaseAccessor<AppDatabase>
   Stream<List<Asset>> watchAll() {
     return (select(assets)
           ..where((a) => a.isDeleted.equals(false))
-          ..orderBy([(a) => OrderingTerm.desc(a.createdAt)]))
+          ..orderBy([(a) => OrderingTerm.asc(a.sortOrder)]))
         .watch();
   }
 

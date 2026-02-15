@@ -74,6 +74,7 @@ enum CategorySortOption {
 
 enum AssetSortOption {
   lastUsed,
+  listOrder,
   alphabetical,
   newest;
 
@@ -81,6 +82,8 @@ enum AssetSortOption {
     switch (this) {
       case AssetSortOption.lastUsed:
         return 'Last Used';
+      case AssetSortOption.listOrder:
+        return 'List Order';
       case AssetSortOption.alphabetical:
         return 'Alphabetical';
       case AssetSortOption.newest:

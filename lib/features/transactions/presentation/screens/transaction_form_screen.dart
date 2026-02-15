@@ -492,7 +492,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     final newAssetId = await Navigator.of(context).push<String>(
       MaterialPageRoute(
         builder: (context) => AssetFormModal(
-          onSave: (name, icon, colorIndex, note) async {
+          onSave: (name, icon, colorIndex, status, note) async {
             final id = await ref.read(assetsProvider.notifier).addAsset(
               name: name,
               icon: icon,

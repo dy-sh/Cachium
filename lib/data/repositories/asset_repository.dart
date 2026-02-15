@@ -32,6 +32,7 @@ class AssetRepository {
       colorIndex: asset.colorIndex,
       status: asset.status.name,
       note: asset.note,
+      sortOrder: asset.sortOrder,
       createdAtMillis: asset.createdAt.millisecondsSinceEpoch,
     );
   }
@@ -52,6 +53,7 @@ class AssetRepository {
         orElse: () => ui.AssetStatus.active,
       ),
       note: data.note,
+      sortOrder: data.sortOrder,
       createdAt: DateTime.fromMillisecondsSinceEpoch(data.createdAtMillis),
     );
   }
@@ -65,6 +67,7 @@ class AssetRepository {
       await database.insertAsset(
         id: asset.id,
         createdAt: asset.createdAt.millisecondsSinceEpoch,
+        sortOrder: asset.sortOrder,
         lastUpdatedAt: asset.createdAt.millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
@@ -124,6 +127,7 @@ class AssetRepository {
 
       await database.updateAsset(
         id: asset.id,
+        sortOrder: asset.sortOrder,
         lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );

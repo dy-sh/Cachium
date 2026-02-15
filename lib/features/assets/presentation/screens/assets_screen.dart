@@ -12,8 +12,9 @@ import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/asset.dart';
 import '../providers/assets_provider.dart';
+import '../widgets/asset_form_modal.dart';
 
-enum _AssetFilter { all, active, sold }
+enum _AssetTab { active, sold }
 
 class AssetsScreen extends ConsumerStatefulWidget {
   const AssetsScreen({super.key});
@@ -23,8 +24,7 @@ class AssetsScreen extends ConsumerStatefulWidget {
 }
 
 class _AssetsScreenState extends ConsumerState<AssetsScreen> {
-  _AssetFilter _filter = _AssetFilter.all;
-  AssetSortOption _sortOption = AssetSortOption.lastUsed;
+  _AssetTab _tab = _AssetTab.active;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
@@ -34,11 +34,63 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
     super.dispose();
   }
 
+  void _openCreateModal() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AssetFormModal(
+          onSave: (name, icon, colorIndex, status, note) async {
+            await ref.read(assetsProvider.notifier).addAsset(
+              name: name,
+              icon: icon,
+              colorIndex: colorIndex,
+              note: note,
+            );
+            if (context.mounted) {
+              Navigator.of(context).pop();
+              context.showSuccessNotification('Asset created');
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  void _openEditModal(Asset asset) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AssetFormModal(
+          asset: asset,
+          onSave: (name, icon, colorIndex, status, note) async {
+            final updatedAsset = asset.copyWith(
+              name: name,
+              icon: icon,
+              colorIndex: colorIndex,
+              status: status,
+              note: note,
+              clearNote: note == null,
+            );
+            await ref.read(assetsProvider.notifier).updateAsset(updatedAsset);
+            if (context.mounted) {
+              Navigator.of(context).pop();
+              context.showSuccessNotification('Asset updated');
+            }
+          },
+          onDelete: () async {
+            await ref.read(assetsProvider.notifier).deleteAsset(asset.id);
+            if (context.mounted) {
+              Navigator.of(context).pop();
+              context.showSuccessNotification('Asset deleted');
+            }
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final assetsAsync = ref.watch(assetsProvider);
     final intensity = ref.watch(colorIntensityProvider);
-    final recentAssetIds = ref.watch(recentlyUsedAssetIdsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -60,25 +112,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
                     child: Text('Assets', style: AppTypography.h2),
                   ),
                   GestureDetector(
-                    onTap: () => _showSortPicker(context),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: Icon(
-                        LucideIcons.arrowUpDown,
-                        color: AppColors.textSecondary,
-                        size: 18,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  GestureDetector(
-                    onTap: () => context.push('/asset/new'),
+                    onTap: _openCreateModal,
                     child: Container(
                       width: 40,
                       height: 40,
@@ -100,10 +134,10 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
             const SizedBox(height: AppSpacing.xl),
             Center(
               child: ToggleChip(
-                options: const ['All', 'Active', 'Sold'],
-                selectedIndex: _filter.index,
+                options: const ['Active', 'Sold'],
+                selectedIndex: _tab.index,
                 onChanged: (index) {
-                  setState(() => _filter = _AssetFilter.values[index]);
+                  setState(() => _tab = _AssetTab.values[index]);
                 },
               ),
             ),
@@ -132,7 +166,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
             Expanded(
               child: assetsAsync.when(
                 data: (assets) {
-                  final filtered = _filterAndSortAssets(assets, recentAssetIds);
+                  final filtered = _filterAssets(assets);
                   if (filtered.isEmpty) {
                     return Center(
                       child: EmptyState(
@@ -144,15 +178,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
                       ),
                     );
                   }
-                  return ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-                    itemCount: filtered.length,
-                    itemBuilder: (context, index) => _AssetCard(
-                      asset: filtered[index],
-                      intensity: intensity,
-                      onTap: () => context.push('/asset/${filtered[index].id}'),
-                    ),
-                  );
+                  return _buildAssetList(filtered, assets, intensity);
                 },
                 loading: () => const Center(child: LoadingIndicator()),
                 error: (error, _) => Center(
@@ -166,12 +192,11 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
     );
   }
 
-  List<Asset> _filterAndSortAssets(List<Asset> assets, List<String> recentAssetIds) {
-    // Filter by status
-    var filtered = switch (_filter) {
-      _AssetFilter.all => assets,
-      _AssetFilter.active => assets.where((a) => a.status == AssetStatus.active).toList(),
-      _AssetFilter.sold => assets.where((a) => a.status == AssetStatus.sold).toList(),
+  List<Asset> _filterAssets(List<Asset> assets) {
+    // Filter by status tab
+    var filtered = switch (_tab) {
+      _AssetTab.active => assets.where((a) => a.status == AssetStatus.active).toList(),
+      _AssetTab.sold => assets.where((a) => a.status == AssetStatus.sold).toList(),
     };
 
     // Filter by search
@@ -181,135 +206,103 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
           (a.note?.toLowerCase().contains(_searchQuery) ?? false)).toList();
     }
 
-    // Sort
-    final sorted = List<Asset>.from(filtered);
-    switch (_sortOption) {
-      case AssetSortOption.lastUsed:
-        final idOrder = {for (int i = 0; i < recentAssetIds.length; i++) recentAssetIds[i]: i};
-        sorted.sort((a, b) {
-          final aIdx = idOrder[a.id];
-          final bIdx = idOrder[b.id];
-          if (aIdx != null && bIdx != null) return aIdx.compareTo(bIdx);
-          if (aIdx != null) return -1;
-          if (bIdx != null) return 1;
-          return b.createdAt.compareTo(a.createdAt);
-        });
-      case AssetSortOption.alphabetical:
-        sorted.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
-      case AssetSortOption.newest:
-        sorted.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    }
-
-    return sorted;
+    return filtered;
   }
 
-  void _showSortPicker(BuildContext context) {
-    final animationsEnabled = ref.read(formAnimationsEnabledProvider);
-    final options = AssetSortOption.values.map((e) => e.displayName).toList();
-    final selectedIndex = AssetSortOption.values.indexOf(_sortOption);
-    final modalContent = _SortPickerSheet(
-      options: options,
-      selectedIndex: selectedIndex,
-      onSelected: (index) {
-        setState(() => _sortOption = AssetSortOption.values[index]);
-        Navigator.pop(context);
+  Widget _buildAssetList(List<Asset> filtered, List<Asset> allAssets, ColorIntensity intensity) {
+    // Only allow reordering on the Active tab with no search query
+    final canReorder = _tab == _AssetTab.active && _searchQuery.isEmpty;
+
+    if (canReorder) {
+      return ReorderableListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+        proxyDecorator: (child, index, animation) {
+          return AnimatedBuilder(
+            animation: animation,
+            builder: (context, child) => Material(
+              color: Colors.transparent,
+              elevation: 0,
+              child: child,
+            ),
+            child: child,
+          );
+        },
+        onReorder: (oldIndex, newIndex) {
+          if (oldIndex < newIndex) newIndex--;
+          final asset = filtered[oldIndex];
+          // Calculate the new index in the full assets list
+          ref.read(assetsProvider.notifier).moveAssetToPosition(asset.id, newIndex);
+        },
+        itemCount: filtered.length + 1, // +1 for add tile
+        itemBuilder: (context, index) {
+          if (index == filtered.length) {
+            return KeyedSubtree(
+              key: const ValueKey('add_asset_tile'),
+              child: _buildAddAssetTile(),
+            );
+          }
+          final asset = filtered[index];
+          return KeyedSubtree(
+            key: ValueKey(asset.id),
+            child: _AssetCard(
+              asset: asset,
+              intensity: intensity,
+              onTap: () => _openEditModal(asset),
+              onDetailTap: () => context.push('/asset/${asset.id}'),
+              showDragHandle: true,
+            ),
+          );
+        },
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+      itemCount: filtered.length + (_tab == _AssetTab.active ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (index == filtered.length) {
+          return _buildAddAssetTile();
+        }
+        final asset = filtered[index];
+        return _AssetCard(
+          asset: asset,
+          intensity: intensity,
+          onTap: () => _openEditModal(asset),
+          onDetailTap: () => context.push('/asset/${asset.id}'),
+          showDragHandle: false,
+        );
       },
     );
-
-    if (!animationsEnabled) {
-      Navigator.of(context).push(
-        PageRouteBuilder(
-          opaque: false,
-          barrierDismissible: true,
-          barrierColor: Colors.black54,
-          transitionDuration: Duration.zero,
-          reverseTransitionDuration: Duration.zero,
-          pageBuilder: (context, animation, secondaryAnimation) {
-            return Align(
-              alignment: Alignment.bottomCenter,
-              child: Material(
-                color: AppColors.surface,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                child: modalContent,
-              ),
-            );
-          },
-        ),
-      );
-    } else {
-      showModalBottomSheet(
-        context: context,
-        backgroundColor: AppColors.surface,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        builder: (context) => modalContent,
-      );
-    }
   }
-}
 
-class _SortPickerSheet extends StatelessWidget {
-  final List<String> options;
-  final int selectedIndex;
-  final ValueChanged<int> onSelected;
-
-  const _SortPickerSheet({
-    required this.options,
-    required this.selectedIndex,
-    required this.onSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildAddAssetTile() {
+    return GestureDetector(
+      onTap: _openCreateModal,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppSpacing.xxl),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppColors.border,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+            Icon(
+              LucideIcons.plus,
+              size: 18,
+              color: AppColors.textSecondary,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              'Add Asset',
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
               ),
             ),
-            const SizedBox(height: AppSpacing.lg),
-            Text('Sort By', style: AppTypography.h4),
-            const SizedBox(height: AppSpacing.lg),
-            ...List.generate(options.length, (index) {
-              final isSelected = index == selectedIndex;
-              return GestureDetector(
-                onTap: () => onSelected(index),
-                behavior: HitTestBehavior.opaque,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          options[index],
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                      if (isSelected)
-                        Icon(
-                          LucideIcons.check,
-                          size: 18,
-                          color: AppColors.textPrimary,
-                        ),
-                    ],
-                  ),
-                ),
-              );
-            }),
           ],
         ),
       ),
@@ -321,11 +314,15 @@ class _AssetCard extends ConsumerWidget {
   final Asset asset;
   final ColorIntensity intensity;
   final VoidCallback onTap;
+  final VoidCallback onDetailTap;
+  final bool showDragHandle;
 
   const _AssetCard({
     required this.asset,
     required this.intensity,
     required this.onTap,
+    required this.onDetailTap,
+    this.showDragHandle = false,
   });
 
   @override
@@ -347,6 +344,14 @@ class _AssetCard extends ConsumerWidget {
         ),
         child: Row(
           children: [
+            if (showDragHandle) ...[
+              Icon(
+                LucideIcons.gripVertical,
+                size: 16,
+                color: AppColors.textTertiary,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+            ],
             Container(
               width: 40,
               height: 40,
@@ -411,6 +416,19 @@ class _AssetCard extends ConsumerWidget {
                 style: AppTypography.labelSmall.copyWith(
                   color: asset.status.color,
                   fontSize: 11,
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            GestureDetector(
+              onTap: onDetailTap,
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                child: Icon(
+                  LucideIcons.chevronRight,
+                  size: 18,
+                  color: AppColors.textTertiary,
                 ),
               ),
             ),

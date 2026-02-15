@@ -45,6 +45,9 @@ mixin _$AssetData {
   /// Optional description/note
   String? get note => throw _privateConstructorUsedError;
 
+  /// Sort order for display ordering
+  int get sortOrder => throw _privateConstructorUsedError;
+
   /// Matches the database createdAt field for integrity verification during import.
   /// Not exported as a separate CSV column to avoid duplication.
   int get createdAtMillis => throw _privateConstructorUsedError;
@@ -73,6 +76,7 @@ abstract class $AssetDataCopyWith<$Res> {
     int colorIndex,
     String status,
     String? note,
+    int sortOrder,
     int createdAtMillis,
   });
 }
@@ -100,6 +104,7 @@ class _$AssetDataCopyWithImpl<$Res, $Val extends AssetData>
     Object? colorIndex = null,
     Object? status = null,
     Object? note = freezed,
+    Object? sortOrder = null,
     Object? createdAtMillis = null,
   }) {
     return _then(
@@ -136,6 +141,10 @@ class _$AssetDataCopyWithImpl<$Res, $Val extends AssetData>
                 ? _value.note
                 : note // ignore: cast_nullable_to_non_nullable
                       as String?,
+            sortOrder: null == sortOrder
+                ? _value.sortOrder
+                : sortOrder // ignore: cast_nullable_to_non_nullable
+                      as int,
             createdAtMillis: null == createdAtMillis
                 ? _value.createdAtMillis
                 : createdAtMillis // ignore: cast_nullable_to_non_nullable
@@ -164,6 +173,7 @@ abstract class _$$AssetDataImplCopyWith<$Res>
     int colorIndex,
     String status,
     String? note,
+    int sortOrder,
     int createdAtMillis,
   });
 }
@@ -190,6 +200,7 @@ class __$$AssetDataImplCopyWithImpl<$Res>
     Object? colorIndex = null,
     Object? status = null,
     Object? note = freezed,
+    Object? sortOrder = null,
     Object? createdAtMillis = null,
   }) {
     return _then(
@@ -226,6 +237,10 @@ class __$$AssetDataImplCopyWithImpl<$Res>
             ? _value.note
             : note // ignore: cast_nullable_to_non_nullable
                   as String?,
+        sortOrder: null == sortOrder
+            ? _value.sortOrder
+            : sortOrder // ignore: cast_nullable_to_non_nullable
+                  as int,
         createdAtMillis: null == createdAtMillis
             ? _value.createdAtMillis
             : createdAtMillis // ignore: cast_nullable_to_non_nullable
@@ -247,6 +262,7 @@ class _$AssetDataImpl implements _AssetData {
     required this.colorIndex,
     required this.status,
     this.note,
+    this.sortOrder = 0,
     required this.createdAtMillis,
   });
 
@@ -285,6 +301,11 @@ class _$AssetDataImpl implements _AssetData {
   @override
   final String? note;
 
+  /// Sort order for display ordering
+  @override
+  @JsonKey()
+  final int sortOrder;
+
   /// Matches the database createdAt field for integrity verification during import.
   /// Not exported as a separate CSV column to avoid duplication.
   @override
@@ -292,7 +313,7 @@ class _$AssetDataImpl implements _AssetData {
 
   @override
   String toString() {
-    return 'AssetData(id: $id, name: $name, iconCodePoint: $iconCodePoint, iconFontFamily: $iconFontFamily, iconFontPackage: $iconFontPackage, colorIndex: $colorIndex, status: $status, note: $note, createdAtMillis: $createdAtMillis)';
+    return 'AssetData(id: $id, name: $name, iconCodePoint: $iconCodePoint, iconFontFamily: $iconFontFamily, iconFontPackage: $iconFontPackage, colorIndex: $colorIndex, status: $status, note: $note, sortOrder: $sortOrder, createdAtMillis: $createdAtMillis)';
   }
 
   @override
@@ -312,6 +333,8 @@ class _$AssetDataImpl implements _AssetData {
                 other.colorIndex == colorIndex) &&
             (identical(other.status, status) || other.status == status) &&
             (identical(other.note, note) || other.note == note) &&
+            (identical(other.sortOrder, sortOrder) ||
+                other.sortOrder == sortOrder) &&
             (identical(other.createdAtMillis, createdAtMillis) ||
                 other.createdAtMillis == createdAtMillis));
   }
@@ -328,6 +351,7 @@ class _$AssetDataImpl implements _AssetData {
     colorIndex,
     status,
     note,
+    sortOrder,
     createdAtMillis,
   );
 
@@ -355,6 +379,7 @@ abstract class _AssetData implements AssetData {
     required final int colorIndex,
     required final String status,
     final String? note,
+    final int sortOrder,
     required final int createdAtMillis,
   }) = _$AssetDataImpl;
 
@@ -392,6 +417,10 @@ abstract class _AssetData implements AssetData {
   /// Optional description/note
   @override
   String? get note;
+
+  /// Sort order for display ordering
+  @override
+  int get sortOrder;
 
   /// Matches the database createdAt field for integrity verification during import.
   /// Not exported as a separate CSV column to avoid duplication.

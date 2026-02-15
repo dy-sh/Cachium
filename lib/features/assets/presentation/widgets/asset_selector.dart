@@ -84,6 +84,10 @@ class _AssetSelectorState extends ConsumerState<AssetSelector> {
           }
         }
         return sorted;
+      case AssetSortOption.listOrder:
+        final sorted = List<Asset>.from(assets);
+        sorted.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+        return sorted;
       case AssetSortOption.alphabetical:
         final sorted = List<Asset>.from(assets);
         sorted.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));

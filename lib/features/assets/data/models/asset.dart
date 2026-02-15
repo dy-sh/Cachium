@@ -41,6 +41,7 @@ class Asset {
   final int colorIndex;
   final AssetStatus status;
   final String? note;
+  final int sortOrder;
   final DateTime createdAt;
 
   const Asset({
@@ -50,6 +51,7 @@ class Asset {
     required this.colorIndex,
     this.status = AssetStatus.active,
     this.note,
+    this.sortOrder = 0,
     required this.createdAt,
   });
 
@@ -65,6 +67,7 @@ class Asset {
     AssetStatus? status,
     String? note,
     bool clearNote = false,
+    int? sortOrder,
     DateTime? createdAt,
   }) {
     return Asset(
@@ -74,6 +77,7 @@ class Asset {
       colorIndex: colorIndex ?? this.colorIndex,
       status: status ?? this.status,
       note: clearNote ? null : (note ?? this.note),
+      sortOrder: sortOrder ?? this.sortOrder,
       createdAt: createdAt ?? this.createdAt,
     );
   }

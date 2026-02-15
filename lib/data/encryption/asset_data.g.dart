@@ -16,6 +16,7 @@ _$AssetDataImpl _$$AssetDataImplFromJson(Map<String, dynamic> json) =>
       colorIndex: (json['colorIndex'] as num).toInt(),
       status: json['status'] as String,
       note: json['note'] as String?,
+      sortOrder: (json['sortOrder'] as num?)?.toInt() ?? 0,
       createdAtMillis: (json['createdAtMillis'] as num).toInt(),
     );
 
@@ -29,5 +30,6 @@ Map<String, dynamic> _$$AssetDataImplToJson(_$AssetDataImpl instance) =>
       'colorIndex': instance.colorIndex,
       'status': instance.status,
       'note': instance.note,
+      'sortOrder': instance.sortOrder,
       'createdAtMillis': instance.createdAtMillis,
     };

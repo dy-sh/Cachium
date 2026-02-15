@@ -15,11 +15,45 @@ import '../../../transactions/data/models/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../data/models/asset.dart';
 import '../providers/assets_provider.dart';
+import '../widgets/asset_form_modal.dart';
 
 class AssetDetailScreen extends ConsumerWidget {
   final String assetId;
 
   const AssetDetailScreen({super.key, required this.assetId});
+
+  void _openEditModal(BuildContext context, WidgetRef ref, Asset asset) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AssetFormModal(
+          asset: asset,
+          onSave: (name, icon, colorIndex, status, note) async {
+            final updatedAsset = asset.copyWith(
+              name: name,
+              icon: icon,
+              colorIndex: colorIndex,
+              status: status,
+              note: note,
+              clearNote: note == null,
+            );
+            await ref.read(assetsProvider.notifier).updateAsset(updatedAsset);
+            if (context.mounted) {
+              Navigator.of(context).pop();
+              context.showSuccessNotification('Asset updated');
+            }
+          },
+          onDelete: () async {
+            await ref.read(assetsProvider.notifier).deleteAsset(asset.id);
+            if (context.mounted) {
+              Navigator.of(context).pop(); // close modal
+              context.pop(); // close detail screen
+              context.showSuccessNotification('Asset deleted');
+            }
+          },
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -72,7 +106,7 @@ class AssetDetailScreen extends ConsumerWidget {
               title: asset.name,
               onClose: () => context.pop(),
               trailing: GestureDetector(
-                onTap: () => context.push('/asset/${asset.id}/edit'),
+                onTap: () => _openEditModal(context, ref, asset),
                 child: Container(
                   padding: const EdgeInsets.all(AppSpacing.sm),
                   decoration: BoxDecoration(
