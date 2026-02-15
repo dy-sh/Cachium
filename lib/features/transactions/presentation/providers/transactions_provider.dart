@@ -18,6 +18,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     required TransactionType type,
     required String categoryId,
     required String accountId,
+    String? destinationAccountId,
     required DateTime date,
     String? note,
     String? merchant,
@@ -31,6 +32,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
       type: type,
       categoryId: categoryId,
       accountId: accountId,
+      destinationAccountId: destinationAccountId,
       date: date,
       note: note,
       merchant: merchant,
@@ -42,9 +44,15 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
       // Save to encrypted database
       await repo.createTransaction(transaction);
 
-      // Update account balance
-      final balanceChange = type == TransactionType.income ? amount : -amount;
-      await ref.read(accountsProvider.notifier).updateBalance(accountId, balanceChange);
+      // Update account balances
+      if (type == TransactionType.transfer && destinationAccountId != null) {
+        // Transfer: debit source, credit destination
+        await ref.read(accountsProvider.notifier).updateBalance(accountId, -amount);
+        await ref.read(accountsProvider.notifier).updateBalance(destinationAccountId, amount);
+      } else {
+        final balanceChange = type == TransactionType.income ? amount : -amount;
+        await ref.read(accountsProvider.notifier).updateBalance(accountId, balanceChange);
+      }
     });
 
     // Update local state
@@ -61,49 +69,38 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
 
     final originalTransaction = currentState.firstWhere((t) => t.id == transaction.id);
 
-    // Calculate balance adjustments
-    final sameAccount = originalTransaction.accountId == transaction.accountId;
-
     // Wrap in database transaction to prevent locking issues
     await db.transaction(() async {
-      if (sameAccount) {
-        // Same account: calculate net difference
-        // Original effect: income = +amount, expense = -amount
-        // New effect: income = +amount, expense = -amount
-        // Net change = new effect - original effect
-        final originalEffect = originalTransaction.type == TransactionType.income
-            ? originalTransaction.amount
-            : -originalTransaction.amount;
-        final newEffect = transaction.type == TransactionType.income
-            ? transaction.amount
-            : -transaction.amount;
-        final netChange = newEffect - originalEffect;
-
-        if (netChange != 0) {
+      // Reverse original balance effects
+      if (originalTransaction.type == TransactionType.transfer) {
+        await ref.read(accountsProvider.notifier).updateBalance(
+              originalTransaction.accountId, originalTransaction.amount);
+        if (originalTransaction.destinationAccountId != null) {
           await ref.read(accountsProvider.notifier).updateBalance(
-                transaction.accountId,
-                netChange,
-              );
+                originalTransaction.destinationAccountId!, -originalTransaction.amount);
         }
       } else {
-        // Different accounts: reverse from original, apply to new
-        // First, reverse the original transaction's effect
-        final originalBalanceChange = originalTransaction.type == TransactionType.income
+        final reverseChange = originalTransaction.type == TransactionType.income
             ? -originalTransaction.amount
             : originalTransaction.amount;
         await ref.read(accountsProvider.notifier).updateBalance(
-              originalTransaction.accountId,
-              originalBalanceChange,
-            );
+              originalTransaction.accountId, reverseChange);
+      }
 
-        // Then, apply the new transaction's effect
-        final newBalanceChange = transaction.type == TransactionType.income
+      // Apply new balance effects
+      if (transaction.type == TransactionType.transfer) {
+        await ref.read(accountsProvider.notifier).updateBalance(
+              transaction.accountId, -transaction.amount);
+        if (transaction.destinationAccountId != null) {
+          await ref.read(accountsProvider.notifier).updateBalance(
+                transaction.destinationAccountId!, transaction.amount);
+        }
+      } else {
+        final newChange = transaction.type == TransactionType.income
             ? transaction.amount
             : -transaction.amount;
         await ref.read(accountsProvider.notifier).updateBalance(
-              transaction.accountId,
-              newBalanceChange,
-            );
+              transaction.accountId, newChange);
       }
 
       // Update in encrypted database
@@ -133,12 +130,22 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
       await repo.deleteTransaction(id);
 
       // Reverse the balance change
-      final balanceChange =
-          transaction.type == TransactionType.income ? -transaction.amount : transaction.amount;
-      await ref.read(accountsProvider.notifier).updateBalance(
-            transaction.accountId,
-            balanceChange,
-          );
+      if (transaction.type == TransactionType.transfer) {
+        // Reverse transfer: credit source, debit destination
+        await ref.read(accountsProvider.notifier).updateBalance(
+              transaction.accountId, transaction.amount);
+        if (transaction.destinationAccountId != null) {
+          await ref.read(accountsProvider.notifier).updateBalance(
+                transaction.destinationAccountId!, -transaction.amount);
+        }
+      } else {
+        final balanceChange =
+            transaction.type == TransactionType.income ? -transaction.amount : transaction.amount;
+        await ref.read(accountsProvider.notifier).updateBalance(
+              transaction.accountId,
+              balanceChange,
+            );
+      }
     });
 
     // Update local state
@@ -159,12 +166,21 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
       await repo.restoreTransaction(transaction.id);
 
       // Re-apply the balance change to the account
-      final balanceChange =
-          transaction.type == TransactionType.income ? transaction.amount : -transaction.amount;
-      await ref.read(accountsProvider.notifier).updateBalance(
-            transaction.accountId,
-            balanceChange,
-          );
+      if (transaction.type == TransactionType.transfer) {
+        await ref.read(accountsProvider.notifier).updateBalance(
+              transaction.accountId, -transaction.amount);
+        if (transaction.destinationAccountId != null) {
+          await ref.read(accountsProvider.notifier).updateBalance(
+                transaction.destinationAccountId!, transaction.amount);
+        }
+      } else {
+        final balanceChange =
+            transaction.type == TransactionType.income ? transaction.amount : -transaction.amount;
+        await ref.read(accountsProvider.notifier).updateBalance(
+              transaction.accountId,
+              balanceChange,
+            );
+      }
     });
 
     // Re-insert into local state (sorted by date descending)
@@ -191,12 +207,21 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
         await repo.deleteTransaction(id);
 
         // Reverse the balance change
-        final balanceChange =
-            transaction.type == TransactionType.income ? -transaction.amount : transaction.amount;
-        await ref.read(accountsProvider.notifier).updateBalance(
-              transaction.accountId,
-              balanceChange,
-            );
+        if (transaction.type == TransactionType.transfer) {
+          await ref.read(accountsProvider.notifier).updateBalance(
+                transaction.accountId, transaction.amount);
+          if (transaction.destinationAccountId != null) {
+            await ref.read(accountsProvider.notifier).updateBalance(
+                  transaction.destinationAccountId!, -transaction.amount);
+          }
+        } else {
+          final balanceChange =
+              transaction.type == TransactionType.income ? -transaction.amount : transaction.amount;
+          await ref.read(accountsProvider.notifier).updateBalance(
+                transaction.accountId,
+                balanceChange,
+              );
+        }
       }
     });
 
@@ -219,12 +244,21 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
         await repo.restoreTransaction(transaction.id);
 
         // Re-apply the balance change
-        final balanceChange =
-            transaction.type == TransactionType.income ? transaction.amount : -transaction.amount;
-        await ref.read(accountsProvider.notifier).updateBalance(
-              transaction.accountId,
-              balanceChange,
-            );
+        if (transaction.type == TransactionType.transfer) {
+          await ref.read(accountsProvider.notifier).updateBalance(
+                transaction.accountId, -transaction.amount);
+          if (transaction.destinationAccountId != null) {
+            await ref.read(accountsProvider.notifier).updateBalance(
+                  transaction.destinationAccountId!, transaction.amount);
+          }
+        } else {
+          final balanceChange =
+              transaction.type == TransactionType.income ? transaction.amount : -transaction.amount;
+          await ref.read(accountsProvider.notifier).updateBalance(
+                transaction.accountId,
+                balanceChange,
+              );
+        }
       }
     });
 
@@ -387,7 +421,7 @@ final deletedTransactionsProvider = FutureProvider<List<Transaction>>((ref) asyn
   return repo.getAllDeletedTransactions();
 });
 
-enum TransactionFilter { all, income, expense }
+enum TransactionFilter { all, income, expense, transfer }
 
 final transactionFilterProvider = StateProvider<TransactionFilter>((ref) {
   return TransactionFilter.all;
@@ -403,6 +437,8 @@ final filteredTransactionsProvider = Provider<AsyncValue<List<Transaction>>>((re
         return transactions.where((t) => t.type == TransactionType.income).toList();
       case TransactionFilter.expense:
         return transactions.where((t) => t.type == TransactionType.expense).toList();
+      case TransactionFilter.transfer:
+        return transactions.where((t) => t.type == TransactionType.transfer).toList();
       case TransactionFilter.all:
         return transactions;
     }
@@ -471,7 +507,10 @@ final transactionByIdProvider = Provider.family<Transaction?, String>((ref, id) 
 final transactionsByAccountProvider = Provider.family<List<Transaction>, String>((ref, accountId) {
   final transactions = ref.watch(transactionsProvider).valueOrNull;
   if (transactions == null) return [];
-  return transactions.where((t) => t.accountId == accountId).toList();
+  return transactions
+      .where((t) => t.accountId == accountId || t.destinationAccountId == accountId)
+      .toList()
+    ..sort((a, b) => b.date.compareTo(a.date));
 });
 
 final transactionCountByAccountProvider = Provider.family<int, String>((ref, accountId) {
@@ -505,4 +544,23 @@ final searchedTransactionsProvider = Provider<AsyncValue<List<TransactionGroup>>
       return TransactionGroup(date: group.date, transactions: filteredTxs);
     }).where((group) => group.transactions.isNotEmpty).toList();
   });
+});
+
+/// Provides distinct merchant names from transaction history, sorted by frequency.
+final merchantSuggestionsProvider = Provider<List<String>>((ref) {
+  final transactions = ref.watch(transactionsProvider).valueOrNull;
+  if (transactions == null) return [];
+
+  final frequency = <String, int>{};
+  for (final tx in transactions) {
+    final merchant = tx.merchant?.trim();
+    if (merchant != null && merchant.isNotEmpty) {
+      frequency[merchant] = (frequency[merchant] ?? 0) + 1;
+    }
+  }
+
+  final sorted = frequency.entries.toList()
+    ..sort((a, b) => b.value.compareTo(a.value));
+
+  return sorted.map((e) => e.key).toList();
 });

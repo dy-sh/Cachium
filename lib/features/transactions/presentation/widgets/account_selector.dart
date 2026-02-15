@@ -20,6 +20,7 @@ class AccountSelector extends ConsumerStatefulWidget {
   final List<String>? recentAccountIds;
   final int initialVisibleCount;
   final VoidCallback? onCreatePressed;
+  final String? excludeAccountId;
 
   const AccountSelector({
     super.key,
@@ -29,6 +30,7 @@ class AccountSelector extends ConsumerStatefulWidget {
     this.recentAccountIds,
     this.initialVisibleCount = 3,
     this.onCreatePressed,
+    this.excludeAccountId,
   });
 
   @override
@@ -177,12 +179,17 @@ class _AccountSelectorState extends ConsumerState<AccountSelector> {
   }
 
   List<Account> _getSortedAccounts() {
+    // Filter out excluded account (used for transfers)
+    final accounts = widget.excludeAccountId != null
+        ? widget.accounts.where((a) => a.id != widget.excludeAccountId).toList()
+        : widget.accounts;
+
     if (widget.recentAccountIds == null || widget.recentAccountIds!.isEmpty) {
-      return widget.accounts;
+      return accounts;
     }
 
     // Create a map for quick lookup
-    final accountMap = {for (var a in widget.accounts) a.id: a};
+    final accountMap = {for (var a in accounts) a.id: a};
 
     // Build sorted list: recent accounts first, then remaining
     final sorted = <Account>[];
@@ -198,7 +205,7 @@ class _AccountSelectorState extends ConsumerState<AccountSelector> {
     }
 
     // Add any remaining accounts not in the recent list
-    for (final account in widget.accounts) {
+    for (final account in accounts) {
       if (!addedIds.contains(account.id)) {
         sorted.add(account);
       }

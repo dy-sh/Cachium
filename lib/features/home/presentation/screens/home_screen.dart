@@ -7,8 +7,12 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/buttons/circular_button.dart';
 import '../../../../design_system/animations/staggered_list.dart';
 import '../../../../navigation/app_router.dart';
+import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
+import '../../../transactions/presentation/providers/transactions_provider.dart';
+import '../../../budgets/presentation/providers/budget_provider.dart';
 import '../widgets/account_preview_list.dart';
+import '../widgets/budget_progress_list.dart';
 import '../widgets/quick_actions.dart';
 import '../widgets/recent_transactions_list.dart';
 import '../widgets/total_balance_card.dart';
@@ -86,6 +90,35 @@ class HomeScreen extends ConsumerWidget {
       visibleSections.add(const SizedBox(height: AppSpacing.xxl));
     }
 
+    // Budget progress - always shown if budgets exist
+    final now = DateTime.now();
+    final budgetProgress = ref.watch(
+      budgetProgressProvider((year: now.year, month: now.month)),
+    );
+    if (budgetProgress.isNotEmpty) {
+      visibleSections.add(
+        StaggeredListItem(
+          index: staggerIndex++,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Budget', style: AppTypography.h4),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              const BudgetProgressList(),
+            ],
+          ),
+        ),
+      );
+      visibleSections.add(const SizedBox(height: AppSpacing.xxl));
+    }
+
     if (showRecentTransactions) {
       visibleSections.add(
         StaggeredListItem(
@@ -156,11 +189,22 @@ class HomeScreen extends ConsumerWidget {
 
           // Scrollable Content
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: AppSpacing.bottomNavHeight + AppSpacing.lg),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: visibleSections,
+            child: RefreshIndicator(
+              color: AppColors.textPrimary,
+              backgroundColor: AppColors.surface,
+              onRefresh: () async {
+                await Future.wait([
+                  ref.read(transactionsProvider.notifier).refresh(),
+                  ref.read(accountsProvider.notifier).refresh(),
+                ]);
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.only(bottom: AppSpacing.bottomNavHeight + AppSpacing.lg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: visibleSections,
+                ),
               ),
             ),
           ),

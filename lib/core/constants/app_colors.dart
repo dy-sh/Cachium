@@ -335,6 +335,8 @@ class AppColors {
         return _getColorForIntensity(incomeZen, incomePrism, incomeNeon, intensity);
       case 'expense':
         return _getColorForIntensity(expenseZen, expensePrism, expenseNeon, intensity);
+      case 'transfer':
+        return _getColorForIntensity(azure, sky, cerulean, intensity);
       default:
         return textPrimary;
     }

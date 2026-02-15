@@ -54,7 +54,41 @@ class _AccountPreviewListState extends ConsumerState<AccountPreviewList> {
           ),
         ),
       ),
-      data: (accounts) => SizedBox(
+      data: (accounts) => accounts.isEmpty
+          ? Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+              child: GestureDetector(
+                onTap: () => context.push('/account/new'),
+                child: Container(
+                  height: 72,
+                  decoration: BoxDecoration(
+                    borderRadius: AppRadius.lgAll,
+                    border: Border.all(
+                      color: AppColors.border,
+                      style: BorderStyle.solid,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.add_circle_outline,
+                        size: 20,
+                        color: AppColors.textTertiary,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(
+                        'Add your first account',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            )
+          : SizedBox(
         height: 72,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,

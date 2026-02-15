@@ -32,6 +32,9 @@ class TransactionData with _$TransactionData {
     /// Optional merchant/payee name
     String? merchant,
 
+    /// For transfers: the destination account ID
+    String? destinationAccountId,
+
     /// Currency code (default: USD)
     @Default('USD') String currency,
 

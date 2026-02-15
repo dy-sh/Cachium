@@ -31,9 +31,10 @@ class TransactionRepository {
       amount: transaction.amount,
       categoryId: transaction.categoryId,
       accountId: transaction.accountId,
-      type: transaction.type.name, // 'income' or 'expense'
+      type: transaction.type.name, // 'income', 'expense', or 'transfer'
       note: transaction.note,
       merchant: transaction.merchant,
+      destinationAccountId: transaction.destinationAccountId,
       currency: 'USD', // Default for now
       dateMillis: transaction.date.millisecondsSinceEpoch,
       createdAtMillis: transaction.createdAt.millisecondsSinceEpoch,
@@ -45,11 +46,13 @@ class TransactionRepository {
     return ui.Transaction(
       id: data.id,
       amount: data.amount,
-      type: data.type == 'income'
-          ? ui.TransactionType.income
-          : ui.TransactionType.expense,
+      type: ui.TransactionType.values.firstWhere(
+        (e) => e.name == data.type,
+        orElse: () => ui.TransactionType.expense,
+      ),
       categoryId: data.categoryId,
       accountId: data.accountId,
+      destinationAccountId: data.destinationAccountId,
       date: DateTime.fromMillisecondsSinceEpoch(data.dateMillis),
       note: data.note,
       merchant: data.merchant,

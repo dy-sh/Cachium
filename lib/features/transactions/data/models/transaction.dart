@@ -1,6 +1,7 @@
 enum TransactionType {
   income,
   expense,
+  transfer,
 }
 
 extension TransactionTypeExtension on TransactionType {
@@ -10,6 +11,8 @@ extension TransactionTypeExtension on TransactionType {
         return 'Income';
       case TransactionType.expense:
         return 'Expense';
+      case TransactionType.transfer:
+        return 'Transfer';
     }
   }
 }
@@ -20,6 +23,7 @@ class Transaction {
   final TransactionType type;
   final String categoryId;
   final String accountId;
+  final String? destinationAccountId; // For transfers: the receiving account
   final DateTime date;
   final String? note;
   final String? merchant;
@@ -31,11 +35,14 @@ class Transaction {
     required this.type,
     required this.categoryId,
     required this.accountId,
+    this.destinationAccountId,
     required this.date,
     this.note,
     this.merchant,
     required this.createdAt,
   });
+
+  bool get isTransfer => type == TransactionType.transfer;
 
   Transaction copyWith({
     String? id,
@@ -43,6 +50,8 @@ class Transaction {
     TransactionType? type,
     String? categoryId,
     String? accountId,
+    String? destinationAccountId,
+    bool clearDestinationAccountId = false,
     DateTime? date,
     String? note,
     String? merchant,
@@ -54,6 +63,9 @@ class Transaction {
       type: type ?? this.type,
       categoryId: categoryId ?? this.categoryId,
       accountId: accountId ?? this.accountId,
+      destinationAccountId: clearDestinationAccountId
+          ? null
+          : (destinationAccountId ?? this.destinationAccountId),
       date: date ?? this.date,
       note: note ?? this.note,
       merchant: merchant ?? this.merchant,
@@ -84,9 +96,11 @@ class TransactionGroup {
     return transactions.fold(0.0, (sum, tx) {
       if (tx.type == TransactionType.income) {
         return sum + tx.amount;
-      } else {
+      } else if (tx.type == TransactionType.expense) {
         return sum - tx.amount;
       }
+      // Transfers are net zero
+      return sum;
     });
   }
 

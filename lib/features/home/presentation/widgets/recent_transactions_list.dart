@@ -60,19 +60,37 @@ class RecentTransactionsList extends ConsumerWidget {
         if (transactions.isEmpty) {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-            child: Container(
-              padding: const EdgeInsets.all(AppSpacing.xxl),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Center(
-                child: Text(
-                  'No transactions yet',
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+            child: GestureDetector(
+              onTap: () => context.push('/transaction/new'),
+              child: Container(
+                padding: const EdgeInsets.all(AppSpacing.xxl),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      LucideIcons.receipt,
+                      size: 28,
+                      color: AppColors.textTertiary,
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      'No transactions yet',
+                      style: AppTypography.labelMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      'Tap to add your first transaction',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -99,11 +117,16 @@ class _TransactionItem extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final category = ref.watch(categoryByIdProvider(transaction.categoryId));
     final account = ref.watch(accountByIdProvider(transaction.accountId));
+    final destAccount = transaction.destinationAccountId != null
+        ? ref.watch(accountByIdProvider(transaction.destinationAccountId!))
+        : null;
     final intensity = ref.watch(colorIntensityProvider);
-    final isIncome = transaction.type == TransactionType.income;
-    final color = AppColors.getTransactionColor(isIncome ? 'income' : 'expense', intensity);
+    final isTransfer = transaction.type == TransactionType.transfer;
+    final color = AppColors.getTransactionColor(transaction.type.name, intensity);
     final bgOpacity = AppColors.getBgOpacity(intensity);
-    final categoryColor = category?.getColor(intensity) ?? AppColors.textSecondary;
+    final categoryColor = isTransfer
+        ? AppColors.getTransactionColor('transfer', intensity)
+        : (category?.getColor(intensity) ?? AppColors.textSecondary);
 
     return Dismissible(
       key: ValueKey(transaction.id),
@@ -150,7 +173,7 @@ class _TransactionItem extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
-                  category?.icon ?? Icons.circle,
+                  isTransfer ? LucideIcons.arrowLeftRight : (category?.icon ?? Icons.circle),
                   color: categoryColor,
                   size: 20,
                 ),
@@ -161,12 +184,14 @@ class _TransactionItem extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      category?.name ?? 'Unknown',
+                      isTransfer ? 'Transfer' : (category?.name ?? 'Unknown'),
                       style: AppTypography.labelLarge,
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${account?.name ?? 'Unknown'} • ${DateFormatter.formatRelative(transaction.date)}',
+                      isTransfer
+                          ? '${account?.name ?? '?'} → ${destAccount?.name ?? '?'} • ${DateFormatter.formatRelative(transaction.date)}'
+                          : '${account?.name ?? 'Unknown'} • ${DateFormatter.formatRelative(transaction.date)}',
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.textTertiary,
                       ),
@@ -175,7 +200,9 @@ class _TransactionItem extends ConsumerWidget {
                 ),
               ),
               Text(
-                CurrencyFormatter.formatWithSign(transaction.amount, transaction.type.name),
+                isTransfer
+                    ? CurrencyFormatter.format(transaction.amount)
+                    : CurrencyFormatter.formatWithSign(transaction.amount, transaction.type.name),
                 style: AppTypography.moneySmall.copyWith(color: color),
               ),
             ],

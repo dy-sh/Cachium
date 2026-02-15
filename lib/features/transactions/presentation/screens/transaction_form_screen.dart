@@ -82,9 +82,15 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     // Initialize form with initial type if provided
     if (widget.initialType != null && !_initialized && widget.transactionId == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final type = widget.initialType == 'income'
-            ? TransactionType.income
-            : TransactionType.expense;
+        final TransactionType type;
+        switch (widget.initialType) {
+          case 'income':
+            type = TransactionType.income;
+          case 'transfer':
+            type = TransactionType.transfer;
+          default:
+            type = TransactionType.expense;
+        }
         ref.read(transactionFormProvider.notifier).reset();
         ref.read(transactionFormProvider.notifier).setType(type);
         ref.read(transactionFormProvider.notifier).applyLastUsedAccountIfNeeded();
@@ -129,6 +135,8 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     final showAddCategoryButton = ref.watch(showAddCategoryButtonProvider);
     final categorySortOption = ref.watch(categorySortOptionProvider);
     final allowSelectParentCategory = ref.watch(allowSelectParentCategoryProvider);
+
+    final isTransfer = formState.type == TransactionType.transfer;
 
     final categories = formState.type == TransactionType.income
         ? incomeCategories
@@ -178,16 +186,20 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                   children: [
                     Center(
                       child: ToggleChip(
-                        options: const ['Income', 'Expense'],
-                        selectedIndex: isIncome ? 0 : 1,
+                        options: const ['Income', 'Expense', 'Transfer'],
+                        selectedIndex: isIncome ? 0 : (isTransfer ? 2 : 1),
                         colors: [
                           AppColors.getTransactionColor('income', intensity),
                           AppColors.getTransactionColor('expense', intensity),
+                          AppColors.getTransactionColor('transfer', intensity),
                         ],
                         onChanged: (index) {
-                          ref.read(transactionFormProvider.notifier).setType(
-                                index == 0 ? TransactionType.income : TransactionType.expense,
-                              );
+                          final type = switch (index) {
+                            0 => TransactionType.income,
+                            2 => TransactionType.transfer,
+                            _ => TransactionType.expense,
+                          };
+                          ref.read(transactionFormProvider.notifier).setType(type);
                         },
                       ),
                     ),
@@ -204,31 +216,34 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                     ),
                     const SizedBox(height: AppSpacing.xxl),
 
-                    Text('Category', style: AppTypography.labelMedium),
-                    const SizedBox(height: AppSpacing.sm),
-                    CategorySelector(
-                      categories: categories,
-                      selectedId: formState.categoryId,
-                      initialVisibleCount: categoriesFoldedCount,
-                      sortOption: categorySortOption,
-                      recentCategoryIds: recentCategoryIds,
-                      allowSelectParentCategory: allowSelectParentCategory,
-                      onChanged: (id) {
-                        ref.read(transactionFormProvider.notifier).setCategory(id);
-                      },
-                      onCreatePressed: showAddCategoryButton
-                          ? (parentId) => _createNewCategory(context, ref, formState.type, parentId)
-                          : null,
-                    ),
-                    const SizedBox(height: AppSpacing.xxl),
+                    if (!isTransfer) ...[
+                      Text('Category', style: AppTypography.labelMedium),
+                      const SizedBox(height: AppSpacing.sm),
+                      CategorySelector(
+                        categories: categories,
+                        selectedId: formState.categoryId,
+                        initialVisibleCount: categoriesFoldedCount,
+                        sortOption: categorySortOption,
+                        recentCategoryIds: recentCategoryIds,
+                        allowSelectParentCategory: allowSelectParentCategory,
+                        onChanged: (id) {
+                          ref.read(transactionFormProvider.notifier).setCategory(id);
+                        },
+                        onCreatePressed: showAddCategoryButton
+                            ? (parentId) => _createNewCategory(context, ref, formState.type, parentId)
+                            : null,
+                      ),
+                      const SizedBox(height: AppSpacing.xxl),
+                    ],
 
-                    Text('Account', style: AppTypography.labelMedium),
+                    Text(isTransfer ? 'From Account' : 'Account', style: AppTypography.labelMedium),
                     const SizedBox(height: AppSpacing.sm),
                     AccountSelector(
                       accounts: accounts,
                       selectedId: formState.accountId,
                       recentAccountIds: recentAccountIds,
                       initialVisibleCount: accountsFoldedCount,
+                      excludeAccountId: isTransfer ? formState.destinationAccountId : null,
                       onChanged: (id) {
                         ref.read(transactionFormProvider.notifier).setAccount(id);
                       },
@@ -238,6 +253,25 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                     ),
                     const SizedBox(height: AppSpacing.xxl),
 
+                    if (isTransfer) ...[
+                      Text('To Account', style: AppTypography.labelMedium),
+                      const SizedBox(height: AppSpacing.sm),
+                      AccountSelector(
+                        accounts: accounts,
+                        selectedId: formState.destinationAccountId,
+                        recentAccountIds: recentAccountIds,
+                        initialVisibleCount: accountsFoldedCount,
+                        excludeAccountId: formState.accountId,
+                        onChanged: (id) {
+                          ref.read(transactionFormProvider.notifier).setDestinationAccount(id);
+                        },
+                        onCreatePressed: showAddAccountButton
+                            ? () => _createNewAccount(context, ref)
+                            : null,
+                      ),
+                      const SizedBox(height: AppSpacing.xxl),
+                    ],
+
                     DateSelector(
                       date: formState.date,
                       onChanged: (date) {
@@ -246,10 +280,8 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                     ),
                     const SizedBox(height: AppSpacing.xxl),
 
-                    InputField(
+                    _MerchantAutocomplete(
                       key: ValueKey('merchant_${formState.editingTransactionId}'),
-                      label: 'Merchant (optional)',
-                      hint: 'e.g. Amazon, Starbucks...',
                       controller: _merchantController,
                       onChanged: (value) {
                         ref.read(transactionFormProvider.notifier).setMerchant(value);
@@ -297,10 +329,12 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                         ? () async {
                             // Save last used account and category
                             ref.read(settingsProvider.notifier).setLastUsedAccountId(formState.accountId);
-                            ref.read(settingsProvider.notifier).setLastUsedCategoryId(
-                              formState.type,
-                              formState.categoryId,
-                            );
+                            if (!isTransfer) {
+                              ref.read(settingsProvider.notifier).setLastUsedCategoryId(
+                                formState.type,
+                                formState.categoryId,
+                              );
+                            }
 
                             if (isEditing) {
                               // Update existing transaction
@@ -311,8 +345,10 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                                 final updatedTransaction = originalTransaction.copyWith(
                                   amount: formState.amount,
                                   type: formState.type,
-                                  categoryId: formState.categoryId,
+                                  categoryId: isTransfer ? '' : formState.categoryId,
                                   accountId: formState.accountId,
+                                  destinationAccountId: formState.destinationAccountId,
+                                  clearDestinationAccountId: !isTransfer,
                                   date: formState.date,
                                   note: formState.note,
                                   merchant: formState.merchant,
@@ -325,8 +361,9 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                               await ref.read(transactionsProvider.notifier).addTransaction(
                                     amount: formState.amount,
                                     type: formState.type,
-                                    categoryId: formState.categoryId!,
+                                    categoryId: isTransfer ? '' : formState.categoryId!,
                                     accountId: formState.accountId!,
+                                    destinationAccountId: formState.destinationAccountId,
                                     date: formState.date,
                                     note: formState.note,
                                     merchant: formState.merchant,
@@ -334,6 +371,9 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                             }
                             if (context.mounted) {
                               context.pop();
+                              context.showSuccessNotification(
+                                isEditing ? 'Transaction updated' : 'Transaction saved',
+                              );
                             }
                           }
                         : null,
@@ -404,6 +444,159 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     if (newAccountId != null && mounted) {
       ref.read(transactionFormProvider.notifier).setAccount(newAccountId);
     }
+  }
+}
+
+class _MerchantAutocomplete extends ConsumerStatefulWidget {
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+
+  const _MerchantAutocomplete({
+    super.key,
+    required this.controller,
+    required this.onChanged,
+  });
+
+  @override
+  ConsumerState<_MerchantAutocomplete> createState() => _MerchantAutocompleteState();
+}
+
+class _MerchantAutocompleteState extends ConsumerState<_MerchantAutocomplete> {
+  final _focusNode = FocusNode();
+  bool _isFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() {
+      setState(() => _isFocused = _focusNode.hasFocus);
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final merchants = ref.watch(merchantSuggestionsProvider);
+    final accentColor = ref.watch(accentColorProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          'Merchant (optional)',
+          style: AppTypography.labelMedium,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        RawAutocomplete<String>(
+          textEditingController: widget.controller,
+          focusNode: _focusNode,
+          optionsBuilder: (textEditingValue) {
+            if (textEditingValue.text.isEmpty) return const Iterable.empty();
+            final query = textEditingValue.text.toLowerCase();
+            return merchants
+                .where((m) => m.toLowerCase().contains(query))
+                .take(5);
+          },
+          onSelected: (selection) {
+            widget.controller.text = selection;
+            widget.onChanged(selection);
+          },
+          fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _isFocused ? accentColor : AppColors.border,
+                  width: _isFocused ? 2 : 1,
+                ),
+              ),
+              child: TextField(
+                controller: controller,
+                focusNode: focusNode,
+                onChanged: widget.onChanged,
+                style: AppTypography.input,
+                cursorColor: accentColor,
+                decoration: InputDecoration(
+                  hintText: 'e.g. Amazon, Starbucks...',
+                  hintStyle: AppTypography.inputHint,
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.inputPadding,
+                    vertical: AppSpacing.inputPadding,
+                  ),
+                ),
+              ),
+            );
+          },
+          optionsViewBuilder: (context, onSelected, options) {
+            return Align(
+              alignment: Alignment.topLeft,
+              child: Material(
+                elevation: 0,
+                color: Colors.transparent,
+                child: Container(
+                  constraints: const BoxConstraints(maxHeight: 200),
+                  margin: const EdgeInsets.only(top: AppSpacing.xs),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: ListView.builder(
+                    padding: EdgeInsets.zero,
+                    shrinkWrap: true,
+                    itemCount: options.length,
+                    itemBuilder: (context, index) {
+                      final option = options.elementAt(index);
+                      return InkWell(
+                        onTap: () => onSelected(option),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.lg,
+                            vertical: AppSpacing.md,
+                          ),
+                          decoration: BoxDecoration(
+                            border: index < options.length - 1
+                                ? Border(
+                                    bottom: BorderSide(
+                                      color: AppColors.border.withValues(alpha: 0.5),
+                                    ),
+                                  )
+                                : null,
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                LucideIcons.store,
+                                size: 16,
+                                color: AppColors.textTertiary,
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Text(
+                                option,
+                                style: AppTypography.bodyMedium,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
   }
 }
 

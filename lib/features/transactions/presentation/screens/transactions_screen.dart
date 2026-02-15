@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/providers/database_providers.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../design_system/design_system.dart';
@@ -71,6 +72,121 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     }
   }
 
+  Future<void> _changeCategoryForSelected() async {
+    final selectedIds = ref.read(selectedTransactionIdsProvider);
+    if (selectedIds.isEmpty) return;
+
+    final categories = ref.read(categoriesProvider).valueOrNull ?? [];
+    final intensity = ref.read(colorIntensityProvider);
+
+    final selectedCategoryId = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => _BulkPickerSheet(
+        title: 'Change Category',
+        items: categories
+            .where((c) => c.parentId == null || true) // all categories
+            .map((c) => _PickerItem(
+                  id: c.id,
+                  name: c.name,
+                  icon: c.icon,
+                  color: c.getColor(intensity),
+                ))
+            .toList(),
+      ),
+    );
+
+    if (selectedCategoryId == null || !mounted) return;
+
+    final repo = ref.read(transactionRepositoryProvider);
+    final db = ref.read(databaseProvider);
+    final allTransactions = ref.read(transactionsProvider).valueOrNull ?? [];
+    final toUpdate = allTransactions.where((t) => selectedIds.contains(t.id)).toList();
+
+    await db.transaction(() async {
+      for (final tx in toUpdate) {
+        final updated = tx.copyWith(categoryId: selectedCategoryId);
+        await repo.updateTransaction(updated);
+      }
+    });
+
+    await ref.read(transactionsProvider.notifier).refresh();
+    _exitSelectionMode();
+
+    if (mounted) {
+      context.showSuccessNotification(
+        '${toUpdate.length} transaction${toUpdate.length == 1 ? '' : 's'} updated',
+      );
+    }
+  }
+
+  Future<void> _changeAccountForSelected() async {
+    final selectedIds = ref.read(selectedTransactionIdsProvider);
+    if (selectedIds.isEmpty) return;
+
+    final accounts = ref.read(accountsProvider).valueOrNull ?? [];
+    final intensity = ref.read(colorIntensityProvider);
+
+    final selectedAccountId = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => _BulkPickerSheet(
+        title: 'Change Account',
+        items: accounts
+            .map((a) => _PickerItem(
+                  id: a.id,
+                  name: a.name,
+                  icon: a.icon,
+                  color: a.getColorWithIntensity(intensity),
+                ))
+            .toList(),
+      ),
+    );
+
+    if (selectedAccountId == null || !mounted) return;
+
+    final repo = ref.read(transactionRepositoryProvider);
+    final db = ref.read(databaseProvider);
+    final allTransactions = ref.read(transactionsProvider).valueOrNull ?? [];
+    final toUpdate = allTransactions.where((t) => selectedIds.contains(t.id)).toList();
+
+    // Calculate balance adjustments
+    await db.transaction(() async {
+      for (final tx in toUpdate) {
+        if (tx.accountId == selectedAccountId) continue;
+
+        // Reverse old account balance
+        if (tx.type == TransactionType.transfer) {
+          await ref.read(accountsProvider.notifier).updateBalance(tx.accountId, tx.amount);
+          await ref.read(accountsProvider.notifier).updateBalance(selectedAccountId, -tx.amount);
+        } else {
+          final reverseChange = tx.type == TransactionType.income ? -tx.amount : tx.amount;
+          await ref.read(accountsProvider.notifier).updateBalance(tx.accountId, reverseChange);
+          final applyChange = tx.type == TransactionType.income ? tx.amount : -tx.amount;
+          await ref.read(accountsProvider.notifier).updateBalance(selectedAccountId, applyChange);
+        }
+
+        final updated = tx.copyWith(accountId: selectedAccountId);
+        await repo.updateTransaction(updated);
+      }
+    });
+
+    await ref.read(transactionsProvider.notifier).refresh();
+    _exitSelectionMode();
+
+    if (mounted) {
+      context.showSuccessNotification(
+        '${toUpdate.length} transaction${toUpdate.length == 1 ? '' : 's'} updated',
+      );
+    }
+  }
+
   void _showMoreMenu(BuildContext context) {
     final RenderBox button = context.findRenderObject() as RenderBox;
     final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
@@ -127,6 +243,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               onCancel: _exitSelectionMode,
               onSelectAll: _selectAll,
               onDelete: _deleteSelected,
+              onChangeCategory: _changeCategoryForSelected,
+              onChangeAccount: _changeAccountForSelected,
             )
           else
             _TransactionsHeader(
@@ -179,12 +297,13 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               builder: (context) {
                 final intensity = ref.watch(colorIntensityProvider);
                 return ToggleChip(
-                  options: const ['All', 'Income', 'Expense'],
+                  options: const ['All', 'Income', 'Expense', 'Transfer'],
                   selectedIndex: filter.index,
                   colors: [
                     AppColors.textPrimary,
                     AppColors.getTransactionColor('income', intensity),
                     AppColors.getTransactionColor('expense', intensity),
+                    AppColors.getTransactionColor('transfer', intensity),
                   ],
                   onChanged: (index) {
                     ref.read(transactionFilterProvider.notifier).state =
@@ -200,7 +319,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           Expanded(
             child: groupsAsync.when(
               loading: () => const Center(
-                child: CircularProgressIndicator(),
+                child: LoadingIndicator(),
               ),
               error: (error, stack) => Center(
                 child: Column(
@@ -241,23 +360,30 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                         ],
                       ),
                     )
-                  : ListView.builder(
-                      padding: EdgeInsets.only(
-                        left: AppSpacing.screenPadding,
-                        right: AppSpacing.screenPadding,
-                        bottom: AppSpacing.bottomNavHeight + AppSpacing.lg,
-                      ),
-                      itemCount: groups.length,
-                      itemBuilder: (context, index) {
-                        final child = _TransactionGroupWidget(group: groups[index]);
-                        if (_isInitialLoad) {
-                          return StaggeredListItem(
-                            index: index,
-                            child: child,
-                          );
-                        }
-                        return child;
+                  : RefreshIndicator(
+                      color: AppColors.textPrimary,
+                      backgroundColor: AppColors.surface,
+                      onRefresh: () async {
+                        await ref.read(transactionsProvider.notifier).refresh();
                       },
+                      child: ListView.builder(
+                        padding: EdgeInsets.only(
+                          left: AppSpacing.screenPadding,
+                          right: AppSpacing.screenPadding,
+                          bottom: AppSpacing.bottomNavHeight + AppSpacing.lg,
+                        ),
+                        itemCount: groups.length,
+                        itemBuilder: (context, index) {
+                          final child = _TransactionGroupWidget(group: groups[index]);
+                          if (_isInitialLoad) {
+                            return StaggeredListItem(
+                              index: index,
+                              child: child,
+                            );
+                          }
+                          return child;
+                        },
+                      ),
                     ),
             ),
           ),
@@ -336,16 +462,22 @@ class _SelectionHeader extends StatelessWidget {
   final VoidCallback onCancel;
   final VoidCallback onSelectAll;
   final VoidCallback onDelete;
+  final VoidCallback onChangeCategory;
+  final VoidCallback onChangeAccount;
 
   const _SelectionHeader({
     required this.selectedCount,
     required this.onCancel,
     required this.onSelectAll,
     required this.onDelete,
+    required this.onChangeCategory,
+    required this.onChangeAccount,
   });
 
   @override
   Widget build(BuildContext context) {
+    final hasSelection = selectedCount > 0;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
       child: Row(
@@ -375,6 +507,42 @@ class _SelectionHeader extends StatelessWidget {
             ),
           ),
           GestureDetector(
+            onTap: hasSelection ? onChangeCategory : null,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Icon(
+                LucideIcons.tag,
+                color: hasSelection ? AppColors.textPrimary : AppColors.textTertiary,
+                size: 20,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          GestureDetector(
+            onTap: hasSelection ? onChangeAccount : null,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Icon(
+                LucideIcons.wallet,
+                color: hasSelection ? AppColors.textPrimary : AppColors.textTertiary,
+                size: 20,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          GestureDetector(
             onTap: onSelectAll,
             child: Container(
               width: 40,
@@ -393,24 +561,24 @@ class _SelectionHeader extends StatelessWidget {
           ),
           const SizedBox(width: AppSpacing.sm),
           GestureDetector(
-            onTap: selectedCount > 0 ? onDelete : null,
+            onTap: hasSelection ? onDelete : null,
             child: Container(
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: selectedCount > 0
+                color: hasSelection
                     ? AppColors.red.withValues(alpha: 0.15)
                     : AppColors.surface,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: selectedCount > 0
+                  color: hasSelection
                       ? AppColors.red.withValues(alpha: 0.3)
                       : AppColors.border,
                 ),
               ),
               child: Icon(
                 LucideIcons.trash2,
-                color: selectedCount > 0 ? AppColors.red : AppColors.textTertiary,
+                color: hasSelection ? AppColors.red : AppColors.textTertiary,
                 size: 20,
               ),
             ),
@@ -475,11 +643,16 @@ class _TransactionItem extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final category = ref.watch(categoryByIdProvider(transaction.categoryId));
     final account = ref.watch(accountByIdProvider(transaction.accountId));
+    final destAccount = transaction.destinationAccountId != null
+        ? ref.watch(accountByIdProvider(transaction.destinationAccountId!))
+        : null;
     final intensity = ref.watch(colorIntensityProvider);
-    final isIncome = transaction.type == TransactionType.income;
-    final color = AppColors.getTransactionColor(isIncome ? 'income' : 'expense', intensity);
+    final isTransfer = transaction.type == TransactionType.transfer;
+    final color = AppColors.getTransactionColor(transaction.type.name, intensity);
     final bgOpacity = AppColors.getBgOpacity(intensity);
-    final categoryColor = category?.getColor(intensity) ?? AppColors.textSecondary;
+    final categoryColor = isTransfer
+        ? AppColors.getTransactionColor('transfer', intensity)
+        : (category?.getColor(intensity) ?? AppColors.textSecondary);
     final isSelectionMode = ref.watch(transactionSelectionModeProvider);
     final isSelected = ref.watch(isTransactionSelectedProvider(transaction.id));
     final accentColor = ref.watch(accentColorProvider);
@@ -524,7 +697,7 @@ class _TransactionItem extends ConsumerWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
-              category?.icon ?? Icons.circle,
+              isTransfer ? LucideIcons.arrowLeftRight : (category?.icon ?? Icons.circle),
               color: categoryColor,
               size: 20,
             ),
@@ -535,12 +708,24 @@ class _TransactionItem extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  category?.name ?? 'Unknown',
+                  isTransfer ? 'Transfer' : (category?.name ?? 'Unknown'),
                   style: AppTypography.labelLarge,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                if (transaction.note != null && transaction.note!.isNotEmpty)
+                if (isTransfer)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      '${account?.name ?? '?'} → ${destAccount?.name ?? '?'}',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  )
+                else if (transaction.note != null && transaction.note!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
                     child: Text(
@@ -564,17 +749,20 @@ class _TransactionItem extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    CurrencyFormatter.formatWithSign(transaction.amount, transaction.type.name),
+                    isTransfer
+                        ? CurrencyFormatter.format(transaction.amount)
+                        : CurrencyFormatter.formatWithSign(transaction.amount, transaction.type.name),
                     style: AppTypography.moneySmall.copyWith(color: color),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  Text(
-                    account?.name ?? 'Unknown',
-                    style: AppTypography.labelSmall,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  if (!isTransfer)
+                    Text(
+                      account?.name ?? 'Unknown',
+                      style: AppTypography.labelSmall,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                 ],
               ),
             ),
@@ -604,11 +792,24 @@ class _TransactionItem extends ConsumerWidget {
       );
     }
 
-    // Normal mode: swipe to delete, tap to edit, long-press to enter selection
+    // Normal mode: swipe-left to delete, swipe-right to duplicate, tap to edit, long-press to select
     return Dismissible(
       key: ValueKey(transaction.id),
-      direction: DismissDirection.endToStart,
       background: Container(
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+        padding: const EdgeInsets.only(left: AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: AppColors.cyan.withValues(alpha: 0.15),
+          borderRadius: AppRadius.mdAll,
+        ),
+        alignment: Alignment.centerLeft,
+        child: Icon(
+          LucideIcons.copy,
+          color: AppColors.cyan,
+          size: 22,
+        ),
+      ),
+      secondaryBackground: Container(
         margin: const EdgeInsets.only(bottom: AppSpacing.sm),
         padding: const EdgeInsets.only(right: AppSpacing.lg),
         decoration: BoxDecoration(
@@ -622,6 +823,27 @@ class _TransactionItem extends ConsumerWidget {
           size: 22,
         ),
       ),
+      confirmDismiss: (direction) async {
+        if (direction == DismissDirection.startToEnd) {
+          // Duplicate: create new transaction with same details, today's date
+          final tx = transaction;
+          await ref.read(transactionsProvider.notifier).addTransaction(
+                amount: tx.amount,
+                type: tx.type,
+                categoryId: tx.categoryId,
+                accountId: tx.accountId,
+                destinationAccountId: tx.destinationAccountId,
+                date: DateTime.now(),
+                note: tx.note,
+                merchant: tx.merchant,
+              );
+          if (context.mounted) {
+            context.showSuccessNotification('Transaction duplicated');
+          }
+          return false; // Don't dismiss, just duplicate
+        }
+        return true; // Allow delete dismissal
+      },
       onDismissed: (_) {
         final tx = transaction;
         ref.read(transactionsProvider.notifier).deleteTransaction(tx.id);
@@ -638,6 +860,89 @@ class _TransactionItem extends ConsumerWidget {
         },
         child: itemContent,
       ),
+    );
+  }
+}
+
+class _PickerItem {
+  final String id;
+  final String name;
+  final IconData icon;
+  final Color color;
+
+  const _PickerItem({
+    required this.id,
+    required this.name,
+    required this.icon,
+    required this.color,
+  });
+}
+
+class _BulkPickerSheet extends StatelessWidget {
+  final String title;
+  final List<_PickerItem> items;
+
+  const _BulkPickerSheet({
+    required this.title,
+    required this.items,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: AppSpacing.md),
+        Container(
+          width: 32,
+          height: 4,
+          decoration: BoxDecoration(
+            color: AppColors.textTertiary,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        Text(title, style: AppTypography.h3),
+        const SizedBox(height: AppSpacing.md),
+        Flexible(
+          child: ListView.builder(
+            shrinkWrap: true,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final item = items[index];
+              return GestureDetector(
+                onTap: () => Navigator.pop(context, item.id),
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: AppSpacing.xs),
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: AppRadius.mdAll,
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: item.color.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(item.icon, color: item.color, size: 16),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Text(item.name, style: AppTypography.labelLarge),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        SizedBox(height: MediaQuery.of(context).padding.bottom + AppSpacing.md),
+      ],
     );
   }
 }

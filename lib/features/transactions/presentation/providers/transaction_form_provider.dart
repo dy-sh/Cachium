@@ -7,6 +7,7 @@ class TransactionFormState {
   final double amount;
   final String? categoryId;
   final String? accountId;
+  final String? destinationAccountId; // For transfers
   final DateTime date;
   final String? note;
   final String? merchant;
@@ -16,6 +17,7 @@ class TransactionFormState {
   final double? originalAmount;
   final String? originalCategoryId;
   final String? originalAccountId;
+  final String? originalDestinationAccountId;
   final DateTime? originalDate;
   final String? originalNote;
   final String? originalMerchant;
@@ -27,6 +29,7 @@ class TransactionFormState {
     this.amount = 0,
     this.categoryId,
     this.accountId,
+    this.destinationAccountId,
     required this.date,
     this.note,
     this.merchant,
@@ -35,14 +38,25 @@ class TransactionFormState {
     this.originalAmount,
     this.originalCategoryId,
     this.originalAccountId,
+    this.originalDestinationAccountId,
     this.originalDate,
     this.originalNote,
     this.originalMerchant,
     this.allowZeroAmount = false,
   });
 
-  bool get isValid =>
-      (allowZeroAmount ? amount >= 0 : amount > 0) && categoryId != null && accountId != null;
+  bool get isTransfer => type == TransactionType.transfer;
+
+  bool get isValid {
+    final amountValid = allowZeroAmount ? amount >= 0 : amount > 0;
+    if (isTransfer) {
+      return amountValid &&
+          accountId != null &&
+          destinationAccountId != null &&
+          accountId != destinationAccountId;
+    }
+    return amountValid && categoryId != null && accountId != null;
+  }
 
   bool get isEditing => editingTransactionId != null;
 
@@ -53,6 +67,7 @@ class TransactionFormState {
         amount != originalAmount ||
         categoryId != originalCategoryId ||
         accountId != originalAccountId ||
+        destinationAccountId != originalDestinationAccountId ||
         !_isSameDateTime(date, originalDate) ||
         note != originalNote ||
         merchant != originalMerchant;
@@ -76,6 +91,8 @@ class TransactionFormState {
     double? amount,
     String? categoryId,
     String? accountId,
+    String? destinationAccountId,
+    bool clearDestinationAccountId = false,
     DateTime? date,
     String? note,
     String? merchant,
@@ -84,6 +101,7 @@ class TransactionFormState {
     double? originalAmount,
     String? originalCategoryId,
     String? originalAccountId,
+    String? originalDestinationAccountId,
     DateTime? originalDate,
     String? originalNote,
     String? originalMerchant,
@@ -94,6 +112,9 @@ class TransactionFormState {
       amount: amount ?? this.amount,
       categoryId: categoryId ?? this.categoryId,
       accountId: accountId ?? this.accountId,
+      destinationAccountId: clearDestinationAccountId
+          ? null
+          : (destinationAccountId ?? this.destinationAccountId),
       date: date ?? this.date,
       note: note ?? this.note,
       merchant: merchant ?? this.merchant,
@@ -102,6 +123,7 @@ class TransactionFormState {
       originalAmount: originalAmount ?? this.originalAmount,
       originalCategoryId: originalCategoryId ?? this.originalCategoryId,
       originalAccountId: originalAccountId ?? this.originalAccountId,
+      originalDestinationAccountId: originalDestinationAccountId ?? this.originalDestinationAccountId,
       originalDate: originalDate ?? this.originalDate,
       originalNote: originalNote ?? this.originalNote,
       originalMerchant: originalMerchant ?? this.originalMerchant,
@@ -136,13 +158,15 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
 
   void setType(TransactionType type) {
     // Reset category when type changes since categories are type-specific
-    // Auto-select last used category for the new type if setting enabled
-    final selectLastCategory = ref.read(selectLastCategoryProvider);
+    // For transfers, category is not required so clear it
     String? categoryId;
-    if (selectLastCategory) {
-      categoryId = type == TransactionType.income
-          ? ref.read(lastUsedIncomeCategoryIdProvider)
-          : ref.read(lastUsedExpenseCategoryIdProvider);
+    if (type != TransactionType.transfer) {
+      final selectLastCategory = ref.read(selectLastCategoryProvider);
+      if (selectLastCategory) {
+        categoryId = type == TransactionType.income
+            ? ref.read(lastUsedIncomeCategoryIdProvider)
+            : ref.read(lastUsedExpenseCategoryIdProvider);
+      }
     }
 
     // Also apply last used account if not already set (handles async settings load)
@@ -154,7 +178,22 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
       }
     }
 
-    state = state.copyWith(type: type, categoryId: categoryId, accountId: accountId);
+    // Clear destination account when switching away from transfer
+    final clearDest = type != TransactionType.transfer;
+
+    state = state.copyWith(
+      type: type,
+      categoryId: categoryId,
+      accountId: accountId,
+      clearDestinationAccountId: clearDest,
+    );
+  }
+
+  void setDestinationAccount(String? accountId) {
+    state = state.copyWith(
+      destinationAccountId: accountId,
+      clearDestinationAccountId: accountId == null,
+    );
   }
 
   /// Apply last used account if setting is enabled and no account is selected.
@@ -225,6 +264,7 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
       amount: transaction.amount,
       categoryId: transaction.categoryId,
       accountId: transaction.accountId,
+      destinationAccountId: transaction.destinationAccountId,
       date: transaction.date,
       note: transaction.note,
       merchant: transaction.merchant,
@@ -234,6 +274,7 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
       originalAmount: transaction.amount,
       originalCategoryId: transaction.categoryId,
       originalAccountId: transaction.accountId,
+      originalDestinationAccountId: transaction.destinationAccountId,
       originalDate: transaction.date,
       originalNote: transaction.note,
       originalMerchant: transaction.merchant,

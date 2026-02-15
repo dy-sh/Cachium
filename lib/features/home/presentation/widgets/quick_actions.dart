@@ -20,6 +20,8 @@ class QuickActions extends ConsumerWidget {
     final incomeColor = AppColors.getTransactionColor('income', intensity);
     final expenseColor = AppColors.getTransactionColor('expense', intensity);
 
+    final transferColor = AppColors.getTransactionColor('transfer', intensity);
+
     return Row(
       children: [
         Expanded(
@@ -40,6 +42,17 @@ class QuickActions extends ConsumerWidget {
             color: expenseColor,
             onTap: () {
               context.push('${AppRoutes.transactionForm}?type=expense');
+            },
+          ),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: _QuickActionButton(
+            label: 'Transfer',
+            icon: LucideIcons.arrowLeftRight,
+            color: transferColor,
+            onTap: () {
+              context.push('${AppRoutes.transactionForm}?type=transfer');
             },
           ),
         ),

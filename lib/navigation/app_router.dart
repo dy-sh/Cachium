@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../core/animations/page_transitions.dart';
+import '../features/accounts/presentation/screens/account_detail_screen.dart';
 import '../features/accounts/presentation/screens/account_form_screen.dart';
 import '../features/accounts/presentation/screens/accounts_screen.dart';
 import '../features/analytics/presentation/screens/analytics_screen.dart';
@@ -22,6 +23,7 @@ import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/settings/presentation/screens/transactions_settings_screen.dart';
 import '../features/budgets/presentation/screens/budget_settings_screen.dart';
 import '../features/transactions/presentation/screens/deleted_transactions_screen.dart';
+import '../features/transactions/presentation/screens/transaction_detail_screen.dart';
 import '../features/transactions/presentation/screens/transaction_form_screen.dart';
 import '../features/transactions/presentation/screens/transactions_screen.dart';
 import 'navigation_shell.dart';
@@ -48,9 +50,11 @@ class AppRoutes {
   static const csvImportPreview = '/settings/csv-import/preview';
   static const deletedTransactions = '/transactions/deleted';
   static const transactionForm = '/transaction/new';
-  static const transactionEdit = '/transaction/:id';
+  static const transactionDetail = '/transaction/:id';
+  static const transactionEdit = '/transaction/:id/edit';
   static const accountForm = '/account/new';
-  static const accountEdit = '/account/:id';
+  static const accountDetail = '/account/:id';
+  static const accountEdit = '/account/:id/edit';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -111,6 +115,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: AppRoutes.transactionDetail,
+        pageBuilder: (context, state) {
+          final transactionId = state.pathParameters['id']!;
+          return PageTransitions.buildSlideLeftTransition(
+            state,
+            TransactionDetailScreen(transactionId: transactionId),
+            animationsEnabled: ref.read(formAnimationsEnabledProvider),
+          );
+        },
+      ),
+      GoRoute(
         path: AppRoutes.transactionEdit,
         pageBuilder: (context, state) {
           final transactionId = state.pathParameters['id']!;
@@ -128,6 +143,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           const AccountFormScreen(),
           animationsEnabled: ref.read(formAnimationsEnabledProvider),
         ),
+      ),
+      GoRoute(
+        path: AppRoutes.accountDetail,
+        pageBuilder: (context, state) {
+          final accountId = state.pathParameters['id']!;
+          return PageTransitions.buildSlideLeftTransition(
+            state,
+            AccountDetailScreen(accountId: accountId),
+            animationsEnabled: ref.read(formAnimationsEnabledProvider),
+          );
+        },
       ),
       GoRoute(
         path: AppRoutes.accountEdit,
