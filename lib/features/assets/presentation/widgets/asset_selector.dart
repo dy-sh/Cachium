@@ -22,6 +22,9 @@ class AssetSelector extends ConsumerStatefulWidget {
   final List<String>? recentAssetIds;
   final int initialVisibleCount;
   final AssetSortOption sortOption;
+  /// Assets filtered for the selected category (used with this category family).
+  /// When provided, the default view shows only these assets with a "Browse all" option.
+  final List<Asset>? categoryAssets;
 
   const AssetSelector({
     super.key,
@@ -32,6 +35,7 @@ class AssetSelector extends ConsumerStatefulWidget {
     this.recentAssetIds,
     this.initialVisibleCount = 5,
     this.sortOption = AssetSortOption.lastUsed,
+    this.categoryAssets,
   });
 
   @override
@@ -60,8 +64,8 @@ class _AssetSelectorState extends ConsumerState<AssetSelector> {
     }
   }
 
-  List<Asset> _getSortedAssets() {
-    final assets = widget.assets;
+  List<Asset> _getSortedAssets([List<Asset>? overrideAssets]) {
+    final assets = overrideAssets ?? widget.assets;
 
     switch (widget.sortOption) {
       case AssetSortOption.lastUsed:
@@ -99,6 +103,9 @@ class _AssetSelectorState extends ConsumerState<AssetSelector> {
     }
   }
 
+  /// Whether we're in "browse all" mode (showing all assets instead of category-filtered).
+  bool _browseAll = false;
+
   @override
   Widget build(BuildContext context) {
     final intensity = ref.watch(colorIntensityProvider);
@@ -107,7 +114,53 @@ class _AssetSelectorState extends ConsumerState<AssetSelector> {
       return const SizedBox.shrink();
     }
 
-    final sortedAssets = _getSortedAssets();
+    // Determine which assets to display
+    final hasCategoryFilter = widget.categoryAssets != null;
+    final isFilteredView = hasCategoryFilter && !_browseAll;
+    final displayAssets = isFilteredView ? widget.categoryAssets! : widget.assets;
+
+    // If filtered view has no assets, show empty state with "Browse all" option
+    if (isFilteredView && displayAssets.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Always show None card
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 3,
+            childAspectRatio: 2.4,
+            crossAxisSpacing: AppSpacing.chipGap,
+            mainAxisSpacing: AppSpacing.chipGap,
+            children: [
+              _NoneCard(
+                isSelected: widget.selectedId == null,
+                onTap: () {
+                  HapticHelper.lightImpact();
+                  widget.onChanged(null);
+                },
+              ),
+              if (widget.onCreatePressed != null)
+                _CreateNewCard(onTap: widget.onCreatePressed!),
+            ],
+          ),
+          if (widget.assets.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            GestureDetector(
+              onTap: () => setState(() => _browseAll = true),
+              child: Text(
+                'Browse all assets',
+                style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.accentPrimary,
+                ),
+              ),
+            ),
+          ],
+        ],
+      );
+    }
+
+    final sortedAssets = _getSortedAssets(displayAssets);
     final filteredAssets = _searchQuery.isEmpty
         ? sortedAssets
         : sortedAssets.where((a) =>
@@ -221,6 +274,33 @@ class _AssetSelectorState extends ConsumerState<AssetSelector> {
               ),
             ),
           ),
+        ],
+        // Show "Browse all" link in filtered view, or "Show category assets" to go back
+        if (hasCategoryFilter && !_showAll) ...[
+          const SizedBox(height: AppSpacing.sm),
+          if (_browseAll)
+            GestureDetector(
+              onTap: () => setState(() {
+                _browseAll = false;
+                _clearSearch();
+              }),
+              child: Text(
+                'Show category assets',
+                style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.accentPrimary,
+                ),
+              ),
+            )
+          else if (widget.assets.length > displayAssets.length)
+            GestureDetector(
+              onTap: () => setState(() => _browseAll = true),
+              child: Text(
+                'Browse all assets',
+                style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.accentPrimary,
+                ),
+              ),
+            ),
         ],
       ],
     );

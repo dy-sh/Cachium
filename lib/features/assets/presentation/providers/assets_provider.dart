@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/exceptions/app_exception.dart';
 import '../../../../core/providers/database_providers.dart';
+import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../data/models/asset.dart';
@@ -225,6 +226,40 @@ final recentlyUsedAssetIdsProvider = Provider<List<String>>((ref) {
   });
 
   return sortedAssets.map((a) => a.id).toList();
+});
+
+/// Returns active assets that have been used with the given category family
+/// (category + parent + siblings + children).
+final assetsForCategoryProvider = Provider.family<List<Asset>, String?>((ref, categoryId) {
+  final activeAssets = ref.watch(activeAssetsProvider);
+  if (categoryId == null) return activeAssets;
+
+  final transactions = ref.watch(transactionsProvider).valueOrNull ?? [];
+  final categoriesAsync = ref.watch(categoriesProvider);
+  final categories = categoriesAsync.valueOrNull ?? [];
+  final category = categories.where((c) => c.id == categoryId).firstOrNull;
+
+  // Collect related category IDs: selected category + parent + siblings + children
+  final relatedCategoryIds = <String>{categoryId};
+  if (category?.parentId != null) {
+    relatedCategoryIds.add(category!.parentId!);
+    // Add sibling categories
+    final siblings = categories.where((c) => c.parentId == category.parentId);
+    relatedCategoryIds.addAll(siblings.map((c) => c.id));
+  }
+  // If this IS a parent, add its children
+  final children = categories.where((c) => c.parentId == categoryId);
+  relatedCategoryIds.addAll(children.map((c) => c.id));
+
+  // Find asset IDs used with any of these categories
+  final usedAssetIds = <String>{};
+  for (final tx in transactions) {
+    if (tx.assetId != null && relatedCategoryIds.contains(tx.categoryId)) {
+      usedAssetIds.add(tx.assetId!);
+    }
+  }
+
+  return activeAssets.where((a) => usedAssetIds.contains(a.id)).toList();
 });
 
 /// Net cost for an asset: total expenses minus total income.

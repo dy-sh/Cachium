@@ -530,6 +530,7 @@ class DatabaseImportService {
           encryptedBlob = (row['encrypted_blob'] ?? row['encryptedBlob']) as Uint8List;
         } else {
           // Plaintext format, need to encrypt using CategoryData model
+          final showAssetsRaw = row['show_assets'] ?? row['showAssets'];
           final data = CategoryData(
             id: id,
             name: row['name'] as String,
@@ -541,6 +542,7 @@ class DatabaseImportService {
             isCustom: ((row['is_custom'] ?? row['isCustom']) as int) == 1,
             parentId: (row['parent_id'] ?? row['parentId']) as String?,
             sortOrder: sortOrder,
+            showAssets: showAssetsRaw != null && (showAssetsRaw as int) == 1,
           );
           encryptedBlob = await encryptionService.encryptJson(data.toJson());
         }
@@ -740,6 +742,7 @@ class DatabaseImportService {
           // Plaintext format, need to encrypt using CategoryData model
           final iconFontPackage = (data['icon_font_package'] ?? data['iconFontPackage'])?.toString() ?? '';
           final parentId = (data['parent_id'] ?? data['parentId'])?.toString() ?? '';
+          final showAssetsRaw = (data['show_assets'] ?? data['showAssets'])?.toString() ?? '';
 
           final categoryData = CategoryData(
             id: id,
@@ -752,6 +755,7 @@ class DatabaseImportService {
             isCustom: (data['is_custom'] ?? data['isCustom']).toString() == '1',
             parentId: parentId.isEmpty ? null : parentId,
             sortOrder: sortOrder,
+            showAssets: showAssetsRaw == '1',
           );
           encryptedBlob = await encryptionService.encryptJson(categoryData.toJson());
         }
@@ -1541,6 +1545,7 @@ class DatabaseImportService {
         } else {
           final iconFontPackage = (data['icon_font_package'] ?? data['iconFontPackage'])?.toString() ?? '';
           final parentId = (data['parent_id'] ?? data['parentId'])?.toString() ?? '';
+          final showAssetsRaw = (data['show_assets'] ?? data['showAssets'])?.toString() ?? '';
 
           final categoryData = CategoryData(
             id: id,
@@ -1553,6 +1558,7 @@ class DatabaseImportService {
             isCustom: (data['is_custom'] ?? data['isCustom']).toString() == '1',
             parentId: parentId.isEmpty ? null : parentId,
             sortOrder: sortOrder,
+            showAssets: showAssetsRaw == '1',
           );
           encryptedBlob = await encryptionService.encryptJson(categoryData.toJson());
         }

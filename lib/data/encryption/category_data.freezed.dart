@@ -51,6 +51,9 @@ mixin _$CategoryData {
   /// Sort order within the same parent - duplicated for integrity check
   int get sortOrder => throw _privateConstructorUsedError;
 
+  /// Whether asset selector appears for this category
+  bool get showAssets => throw _privateConstructorUsedError;
+
   /// Serializes this CategoryData to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
@@ -79,6 +82,7 @@ abstract class $CategoryDataCopyWith<$Res> {
     bool isCustom,
     String? parentId,
     int sortOrder,
+    bool showAssets,
   });
 }
 
@@ -107,6 +111,7 @@ class _$CategoryDataCopyWithImpl<$Res, $Val extends CategoryData>
     Object? isCustom = null,
     Object? parentId = freezed,
     Object? sortOrder = null,
+    Object? showAssets = null,
   }) {
     return _then(
       _value.copyWith(
@@ -150,6 +155,10 @@ class _$CategoryDataCopyWithImpl<$Res, $Val extends CategoryData>
                 ? _value.sortOrder
                 : sortOrder // ignore: cast_nullable_to_non_nullable
                       as int,
+            showAssets: null == showAssets
+                ? _value.showAssets
+                : showAssets // ignore: cast_nullable_to_non_nullable
+                      as bool,
           )
           as $Val,
     );
@@ -176,6 +185,7 @@ abstract class _$$CategoryDataImplCopyWith<$Res>
     bool isCustom,
     String? parentId,
     int sortOrder,
+    bool showAssets,
   });
 }
 
@@ -203,6 +213,7 @@ class __$$CategoryDataImplCopyWithImpl<$Res>
     Object? isCustom = null,
     Object? parentId = freezed,
     Object? sortOrder = null,
+    Object? showAssets = null,
   }) {
     return _then(
       _$CategoryDataImpl(
@@ -246,6 +257,10 @@ class __$$CategoryDataImplCopyWithImpl<$Res>
             ? _value.sortOrder
             : sortOrder // ignore: cast_nullable_to_non_nullable
                   as int,
+        showAssets: null == showAssets
+            ? _value.showAssets
+            : showAssets // ignore: cast_nullable_to_non_nullable
+                  as bool,
       ),
     );
   }
@@ -265,6 +280,7 @@ class _$CategoryDataImpl implements _CategoryData {
     this.isCustom = false,
     this.parentId,
     required this.sortOrder,
+    this.showAssets = false,
   });
 
   factory _$CategoryDataImpl.fromJson(Map<String, dynamic> json) =>
@@ -311,9 +327,14 @@ class _$CategoryDataImpl implements _CategoryData {
   @override
   final int sortOrder;
 
+  /// Whether asset selector appears for this category
+  @override
+  @JsonKey()
+  final bool showAssets;
+
   @override
   String toString() {
-    return 'CategoryData(id: $id, name: $name, iconCodePoint: $iconCodePoint, iconFontFamily: $iconFontFamily, iconFontPackage: $iconFontPackage, colorIndex: $colorIndex, type: $type, isCustom: $isCustom, parentId: $parentId, sortOrder: $sortOrder)';
+    return 'CategoryData(id: $id, name: $name, iconCodePoint: $iconCodePoint, iconFontFamily: $iconFontFamily, iconFontPackage: $iconFontPackage, colorIndex: $colorIndex, type: $type, isCustom: $isCustom, parentId: $parentId, sortOrder: $sortOrder, showAssets: $showAssets)';
   }
 
   @override
@@ -337,7 +358,9 @@ class _$CategoryDataImpl implements _CategoryData {
             (identical(other.parentId, parentId) ||
                 other.parentId == parentId) &&
             (identical(other.sortOrder, sortOrder) ||
-                other.sortOrder == sortOrder));
+                other.sortOrder == sortOrder) &&
+            (identical(other.showAssets, showAssets) ||
+                other.showAssets == showAssets));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -354,6 +377,7 @@ class _$CategoryDataImpl implements _CategoryData {
     isCustom,
     parentId,
     sortOrder,
+    showAssets,
   );
 
   /// Create a copy of CategoryData
@@ -382,6 +406,7 @@ abstract class _CategoryData implements CategoryData {
     final bool isCustom,
     final String? parentId,
     required final int sortOrder,
+    final bool showAssets,
   }) = _$CategoryDataImpl;
 
   factory _CategoryData.fromJson(Map<String, dynamic> json) =
@@ -426,6 +451,10 @@ abstract class _CategoryData implements CategoryData {
   /// Sort order within the same parent - duplicated for integrity check
   @override
   int get sortOrder;
+
+  /// Whether asset selector appears for this category
+  @override
+  bool get showAssets;
 
   /// Create a copy of CategoryData
   /// with the given fields replaced by the non-null parameter values.

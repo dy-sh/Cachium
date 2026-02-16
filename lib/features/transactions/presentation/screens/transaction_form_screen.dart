@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:uuid/uuid.dart';
+import '../../../../core/animations/haptic_helper.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -140,13 +141,25 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     final allowSelectParentCategory = ref.watch(allowSelectParentCategoryProvider);
 
     // Asset settings
-    final showAssetSelector = ref.watch(showAssetSelectorProvider);
+    final globalShowAssets = ref.watch(showAssetSelectorProvider);
+    final categoryShowsAssets = ref.watch(categoryShowsAssetsProvider(formState.categoryId));
     final assetsFoldedCount = ref.watch(assetsFoldedCountProvider);
     final showAddAssetButton = ref.watch(showAddAssetButtonProvider);
     final assetSortOption = ref.watch(assetSortOptionProvider);
     final recentAssetIds = ref.watch(recentlyUsedAssetIdsProvider);
 
     final isTransfer = formState.type == TransactionType.transfer;
+    final showAssets = !isTransfer && globalShowAssets && categoryShowsAssets;
+
+    // Auto-clear asset when category changes to one that doesn't show assets
+    // (skip for editing mode to preserve the linked asset for read-only display)
+    if (!showAssets && formState.assetId != null && !formState.isEditing && !isTransfer) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.read(transactionFormProvider.notifier).clearAsset();
+        }
+      });
+    }
 
     final categories = formState.type == TransactionType.income
         ? incomeCategories
@@ -245,10 +258,11 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                       ),
                       const SizedBox(height: AppSpacing.xxl),
 
-                      // Asset selector (optional)
-                      if (showAssetSelector) Builder(
+                      // Asset selector (per-category visibility)
+                      if (showAssets) Builder(
                         builder: (context) {
                           final activeAssets = ref.watch(activeAssetsProvider);
+                          final categoryAssets = ref.watch(assetsForCategoryProvider(formState.categoryId));
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -256,6 +270,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                               const SizedBox(height: AppSpacing.sm),
                               AssetSelector(
                                 assets: activeAssets,
+                                categoryAssets: categoryAssets,
                                 selectedId: formState.assetId,
                                 recentAssetIds: recentAssetIds,
                                 initialVisibleCount: assetsFoldedCount,
@@ -266,6 +281,62 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                                 onCreatePressed: showAddAssetButton
                                     ? () => _createNewAsset(context, ref)
                                     : null,
+                              ),
+                              const SizedBox(height: AppSpacing.xxl),
+                            ],
+                          );
+                        },
+                      )
+                      // Show linked asset read-only when editing a tx that has an asset
+                      // but the category now has showAssets=false
+                      else if (!isTransfer && globalShowAssets && formState.assetId != null && formState.isEditing) Builder(
+                        builder: (context) {
+                          final asset = ref.watch(assetByIdProvider(formState.assetId!));
+                          if (asset == null) return const SizedBox.shrink();
+                          final assetColor = asset.getColor(intensity);
+                          final bgOpacity = AppColors.getBgOpacity(intensity);
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Asset', style: AppTypography.labelMedium),
+                              const SizedBox(height: AppSpacing.sm),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: AppSpacing.sm,
+                                      vertical: AppSpacing.xs,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: assetColor.withValues(alpha: bgOpacity),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: assetColor),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(asset.icon, size: 14, color: assetColor),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          asset.name,
+                                          style: AppTypography.labelSmall.copyWith(color: assetColor),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.sm),
+                                  GestureDetector(
+                                    onTap: () {
+                                      HapticHelper.lightImpact();
+                                      ref.read(transactionFormProvider.notifier).setAsset(null);
+                                    },
+                                    child: Icon(
+                                      LucideIcons.x,
+                                      size: 16,
+                                      color: AppColors.textTertiary,
+                                    ),
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: AppSpacing.xxl),
                             ],
@@ -682,7 +753,7 @@ class _CategoryPickerFormScreen extends ConsumerWidget {
     return CategoryFormModal(
       type: type,
       initialParentId: initialParentId,
-      onSave: (name, icon, colorIndex, parentId) async {
+      onSave: (name, icon, colorIndex, parentId, showAssets) async {
         final uuid = const Uuid();
         final newId = uuid.v4();
 
@@ -695,6 +766,7 @@ class _CategoryPickerFormScreen extends ConsumerWidget {
           parentId: parentId,
           isCustom: true,
           sortOrder: 0,
+          showAssets: showAssets,
         );
 
         await ref.read(categoriesProvider.notifier).addCategory(category);

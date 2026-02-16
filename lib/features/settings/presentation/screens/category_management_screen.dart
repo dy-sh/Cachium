@@ -689,7 +689,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
       MaterialPageRoute(
         builder: (context) => CategoryFormModal(
           type: _selectedType,
-          onSave: (name, icon, colorIndex, parentId) {
+          onSave: (name, icon, colorIndex, parentId, showAssets) {
             final categories = ref.read(categoriesProvider).valueOrEmpty;
             final siblings = categories
                 .where((c) => c.parentId == parentId && c.type == _selectedType)
@@ -707,6 +707,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
               isCustom: true,
               parentId: parentId,
               sortOrder: sortOrder,
+              showAssets: showAssets,
             );
             ref.read(categoriesProvider.notifier).addCategory(category);
             Navigator.pop(context);
@@ -722,13 +723,14 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
         builder: (context) => CategoryFormModal(
           category: category,
           type: category.type,
-          onSave: (name, icon, colorIndex, parentId) {
+          onSave: (name, icon, colorIndex, parentId, showAssets) {
             final updated = category.copyWith(
               name: name,
               icon: icon,
               colorIndex: colorIndex,
               parentId: parentId,
               clearParentId: parentId == null,
+              showAssets: showAssets,
             );
             ref.read(categoriesProvider.notifier).updateCategory(updated);
             Navigator.pop(context);
@@ -755,7 +757,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
         builder: (context) => CategoryFormModal(
           type: parentCategory.type,
           initialParentId: parentCategory.id,
-          onSave: (name, icon, colorIndex, parentId) {
+          onSave: (name, icon, colorIndex, parentId, showAssets) {
             final categories = ref.read(categoriesProvider).valueOrEmpty;
             final effectiveParentId = parentId ?? parentCategory.id;
             final siblings = categories
@@ -774,6 +776,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
               isCustom: true,
               parentId: effectiveParentId,
               sortOrder: sortOrder,
+              showAssets: showAssets,
             );
             ref.read(categoriesProvider.notifier).addCategory(category);
             Navigator.pop(context);

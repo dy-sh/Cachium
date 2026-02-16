@@ -370,7 +370,7 @@ class _CategoryPickerFormScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return CategoryFormModal(
       type: type,
-      onSave: (name, icon, colorIndex, parentId) async {
+      onSave: (name, icon, colorIndex, parentId, showAssets) async {
         final uuid = const Uuid();
         final newId = uuid.v4();
 
@@ -383,6 +383,7 @@ class _CategoryPickerFormScreen extends ConsumerWidget {
           parentId: parentId,
           isCustom: true,
           sortOrder: 0,
+          showAssets: showAssets,
         );
 
         await ref.read(categoriesProvider.notifier).addCategory(category);

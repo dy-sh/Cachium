@@ -18,6 +18,7 @@ _$CategoryDataImpl _$$CategoryDataImplFromJson(Map<String, dynamic> json) =>
       isCustom: json['isCustom'] as bool? ?? false,
       parentId: json['parentId'] as String?,
       sortOrder: (json['sortOrder'] as num).toInt(),
+      showAssets: json['showAssets'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$$CategoryDataImplToJson(_$CategoryDataImpl instance) =>
@@ -32,4 +33,5 @@ Map<String, dynamic> _$$CategoryDataImplToJson(_$CategoryDataImpl instance) =>
       'isCustom': instance.isCustom,
       'parentId': instance.parentId,
       'sortOrder': instance.sortOrder,
+      'showAssets': instance.showAssets,
     };

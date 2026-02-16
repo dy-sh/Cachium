@@ -399,6 +399,17 @@ final categoryAncestorsProvider = Provider.family<List<Category>, String>((ref, 
   }
 });
 
+/// Resolves whether assets should be shown for a given category.
+/// Subcategories inherit from their root parent.
+final categoryShowsAssetsProvider = Provider.family<bool, String?>((ref, categoryId) {
+  if (categoryId == null) return false;
+  final category = ref.watch(categoryByIdProvider(categoryId));
+  if (category == null) return false;
+  if (category.parentId == null) return category.showAssets;
+  final parent = ref.watch(categoryByIdProvider(category.parentId!));
+  return parent?.showAssets ?? false;
+});
+
 /// Checks if a category name already exists (case-insensitive).
 /// Returns true if duplicate exists, excluding the category with excludeId.
 final categoryNameExistsProvider = Provider.family<bool, ({String name, String? excludeId})>((ref, params) {

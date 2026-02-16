@@ -19,7 +19,7 @@ class CategoryFormModal extends ConsumerStatefulWidget {
   final Category? category;
   final CategoryType type;
   final String? initialParentId;
-  final void Function(String name, IconData icon, int colorIndex, String? parentId) onSave;
+  final void Function(String name, IconData icon, int colorIndex, String? parentId, bool showAssets) onSave;
   final VoidCallback? onDelete;
   final VoidCallback? onAddChild;
 
@@ -43,6 +43,7 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
   late IconData _selectedIcon;
   late int _selectedColorIndex;
   String? _selectedParentId;
+  bool _showAssets = false;
   bool _isEditingName = false;
   String _previousName = '';
 
@@ -54,6 +55,7 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
     _selectedIcon = widget.category?.icon ?? LucideIcons.tag;
     _selectedColorIndex = widget.category?.colorIndex ?? 0;
     _selectedParentId = widget.category?.parentId ?? widget.initialParentId;
+    _showAssets = widget.category?.showAssets ?? false;
 
     // Start in edit mode if new category
     if (widget.category == null) {
@@ -92,7 +94,8 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
     return _nameController.text.trim() != widget.category!.name ||
         _selectedIcon != widget.category!.icon ||
         _selectedColorIndex != widget.category!.colorIndex ||
-        _selectedParentId != widget.category!.parentId;
+        _selectedParentId != widget.category!.parentId ||
+        _showAssets != widget.category!.showAssets;
   }
 
   @override
@@ -241,6 +244,12 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
                     _buildParentSelector(intensity),
                     const SizedBox(height: AppSpacing.xxl),
 
+                    // Track assets toggle (only for root categories)
+                    if (_selectedParentId == null) ...[
+                      _buildShowAssetsToggle(),
+                      const SizedBox(height: AppSpacing.xxl),
+                    ],
+
                     // Color picker
                     Text('Color', style: AppTypography.labelMedium),
                     const SizedBox(height: AppSpacing.sm),
@@ -332,6 +341,7 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
                                     _selectedIcon,
                                     _selectedColorIndex,
                                     _selectedParentId,
+                                    _showAssets,
                                   );
                                 }
                               : null,
@@ -348,6 +358,58 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
   void _showDeleteConfirmation(BuildContext context) {
     // Directly call onDelete - confirmation will be shown by the parent
     widget.onDelete?.call();
+  }
+
+  Widget _buildShowAssetsToggle() {
+    return GestureDetector(
+      onTap: () => setState(() => _showAssets = !_showAssets),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceLight,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              LucideIcons.package,
+              size: 18,
+              color: _showAssets ? AppColors.accentPrimary : AppColors.textSecondary,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Track assets',
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: _showAssets ? AppColors.textPrimary : AppColors.textSecondary,
+                    ),
+                  ),
+                  Text(
+                    'Show asset selector in transaction form',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+              height: 24,
+              width: 44,
+              child: Switch.adaptive(
+                value: _showAssets,
+                onChanged: (value) => setState(() => _showAssets = value),
+                activeTrackColor: AppColors.accentPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildParentSelector(ColorIntensity intensity) {

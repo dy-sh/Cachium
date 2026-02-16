@@ -39,6 +39,7 @@ class CategoryRepository {
       isCustom: category.isCustom,
       parentId: category.parentId,
       sortOrder: category.sortOrder,
+      showAssets: category.showAssets,
     );
   }
 
@@ -60,6 +61,7 @@ class CategoryRepository {
       isCustom: data.isCustom,
       parentId: data.parentId,
       sortOrder: data.sortOrder,
+      showAssets: data.showAssets,
     );
   }
 

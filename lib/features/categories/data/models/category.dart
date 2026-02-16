@@ -17,6 +17,7 @@ class Category {
   final bool isCustom;
   final String? parentId; // null = root level
   final int sortOrder; // ordering within same parent
+  final bool showAssets; // whether asset selector appears for this category
 
   const Category({
     required this.id,
@@ -27,6 +28,7 @@ class Category {
     this.isCustom = false,
     this.parentId,
     this.sortOrder = 0,
+    this.showAssets = false,
   });
 
   /// Returns the color for this category based on the current palette.
@@ -45,6 +47,7 @@ class Category {
     String? parentId,
     bool clearParentId = false,
     int? sortOrder,
+    bool? showAssets,
   }) {
     return Category(
       id: id ?? this.id,
@@ -55,6 +58,7 @@ class Category {
       isCustom: isCustom ?? this.isCustom,
       parentId: clearParentId ? null : (parentId ?? this.parentId),
       sortOrder: sortOrder ?? this.sortOrder,
+      showAssets: showAssets ?? this.showAssets,
     );
   }
 
@@ -88,6 +92,7 @@ class DefaultCategories {
       colorIndex: 13, // cyan - tech/digital
       type: CategoryType.income,
       sortOrder: 1,
+      showAssets: true,
     ),
     Category(
       id: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
@@ -96,6 +101,7 @@ class DefaultCategories {
       colorIndex: 17, // blue - financial
       type: CategoryType.income,
       sortOrder: 2,
+      showAssets: true,
     ),
     Category(
       id: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
@@ -161,6 +167,7 @@ class DefaultCategories {
       colorIndex: 17, // blue - movement
       type: CategoryType.expense,
       sortOrder: 1,
+      showAssets: true,
     ),
     // Transport subcategories
     Category(
@@ -198,6 +205,7 @@ class DefaultCategories {
       colorIndex: 22, // fuchsia - retail
       type: CategoryType.expense,
       sortOrder: 2,
+      showAssets: true,
     ),
     // Shopping subcategories
     Category(
@@ -234,6 +242,7 @@ class DefaultCategories {
       colorIndex: 19, // violet - fun
       type: CategoryType.expense,
       sortOrder: 3,
+      showAssets: true,
     ),
     // Bills (parent)
     Category(
@@ -243,6 +252,7 @@ class DefaultCategories {
       colorIndex: 5, // yellow - attention
       type: CategoryType.expense,
       sortOrder: 4,
+      showAssets: true,
     ),
     // Bills subcategories
     Category(
@@ -287,6 +297,7 @@ class DefaultCategories {
       colorIndex: 18, // indigo - knowledge
       type: CategoryType.expense,
       sortOrder: 6,
+      showAssets: true,
     ),
     Category(
       id: 'd3e4f5a6-b7c8-4d9e-0f1a-2b3c4d5e6f7a',
@@ -295,6 +306,7 @@ class DefaultCategories {
       colorIndex: 13, // cyan - sky/water
       type: CategoryType.expense,
       sortOrder: 7,
+      showAssets: true,
     ),
     Category(
       id: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',

@@ -40,6 +40,9 @@ class CategoryData with _$CategoryData {
 
     /// Sort order within the same parent - duplicated for integrity check
     required int sortOrder,
+
+    /// Whether asset selector appears for this category
+    @Default(false) bool showAssets,
   }) = _CategoryData;
 
   factory CategoryData.fromJson(Map<String, dynamic> json) =>

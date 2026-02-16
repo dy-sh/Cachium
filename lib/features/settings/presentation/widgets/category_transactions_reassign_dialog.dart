@@ -95,7 +95,7 @@ class _CategoryTransactionsReassignScreenState
       MaterialPageRoute(
         builder: (context) => CategoryFormModal(
           type: widget.categoryType,
-          onSave: (name, icon, colorIndex, parentId) {
+          onSave: (name, icon, colorIndex, parentId, showAssets) {
             final categories = ref.read(categoriesProvider).valueOrEmpty;
             final siblings = categories
                 .where(
@@ -115,6 +115,7 @@ class _CategoryTransactionsReassignScreenState
               isCustom: true,
               parentId: parentId,
               sortOrder: sortOrder,
+              showAssets: showAssets,
             );
             ref.read(categoriesProvider.notifier).addCategory(category);
             Navigator.pop(context);

@@ -191,7 +191,8 @@ class DatabaseExportService {
         color_index INTEGER NOT NULL,
         type TEXT NOT NULL,
         is_custom INTEGER NOT NULL DEFAULT 0,
-        parent_id TEXT
+        parent_id TEXT,
+        show_assets INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -336,8 +337,8 @@ class DatabaseExportService {
 
     final stmt = exportDb.prepare(
       '''INSERT INTO categories
-         (id, sort_order, last_updated_at, is_deleted, name, icon_code_point, icon_font_family, icon_font_package, color_index, type, is_custom, parent_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+         (id, sort_order, last_updated_at, is_deleted, name, icon_code_point, icon_font_family, icon_font_package, color_index, type, is_custom, parent_id, show_assets)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
     );
 
     for (final row in rows) {
@@ -357,6 +358,7 @@ class DatabaseExportService {
         data.type,
         data.isCustom ? 1 : 0,
         data.parentId,
+        data.showAssets ? 1 : 0,
       ]);
     }
 
@@ -509,7 +511,7 @@ class DatabaseExportService {
             ..where((c) => c.isDeleted.equals(false)))
           .get();
       csvData.add([
-        'id', 'sort_order', 'last_updated_at', 'name', 'icon_code_point', 'icon_font_family', 'icon_font_package', 'color_index', 'type', 'is_custom', 'parent_id',
+        'id', 'sort_order', 'last_updated_at', 'name', 'icon_code_point', 'icon_font_family', 'icon_font_package', 'color_index', 'type', 'is_custom', 'parent_id', 'show_assets',
       ]);
 
       for (final row in rows) {
@@ -528,6 +530,7 @@ class DatabaseExportService {
           data.type,
           data.isCustom ? 1 : 0,
           data.parentId ?? '',
+          data.showAssets ? 1 : 0,
         ]);
       }
     }
