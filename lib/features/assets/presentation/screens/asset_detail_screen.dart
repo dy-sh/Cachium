@@ -14,8 +14,13 @@ import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../data/models/asset.dart';
+import '../providers/asset_analytics_providers.dart';
 import '../providers/assets_provider.dart';
+import '../widgets/asset_category_breakdown.dart';
 import '../widgets/asset_form_modal.dart';
+import '../widgets/asset_spending_chart.dart';
+import '../widgets/asset_stats_cards.dart';
+import '../widgets/asset_status_dialog.dart';
 
 class AssetDetailScreen extends ConsumerWidget {
   final String assetId;
@@ -83,6 +88,7 @@ class AssetDetailScreen extends ConsumerWidget {
 
     final assetColor = asset.getColor(intensity);
     final transactions = ref.watch(transactionsByAssetProvider(assetId));
+    final monthGroups = ref.watch(assetTransactionsByMonthProvider(assetId));
     final bgOpacity = AppColors.getBgOpacity(intensity);
 
     // Cost analysis
@@ -126,7 +132,7 @@ class AssetDetailScreen extends ConsumerWidget {
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
                 children: [
-                  // Hero card
+                  // 1. Hero card
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(AppSpacing.xl),
@@ -195,7 +201,7 @@ class AssetDetailScreen extends ConsumerWidget {
 
                   const SizedBox(height: AppSpacing.lg),
 
-                  // Cost breakdown
+                  // 2. Cost breakdown
                   Row(
                     children: [
                       Expanded(
@@ -224,48 +230,43 @@ class AssetDetailScreen extends ConsumerWidget {
                         : AppColors.getTransactionColor('income', intensity),
                   ),
 
-                  if (asset.status == AssetStatus.active) ...[
-                    const SizedBox(height: AppSpacing.md),
-                    GestureDetector(
-                      onTap: () async {
-                        final updatedAsset = asset.copyWith(status: AssetStatus.sold);
-                        await ref.read(assetsProvider.notifier).updateAsset(updatedAsset);
-                        if (context.mounted) {
-                          context.showSuccessNotification('Asset marked as sold');
-                        }
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: AppRadius.mdAll,
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              LucideIcons.badgeCheck,
-                              size: 18,
-                              color: AppColors.textSecondary,
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
-                            Text(
-                              'Mark as Sold',
-                              style: AppTypography.labelMedium.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                  // 3. Stats cards
+                  if (transactions.isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.lg),
+                    AssetStatsCards(assetId: assetId),
                   ],
 
-                  const SizedBox(height: AppSpacing.xxl),
+                  // 4. Mark as Sold / Reactivate button
+                  const SizedBox(height: AppSpacing.lg),
+                  if (asset.status == AssetStatus.active)
+                    PrimaryButton(
+                      label: 'Mark as Sold',
+                      icon: LucideIcons.badgeCheck,
+                      backgroundColor: AppColors.surface,
+                      textColor: AppColors.textSecondary,
+                      useAccentColor: false,
+                      onPressed: () => showMarkAsSoldDialog(context, ref, asset),
+                    )
+                  else
+                    PrimaryButton(
+                      label: 'Reactivate',
+                      icon: LucideIcons.rotateCcw,
+                      backgroundColor: AppColors.surface,
+                      textColor: AppColors.textSecondary,
+                      useAccentColor: false,
+                      onPressed: () => showReactivateDialog(context, ref, asset),
+                    ),
 
-                  // Linked transactions
+                  // 5. Spending chart
+                  const SizedBox(height: AppSpacing.lg),
+                  AssetSpendingChart(assetId: assetId),
+
+                  // 6. Category breakdown
+                  const SizedBox(height: AppSpacing.lg),
+                  AssetCategoryBreakdown(assetId: assetId),
+
+                  // 7. Linked Transactions (grouped by month)
+                  const SizedBox(height: AppSpacing.xxl),
                   Text('Linked Transactions', style: AppTypography.h4),
                   const SizedBox(height: AppSpacing.md),
 
@@ -287,7 +288,7 @@ class AssetDetailScreen extends ConsumerWidget {
                       ),
                     )
                   else
-                    ...transactions.map((tx) => _AssetTransactionItem(transaction: tx)),
+                    ...monthGroups.map((group) => _MonthTransactionGroup(group: group)),
 
                   const SizedBox(height: AppSpacing.xxxl),
                 ],
@@ -336,6 +337,56 @@ class _CostCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _MonthTransactionGroup extends ConsumerWidget {
+  final AssetMonthGroup group;
+
+  const _MonthTransactionGroup({required this.group});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final intensity = ref.watch(colorIntensityProvider);
+    final expenseColor = AppColors.getTransactionColor('expense', intensity);
+    final incomeColor = AppColors.getTransactionColor('income', intensity);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.sm, top: AppSpacing.sm),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                DateFormatter.formatMonthYear(group.month),
+                style: AppTypography.labelMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              Row(
+                children: [
+                  if (group.expenseSubtotal > 0)
+                    Text(
+                      '-${CurrencyFormatter.format(group.expenseSubtotal)}',
+                      style: AppTypography.labelSmall.copyWith(color: expenseColor),
+                    ),
+                  if (group.expenseSubtotal > 0 && group.incomeSubtotal > 0)
+                    const SizedBox(width: AppSpacing.sm),
+                  if (group.incomeSubtotal > 0)
+                    Text(
+                      '+${CurrencyFormatter.format(group.incomeSubtotal)}',
+                      style: AppTypography.labelSmall.copyWith(color: incomeColor),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        ...group.transactions.map((tx) => _AssetTransactionItem(transaction: tx)),
+      ],
     );
   }
 }

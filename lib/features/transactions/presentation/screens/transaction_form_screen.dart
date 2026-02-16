@@ -244,6 +244,34 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                             : null,
                       ),
                       const SizedBox(height: AppSpacing.xxl),
+
+                      // Asset selector (optional)
+                      if (showAssetSelector) Builder(
+                        builder: (context) {
+                          final activeAssets = ref.watch(activeAssetsProvider);
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Asset (optional)', style: AppTypography.labelMedium),
+                              const SizedBox(height: AppSpacing.sm),
+                              AssetSelector(
+                                assets: activeAssets,
+                                selectedId: formState.assetId,
+                                recentAssetIds: recentAssetIds,
+                                initialVisibleCount: assetsFoldedCount,
+                                sortOption: assetSortOption,
+                                onChanged: (id) {
+                                  ref.read(transactionFormProvider.notifier).setAsset(id);
+                                },
+                                onCreatePressed: showAddAssetButton
+                                    ? () => _createNewAsset(context, ref)
+                                    : null,
+                              ),
+                              const SizedBox(height: AppSpacing.xxl),
+                            ],
+                          );
+                        },
+                      ),
                     ],
 
                     Text(isTransfer ? 'From Account' : 'Account', style: AppTypography.labelMedium),
@@ -306,35 +334,6 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                       controller: _noteController,
                       onChanged: (value) {
                         ref.read(transactionFormProvider.notifier).setNote(value);
-                      },
-                    ),
-                    const SizedBox(height: AppSpacing.xxl),
-
-                    // Asset selector (optional)
-                    if (showAssetSelector) Builder(
-                      builder: (context) {
-                        final activeAssets = ref.watch(activeAssetsProvider);
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Asset (optional)', style: AppTypography.labelMedium),
-                            const SizedBox(height: AppSpacing.sm),
-                            AssetSelector(
-                              assets: activeAssets,
-                              selectedId: formState.assetId,
-                              recentAssetIds: recentAssetIds,
-                              initialVisibleCount: assetsFoldedCount,
-                              sortOption: assetSortOption,
-                              onChanged: (id) {
-                                ref.read(transactionFormProvider.notifier).setAsset(id);
-                              },
-                              onCreatePressed: showAddAssetButton
-                                  ? () => _createNewAsset(context, ref)
-                                  : null,
-                            ),
-                            const SizedBox(height: AppSpacing.lg),
-                          ],
-                        );
                       },
                     ),
                     const SizedBox(height: AppSpacing.xxxl),

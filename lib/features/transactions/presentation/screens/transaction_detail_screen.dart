@@ -11,6 +11,7 @@ import '../../../../core/utils/date_formatter.dart';
 import '../../../../design_system/components/feedback/notification.dart';
 import '../../../../design_system/components/layout/form_header.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
+import '../../../assets/presentation/providers/assets_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/transaction.dart';
@@ -51,6 +52,9 @@ class TransactionDetailScreen extends ConsumerWidget {
     final account = ref.watch(accountByIdProvider(transaction.accountId));
     final destAccount = transaction.destinationAccountId != null
         ? ref.watch(accountByIdProvider(transaction.destinationAccountId!))
+        : null;
+    final asset = transaction.assetId != null
+        ? ref.watch(assetByIdProvider(transaction.assetId!))
         : null;
     final isTransfer = transaction.isTransfer;
     final color = AppColors.getTransactionColor(transaction.type.name, intensity);
@@ -213,6 +217,16 @@ class TransactionDetailScreen extends ConsumerWidget {
                               icon: LucideIcons.wallet,
                               label: 'Account',
                               value: account?.name ?? 'Unknown',
+                            ),
+                          if (asset != null)
+                            GestureDetector(
+                              onTap: () => context.push('/asset/${asset.id}'),
+                              child: _DetailRow(
+                                icon: LucideIcons.box,
+                                label: 'Asset',
+                                value: asset.name,
+                                valueColor: asset.getColor(intensity),
+                              ),
                             ),
                           _DetailRow(
                             icon: LucideIcons.calendar,
