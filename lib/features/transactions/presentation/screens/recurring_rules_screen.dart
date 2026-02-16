@@ -56,7 +56,26 @@ class RecurringRulesScreen extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(width: AppSpacing.md),
-                      Text('Recurring Transactions', style: AppTypography.h3),
+                      Expanded(
+                        child: Text('Recurring Transactions', style: AppTypography.h3),
+                      ),
+                      GestureDetector(
+                        onTap: () => context.push('/settings/recurring/new'),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Icon(
+                            LucideIcons.plus,
+                            size: 20,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.xxl),
@@ -124,7 +143,9 @@ class _RecurringRuleCard extends ConsumerWidget {
         ? AppColors.getTransactionColor('income', intensity)
         : AppColors.getTransactionColor('expense', intensity);
 
-    return Container(
+    return GestureDetector(
+      onTap: () => context.push('/settings/recurring/${rule.id}/edit'),
+      child: Container(
       padding: const EdgeInsets.all(AppSpacing.cardPadding),
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -188,7 +209,9 @@ class _RecurringRuleCard extends ConsumerWidget {
             ),
             color: AppColors.surface,
             onSelected: (value) async {
-              if (value == 'toggle') {
+              if (value == 'edit') {
+                context.push('/settings/recurring/${rule.id}/edit');
+              } else if (value == 'toggle') {
                 await ref
                     .read(recurringRulesProvider.notifier)
                     .toggleActive(rule.id);
@@ -212,6 +235,23 @@ class _RecurringRuleCard extends ConsumerWidget {
               }
             },
             itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'edit',
+                child: Row(
+                  children: [
+                    Icon(
+                      LucideIcons.pencil,
+                      size: 16,
+                      color: AppColors.textSecondary,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text(
+                      'Edit',
+                      style: AppTypography.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
               PopupMenuItem(
                 value: 'toggle',
                 child: Row(
@@ -252,6 +292,7 @@ class _RecurringRuleCard extends ConsumerWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }

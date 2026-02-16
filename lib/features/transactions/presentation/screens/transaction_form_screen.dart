@@ -23,6 +23,7 @@ import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../settings/presentation/widgets/category_form_modal.dart';
 import '../../data/models/transaction.dart';
 import '../providers/transaction_form_provider.dart';
+import '../providers/transaction_templates_provider.dart';
 import '../providers/transactions_provider.dart';
 import '../../../assets/presentation/providers/assets_provider.dart';
 import '../../../assets/presentation/widgets/asset_form_modal.dart';
@@ -198,7 +199,22 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                         ),
                       ),
                     )
-                  : null,
+                  : GestureDetector(
+                      onTap: () => _showTemplatePicker(context),
+                      child: Container(
+                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Icon(
+                          LucideIcons.fileText,
+                          size: 18,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
             ),
 
             Expanded(
@@ -580,6 +596,85 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     if (newAssetId != null && mounted) {
       ref.read(transactionFormProvider.notifier).setAsset(newAssetId);
     }
+  }
+
+  void _showTemplatePicker(BuildContext context) {
+    final templates =
+        ref.read(transactionTemplatesProvider).valueOrNull ?? [];
+    if (templates.isEmpty) {
+      context.showInfoNotification('No templates yet. Create one in Settings.');
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.screenPadding,
+                  AppSpacing.lg,
+                  AppSpacing.screenPadding,
+                  AppSpacing.md,
+                ),
+                child: Text('Apply Template', style: AppTypography.h4),
+              ),
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.4,
+                ),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: templates.length,
+                  itemBuilder: (_, index) {
+                    final template = templates[index];
+                    return ListTile(
+                      leading: Icon(
+                        LucideIcons.fileText,
+                        color: AppColors.textSecondary,
+                        size: 20,
+                      ),
+                      title: Text(
+                        template.name,
+                        style: AppTypography.bodyMedium,
+                      ),
+                      subtitle: Text(
+                        template.type.displayName,
+                        style: AppTypography.labelSmall.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.of(sheetContext).pop();
+                        ref.read(transactionFormProvider.notifier)
+                            .applyTemplate(template);
+                        // Update text controllers
+                        if (template.merchant != null) {
+                          _merchantController.text = template.merchant!;
+                        }
+                        if (template.note != null) {
+                          _noteController.text = template.note!;
+                        }
+                        setState(() {});
+                      },
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
 

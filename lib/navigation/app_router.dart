@@ -27,9 +27,12 @@ import '../features/budgets/presentation/screens/budget_settings_screen.dart';
 import '../features/transactions/presentation/screens/deleted_transactions_screen.dart';
 import '../features/savings_goals/presentation/screens/savings_goals_screen.dart';
 import '../features/search/presentation/screens/global_search_screen.dart';
+import '../features/transactions/presentation/screens/recurring_rule_form_screen.dart';
 import '../features/transactions/presentation/screens/recurring_rules_screen.dart';
 import '../features/transactions/presentation/screens/transaction_detail_screen.dart';
 import '../features/transactions/presentation/screens/transaction_form_screen.dart';
+import '../features/transactions/presentation/screens/transaction_template_form_screen.dart';
+import '../features/transactions/presentation/screens/transaction_templates_screen.dart';
 import '../features/transactions/presentation/screens/transactions_screen.dart';
 import 'navigation_shell.dart';
 
@@ -56,6 +59,11 @@ class AppRoutes {
   static const search = '/search';
   static const savingsGoals = '/settings/savings-goals';
   static const recurringRules = '/settings/recurring';
+  static const recurringRuleForm = '/settings/recurring/new';
+  static const recurringRuleEdit = '/settings/recurring/:id/edit';
+  static const transactionTemplates = '/settings/templates';
+  static const transactionTemplateForm = '/settings/templates/new';
+  static const transactionTemplateEdit = '/settings/templates/:id/edit';
   static const deletedTransactions = '/transactions/deleted';
   static const transactionForm = '/transaction/new';
   static const transactionDetail = '/transaction/:id';
@@ -309,6 +317,52 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           const RecurringRulesScreen(),
           animationsEnabled: ref.read(formAnimationsEnabledProvider),
         ),
+      ),
+      GoRoute(
+        path: AppRoutes.recurringRuleForm,
+        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
+          state,
+          const RecurringRuleFormScreen(),
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.recurringRuleEdit,
+        pageBuilder: (context, state) {
+          final ruleId = state.pathParameters['id']!;
+          return PageTransitions.buildSlideLeftTransition(
+            state,
+            RecurringRuleFormScreen(ruleId: ruleId),
+            animationsEnabled: ref.read(formAnimationsEnabledProvider),
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.transactionTemplates,
+        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
+          state,
+          const TransactionTemplatesScreen(),
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.transactionTemplateForm,
+        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
+          state,
+          const TransactionTemplateFormScreen(),
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.transactionTemplateEdit,
+        pageBuilder: (context, state) {
+          final templateId = state.pathParameters['id']!;
+          return PageTransitions.buildSlideLeftTransition(
+            state,
+            TransactionTemplateFormScreen(templateId: templateId),
+            animationsEnabled: ref.read(formAnimationsEnabledProvider),
+          );
+        },
       ),
       GoRoute(
         path: AppRoutes.deletedTransactions,

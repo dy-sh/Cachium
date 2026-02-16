@@ -99,7 +99,7 @@ mixin _$SettingsData {
   /// Whether app lock (biometric/PIN) is enabled
   bool get appLockEnabled => throw _privateConstructorUsedError;
 
-  /// App PIN code (stored as plaintext 4-6 digit string)
+  /// App PIN code (stored as plaintext 4-8 digit string)
   String? get appPinCode => throw _privateConstructorUsedError;
 
   /// App password (stored as plaintext string)
@@ -684,7 +684,7 @@ class _$SettingsDataImpl implements _SettingsData {
   @JsonKey()
   final bool appLockEnabled;
 
-  /// App PIN code (stored as plaintext 4-6 digit string)
+  /// App PIN code (stored as plaintext 4-8 digit string)
   @override
   final String? appPinCode;
 
@@ -952,7 +952,7 @@ abstract class _SettingsData implements SettingsData {
   @override
   bool get appLockEnabled;
 
-  /// App PIN code (stored as plaintext 4-6 digit string)
+  /// App PIN code (stored as plaintext 4-8 digit string)
   @override
   String? get appPinCode;
 

@@ -35,9 +35,10 @@ class RecurringRulesNotifier extends AsyncNotifier<List<RecurringRule>> {
     await updateRule(rule.copyWith(isActive: !rule.isActive));
   }
 
-  /// Generate all pending transactions for active recurring rules.
-  /// Called on app launch.
-  Future<int> generatePendingTransactions() async {
+  /// Generate pending transactions for active recurring rules.
+  /// When [ruleIds] is provided, only generate for those specific rules.
+  /// When null, generate for all active rules.
+  Future<int> generatePendingTransactions({List<String>? ruleIds}) async {
     final rules = state.valueOrNull ?? [];
     final transactionsNotifier = ref.read(transactionsProvider.notifier);
     final repository = ref.read(recurringRuleRepositoryProvider);
@@ -45,6 +46,7 @@ class RecurringRulesNotifier extends AsyncNotifier<List<RecurringRule>> {
 
     for (final rule in rules) {
       if (!rule.isActive) continue;
+      if (ruleIds != null && !ruleIds.contains(rule.id)) continue;
 
       var lastGenerated = rule.lastGeneratedDate;
       var nextDate = rule.frequency.nextDate(lastGenerated);

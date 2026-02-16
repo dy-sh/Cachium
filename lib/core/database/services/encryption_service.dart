@@ -10,6 +10,7 @@ import '../../../data/encryption/category_data.dart';
 import '../../../data/encryption/recurring_rule_data.dart';
 import '../../../data/encryption/savings_goal_data.dart';
 import '../../../data/encryption/transaction_data.dart';
+import '../../../data/encryption/transaction_template_data.dart';
 import '../../exceptions/security_exception.dart';
 import 'key_provider.dart';
 
@@ -361,6 +362,41 @@ class EncryptionService {
   }) async {
     final json = await decryptJson(encryptedBlob);
     final data = AssetData.fromJson(json);
+
+    if (data.id != expectedId) {
+      throw SecurityException(
+        rowId: expectedId,
+        fieldName: 'id',
+        expectedValue: expectedId,
+        actualValue: data.id,
+      );
+    }
+
+    if (data.createdAtMillis != expectedCreatedAtMillis) {
+      throw SecurityException(
+        rowId: expectedId,
+        fieldName: 'createdAtMillis',
+        expectedValue: expectedCreatedAtMillis.toString(),
+        actualValue: data.createdAtMillis.toString(),
+      );
+    }
+
+    return data;
+  }
+
+  /// Encrypts transaction template data into a binary blob.
+  Future<Uint8List> encryptTransactionTemplate(TransactionTemplateData data) async {
+    return encryptJson(data.toJson());
+  }
+
+  /// Decrypts an encrypted blob back to transaction template data.
+  Future<TransactionTemplateData> decryptTransactionTemplate(
+    Uint8List encryptedBlob, {
+    required String expectedId,
+    required int expectedCreatedAtMillis,
+  }) async {
+    final json = await decryptJson(encryptedBlob);
+    final data = TransactionTemplateData.fromJson(json);
 
     if (data.id != expectedId) {
       throw SecurityException(

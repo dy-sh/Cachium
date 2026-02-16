@@ -8,6 +8,7 @@ import '../../data/repositories/recurring_rule_repository.dart';
 import '../../data/repositories/savings_goal_repository.dart';
 import '../../data/repositories/settings_repository.dart';
 import '../../data/repositories/transaction_repository.dart';
+import '../../data/repositories/transaction_template_repository.dart';
 import '../database/app_database.dart';
 import '../database/services/encryption_service.dart';
 import '../database/services/key_provider.dart';
@@ -94,6 +95,14 @@ final recurringRuleRepositoryProvider = Provider<RecurringRuleRepository>((ref) 
 /// Provider for the savings goal repository.
 final savingsGoalRepositoryProvider = Provider<SavingsGoalRepository>((ref) {
   return SavingsGoalRepository(
+    database: ref.watch(databaseProvider),
+    encryptionService: ref.watch(encryptionServiceProvider),
+  );
+});
+
+/// Provider for the transaction template repository.
+final transactionTemplateRepositoryProvider = Provider<TransactionTemplateRepository>((ref) {
+  return TransactionTemplateRepository(
     database: ref.watch(databaseProvider),
     encryptionService: ref.watch(encryptionServiceProvider),
   );

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/transaction.dart';
+import '../../data/models/transaction_template.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 
 class TransactionFormState {
@@ -272,6 +273,21 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
               : lastUsedExpenseCategoryId)
           : null,
       allowZeroAmount: allowZeroAmount,
+    );
+  }
+
+  void applyTemplate(TransactionTemplate template) {
+    state = state.copyWith(
+      type: template.type,
+      amount: template.amount ?? state.amount,
+      categoryId: template.categoryId,
+      accountId: template.accountId,
+      destinationAccountId: template.destinationAccountId,
+      clearDestinationAccountId: template.destinationAccountId == null,
+      assetId: template.assetId,
+      clearAssetId: template.assetId == null,
+      merchant: template.merchant,
+      note: template.note,
     );
   }
 

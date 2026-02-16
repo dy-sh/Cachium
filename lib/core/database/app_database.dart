@@ -9,6 +9,7 @@ import 'daos/recurring_rule_dao.dart';
 import 'daos/savings_goal_dao.dart';
 import 'daos/settings_dao.dart';
 import 'daos/transaction_dao.dart';
+import 'daos/transaction_template_dao.dart';
 
 part 'app_database.g.dart';
 
@@ -144,6 +145,19 @@ class SavingsGoals extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Table for storing encrypted transaction templates.
+@DataClassName('TransactionTemplateRow')
+class TransactionTemplates extends Table {
+  TextColumn get id => text()();
+  IntColumn get createdAt => integer()();
+  IntColumn get lastUpdatedAt => integer()();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BlobColumn get encryptedBlob => blob()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Table for storing app settings.
 ///
 /// Settings are stored as unencrypted JSON since they don't contain sensitive data.
@@ -168,15 +182,15 @@ class AppSettings extends Table {
 /// is stored unencrypted on disk, but all sensitive transaction data is
 /// encrypted at the application layer before being stored.
 @DriftDatabase(
-  tables: [Transactions, Accounts, Categories, Budgets, Assets, RecurringRules, SavingsGoals, AppSettings],
-  daos: [TransactionDao, AccountDao, CategoryDao, BudgetDao, AssetDao, RecurringRuleDao, SavingsGoalDao, SettingsDao],
+  tables: [Transactions, Accounts, Categories, Budgets, Assets, RecurringRules, SavingsGoals, TransactionTemplates, AppSettings],
+  daos: [TransactionDao, AccountDao, CategoryDao, BudgetDao, AssetDao, RecurringRuleDao, SavingsGoalDao, TransactionTemplateDao, SettingsDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -193,6 +207,7 @@ class AppDatabase extends _$AppDatabase {
           await m.deleteTable('assets');
           await m.deleteTable('recurring_rules');
           await m.deleteTable('savings_goals');
+          await m.deleteTable('transaction_templates');
           await m.deleteTable('app_settings');
           await m.createAll();
         },
@@ -503,6 +518,43 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> deleteAllRecurringRules() => recurringRuleDao.deleteAll();
 
+  // CRUD operations for transaction templates (delegates to TransactionTemplateDao)
+
+  Future<void> insertTransactionTemplate({
+    required String id,
+    required int createdAt,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+  }) =>
+      transactionTemplateDao.insert(
+        id: id,
+        createdAt: createdAt,
+        lastUpdatedAt: lastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+      );
+
+  Future<void> updateTransactionTemplate({
+    required String id,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+  }) =>
+      transactionTemplateDao.updateRow(
+        id: id,
+        lastUpdatedAt: lastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+      );
+
+  Future<void> softDeleteTransactionTemplate(String id, int lastUpdatedAt) =>
+      transactionTemplateDao.softDelete(id, lastUpdatedAt);
+
+  Future<List<TransactionTemplateRow>> getAllTransactionTemplates() =>
+      transactionTemplateDao.getAll();
+
+  Stream<List<TransactionTemplateRow>> watchAllTransactionTemplates() =>
+      transactionTemplateDao.watchAll();
+
+  Future<void> deleteAllTransactionTemplates() => transactionTemplateDao.deleteAll();
+
   // CRUD operations for savings goals (delegates to SavingsGoalDao)
 
   Future<void> insertSavingsGoal({
@@ -580,6 +632,7 @@ class AppDatabase extends _$AppDatabase {
       await deleteAllAssets();
       await deleteAllRecurringRules();
       await deleteAllSavingsGoals();
+      await deleteAllTransactionTemplates();
       if (includeSettings) {
         await deleteAllSettings();
       }

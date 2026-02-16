@@ -90,6 +90,13 @@ class SettingsScreen extends ConsumerWidget {
                         onTap: () => context.push('/settings/recurring'),
                       ),
                       SettingsTile(
+                        title: 'Transaction Templates',
+                        description: 'Quick-fill presets for transactions',
+                        icon: LucideIcons.fileText,
+                        iconColor: AppColors.getAccentColor(3, intensity), // Blue
+                        onTap: () => context.push('/settings/templates'),
+                      ),
+                      SettingsTile(
                         title: 'Deleted Transactions',
                         description: 'View and restore deleted items',
                         icon: LucideIcons.trash2,

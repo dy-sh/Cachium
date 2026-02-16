@@ -2732,6 +2732,388 @@ class SavingsGoalsCompanion extends UpdateCompanion<SavingsGoalRow> {
   }
 }
 
+class $TransactionTemplatesTable extends TransactionTemplates
+    with TableInfo<$TransactionTemplatesTable, TransactionTemplateRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TransactionTemplatesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastUpdatedAtMeta = const VerificationMeta(
+    'lastUpdatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> lastUpdatedAt = GeneratedColumn<int>(
+    'last_updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _encryptedBlobMeta = const VerificationMeta(
+    'encryptedBlob',
+  );
+  @override
+  late final GeneratedColumn<Uint8List> encryptedBlob =
+      GeneratedColumn<Uint8List>(
+        'encrypted_blob',
+        aliasedName,
+        false,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: true,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    createdAt,
+    lastUpdatedAt,
+    isDeleted,
+    encryptedBlob,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'transaction_templates';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TransactionTemplateRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('last_updated_at')) {
+      context.handle(
+        _lastUpdatedAtMeta,
+        lastUpdatedAt.isAcceptableOrUnknown(
+          data['last_updated_at']!,
+          _lastUpdatedAtMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_lastUpdatedAtMeta);
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('encrypted_blob')) {
+      context.handle(
+        _encryptedBlobMeta,
+        encryptedBlob.isAcceptableOrUnknown(
+          data['encrypted_blob']!,
+          _encryptedBlobMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_encryptedBlobMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TransactionTemplateRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TransactionTemplateRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      lastUpdatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_updated_at'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      encryptedBlob: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}encrypted_blob'],
+      )!,
+    );
+  }
+
+  @override
+  $TransactionTemplatesTable createAlias(String alias) {
+    return $TransactionTemplatesTable(attachedDatabase, alias);
+  }
+}
+
+class TransactionTemplateRow extends DataClass
+    implements Insertable<TransactionTemplateRow> {
+  final String id;
+  final int createdAt;
+  final int lastUpdatedAt;
+  final bool isDeleted;
+  final Uint8List encryptedBlob;
+  const TransactionTemplateRow({
+    required this.id,
+    required this.createdAt,
+    required this.lastUpdatedAt,
+    required this.isDeleted,
+    required this.encryptedBlob,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['created_at'] = Variable<int>(createdAt);
+    map['last_updated_at'] = Variable<int>(lastUpdatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['encrypted_blob'] = Variable<Uint8List>(encryptedBlob);
+    return map;
+  }
+
+  TransactionTemplatesCompanion toCompanion(bool nullToAbsent) {
+    return TransactionTemplatesCompanion(
+      id: Value(id),
+      createdAt: Value(createdAt),
+      lastUpdatedAt: Value(lastUpdatedAt),
+      isDeleted: Value(isDeleted),
+      encryptedBlob: Value(encryptedBlob),
+    );
+  }
+
+  factory TransactionTemplateRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TransactionTemplateRow(
+      id: serializer.fromJson<String>(json['id']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      lastUpdatedAt: serializer.fromJson<int>(json['lastUpdatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      encryptedBlob: serializer.fromJson<Uint8List>(json['encryptedBlob']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'lastUpdatedAt': serializer.toJson<int>(lastUpdatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'encryptedBlob': serializer.toJson<Uint8List>(encryptedBlob),
+    };
+  }
+
+  TransactionTemplateRow copyWith({
+    String? id,
+    int? createdAt,
+    int? lastUpdatedAt,
+    bool? isDeleted,
+    Uint8List? encryptedBlob,
+  }) => TransactionTemplateRow(
+    id: id ?? this.id,
+    createdAt: createdAt ?? this.createdAt,
+    lastUpdatedAt: lastUpdatedAt ?? this.lastUpdatedAt,
+    isDeleted: isDeleted ?? this.isDeleted,
+    encryptedBlob: encryptedBlob ?? this.encryptedBlob,
+  );
+  TransactionTemplateRow copyWithCompanion(TransactionTemplatesCompanion data) {
+    return TransactionTemplateRow(
+      id: data.id.present ? data.id.value : this.id,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      lastUpdatedAt: data.lastUpdatedAt.present
+          ? data.lastUpdatedAt.value
+          : this.lastUpdatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      encryptedBlob: data.encryptedBlob.present
+          ? data.encryptedBlob.value
+          : this.encryptedBlob,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TransactionTemplateRow(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('lastUpdatedAt: $lastUpdatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('encryptedBlob: $encryptedBlob')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    createdAt,
+    lastUpdatedAt,
+    isDeleted,
+    $driftBlobEquality.hash(encryptedBlob),
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TransactionTemplateRow &&
+          other.id == this.id &&
+          other.createdAt == this.createdAt &&
+          other.lastUpdatedAt == this.lastUpdatedAt &&
+          other.isDeleted == this.isDeleted &&
+          $driftBlobEquality.equals(other.encryptedBlob, this.encryptedBlob));
+}
+
+class TransactionTemplatesCompanion
+    extends UpdateCompanion<TransactionTemplateRow> {
+  final Value<String> id;
+  final Value<int> createdAt;
+  final Value<int> lastUpdatedAt;
+  final Value<bool> isDeleted;
+  final Value<Uint8List> encryptedBlob;
+  final Value<int> rowid;
+  const TransactionTemplatesCompanion({
+    this.id = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.lastUpdatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.encryptedBlob = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TransactionTemplatesCompanion.insert({
+    required String id,
+    required int createdAt,
+    required int lastUpdatedAt,
+    this.isDeleted = const Value.absent(),
+    required Uint8List encryptedBlob,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       createdAt = Value(createdAt),
+       lastUpdatedAt = Value(lastUpdatedAt),
+       encryptedBlob = Value(encryptedBlob);
+  static Insertable<TransactionTemplateRow> custom({
+    Expression<String>? id,
+    Expression<int>? createdAt,
+    Expression<int>? lastUpdatedAt,
+    Expression<bool>? isDeleted,
+    Expression<Uint8List>? encryptedBlob,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (createdAt != null) 'created_at': createdAt,
+      if (lastUpdatedAt != null) 'last_updated_at': lastUpdatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (encryptedBlob != null) 'encrypted_blob': encryptedBlob,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TransactionTemplatesCompanion copyWith({
+    Value<String>? id,
+    Value<int>? createdAt,
+    Value<int>? lastUpdatedAt,
+    Value<bool>? isDeleted,
+    Value<Uint8List>? encryptedBlob,
+    Value<int>? rowid,
+  }) {
+    return TransactionTemplatesCompanion(
+      id: id ?? this.id,
+      createdAt: createdAt ?? this.createdAt,
+      lastUpdatedAt: lastUpdatedAt ?? this.lastUpdatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      encryptedBlob: encryptedBlob ?? this.encryptedBlob,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (lastUpdatedAt.present) {
+      map['last_updated_at'] = Variable<int>(lastUpdatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (encryptedBlob.present) {
+      map['encrypted_blob'] = Variable<Uint8List>(encryptedBlob.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TransactionTemplatesCompanion(')
+          ..write('id: $id, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('lastUpdatedAt: $lastUpdatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('encryptedBlob: $encryptedBlob, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $AppSettingsTable extends AppSettings
     with TableInfo<$AppSettingsTable, AppSetting> {
   @override
@@ -3013,6 +3395,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $AssetsTable assets = $AssetsTable(this);
   late final $RecurringRulesTable recurringRules = $RecurringRulesTable(this);
   late final $SavingsGoalsTable savingsGoals = $SavingsGoalsTable(this);
+  late final $TransactionTemplatesTable transactionTemplates =
+      $TransactionTemplatesTable(this);
   late final $AppSettingsTable appSettings = $AppSettingsTable(this);
   late final TransactionDao transactionDao = TransactionDao(
     this as AppDatabase,
@@ -3027,6 +3411,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final SavingsGoalDao savingsGoalDao = SavingsGoalDao(
     this as AppDatabase,
   );
+  late final TransactionTemplateDao transactionTemplateDao =
+      TransactionTemplateDao(this as AppDatabase);
   late final SettingsDao settingsDao = SettingsDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -3040,6 +3426,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     assets,
     recurringRules,
     savingsGoals,
+    transactionTemplates,
     appSettings,
   ];
 }
@@ -4479,6 +4866,226 @@ typedef $$SavingsGoalsTableProcessedTableManager =
       SavingsGoalRow,
       PrefetchHooks Function()
     >;
+typedef $$TransactionTemplatesTableCreateCompanionBuilder =
+    TransactionTemplatesCompanion Function({
+      required String id,
+      required int createdAt,
+      required int lastUpdatedAt,
+      Value<bool> isDeleted,
+      required Uint8List encryptedBlob,
+      Value<int> rowid,
+    });
+typedef $$TransactionTemplatesTableUpdateCompanionBuilder =
+    TransactionTemplatesCompanion Function({
+      Value<String> id,
+      Value<int> createdAt,
+      Value<int> lastUpdatedAt,
+      Value<bool> isDeleted,
+      Value<Uint8List> encryptedBlob,
+      Value<int> rowid,
+    });
+
+class $$TransactionTemplatesTableFilterComposer
+    extends Composer<_$AppDatabase, $TransactionTemplatesTable> {
+  $$TransactionTemplatesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastUpdatedAt => $composableBuilder(
+    column: $table.lastUpdatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get encryptedBlob => $composableBuilder(
+    column: $table.encryptedBlob,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$TransactionTemplatesTableOrderingComposer
+    extends Composer<_$AppDatabase, $TransactionTemplatesTable> {
+  $$TransactionTemplatesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastUpdatedAt => $composableBuilder(
+    column: $table.lastUpdatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<Uint8List> get encryptedBlob => $composableBuilder(
+    column: $table.encryptedBlob,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$TransactionTemplatesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TransactionTemplatesTable> {
+  $$TransactionTemplatesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get lastUpdatedAt => $composableBuilder(
+    column: $table.lastUpdatedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get encryptedBlob => $composableBuilder(
+    column: $table.encryptedBlob,
+    builder: (column) => column,
+  );
+}
+
+class $$TransactionTemplatesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TransactionTemplatesTable,
+          TransactionTemplateRow,
+          $$TransactionTemplatesTableFilterComposer,
+          $$TransactionTemplatesTableOrderingComposer,
+          $$TransactionTemplatesTableAnnotationComposer,
+          $$TransactionTemplatesTableCreateCompanionBuilder,
+          $$TransactionTemplatesTableUpdateCompanionBuilder,
+          (
+            TransactionTemplateRow,
+            BaseReferences<
+              _$AppDatabase,
+              $TransactionTemplatesTable,
+              TransactionTemplateRow
+            >,
+          ),
+          TransactionTemplateRow,
+          PrefetchHooks Function()
+        > {
+  $$TransactionTemplatesTableTableManager(
+    _$AppDatabase db,
+    $TransactionTemplatesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TransactionTemplatesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TransactionTemplatesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$TransactionTemplatesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> lastUpdatedAt = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<Uint8List> encryptedBlob = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TransactionTemplatesCompanion(
+                id: id,
+                createdAt: createdAt,
+                lastUpdatedAt: lastUpdatedAt,
+                isDeleted: isDeleted,
+                encryptedBlob: encryptedBlob,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required int createdAt,
+                required int lastUpdatedAt,
+                Value<bool> isDeleted = const Value.absent(),
+                required Uint8List encryptedBlob,
+                Value<int> rowid = const Value.absent(),
+              }) => TransactionTemplatesCompanion.insert(
+                id: id,
+                createdAt: createdAt,
+                lastUpdatedAt: lastUpdatedAt,
+                isDeleted: isDeleted,
+                encryptedBlob: encryptedBlob,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$TransactionTemplatesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TransactionTemplatesTable,
+      TransactionTemplateRow,
+      $$TransactionTemplatesTableFilterComposer,
+      $$TransactionTemplatesTableOrderingComposer,
+      $$TransactionTemplatesTableAnnotationComposer,
+      $$TransactionTemplatesTableCreateCompanionBuilder,
+      $$TransactionTemplatesTableUpdateCompanionBuilder,
+      (
+        TransactionTemplateRow,
+        BaseReferences<
+          _$AppDatabase,
+          $TransactionTemplatesTable,
+          TransactionTemplateRow
+        >,
+      ),
+      TransactionTemplateRow,
+      PrefetchHooks Function()
+    >;
 typedef $$AppSettingsTableCreateCompanionBuilder =
     AppSettingsCompanion Function({
       required String id,
@@ -4661,6 +5268,8 @@ class $AppDatabaseManager {
       $$RecurringRulesTableTableManager(_db, _db.recurringRules);
   $$SavingsGoalsTableTableManager get savingsGoals =>
       $$SavingsGoalsTableTableManager(_db, _db.savingsGoals);
+  $$TransactionTemplatesTableTableManager get transactionTemplates =>
+      $$TransactionTemplatesTableTableManager(_db, _db.transactionTemplates);
   $$AppSettingsTableTableManager get appSettings =>
       $$AppSettingsTableTableManager(_db, _db.appSettings);
 }
