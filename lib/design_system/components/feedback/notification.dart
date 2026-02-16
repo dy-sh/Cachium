@@ -312,7 +312,7 @@ class NotificationOverlay {
 
     _currentEntry = OverlayEntry(
       builder: (context) => Positioned(
-        top: MediaQuery.of(item.context).padding.top + AppSpacing.md,
+        top: (MediaQuery.maybeOf(context)?.padding.top ?? 0) + AppSpacing.md,
         left: 0,
         right: 0,
         child: Material(
