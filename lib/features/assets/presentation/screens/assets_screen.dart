@@ -168,14 +168,12 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
                 data: (assets) {
                   final filtered = _filterAssets(assets);
                   if (filtered.isEmpty) {
-                    return Center(
-                      child: EmptyState(
-                        icon: LucideIcons.box,
-                        title: assets.isEmpty ? 'No assets yet' : 'No matching assets',
-                        subtitle: assets.isEmpty
-                            ? 'Track your physical assets and their total cost'
-                            : 'Try a different filter or search',
-                      ),
+                    return EmptyState.centered(
+                      icon: LucideIcons.box,
+                      title: assets.isEmpty ? 'No assets yet' : 'No matching assets',
+                      subtitle: assets.isEmpty
+                          ? 'Track your physical assets and their total cost'
+                          : 'Try a different filter or search',
                     );
                   }
                   return _buildAssetList(filtered, assets, intensity);

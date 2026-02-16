@@ -133,10 +133,6 @@ class SavingsGoalsScreen extends ConsumerWidget {
   }
 
   void _showAddGoalSheet(BuildContext context, WidgetRef ref) {
-    final nameController = TextEditingController();
-    final targetController = TextEditingController();
-    final currentController = TextEditingController(text: '0');
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -144,121 +140,7 @@ class SavingsGoalsScreen extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          left: AppSpacing.screenPadding,
-          right: AppSpacing.screenPadding,
-          top: AppSpacing.lg,
-          bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('New Savings Goal', style: AppTypography.h4),
-            const SizedBox(height: AppSpacing.lg),
-            TextField(
-              controller: nameController,
-              style: AppTypography.bodyMedium,
-              decoration: InputDecoration(
-                labelText: 'Name',
-                labelStyle: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: AppColors.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: AppColors.textPrimary),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            TextField(
-              controller: targetController,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              style: AppTypography.bodyMedium,
-              decoration: InputDecoration(
-                labelText: 'Target Amount',
-                labelStyle: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: AppColors.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: AppColors.textPrimary),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            TextField(
-              controller: currentController,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              style: AppTypography.bodyMedium,
-              decoration: InputDecoration(
-                labelText: 'Already Saved',
-                labelStyle: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: AppColors.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: AppColors.textPrimary),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.textPrimary,
-                  foregroundColor: AppColors.background,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                ),
-                onPressed: () async {
-                  final name = nameController.text.trim();
-                  final target =
-                      double.tryParse(targetController.text.trim());
-                  final current =
-                      double.tryParse(currentController.text.trim()) ?? 0;
-
-                  if (name.isEmpty || target == null || target <= 0) return;
-
-                  await ref
-                      .read(savingsGoalsProvider.notifier)
-                      .addGoal(
-                        name: name,
-                        targetAmount: target,
-                        currentAmount: current,
-                        colorIndex: DateTime.now().millisecond % 14,
-                      );
-
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                    context.showSuccessNotification('Savings goal created');
-                  }
-                },
-                child: Text('Create Goal', style: AppTypography.labelMedium),
-              ),
-            ),
-          ],
-        ),
-      ),
+      builder: (_) => _AddGoalSheet(ref: ref),
     );
   }
 }
@@ -450,15 +332,16 @@ class _SavingsGoalCard extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.surface,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (context) => Padding(
+      builder: (sheetContext) => Padding(
         padding: EdgeInsets.only(
           left: AppSpacing.screenPadding,
           right: AppSpacing.screenPadding,
           top: AppSpacing.lg,
-          bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
+          bottom: MediaQuery.of(sheetContext).viewInsets.bottom + AppSpacing.lg,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -510,7 +393,7 @@ class _SavingsGoalCard extends ConsumerWidget {
                       .contribute(goal.id, amount);
 
                   if (context.mounted) {
-                    Navigator.pop(context);
+                    Navigator.pop(sheetContext);
                     context.showSuccessNotification('Added to savings goal');
                   }
                 },
@@ -519,6 +402,195 @@ class _SavingsGoalCard extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _AddGoalSheet extends StatefulWidget {
+  final WidgetRef ref;
+
+  const _AddGoalSheet({required this.ref});
+
+  @override
+  State<_AddGoalSheet> createState() => _AddGoalSheetState();
+}
+
+class _AddGoalSheetState extends State<_AddGoalSheet> {
+  final _nameController = TextEditingController();
+  final _targetController = TextEditingController();
+  final _currentController = TextEditingController(text: '0');
+  String? _error;
+  bool _isCreating = false;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _targetController.dispose();
+    _currentController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _create() async {
+    final name = _nameController.text.trim();
+    final target = double.tryParse(_targetController.text.trim());
+    final current = double.tryParse(_currentController.text.trim()) ?? 0;
+
+    if (name.isEmpty) {
+      setState(() => _error = 'Enter a name');
+      return;
+    }
+    if (target == null || target <= 0) {
+      setState(() => _error = 'Enter a valid target amount');
+      return;
+    }
+
+    setState(() {
+      _error = null;
+      _isCreating = true;
+    });
+
+    try {
+      await widget.ref.read(savingsGoalsProvider.notifier).addGoal(
+            name: name,
+            targetAmount: target,
+            currentAmount: current,
+            colorIndex: DateTime.now().millisecond % 14,
+          );
+
+      if (mounted) {
+        Navigator.pop(context);
+        context.showSuccessNotification('Savings goal created');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isCreating = false;
+          _error = 'Failed: $e';
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: AppSpacing.screenPadding,
+        right: AppSpacing.screenPadding,
+        top: AppSpacing.lg,
+        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('New Savings Goal', style: AppTypography.h4),
+          if (_error != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              _error!,
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.expense,
+              ),
+            ),
+          ],
+          const SizedBox(height: AppSpacing.lg),
+          TextField(
+            controller: _nameController,
+            autofocus: true,
+            style: AppTypography.bodyMedium,
+            decoration: InputDecoration(
+              labelText: 'Name',
+              labelStyle: AppTypography.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: AppColors.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: AppColors.textPrimary),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          TextField(
+            controller: _targetController,
+            keyboardType:
+                const TextInputType.numberWithOptions(decimal: true),
+            style: AppTypography.bodyMedium,
+            decoration: InputDecoration(
+              labelText: 'Target Amount',
+              labelStyle: AppTypography.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: AppColors.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: AppColors.textPrimary),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          TextField(
+            controller: _currentController,
+            keyboardType:
+                const TextInputType.numberWithOptions(decimal: true),
+            style: AppTypography.bodyMedium,
+            decoration: InputDecoration(
+              labelText: 'Already Saved',
+              labelStyle: AppTypography.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: AppColors.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: AppColors.textPrimary),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          SizedBox(
+            width: double.infinity,
+            child: GestureDetector(
+              onTap: _isCreating ? null : _create,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: _isCreating
+                      ? AppColors.textTertiary
+                      : AppColors.textPrimary,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Center(
+                  child: _isCreating
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.background,
+                          ),
+                        )
+                      : Text(
+                          'Create Goal',
+                          style: AppTypography.labelMedium.copyWith(
+                            color: AppColors.background,
+                          ),
+                        ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -22,7 +22,6 @@ class RecurringRulesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final rulesAsync = ref.watch(recurringRulesProvider);
-    final intensity = ref.watch(colorIntensityProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -72,12 +71,11 @@ class RecurringRulesScreen extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.screenPadding,
                       ),
-                      child: EmptyState(
+                      child: EmptyState.centered(
                         icon: LucideIcons.repeat,
                         title: 'No Recurring Transactions',
                         subtitle:
                             'Create recurring rules from the transaction form to auto-generate transactions.',
-                        color: AppColors.getAccentColor(3, intensity),
                       ),
                     );
                   }

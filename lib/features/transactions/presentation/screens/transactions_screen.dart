@@ -590,7 +590,6 @@ class _TransactionGroupWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final intensity = ref.watch(colorIntensityProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -605,28 +604,14 @@ class _TransactionGroupWidget extends ConsumerWidget {
                   color: AppColors.textSecondary,
                 ),
               ),
-              Row(
-                children: [
-                  if (group.totalIncome > 0) ...[
-                    Text(
-                      '+${CurrencyFormatter.format(group.totalIncome)}',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.getTransactionColor('income', intensity),
-                        fontSize: 11,
-                      ),
-                    ),
-                    if (group.totalExpense > 0)
-                      const SizedBox(width: AppSpacing.xs),
-                  ],
-                  if (group.totalExpense > 0)
-                    Text(
-                      '-${CurrencyFormatter.format(group.totalExpense)}',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.getTransactionColor('expense', intensity),
-                        fontSize: 11,
-                      ),
-                    ),
-                ],
+              Text(
+                CurrencyFormatter.formatWithSign(
+                  group.netAmount.abs(),
+                  group.netAmount >= 0 ? 'income' : 'expense',
+                ),
+                style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.textTertiary,
+                ),
               ),
             ],
           ),
@@ -636,7 +621,6 @@ class _TransactionGroupWidget extends ConsumerWidget {
       ],
     );
   }
-
 }
 
 class _TransactionItem extends ConsumerWidget {

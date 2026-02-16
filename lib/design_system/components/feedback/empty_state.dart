@@ -1,23 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 
 /// A reusable empty state component for displaying when no items are available.
 ///
 /// Supports two layout variants:
-/// - [compact] (default): Horizontal row layout with icon, title, subtitle, and optional chevron.
+/// - [compact] (default): Horizontal row layout with icon, title, subtitle.
 ///   Ideal for inline usage within lists or cards.
-/// - [centered]: Vertically stacked layout with larger icon and optional action button.
+/// - [centered]: Vertically centered layout with icon, title, subtitle, and optional add button.
 ///   Ideal for full-section or full-screen empty states.
 class EmptyState extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
   final VoidCallback? onTap;
-  final Color? color;
 
   /// Optional label for a CTA button (centered variant only).
   final String? actionLabel;
@@ -31,7 +29,6 @@ class EmptyState extends StatelessWidget {
     required this.title,
     required this.subtitle,
     this.onTap,
-    this.color,
     this.actionLabel,
     this.centered = false,
   });
@@ -43,7 +40,6 @@ class EmptyState extends StatelessWidget {
     required this.title,
     required this.subtitle,
     this.onTap,
-    this.color,
     this.actionLabel,
   }) : centered = true;
 
@@ -53,36 +49,22 @@ class EmptyState extends StatelessWidget {
   }
 
   Widget _buildCompact() {
-    final effectiveColor = color ?? AppColors.expense;
-
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          borderRadius: AppRadius.mdAll,
-          color: effectiveColor.withValues(alpha: 0.08),
-          border: Border.all(
-            color: effectiveColor.withValues(alpha: 0.3),
-            width: 1,
-          ),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: effectiveColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                size: 18,
-                color: effectiveColor,
-              ),
+            Icon(
+              icon,
+              size: 20,
+              color: AppColors.textTertiary,
             ),
-            const SizedBox(width: AppSpacing.sm),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,15 +72,14 @@ class EmptyState extends StatelessWidget {
                   Text(
                     title,
                     style: AppTypography.labelMedium.copyWith(
-                      color: effectiveColor,
-                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
                     style: AppTypography.labelSmall.copyWith(
-                      color: effectiveColor.withValues(alpha: 0.7),
+                      color: AppColors.textTertiary,
                     ),
                   ),
                 ],
@@ -107,8 +88,8 @@ class EmptyState extends StatelessWidget {
             if (onTap != null)
               Icon(
                 LucideIcons.chevronRight,
-                size: 18,
-                color: effectiveColor.withValues(alpha: 0.6),
+                size: 16,
+                color: AppColors.textTertiary,
               ),
           ],
         ),
@@ -117,42 +98,25 @@ class EmptyState extends StatelessWidget {
   }
 
   Widget _buildCentered() {
-    final effectiveColor = color ?? AppColors.textTertiary;
-
-    return GestureDetector(
-      onTap: onTap,
+    return Center(
       child: Container(
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.xl,
           vertical: AppSpacing.xxl,
         ),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
-        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: effectiveColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                icon,
-                size: 24,
-                color: effectiveColor,
-              ),
+            Icon(
+              icon,
+              size: 32,
+              color: AppColors.textTertiary,
             ),
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               title,
               style: AppTypography.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.center,
             ),
@@ -164,25 +128,35 @@ class EmptyState extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            if (actionLabel != null) ...[
-              const SizedBox(height: AppSpacing.lg),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.lg,
-                  vertical: AppSpacing.sm,
-                ),
-                decoration: BoxDecoration(
-                  color: effectiveColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: effectiveColor.withValues(alpha: 0.3),
+            if (actionLabel != null && onTap != null) ...[
+              const SizedBox(height: AppSpacing.xl),
+              GestureDetector(
+                onTap: onTap,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                    vertical: AppSpacing.sm,
                   ),
-                ),
-                child: Text(
-                  actionLabel!,
-                  style: AppTypography.labelSmall.copyWith(
-                    color: effectiveColor,
-                    fontWeight: FontWeight.w600,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        LucideIcons.plus,
+                        size: 16,
+                        color: AppColors.textSecondary,
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      Text(
+                        actionLabel!,
+                        style: AppTypography.labelMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
