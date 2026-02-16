@@ -270,6 +270,7 @@ class DatabaseManagementNotifier extends Notifier<AsyncValue<void>> {
       final accountRepo = ref.read(accountRepositoryProvider);
       final categoryRepo = ref.read(categoryRepositoryProvider);
       final transactionRepo = ref.read(transactionRepositoryProvider);
+      final assetRepo = ref.read(assetRepositoryProvider);
 
       // Wrap all database operations in a transaction to prevent locking
       await db.transaction(() async {
@@ -277,6 +278,7 @@ class DatabaseManagementNotifier extends Notifier<AsyncValue<void>> {
         await db.deleteAllTransactions();
         await db.deleteAllAccounts();
         await db.deleteAllCategories();
+        await db.deleteAllAssets();
 
         // Seed accounts (use upsert to handle duplicates)
         for (final account in DemoData.accounts) {
@@ -285,6 +287,11 @@ class DatabaseManagementNotifier extends Notifier<AsyncValue<void>> {
 
         // Seed categories (default categories - uses upsert internally)
         await categoryRepo.seedDefaultCategories();
+
+        // Seed assets
+        for (final asset in DemoData.assets) {
+          await assetRepo.createAsset(asset);
+        }
 
         // Seed transactions (use upsert to handle duplicates)
         for (final transaction in DemoData.transactions) {

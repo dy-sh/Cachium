@@ -1,423 +1,328 @@
+import 'package:lucide_icons/lucide_icons.dart';
+
 import '../../features/accounts/data/models/account.dart';
+import '../../features/assets/data/models/asset.dart';
 import '../../features/transactions/data/models/transaction.dart';
 
 class DemoData {
+  // ─── Account IDs ───────────────────────────────────────────────
+  static const _checking = 'demo-acc-checking-001';
+  static const _credit = 'demo-acc-credit-002';
+  static const _cash = 'demo-acc-cash-003';
+  static const _savings = 'demo-acc-savings-004';
+
+  // ─── Asset IDs ─────────────────────────────────────────────────
+  static const _assetCar = 'demo-asset-car-001';
+  static const _assetLaptop = 'demo-asset-laptop-002';
+  static const _assetHeadphones = 'demo-asset-headphones-003';
+  static const _assetBike = 'demo-asset-bike-004';
+  static const _assetCamera = 'demo-asset-camera-005';
+
+  // ─── Category IDs (from DefaultCategories) ─────────────────────
+  // Income
+  static const _catSalary = 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d';
+  static const _catFreelance = 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e';
+  // Expense - Food subcategories
+  static const _catGroceries = 'f7a8b9c0-d1e2-4f3a-4b5c-6d7e8f9a0b1c';
+  static const _catRestaurants = 'f8a9b0c1-d2e3-4f4a-5b6c-7d8e9f0a1b2c';
+  static const _catDelivery = 'f9a0b1c2-d3e4-4f5a-6b7c-8d9e0f1a2b3c';
+  // Expense - Transport
+  static const _catTransport = 'a7b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1d';
+  static const _catFuel = 'a8b9c0d1-e2f3-4a4b-5c6d-7e8f9a0b1c2d';
+  static const _catPublicTransit = 'a9b0c1d2-e3f4-4a5b-6c7d-8e9f0a1b2c3d';
+  // Expense - Shopping subcategories
+  static const _catClothes = 'b9c0d1e2-f3a4-4b5c-6d7e-8f9a0b1c2d3e';
+  static const _catElectronics = 'b0c1d2e3-f4a5-4b6c-7d8e-9f0a1b2c3d4e';
+  // Expense - standalone
+  static const _catEntertainment = 'd0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a';
+  static const _catUtilities = 'c0d1e2f3-a4b5-4c6d-7e8f-9a0b1c2d3e4f';
+  static const _catRent = 'c1d2e3f4-a5b6-4c7d-8e9f-0a1b2c3d4e5f';
+  static const _catInsurance = 'c2d3e4f5-a6b7-4c8d-9e0f-1a2b3c4d5e6f';
+  static const _catHealth = 'd1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a';
+  static const _catEducation = 'd2e3f4a5-b6c7-4d8e-9f0a-1b2c3d4e5f6a';
+
+  // ─── Accounts ──────────────────────────────────────────────────
   static final List<Account> accounts = [
     Account(
-      id: '550e8400-e29b-41d4-a716-446655440001',
-      name: 'Chase Checking',
+      id: _checking,
+      name: 'Checking',
       type: AccountType.bank,
-      balance: 5420.50,
-      initialBalance: 5420.50,
-      createdAt: DateTime.now().subtract(const Duration(days: 365)),
+      balance: 4850.00,
+      initialBalance: 4850.00,
+      createdAt: DateTime.now().subtract(const Duration(days: 120)),
     ),
     Account(
-      id: '550e8400-e29b-41d4-a716-446655440002',
-      name: 'Visa Platinum',
+      id: _credit,
+      name: 'Credit Card',
       type: AccountType.creditCard,
-      balance: -1250.00,
-      initialBalance: -1250.00,
-      createdAt: DateTime.now().subtract(const Duration(days: 300)),
+      balance: -1280.00,
+      initialBalance: -1280.00,
+      createdAt: DateTime.now().subtract(const Duration(days: 120)),
     ),
     Account(
-      id: '550e8400-e29b-41d4-a716-446655440003',
+      id: _cash,
       name: 'Cash',
       type: AccountType.cash,
-      balance: 340.00,
-      initialBalance: 340.00,
-      createdAt: DateTime.now().subtract(const Duration(days: 200)),
+      balance: 185.00,
+      initialBalance: 185.00,
+      createdAt: DateTime.now().subtract(const Duration(days: 120)),
     ),
     Account(
-      id: '550e8400-e29b-41d4-a716-446655440004',
-      name: 'Emergency Fund',
+      id: _savings,
+      name: 'Savings',
       type: AccountType.savings,
-      balance: 12500.00,
-      initialBalance: 12500.00,
-      createdAt: DateTime.now().subtract(const Duration(days: 180)),
-    ),
-    Account(
-      id: '550e8400-e29b-41d4-a716-446655440005',
-      name: 'Fidelity 401k',
-      type: AccountType.investment,
-      balance: 45230.75,
-      initialBalance: 45230.75,
-      createdAt: DateTime.now().subtract(const Duration(days: 150)),
-    ),
-    Account(
-      id: '550e8400-e29b-41d4-a716-446655440006',
-      name: 'PayPal',
-      type: AccountType.wallet,
-      balance: 850.25,
-      initialBalance: 850.25,
-      createdAt: DateTime.now().subtract(const Duration(days: 100)),
+      balance: 9200.00,
+      initialBalance: 9200.00,
+      createdAt: DateTime.now().subtract(const Duration(days: 120)),
     ),
   ];
 
+  // ─── Assets ────────────────────────────────────────────────────
+  static final List<Asset> assets = [
+    Asset(
+      id: _assetCar,
+      name: 'Car',
+      icon: LucideIcons.car,
+      colorIndex: 17, // blue
+      note: 'Daily commuter',
+      sortOrder: 0,
+      createdAt: DateTime.now().subtract(const Duration(days: 100)),
+    ),
+    Asset(
+      id: _assetLaptop,
+      name: 'Laptop',
+      icon: LucideIcons.laptop,
+      colorIndex: 13, // cyan
+      note: 'Work & freelance',
+      sortOrder: 1,
+      createdAt: DateTime.now().subtract(const Duration(days: 90)),
+    ),
+    Asset(
+      id: _assetHeadphones,
+      name: 'Headphones',
+      icon: LucideIcons.headphones,
+      colorIndex: 19, // violet
+      sortOrder: 2,
+      createdAt: DateTime.now().subtract(const Duration(days: 45)),
+    ),
+    Asset(
+      id: _assetBike,
+      name: 'Bicycle',
+      icon: LucideIcons.bike,
+      colorIndex: 9, // green
+      status: AssetStatus.sold,
+      note: 'Sold on marketplace',
+      sortOrder: 3,
+      createdAt: DateTime.now().subtract(const Duration(days: 80)),
+    ),
+    Asset(
+      id: _assetCamera,
+      name: 'Camera',
+      icon: LucideIcons.camera,
+      colorIndex: 3, // orange
+      note: 'Photography hobby',
+      sortOrder: 4,
+      createdAt: DateTime.now().subtract(const Duration(days: 70)),
+    ),
+  ];
+
+  // ─── Transactions ──────────────────────────────────────────────
   static List<Transaction> get transactions {
     final now = DateTime.now();
-    return [
-      // === CONSECUTIVE DAYS FOR STREAKS (today through 7 days ago) ===
-      // Today
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd430c1',
-        amount: 85.50,
-        type: TransactionType.expense,
-        categoryId: 'f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c',
-        accountId: '550e8400-e29b-41d4-a716-446655440002',
-        date: now,
-        note: 'Grocery shopping',
-        merchant: 'Whole Foods',
-        createdAt: now,
-      ),
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd430c2',
-        amount: 12.00,
-        type: TransactionType.expense,
-        categoryId: 'a7b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1d',
-        accountId: '550e8400-e29b-41d4-a716-446655440003',
-        date: now,
-        note: 'Ride to office',
-        merchant: 'Uber',
-        createdAt: now,
-      ),
-      // Yesterday
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd430c3',
-        amount: 3500.00,
-        type: TransactionType.income,
-        categoryId: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
-        accountId: '550e8400-e29b-41d4-a716-446655440001',
-        date: now.subtract(const Duration(days: 1)),
-        note: 'Monthly salary',
-        merchant: 'Acme Corp',
-        createdAt: now.subtract(const Duration(days: 1)),
-      ),
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd430c5',
-        amount: 28.50,
-        type: TransactionType.expense,
-        categoryId: 'f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c',
-        accountId: '550e8400-e29b-41d4-a716-446655440003',
-        date: now.subtract(const Duration(days: 1)),
-        note: 'Lunch with colleagues',
-        merchant: 'Chipotle',
-        createdAt: now.subtract(const Duration(days: 1)),
-      ),
-      // 2 days ago
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd430c6',
-        amount: 150.00,
-        type: TransactionType.expense,
-        categoryId: 'b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e',
-        accountId: '550e8400-e29b-41d4-a716-446655440002',
-        date: now.subtract(const Duration(days: 2)),
-        note: 'New running shoes',
-        merchant: 'Nike',
-        createdAt: now.subtract(const Duration(days: 2)),
-      ),
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd430c7',
-        amount: 250.00,
-        type: TransactionType.income,
-        categoryId: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
-        accountId: '550e8400-e29b-41d4-a716-446655440006',
-        date: now.subtract(const Duration(days: 2)),
-        note: 'Logo design project',
-        merchant: 'Fiverr',
-        createdAt: now.subtract(const Duration(days: 2)),
-      ),
-      // 3 days ago
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd430c8',
-        amount: 95.00,
-        type: TransactionType.expense,
-        categoryId: 'c9d0e1f2-a3b4-4c5d-6e7f-8a9b0c1d2e3f',
-        accountId: '550e8400-e29b-41d4-a716-446655440001',
-        date: now.subtract(const Duration(days: 3)),
-        note: 'Electric bill',
-        merchant: 'Con Edison',
-        createdAt: now.subtract(const Duration(days: 3)),
-      ),
-      // 4 days ago (added for consecutive streak)
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd4a001',
-        amount: 15.00,
-        type: TransactionType.expense,
-        categoryId: 'f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c',
-        accountId: '550e8400-e29b-41d4-a716-446655440003',
-        date: now.subtract(const Duration(days: 4)),
-        note: 'Coffee and snacks',
-        merchant: 'Starbucks',
-        createdAt: now.subtract(const Duration(days: 4)),
-      ),
-      // 5 days ago
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd430ca',
-        amount: 500.00,
-        type: TransactionType.expense,
-        categoryId: 'd3e4f5a6-b7c8-4d9e-0f1a-2b3c4d5e6f7a',
-        accountId: '550e8400-e29b-41d4-a716-446655440002',
-        date: now.subtract(const Duration(days: 5)),
-        note: 'Flight tickets to NYC',
-        merchant: 'Delta Airlines',
-        createdAt: now.subtract(const Duration(days: 5)),
-      ),
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd430cb',
-        amount: 75.00,
-        type: TransactionType.income,
-        categoryId: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
-        accountId: '550e8400-e29b-41d4-a716-446655440003',
-        date: now.subtract(const Duration(days: 5)),
-        note: 'Birthday gift from grandma',
-        createdAt: now.subtract(const Duration(days: 5)),
-      ),
-      // 6 days ago (added for consecutive streak)
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd4a002',
-        amount: 22.00,
-        type: TransactionType.expense,
-        categoryId: 'f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c',
-        accountId: '550e8400-e29b-41d4-a716-446655440002',
-        date: now.subtract(const Duration(days: 6)),
-        note: 'Fast food',
-        merchant: 'McDonalds',
-        createdAt: now.subtract(const Duration(days: 6)),
-      ),
-      // 7 days ago
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd430cc',
-        amount: 200.00,
-        type: TransactionType.expense,
-        categoryId: 'd2e3f4a5-b6c7-4d8e-9f0a-1b2c3d4e5f6a',
-        accountId: '550e8400-e29b-41d4-a716-446655440001',
-        date: now.subtract(const Duration(days: 7)),
-        note: 'Online course subscription',
-        merchant: 'Udemy',
-        createdAt: now.subtract(const Duration(days: 7)),
-      ),
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd430cd',
-        amount: 42.00,
-        type: TransactionType.expense,
-        categoryId: 'f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c',
-        accountId: '550e8400-e29b-41d4-a716-446655440002',
-        date: now.subtract(const Duration(days: 7)),
-        note: 'Dinner',
-        merchant: 'Olive Garden',
-        createdAt: now.subtract(const Duration(days: 7)),
-      ),
-      // 8 days ago
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd4a003',
-        amount: 8.50,
-        type: TransactionType.expense,
-        categoryId: 'f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c',
-        accountId: '550e8400-e29b-41d4-a716-446655440003',
-        date: now.subtract(const Duration(days: 8)),
-        note: 'Breakfast',
-        merchant: 'Dunkin',
-        createdAt: now.subtract(const Duration(days: 8)),
-      ),
-      // 9 days ago
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd4a004',
-        amount: 25.00,
-        type: TransactionType.expense,
-        categoryId: 'f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c',
-        accountId: '550e8400-e29b-41d4-a716-446655440002',
-        date: now.subtract(const Duration(days: 9)),
-        note: 'Takeout dinner',
-        merchant: 'DoorDash',
-        createdAt: now.subtract(const Duration(days: 9)),
-      ),
-      // 10 days ago
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd430ce',
-        amount: 1200.00,
-        type: TransactionType.income,
-        categoryId: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
-        accountId: '550e8400-e29b-41d4-a716-446655440005',
-        date: now.subtract(const Duration(days: 10)),
-        note: 'Dividend payment',
-        merchant: 'Fidelity',
-        createdAt: now.subtract(const Duration(days: 10)),
-      ),
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd430cf',
-        amount: 180.00,
-        type: TransactionType.expense,
-        categoryId: 'c9d0e1f2-a3b4-4c5d-6e7f-8a9b0c1d2e3f',
-        accountId: '550e8400-e29b-41d4-a716-446655440001',
-        date: now.subtract(const Duration(days: 10)),
-        note: 'Internet + Phone bill',
-        merchant: 'Verizon',
-        createdAt: now.subtract(const Duration(days: 10)),
-      ),
+    int n = 0;
+    String txId() => 'demo-tx-${(++n).toString().padLeft(3, '0')}';
 
-      // === RECURRING SUBSCRIPTIONS (3+ transactions with same amount/category/merchant at ~30 day intervals) ===
+    // Date in a specific month (0=current, 1=last, 2=two months ago)
+    DateTime md(int monthsAgo, int day) =>
+        DateTime(now.year, now.month - monthsAgo, day);
 
-      // Netflix subscription - $15.99/month (Entertainment category)
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd4s001',
-        amount: 16.00,
-        type: TransactionType.expense,
-        categoryId: 'd0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a',
-        accountId: '550e8400-e29b-41d4-a716-446655440002',
-        date: now.subtract(const Duration(days: 1)),
-        note: 'Monthly subscription',
-        merchant: 'Netflix',
-        createdAt: now.subtract(const Duration(days: 1)),
-      ),
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd4s002',
-        amount: 16.00,
-        type: TransactionType.expense,
-        categoryId: 'd0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a',
-        accountId: '550e8400-e29b-41d4-a716-446655440002',
-        date: now.subtract(const Duration(days: 31)),
-        note: 'Monthly subscription',
-        merchant: 'Netflix',
-        createdAt: now.subtract(const Duration(days: 31)),
-      ),
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd4s003',
-        amount: 16.00,
-        type: TransactionType.expense,
-        categoryId: 'd0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a',
-        accountId: '550e8400-e29b-41d4-a716-446655440002',
-        date: now.subtract(const Duration(days: 61)),
-        note: 'Monthly subscription',
-        merchant: 'Netflix',
-        createdAt: now.subtract(const Duration(days: 61)),
-      ),
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd4s004',
-        amount: 16.00,
-        type: TransactionType.expense,
-        categoryId: 'd0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a',
-        accountId: '550e8400-e29b-41d4-a716-446655440002',
-        date: now.subtract(const Duration(days: 91)),
-        note: 'Monthly subscription',
-        merchant: 'Netflix',
-        createdAt: now.subtract(const Duration(days: 91)),
-      ),
+    // Recent date relative to today
+    DateTime ago(int days) =>
+        DateTime(now.year, now.month, now.day - days);
 
-      // Spotify subscription - $10.99/month (Entertainment category)
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd4s005',
-        amount: 11.00,
-        type: TransactionType.expense,
-        categoryId: 'd0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a',
-        accountId: '550e8400-e29b-41d4-a716-446655440002',
-        date: now.subtract(const Duration(days: 5)),
-        note: 'Premium subscription',
-        merchant: 'Spotify',
-        createdAt: now.subtract(const Duration(days: 5)),
-      ),
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd4s006',
-        amount: 11.00,
-        type: TransactionType.expense,
-        categoryId: 'd0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a',
-        accountId: '550e8400-e29b-41d4-a716-446655440002',
-        date: now.subtract(const Duration(days: 35)),
-        note: 'Premium subscription',
-        merchant: 'Spotify',
-        createdAt: now.subtract(const Duration(days: 35)),
-      ),
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd4s007',
-        amount: 11.00,
-        type: TransactionType.expense,
-        categoryId: 'd0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a',
-        accountId: '550e8400-e29b-41d4-a716-446655440002',
-        date: now.subtract(const Duration(days: 65)),
-        note: 'Premium subscription',
-        merchant: 'Spotify',
-        createdAt: now.subtract(const Duration(days: 65)),
-      ),
+    // Transaction helper
+    Transaction tx(
+      double amount,
+      TransactionType type,
+      String categoryId,
+      String accountId,
+      DateTime date, {
+      String? note,
+      String? merchant,
+      String? assetId,
+    }) {
+      return Transaction(
+        id: txId(),
+        amount: amount,
+        type: type,
+        categoryId: categoryId,
+        accountId: accountId,
+        date: date,
+        note: note,
+        merchant: merchant,
+        assetId: assetId,
+        createdAt: date,
+      );
+    }
 
-      // Gym membership - $35/month (Health & Fitness category)
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd430c9',
-        amount: 35.00,
-        type: TransactionType.expense,
-        categoryId: 'd1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a',
-        accountId: '550e8400-e29b-41d4-a716-446655440002',
-        date: now.subtract(const Duration(days: 3)),
-        note: 'Gym membership',
-        merchant: 'Planet Fitness',
-        createdAt: now.subtract(const Duration(days: 3)),
-      ),
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd4s008',
-        amount: 35.00,
-        type: TransactionType.expense,
-        categoryId: 'd1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a',
-        accountId: '550e8400-e29b-41d4-a716-446655440002',
-        date: now.subtract(const Duration(days: 33)),
-        note: 'Gym membership',
-        merchant: 'Planet Fitness',
-        createdAt: now.subtract(const Duration(days: 33)),
-      ),
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd4s009',
-        amount: 35.00,
-        type: TransactionType.expense,
-        categoryId: 'd1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a',
-        accountId: '550e8400-e29b-41d4-a716-446655440002',
-        date: now.subtract(const Duration(days: 63)),
-        note: 'Gym membership',
-        merchant: 'Planet Fitness',
-        createdAt: now.subtract(const Duration(days: 63)),
-      ),
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd4s010',
-        amount: 35.00,
-        type: TransactionType.expense,
-        categoryId: 'd1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a',
-        accountId: '550e8400-e29b-41d4-a716-446655440002',
-        date: now.subtract(const Duration(days: 93)),
-        note: 'Gym membership',
-        merchant: 'Planet Fitness',
-        createdAt: now.subtract(const Duration(days: 93)),
-      ),
+    const inc = TransactionType.income;
+    const exp = TransactionType.expense;
 
-      // iCloud storage - $2.99/month (Technology category)
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd4s011',
-        amount: 3.00,
-        type: TransactionType.expense,
-        categoryId: 'd2e3f4a5-b6c7-4d8e-9f0a-1b2c3d4e5f6a',
-        accountId: '550e8400-e29b-41d4-a716-446655440002',
-        date: now.subtract(const Duration(days: 8)),
-        note: 'iCloud+ storage',
-        merchant: 'Apple',
-        createdAt: now.subtract(const Duration(days: 8)),
-      ),
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd4s012',
-        amount: 3.00,
-        type: TransactionType.expense,
-        categoryId: 'd2e3f4a5-b6c7-4d8e-9f0a-1b2c3d4e5f6a',
-        accountId: '550e8400-e29b-41d4-a716-446655440002',
-        date: now.subtract(const Duration(days: 38)),
-        note: 'iCloud+ storage',
-        merchant: 'Apple',
-        createdAt: now.subtract(const Duration(days: 38)),
-      ),
-      Transaction(
-        id: '6ba7b810-9dad-11d1-80b4-00c04fd4s013',
-        amount: 3.00,
-        type: TransactionType.expense,
-        categoryId: 'd2e3f4a5-b6c7-4d8e-9f0a-1b2c3d4e5f6a',
-        accountId: '550e8400-e29b-41d4-a716-446655440002',
-        date: now.subtract(const Duration(days: 68)),
-        note: 'iCloud+ storage',
-        merchant: 'Apple',
-        createdAt: now.subtract(const Duration(days: 68)),
-      ),
+    final all = <Transaction>[
+      // ═════════════════════════════════════════════════════════════
+      // 2 MONTHS AGO
+      // ═════════════════════════════════════════════════════════════
+      tx(4200, inc, _catSalary, _checking, md(2, 1),
+          note: 'Monthly salary', merchant: 'Employer'),
+      tx(1450, exp, _catRent, _checking, md(2, 1),
+          note: 'Monthly rent', merchant: 'Landlord'),
+      tx(92, exp, _catGroceries, _credit, md(2, 3),
+          note: 'Weekly groceries', merchant: 'Grocery store'),
+      tx(15.99, exp, _catEntertainment, _credit, md(2, 5),
+          note: 'Streaming subscription', merchant: 'Streaming service'),
+      tx(7.50, exp, _catRestaurants, _cash, md(2, 6),
+          note: 'Coffee & pastry', merchant: 'Coffee shop'),
+      tx(48, exp, _catRestaurants, _credit, md(2, 8),
+          note: 'Dinner with friends', merchant: 'Restaurant'),
+      tx(42, exp, _catFuel, _credit, md(2, 10),
+          note: 'Gas fill-up', merchant: 'Gas station',
+          assetId: _assetCar),
+      tx(10.99, exp, _catEntertainment, _credit, md(2, 10),
+          note: 'Music subscription', merchant: 'Music service'),
+      tx(108, exp, _catUtilities, _checking, md(2, 12),
+          note: 'Electric bill', merchant: 'Electric company'),
+      tx(115, exp, _catGroceries, _credit, md(2, 13),
+          note: 'Groceries', merchant: 'Supermarket'),
+      tx(35, exp, _catHealth, _credit, md(2, 15),
+          note: 'Gym membership', merchant: 'Gym'),
+      tx(14, exp, _catTransport, _cash, md(2, 16),
+          note: 'Ride to downtown', merchant: 'Rideshare'),
+      tx(22, exp, _catDelivery, _credit, md(2, 18),
+          note: 'Food delivery', merchant: 'Delivery app'),
+      tx(65, exp, _catUtilities, _checking, md(2, 20),
+          note: 'Internet bill', merchant: 'Internet provider'),
+      tx(88, exp, _catGroceries, _credit, md(2, 21),
+          note: 'Weekly groceries', merchant: 'Grocery store'),
+      tx(55, exp, _catRestaurants, _cash, md(2, 23),
+          note: 'Birthday dinner', merchant: 'Restaurant'),
+      tx(350, inc, _catFreelance, _checking, md(2, 24),
+          note: 'Website mockup', merchant: 'Freelance client',
+          assetId: _assetLaptop),
+      tx(38, exp, _catFuel, _credit, md(2, 25),
+          note: 'Gas fill-up', merchant: 'Gas station',
+          assetId: _assetCar),
+      tx(76, exp, _catClothes, _credit, md(2, 26),
+          note: 'Winter jacket', merchant: 'Clothing store'),
+      tx(95, exp, _catGroceries, _credit, md(2, 28),
+          note: 'Groceries', merchant: 'Supermarket'),
+      tx(180, exp, _catInsurance, _checking, md(2, 28),
+          note: 'Car insurance', merchant: 'Insurance company',
+          assetId: _assetCar),
+
+      // ═════════════════════════════════════════════════════════════
+      // 1 MONTH AGO
+      // ═════════════════════════════════════════════════════════════
+      tx(4200, inc, _catSalary, _checking, md(1, 1),
+          note: 'Monthly salary', merchant: 'Employer'),
+      tx(1450, exp, _catRent, _checking, md(1, 1),
+          note: 'Monthly rent', merchant: 'Landlord'),
+      tx(850, inc, _catFreelance, _checking, md(1, 2),
+          note: 'Logo design project', merchant: 'Freelance client',
+          assetId: _assetLaptop),
+      tx(105, exp, _catGroceries, _credit, md(1, 3),
+          note: 'Groceries', merchant: 'Supermarket'),
+      tx(15.99, exp, _catEntertainment, _credit, md(1, 5),
+          note: 'Streaming subscription', merchant: 'Streaming service'),
+      tx(38, exp, _catRestaurants, _credit, md(1, 6),
+          note: 'Lunch with coworker', merchant: 'Bistro'),
+      tx(6.80, exp, _catRestaurants, _cash, md(1, 7),
+          note: 'Morning coffee', merchant: 'Coffee shop'),
+      tx(2.75, exp, _catPublicTransit, _cash, md(1, 8),
+          note: 'Subway ride', merchant: 'Transit'),
+      tx(45, exp, _catFuel, _credit, md(1, 9),
+          note: 'Gas fill-up', merchant: 'Gas station',
+          assetId: _assetCar),
+      tx(10.99, exp, _catEntertainment, _credit, md(1, 10),
+          note: 'Music subscription', merchant: 'Music service'),
+      tx(24, exp, _catHealth, _cash, md(1, 11),
+          note: 'Cold medicine', merchant: 'Pharmacy'),
+      tx(118, exp, _catUtilities, _checking, md(1, 12),
+          note: 'Electric bill', merchant: 'Electric company'),
+      tx(98, exp, _catGroceries, _credit, md(1, 14),
+          note: 'Weekly groceries', merchant: 'Grocery store'),
+      tx(35, exp, _catHealth, _credit, md(1, 15),
+          note: 'Gym membership', merchant: 'Gym'),
+      tx(18, exp, _catDelivery, _credit, md(1, 16),
+          note: 'Pizza delivery', merchant: 'Delivery app'),
+      tx(79, exp, _catElectronics, _credit, md(1, 17),
+          note: 'Wireless headphones', merchant: 'Electronics store',
+          assetId: _assetHeadphones),
+      tx(65, exp, _catUtilities, _checking, md(1, 20),
+          note: 'Internet bill', merchant: 'Internet provider'),
+      tx(82, exp, _catGroceries, _credit, md(1, 21),
+          note: 'Groceries', merchant: 'Grocery store'),
+      tx(62, exp, _catRestaurants, _credit, md(1, 22),
+          note: 'Anniversary dinner', merchant: 'Restaurant'),
+      tx(28, exp, _catEntertainment, _cash, md(1, 23),
+          note: 'Movie night', merchant: 'Cinema'),
+      tx(120, exp, _catElectronics, _credit, md(1, 24),
+          note: 'Camera lens filter', merchant: 'Photo store',
+          assetId: _assetCamera),
+      tx(48, exp, _catFuel, _credit, md(1, 25),
+          note: 'Gas fill-up', merchant: 'Gas station',
+          assetId: _assetCar),
+      tx(110, exp, _catGroceries, _credit, md(1, 27),
+          note: 'Weekly groceries', merchant: 'Supermarket'),
+      tx(145, exp, _catInsurance, _checking, md(1, 28),
+          note: 'Car insurance', merchant: 'Insurance company',
+          assetId: _assetCar),
+
+      // ═════════════════════════════════════════════════════════════
+      // CURRENT MONTH (early fixed dates)
+      // ═════════════════════════════════════════════════════════════
+      tx(4200, inc, _catSalary, _checking, md(0, 1),
+          note: 'Monthly salary', merchant: 'Employer'),
+      tx(1450, exp, _catRent, _checking, md(0, 1),
+          note: 'Monthly rent', merchant: 'Landlord'),
+      tx(97, exp, _catGroceries, _credit, md(0, 3),
+          note: 'Groceries', merchant: 'Grocery store'),
+      tx(15.99, exp, _catEntertainment, _credit, md(0, 5),
+          note: 'Streaming subscription', merchant: 'Streaming service'),
+      tx(8.50, exp, _catRestaurants, _cash, md(0, 7),
+          note: 'Coffee and sandwich', merchant: 'Cafe'),
+      tx(65, exp, _catUtilities, _checking, md(0, 8),
+          note: 'Internet bill', merchant: 'Internet provider'),
+      tx(45, exp, _catFuel, _credit, md(0, 9),
+          note: 'Gas fill-up', merchant: 'Gas station',
+          assetId: _assetCar),
+
+      // ═════════════════════════════════════════════════════════════
+      // RECENT STREAK (consecutive days relative to today)
+      // ═════════════════════════════════════════════════════════════
+      tx(10.99, exp, _catEntertainment, _credit, ago(9),
+          note: 'Music subscription', merchant: 'Music service'),
+      tx(84, exp, _catGroceries, _credit, ago(8),
+          note: 'Weekly groceries', merchant: 'Supermarket'),
+      tx(112, exp, _catUtilities, _checking, ago(7),
+          note: 'Electric bill', merchant: 'Electric company'),
+      tx(42, exp, _catRestaurants, _credit, ago(6),
+          note: 'Dinner out', merchant: 'Restaurant'),
+      tx(5.50, exp, _catRestaurants, _cash, ago(5),
+          note: 'Afternoon coffee', merchant: 'Coffee shop'),
+      tx(18, exp, _catTransport, _cash, ago(4),
+          note: 'Ride to appointment', merchant: 'Rideshare'),
+      tx(35, exp, _catHealth, _credit, ago(3),
+          note: 'Gym membership', merchant: 'Gym'),
+      tx(49, exp, _catEducation, _credit, ago(2),
+          note: 'Online course', merchant: 'Learning platform',
+          assetId: _assetLaptop),
+      tx(25, exp, _catDelivery, _credit, ago(1),
+          note: 'Sushi delivery', merchant: 'Delivery app'),
+      tx(90, exp, _catGroceries, _credit, ago(0),
+          note: 'Grocery run', merchant: 'Grocery store'),
     ];
+
+    // Filter out future dates (for current month when day hasn't arrived yet)
+    return all.where((tx) => !tx.date.isAfter(now)).toList();
   }
 }

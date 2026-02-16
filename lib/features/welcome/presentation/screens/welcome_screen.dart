@@ -11,6 +11,7 @@ import '../../../../design_system/design_system.dart';
 import '../../../../navigation/app_router.dart';
 import '../../../accounts/data/models/account.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
+import '../../../assets/presentation/providers/assets_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/database_management_providers.dart';
@@ -87,6 +88,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       final accountRepo = ref.read(accountRepositoryProvider);
       final categoryRepo = ref.read(categoryRepositoryProvider);
       final transactionRepo = ref.read(transactionRepositoryProvider);
+      final assetRepo = ref.read(assetRepositoryProvider);
 
       // Wrap all database operations in a transaction to prevent locking
       await db.transaction(() async {
@@ -98,6 +100,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
             }
             // Seed default categories
             await categoryRepo.seedDefaultCategories();
+            // Seed assets
+            for (final asset in DemoData.assets) {
+              await assetRepo.createAsset(asset);
+            }
             // Seed transactions
             for (final transaction in DemoData.transactions) {
               await transactionRepo.upsertTransaction(transaction);
@@ -132,6 +138,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       ref.invalidate(accountsProvider);
       ref.invalidate(categoriesProvider);
       ref.invalidate(transactionsProvider);
+      ref.invalidate(assetsProvider);
       ref.invalidate(databaseMetricsProvider);
       ref.invalidate(shouldShowWelcomeProvider);
 
