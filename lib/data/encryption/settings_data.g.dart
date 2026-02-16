@@ -36,6 +36,7 @@ _$SettingsDataImpl _$$SettingsDataImplFromJson(Map<String, dynamic> json) =>
       lastUsedIncomeCategoryId: json['lastUsedIncomeCategoryId'] as String?,
       lastUsedExpenseCategoryId: json['lastUsedExpenseCategoryId'] as String?,
       appLockEnabled: json['appLockEnabled'] as bool? ?? false,
+      appPinCode: json['appPinCode'] as String?,
     );
 
 Map<String, dynamic> _$$SettingsDataImplToJson(_$SettingsDataImpl instance) =>
@@ -66,4 +67,5 @@ Map<String, dynamic> _$$SettingsDataImplToJson(_$SettingsDataImpl instance) =>
       'lastUsedIncomeCategoryId': instance.lastUsedIncomeCategoryId,
       'lastUsedExpenseCategoryId': instance.lastUsedExpenseCategoryId,
       'appLockEnabled': instance.appLockEnabled,
+      'appPinCode': instance.appPinCode,
     };

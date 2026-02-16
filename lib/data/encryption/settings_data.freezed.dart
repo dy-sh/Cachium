@@ -99,6 +99,9 @@ mixin _$SettingsData {
   /// Whether app lock (biometric/PIN) is enabled
   bool get appLockEnabled => throw _privateConstructorUsedError;
 
+  /// App PIN code (stored as plaintext 4-6 digit string)
+  String? get appPinCode => throw _privateConstructorUsedError;
+
   /// Serializes this SettingsData to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
@@ -143,6 +146,7 @@ abstract class $SettingsDataCopyWith<$Res> {
     String? lastUsedIncomeCategoryId,
     String? lastUsedExpenseCategoryId,
     bool appLockEnabled,
+    String? appPinCode,
   });
 }
 
@@ -187,6 +191,7 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
     Object? lastUsedIncomeCategoryId = freezed,
     Object? lastUsedExpenseCategoryId = freezed,
     Object? appLockEnabled = null,
+    Object? appPinCode = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -294,6 +299,10 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
                 ? _value.appLockEnabled
                 : appLockEnabled // ignore: cast_nullable_to_non_nullable
                       as bool,
+            appPinCode: freezed == appPinCode
+                ? _value.appPinCode
+                : appPinCode // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
@@ -336,6 +345,7 @@ abstract class _$$SettingsDataImplCopyWith<$Res>
     String? lastUsedIncomeCategoryId,
     String? lastUsedExpenseCategoryId,
     bool appLockEnabled,
+    String? appPinCode,
   });
 }
 
@@ -379,6 +389,7 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
     Object? lastUsedIncomeCategoryId = freezed,
     Object? lastUsedExpenseCategoryId = freezed,
     Object? appLockEnabled = null,
+    Object? appPinCode = freezed,
   }) {
     return _then(
       _$SettingsDataImpl(
@@ -486,6 +497,10 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
             ? _value.appLockEnabled
             : appLockEnabled // ignore: cast_nullable_to_non_nullable
                   as bool,
+        appPinCode: freezed == appPinCode
+            ? _value.appPinCode
+            : appPinCode // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -521,6 +536,7 @@ class _$SettingsDataImpl implements _SettingsData {
     this.lastUsedIncomeCategoryId,
     this.lastUsedExpenseCategoryId,
     this.appLockEnabled = false,
+    this.appPinCode,
   });
 
   factory _$SettingsDataImpl.fromJson(Map<String, dynamic> json) =>
@@ -652,9 +668,13 @@ class _$SettingsDataImpl implements _SettingsData {
   @JsonKey()
   final bool appLockEnabled;
 
+  /// App PIN code (stored as plaintext 4-6 digit string)
+  @override
+  final String? appPinCode;
+
   @override
   String toString() {
-    return 'SettingsData(id: $id, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, currencySymbol: $currencySymbol, customCurrencySymbol: $customCurrencySymbol, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, categoriesFoldedCount: $categoriesFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, categorySortOption: $categorySortOption, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId, appLockEnabled: $appLockEnabled)';
+    return 'SettingsData(id: $id, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, currencySymbol: $currencySymbol, customCurrencySymbol: $customCurrencySymbol, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, categoriesFoldedCount: $categoriesFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, categorySortOption: $categorySortOption, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId, appLockEnabled: $appLockEnabled, appPinCode: $appPinCode)';
   }
 
   @override
@@ -718,7 +738,9 @@ class _$SettingsDataImpl implements _SettingsData {
                 ) ||
                 other.lastUsedExpenseCategoryId == lastUsedExpenseCategoryId) &&
             (identical(other.appLockEnabled, appLockEnabled) ||
-                other.appLockEnabled == appLockEnabled));
+                other.appLockEnabled == appLockEnabled) &&
+            (identical(other.appPinCode, appPinCode) ||
+                other.appPinCode == appPinCode));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -751,6 +773,7 @@ class _$SettingsDataImpl implements _SettingsData {
     lastUsedIncomeCategoryId,
     lastUsedExpenseCategoryId,
     appLockEnabled,
+    appPinCode,
   ]);
 
   /// Create a copy of SettingsData
@@ -795,6 +818,7 @@ abstract class _SettingsData implements SettingsData {
     final String? lastUsedIncomeCategoryId,
     final String? lastUsedExpenseCategoryId,
     final bool appLockEnabled,
+    final String? appPinCode,
   }) = _$SettingsDataImpl;
 
   factory _SettingsData.fromJson(Map<String, dynamic> json) =
@@ -903,6 +927,10 @@ abstract class _SettingsData implements SettingsData {
   /// Whether app lock (biometric/PIN) is enabled
   @override
   bool get appLockEnabled;
+
+  /// App PIN code (stored as plaintext 4-6 digit string)
+  @override
+  String? get appPinCode;
 
   /// Create a copy of SettingsData
   /// with the given fields replaced by the non-null parameter values.

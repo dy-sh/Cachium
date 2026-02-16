@@ -155,6 +155,7 @@ class AppSettings {
 
   // Security
   final bool appLockEnabled;
+  final String? appPinCode;
 
   // Onboarding
   final bool onboardingCompleted;
@@ -198,6 +199,7 @@ class AppSettings {
     this.homeTotalBalanceTextSize = AmountDisplaySize.large,
     this.homeBalancesHiddenByDefault = false,
     this.appLockEnabled = false,
+    this.appPinCode,
     this.onboardingCompleted = false,
   });
 
@@ -251,6 +253,8 @@ class AppSettings {
     AmountDisplaySize? homeTotalBalanceTextSize,
     bool? homeBalancesHiddenByDefault,
     bool? appLockEnabled,
+    String? appPinCode,
+    bool clearAppPinCode = false,
     bool? onboardingCompleted,
   }) {
     return AppSettings(
@@ -292,6 +296,7 @@ class AppSettings {
       homeTotalBalanceTextSize: homeTotalBalanceTextSize ?? this.homeTotalBalanceTextSize,
       homeBalancesHiddenByDefault: homeBalancesHiddenByDefault ?? this.homeBalancesHiddenByDefault,
       appLockEnabled: appLockEnabled ?? this.appLockEnabled,
+      appPinCode: clearAppPinCode ? null : (appPinCode ?? this.appPinCode),
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
     );
   }

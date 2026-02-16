@@ -261,6 +261,16 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     await _saveAndUpdate(current.copyWith(appLockEnabled: enabled));
   }
 
+  Future<void> setAppPinCode(String? pin) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    if (pin == null) {
+      await _saveAndUpdate(current.copyWith(clearAppPinCode: true));
+    } else {
+      await _saveAndUpdate(current.copyWith(appPinCode: pin));
+    }
+  }
+
   // Onboarding
   Future<void> setOnboardingCompleted(bool completed) async {
     final current = state.valueOrNull;
@@ -334,6 +344,7 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
       homeBalancesHiddenByDefault: defaults.homeBalancesHiddenByDefault,
       // Reset Security
       appLockEnabled: defaults.appLockEnabled,
+      appPinCode: defaults.appPinCode,
       // Preserve onboarding
       onboardingCompleted: current.onboardingCompleted,
     );
@@ -538,4 +549,9 @@ final showAssetSelectorProvider = Provider<bool>((ref) {
 final appLockEnabledProvider = Provider<bool>((ref) {
   final settingsAsync = ref.watch(settingsProvider);
   return settingsAsync.valueOrNull?.appLockEnabled ?? false;
+});
+
+final appPinCodeProvider = Provider<String?>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.appPinCode;
 });
