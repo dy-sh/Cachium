@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../design_system/components/feedback/confirmation_dialog.dart';
 import '../../data/models/account.dart';
 
 enum DeleteAccountAction {
@@ -168,63 +169,18 @@ Future<DeleteAccountAction?> showDeleteAccountDialog({
   );
 }
 
-class SimpleDeleteAccountDialog extends StatelessWidget {
-  final Account account;
-
-  const SimpleDeleteAccountDialog({
-    super.key,
-    required this.account,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: AppColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      title: Text(
-        'Delete Account',
-        style: AppTypography.h4,
-      ),
-      content: Text(
-        'Are you sure you want to delete "${account.name}"? This action cannot be undone.',
-        style: AppTypography.bodyMedium.copyWith(
-          color: AppColors.textSecondary,
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: Text(
-            'Cancel',
-            style: AppTypography.button.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: Text(
-            'Delete',
-            style: AppTypography.button.copyWith(
-              color: AppColors.expense,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 Future<bool?> showSimpleDeleteAccountDialog({
   required BuildContext context,
   required Account account,
-}) {
-  return showDialog<bool>(
+}) async {
+  final result = await showConfirmationDialog(
     context: context,
-    builder: (context) => SimpleDeleteAccountDialog(account: account),
+    title: 'Delete Account',
+    message: 'Are you sure you want to delete "${account.name}"? This action cannot be undone.',
+    confirmLabel: 'Delete',
+    isDestructive: true,
   );
+  return result;
 }
 
 class MoveTransactionsDialog extends ConsumerWidget {

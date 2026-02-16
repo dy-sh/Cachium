@@ -61,6 +61,9 @@ dependencies:
   file_picker: ^6.1.1
   csv: ^5.1.1
 
+  # Security
+  local_auth: ^2.3.0
+
   # Charts
   fl_chart: ^0.68.0
 

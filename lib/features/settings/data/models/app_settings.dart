@@ -153,6 +153,9 @@ class AppSettings {
   final AmountDisplaySize homeTotalBalanceTextSize;
   final bool homeBalancesHiddenByDefault;
 
+  // Security
+  final bool appLockEnabled;
+
   // Onboarding
   final bool onboardingCompleted;
 
@@ -194,6 +197,7 @@ class AppSettings {
     this.homeAccountsTextSize = AmountDisplaySize.large,
     this.homeTotalBalanceTextSize = AmountDisplaySize.large,
     this.homeBalancesHiddenByDefault = false,
+    this.appLockEnabled = false,
     this.onboardingCompleted = false,
   });
 
@@ -246,6 +250,7 @@ class AppSettings {
     AmountDisplaySize? homeAccountsTextSize,
     AmountDisplaySize? homeTotalBalanceTextSize,
     bool? homeBalancesHiddenByDefault,
+    bool? appLockEnabled,
     bool? onboardingCompleted,
   }) {
     return AppSettings(
@@ -286,6 +291,7 @@ class AppSettings {
       homeAccountsTextSize: homeAccountsTextSize ?? this.homeAccountsTextSize,
       homeTotalBalanceTextSize: homeTotalBalanceTextSize ?? this.homeTotalBalanceTextSize,
       homeBalancesHiddenByDefault: homeBalancesHiddenByDefault ?? this.homeBalancesHiddenByDefault,
+      appLockEnabled: appLockEnabled ?? this.appLockEnabled,
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
     );
   }

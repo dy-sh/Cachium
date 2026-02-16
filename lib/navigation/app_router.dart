@@ -25,6 +25,9 @@ import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/settings/presentation/screens/transactions_settings_screen.dart';
 import '../features/budgets/presentation/screens/budget_settings_screen.dart';
 import '../features/transactions/presentation/screens/deleted_transactions_screen.dart';
+import '../features/savings_goals/presentation/screens/savings_goals_screen.dart';
+import '../features/search/presentation/screens/global_search_screen.dart';
+import '../features/transactions/presentation/screens/recurring_rules_screen.dart';
 import '../features/transactions/presentation/screens/transaction_detail_screen.dart';
 import '../features/transactions/presentation/screens/transaction_form_screen.dart';
 import '../features/transactions/presentation/screens/transactions_screen.dart';
@@ -50,6 +53,9 @@ class AppRoutes {
   static const csvImport = '/settings/csv-import';
   static const csvImportMapping = '/settings/csv-import/mapping';
   static const csvImportPreview = '/settings/csv-import/preview';
+  static const search = '/search';
+  static const savingsGoals = '/settings/savings-goals';
+  static const recurringRules = '/settings/recurring';
   static const deletedTransactions = '/transactions/deleted';
   static const transactionForm = '/transaction/new';
   static const transactionDetail = '/transaction/:id';
@@ -277,6 +283,30 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
           state,
           const BudgetSettingsScreen(),
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.search,
+        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
+          state,
+          const GlobalSearchScreen(),
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.savingsGoals,
+        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
+          state,
+          const SavingsGoalsScreen(),
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.recurringRules,
+        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
+          state,
+          const RecurringRulesScreen(),
           animationsEnabled: ref.read(formAnimationsEnabledProvider),
         ),
       ),

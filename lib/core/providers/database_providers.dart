@@ -4,6 +4,8 @@ import '../../data/repositories/account_repository.dart';
 import '../../data/repositories/asset_repository.dart';
 import '../../data/repositories/budget_repository.dart';
 import '../../data/repositories/category_repository.dart';
+import '../../data/repositories/recurring_rule_repository.dart';
+import '../../data/repositories/savings_goal_repository.dart';
 import '../../data/repositories/settings_repository.dart';
 import '../../data/repositories/transaction_repository.dart';
 import '../database/app_database.dart';
@@ -76,6 +78,22 @@ final budgetRepositoryProvider = Provider<BudgetRepository>((ref) {
 /// Provider for the asset repository.
 final assetRepositoryProvider = Provider<AssetRepository>((ref) {
   return AssetRepository(
+    database: ref.watch(databaseProvider),
+    encryptionService: ref.watch(encryptionServiceProvider),
+  );
+});
+
+/// Provider for the recurring rule repository.
+final recurringRuleRepositoryProvider = Provider<RecurringRuleRepository>((ref) {
+  return RecurringRuleRepository(
+    database: ref.watch(databaseProvider),
+    encryptionService: ref.watch(encryptionServiceProvider),
+  );
+});
+
+/// Provider for the savings goal repository.
+final savingsGoalRepositoryProvider = Provider<SavingsGoalRepository>((ref) {
+  return SavingsGoalRepository(
     database: ref.watch(databaseProvider),
     encryptionService: ref.watch(encryptionServiceProvider),
   );

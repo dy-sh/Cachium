@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/constants/app_colors.dart';
+import 'features/settings/presentation/providers/app_lock_provider.dart';
 import 'features/settings/presentation/providers/database_management_providers.dart';
+import 'features/settings/presentation/providers/settings_provider.dart';
+import 'features/settings/presentation/screens/lock_screen.dart';
 import 'features/welcome/presentation/screens/welcome_screen.dart';
 import 'navigation/app_router.dart';
 
@@ -58,7 +61,7 @@ class _AppGate extends ConsumerWidget {
     // This ensures first launch shows welcome screen if needed
     if (!shouldShowWelcomeAsync.hasValue) {
       return shouldShowWelcomeAsync.when(
-        data: (showWelcome) => showWelcome ? const WelcomeScreen() : const _MainApp(),
+        data: (showWelcome) => showWelcome ? const WelcomeScreen() : const _LockGate(),
         loading: () => const Scaffold(
           backgroundColor: AppColors.background,
           body: Center(
@@ -67,7 +70,7 @@ class _AppGate extends ConsumerWidget {
             ),
           ),
         ),
-        error: (_, __) => const _MainApp(),
+        error: (_, __) => const _LockGate(),
       );
     }
 
@@ -75,6 +78,27 @@ class _AppGate extends ConsumerWidget {
     if (shouldShowWelcomeAsync.value == true) {
       return const WelcomeScreen();
     }
+    return const _LockGate();
+  }
+}
+
+/// Gate that shows lock screen if app lock is enabled and app is locked.
+class _LockGate extends ConsumerWidget {
+  const _LockGate();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final appLockEnabled = ref.watch(appLockEnabledProvider);
+    final isLocked = ref.watch(appLockStateProvider);
+
+    if (appLockEnabled && isLocked) {
+      return LockScreen(
+        onUnlocked: () {
+          // State already updated by the lock screen
+        },
+      );
+    }
+
     return const _MainApp();
   }
 }

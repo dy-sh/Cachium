@@ -23,6 +23,7 @@ export 'components/chips/selection_chip.dart';
 export 'components/chips/toggle_chip.dart';
 
 // Feedback
+export 'components/feedback/confirmation_dialog.dart';
 export 'components/feedback/empty_state.dart';
 export 'components/feedback/help_icon.dart';
 export 'components/feedback/loading_indicator.dart';

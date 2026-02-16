@@ -35,6 +35,7 @@ _$SettingsDataImpl _$$SettingsDataImplFromJson(Map<String, dynamic> json) =>
       categorySortOption: json['categorySortOption'] as String? ?? 'lastUsed',
       lastUsedIncomeCategoryId: json['lastUsedIncomeCategoryId'] as String?,
       lastUsedExpenseCategoryId: json['lastUsedExpenseCategoryId'] as String?,
+      appLockEnabled: json['appLockEnabled'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$$SettingsDataImplToJson(_$SettingsDataImpl instance) =>
@@ -64,4 +65,5 @@ Map<String, dynamic> _$$SettingsDataImplToJson(_$SettingsDataImpl instance) =>
       'categorySortOption': instance.categorySortOption,
       'lastUsedIncomeCategoryId': instance.lastUsedIncomeCategoryId,
       'lastUsedExpenseCategoryId': instance.lastUsedExpenseCategoryId,
+      'appLockEnabled': instance.appLockEnabled,
     };

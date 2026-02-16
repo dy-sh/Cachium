@@ -5,6 +5,8 @@ import 'daos/account_dao.dart';
 import 'daos/asset_dao.dart';
 import 'daos/budget_dao.dart';
 import 'daos/category_dao.dart';
+import 'daos/recurring_rule_dao.dart';
+import 'daos/savings_goal_dao.dart';
 import 'daos/settings_dao.dart';
 import 'daos/transaction_dao.dart';
 
@@ -116,6 +118,32 @@ class Assets extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Table for storing encrypted recurring transaction rules.
+@DataClassName('RecurringRuleRow')
+class RecurringRules extends Table {
+  TextColumn get id => text()();
+  IntColumn get createdAt => integer()();
+  IntColumn get lastUpdatedAt => integer()();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BlobColumn get encryptedBlob => blob()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Table for storing encrypted savings goals.
+@DataClassName('SavingsGoalRow')
+class SavingsGoals extends Table {
+  TextColumn get id => text()();
+  IntColumn get createdAt => integer()();
+  IntColumn get lastUpdatedAt => integer()();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BlobColumn get encryptedBlob => blob()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Table for storing app settings.
 ///
 /// Settings are stored as unencrypted JSON since they don't contain sensitive data.
@@ -140,15 +168,15 @@ class AppSettings extends Table {
 /// is stored unencrypted on disk, but all sensitive transaction data is
 /// encrypted at the application layer before being stored.
 @DriftDatabase(
-  tables: [Transactions, Accounts, Categories, Budgets, Assets, AppSettings],
-  daos: [TransactionDao, AccountDao, CategoryDao, BudgetDao, AssetDao, SettingsDao],
+  tables: [Transactions, Accounts, Categories, Budgets, Assets, RecurringRules, SavingsGoals, AppSettings],
+  daos: [TransactionDao, AccountDao, CategoryDao, BudgetDao, AssetDao, RecurringRuleDao, SavingsGoalDao, SettingsDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -163,6 +191,8 @@ class AppDatabase extends _$AppDatabase {
           await m.deleteTable('categories');
           await m.deleteTable('budgets');
           await m.deleteTable('assets');
+          await m.deleteTable('recurring_rules');
+          await m.deleteTable('savings_goals');
           await m.deleteTable('app_settings');
           await m.createAll();
         },
@@ -436,6 +466,80 @@ class AppDatabase extends _$AppDatabase {
 
   Future<bool> hasAssets() => assetDao.hasAny();
 
+  // CRUD operations for recurring rules (delegates to RecurringRuleDao)
+
+  Future<void> insertRecurringRule({
+    required String id,
+    required int createdAt,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+  }) =>
+      recurringRuleDao.insert(
+        id: id,
+        createdAt: createdAt,
+        lastUpdatedAt: lastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+      );
+
+  Future<void> updateRecurringRule({
+    required String id,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+  }) =>
+      recurringRuleDao.updateRow(
+        id: id,
+        lastUpdatedAt: lastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+      );
+
+  Future<void> softDeleteRecurringRule(String id, int lastUpdatedAt) =>
+      recurringRuleDao.softDelete(id, lastUpdatedAt);
+
+  Future<List<RecurringRuleRow>> getAllRecurringRules() =>
+      recurringRuleDao.getAll();
+
+  Stream<List<RecurringRuleRow>> watchAllRecurringRules() =>
+      recurringRuleDao.watchAll();
+
+  Future<void> deleteAllRecurringRules() => recurringRuleDao.deleteAll();
+
+  // CRUD operations for savings goals (delegates to SavingsGoalDao)
+
+  Future<void> insertSavingsGoal({
+    required String id,
+    required int createdAt,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+  }) =>
+      savingsGoalDao.insert(
+        id: id,
+        createdAt: createdAt,
+        lastUpdatedAt: lastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+      );
+
+  Future<void> updateSavingsGoal({
+    required String id,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+  }) =>
+      savingsGoalDao.updateRow(
+        id: id,
+        lastUpdatedAt: lastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+      );
+
+  Future<void> softDeleteSavingsGoal(String id, int lastUpdatedAt) =>
+      savingsGoalDao.softDelete(id, lastUpdatedAt);
+
+  Future<List<SavingsGoalRow>> getAllSavingsGoals() =>
+      savingsGoalDao.getAll();
+
+  Stream<List<SavingsGoalRow>> watchAllSavingsGoals() =>
+      savingsGoalDao.watchAll();
+
+  Future<void> deleteAllSavingsGoals() => savingsGoalDao.deleteAll();
+
   // CRUD operations for app settings (delegates to SettingsDao)
 
   Future<void> upsertSettings({
@@ -474,6 +578,8 @@ class AppDatabase extends _$AppDatabase {
       await deleteAllCategories();
       await deleteAllBudgets();
       await deleteAllAssets();
+      await deleteAllRecurringRules();
+      await deleteAllSavingsGoals();
       if (includeSettings) {
         await deleteAllSettings();
       }

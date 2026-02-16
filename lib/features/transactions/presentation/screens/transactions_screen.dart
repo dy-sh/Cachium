@@ -7,6 +7,7 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/providers/database_providers.dart';
+import '../../../../core/animations/haptic_helper.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../design_system/design_system.dart';
@@ -342,22 +343,15 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               ),
               data: (groups) => groups.isEmpty
                   ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            LucideIcons.receipt,
-                            color: AppColors.textTertiary,
-                            size: 48,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          Text(
-                            'No transactions found',
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.screenPadding,
+                        ),
+                        child: EmptyState.centered(
+                          icon: LucideIcons.receipt,
+                          title: 'No transactions found',
+                          subtitle: 'Try adjusting your filters or add a new transaction',
+                        ),
                       ),
                     )
                   : RefreshIndicator(
@@ -596,6 +590,7 @@ class _TransactionGroupWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final intensity = ref.watch(colorIntensityProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -610,12 +605,28 @@ class _TransactionGroupWidget extends ConsumerWidget {
                   color: AppColors.textSecondary,
                 ),
               ),
-              Text(
-                _formatNetAmount(group.netAmount),
-                style: AppTypography.labelSmall.copyWith(
-                  color: AppColors.textTertiary,
-                  fontSize: 12,
-                ),
+              Row(
+                children: [
+                  if (group.totalIncome > 0) ...[
+                    Text(
+                      '+${CurrencyFormatter.format(group.totalIncome)}',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.getTransactionColor('income', intensity),
+                        fontSize: 11,
+                      ),
+                    ),
+                    if (group.totalExpense > 0)
+                      const SizedBox(width: AppSpacing.xs),
+                  ],
+                  if (group.totalExpense > 0)
+                    Text(
+                      '-${CurrencyFormatter.format(group.totalExpense)}',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.getTransactionColor('expense', intensity),
+                        fontSize: 11,
+                      ),
+                    ),
+                ],
               ),
             ],
           ),
@@ -626,12 +637,6 @@ class _TransactionGroupWidget extends ConsumerWidget {
     );
   }
 
-  String _formatNetAmount(double amount) {
-    if (amount >= 0) {
-      return '+${CurrencyFormatter.format(amount)}';
-    }
-    return CurrencyFormatter.format(amount);
-  }
 }
 
 class _TransactionItem extends ConsumerWidget {
@@ -824,6 +829,8 @@ class _TransactionItem extends ConsumerWidget {
         ),
       ),
       confirmDismiss: (direction) async {
+        final hapticEnabled = ref.read(hapticEnabledProvider);
+        await HapticHelper.mediumImpact(enabled: hapticEnabled);
         if (direction == DismissDirection.startToEnd) {
           // Duplicate: create new transaction with same details, today's date
           final tx = transaction;

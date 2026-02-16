@@ -96,6 +96,9 @@ mixin _$SettingsData {
   /// Last used category ID for expense transactions
   String? get lastUsedExpenseCategoryId => throw _privateConstructorUsedError;
 
+  /// Whether app lock (biometric/PIN) is enabled
+  bool get appLockEnabled => throw _privateConstructorUsedError;
+
   /// Serializes this SettingsData to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
@@ -139,6 +142,7 @@ abstract class $SettingsDataCopyWith<$Res> {
     String categorySortOption,
     String? lastUsedIncomeCategoryId,
     String? lastUsedExpenseCategoryId,
+    bool appLockEnabled,
   });
 }
 
@@ -182,6 +186,7 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
     Object? categorySortOption = null,
     Object? lastUsedIncomeCategoryId = freezed,
     Object? lastUsedExpenseCategoryId = freezed,
+    Object? appLockEnabled = null,
   }) {
     return _then(
       _value.copyWith(
@@ -285,6 +290,10 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
                 ? _value.lastUsedExpenseCategoryId
                 : lastUsedExpenseCategoryId // ignore: cast_nullable_to_non_nullable
                       as String?,
+            appLockEnabled: null == appLockEnabled
+                ? _value.appLockEnabled
+                : appLockEnabled // ignore: cast_nullable_to_non_nullable
+                      as bool,
           )
           as $Val,
     );
@@ -326,6 +335,7 @@ abstract class _$$SettingsDataImplCopyWith<$Res>
     String categorySortOption,
     String? lastUsedIncomeCategoryId,
     String? lastUsedExpenseCategoryId,
+    bool appLockEnabled,
   });
 }
 
@@ -368,6 +378,7 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
     Object? categorySortOption = null,
     Object? lastUsedIncomeCategoryId = freezed,
     Object? lastUsedExpenseCategoryId = freezed,
+    Object? appLockEnabled = null,
   }) {
     return _then(
       _$SettingsDataImpl(
@@ -471,6 +482,10 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
             ? _value.lastUsedExpenseCategoryId
             : lastUsedExpenseCategoryId // ignore: cast_nullable_to_non_nullable
                   as String?,
+        appLockEnabled: null == appLockEnabled
+            ? _value.appLockEnabled
+            : appLockEnabled // ignore: cast_nullable_to_non_nullable
+                  as bool,
       ),
     );
   }
@@ -505,6 +520,7 @@ class _$SettingsDataImpl implements _SettingsData {
     this.categorySortOption = 'lastUsed',
     this.lastUsedIncomeCategoryId,
     this.lastUsedExpenseCategoryId,
+    this.appLockEnabled = false,
   });
 
   factory _$SettingsDataImpl.fromJson(Map<String, dynamic> json) =>
@@ -631,9 +647,14 @@ class _$SettingsDataImpl implements _SettingsData {
   @override
   final String? lastUsedExpenseCategoryId;
 
+  /// Whether app lock (biometric/PIN) is enabled
+  @override
+  @JsonKey()
+  final bool appLockEnabled;
+
   @override
   String toString() {
-    return 'SettingsData(id: $id, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, currencySymbol: $currencySymbol, customCurrencySymbol: $customCurrencySymbol, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, categoriesFoldedCount: $categoriesFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, categorySortOption: $categorySortOption, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId)';
+    return 'SettingsData(id: $id, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, currencySymbol: $currencySymbol, customCurrencySymbol: $customCurrencySymbol, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, categoriesFoldedCount: $categoriesFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, categorySortOption: $categorySortOption, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId, appLockEnabled: $appLockEnabled)';
   }
 
   @override
@@ -695,7 +716,9 @@ class _$SettingsDataImpl implements _SettingsData {
                   other.lastUsedExpenseCategoryId,
                   lastUsedExpenseCategoryId,
                 ) ||
-                other.lastUsedExpenseCategoryId == lastUsedExpenseCategoryId));
+                other.lastUsedExpenseCategoryId == lastUsedExpenseCategoryId) &&
+            (identical(other.appLockEnabled, appLockEnabled) ||
+                other.appLockEnabled == appLockEnabled));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -727,6 +750,7 @@ class _$SettingsDataImpl implements _SettingsData {
     categorySortOption,
     lastUsedIncomeCategoryId,
     lastUsedExpenseCategoryId,
+    appLockEnabled,
   ]);
 
   /// Create a copy of SettingsData
@@ -770,6 +794,7 @@ abstract class _SettingsData implements SettingsData {
     final String categorySortOption,
     final String? lastUsedIncomeCategoryId,
     final String? lastUsedExpenseCategoryId,
+    final bool appLockEnabled,
   }) = _$SettingsDataImpl;
 
   factory _SettingsData.fromJson(Map<String, dynamic> json) =
@@ -874,6 +899,10 @@ abstract class _SettingsData implements SettingsData {
   /// Last used category ID for expense transactions
   @override
   String? get lastUsedExpenseCategoryId;
+
+  /// Whether app lock (biometric/PIN) is enabled
+  @override
+  bool get appLockEnabled;
 
   /// Create a copy of SettingsData
   /// with the given fields replaced by the non-null parameter values.

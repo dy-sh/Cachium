@@ -85,6 +85,9 @@ class SettingsData with _$SettingsData {
 
     /// Last used category ID for expense transactions
     String? lastUsedExpenseCategoryId,
+
+    /// Whether app lock (biometric/PIN) is enabled
+    @Default(false) bool appLockEnabled,
   }) = _SettingsData;
 
   factory SettingsData.fromJson(Map<String, dynamic> json) =>

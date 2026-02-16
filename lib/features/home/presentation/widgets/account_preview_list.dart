@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../../design_system/components/feedback/empty_state.dart';
 import '../../../accounts/data/models/account.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../settings/data/models/app_settings.dart';
@@ -57,35 +59,11 @@ class _AccountPreviewListState extends ConsumerState<AccountPreviewList> {
       data: (accounts) => accounts.isEmpty
           ? Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-              child: GestureDetector(
+              child: EmptyState(
+                icon: LucideIcons.wallet,
+                title: 'No accounts yet',
+                subtitle: 'Add your first account to start tracking',
                 onTap: () => context.push('/account/new'),
-                child: Container(
-                  height: 72,
-                  decoration: BoxDecoration(
-                    borderRadius: AppRadius.lgAll,
-                    border: Border.all(
-                      color: AppColors.border,
-                      style: BorderStyle.solid,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.add_circle_outline,
-                        size: 20,
-                        color: AppColors.textTertiary,
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Text(
-                        'Add your first account',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textTertiary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ),
             )
           : SizedBox(

@@ -76,6 +76,20 @@ class SettingsScreen extends ConsumerWidget {
                         onTap: () => context.push('/settings/assets'),
                       ),
                       SettingsTile(
+                        title: 'Savings Goals',
+                        description: 'Track progress towards targets',
+                        icon: LucideIcons.piggyBank,
+                        iconColor: AppColors.getAccentColor(11, intensity), // Yellow
+                        onTap: () => context.push('/settings/savings-goals'),
+                      ),
+                      SettingsTile(
+                        title: 'Recurring Transactions',
+                        description: 'Manage auto-generated transactions',
+                        icon: LucideIcons.repeat,
+                        iconColor: AppColors.getAccentColor(7, intensity), // Green
+                        onTap: () => context.push('/settings/recurring'),
+                      ),
+                      SettingsTile(
                         title: 'Deleted Transactions',
                         description: 'View and restore deleted items',
                         icon: LucideIcons.trash2,

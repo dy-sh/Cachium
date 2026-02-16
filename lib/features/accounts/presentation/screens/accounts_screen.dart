@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -10,6 +11,7 @@ import '../../../../design_system/design_system.dart';
 import '../../../../navigation/app_router.dart';
 import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
+import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../data/models/account.dart';
 import '../providers/accounts_provider.dart';
 
@@ -96,13 +98,21 @@ class AccountsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: AppSpacing.md),
                   // Main balance amount
-                  AnimatedCounter(
-                    value: totalBalance,
-                    style: AppTypography.moneyLarge.copyWith(
-                      fontSize: 38,
-                      fontWeight: FontWeight.w400,
-                      color: AppColors.textPrimary,
-                      letterSpacing: -0.5,
+                  GestureDetector(
+                    onLongPress: () {
+                      Clipboard.setData(ClipboardData(
+                        text: CurrencyFormatter.format(totalBalance),
+                      ));
+                      context.showSuccessNotification('Balance copied');
+                    },
+                    child: AnimatedCounter(
+                      value: totalBalance,
+                      style: AppTypography.moneyLarge.copyWith(
+                        fontSize: 38,
+                        fontWeight: FontWeight.w400,
+                        color: AppColors.textPrimary,
+                        letterSpacing: -0.5,
+                      ),
                     ),
                   ),
                 ],
@@ -200,6 +210,14 @@ class _AccountCard extends ConsumerWidget {
     required this.intensity,
   });
 
+  String _accountSubtitle(WidgetRef ref) {
+    final txCount = ref.watch(transactionCountByAccountProvider(account.id));
+    if (txCount > 0) {
+      return '${account.type.displayName} \u2022 $txCount tx';
+    }
+    return account.type.displayName;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final accountColor = account.getColorWithIntensity(intensity);
@@ -293,7 +311,7 @@ class _AccountCard extends ConsumerWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
-                            account.type.displayName,
+                            _accountSubtitle(ref),
                             style: AppTypography.labelSmall.copyWith(
                               color: AppColors.textSecondary.withValues(alpha: 0.7),
                               height: 1.2,

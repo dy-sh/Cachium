@@ -254,6 +254,13 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     await _saveAndUpdate(current.copyWith(homeBalancesHiddenByDefault: hidden));
   }
 
+  // Security
+  Future<void> setAppLockEnabled(bool enabled) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    await _saveAndUpdate(current.copyWith(appLockEnabled: enabled));
+  }
+
   // Onboarding
   Future<void> setOnboardingCompleted(bool completed) async {
     final current = state.valueOrNull;
@@ -325,6 +332,8 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
       homeAccountsTextSize: defaults.homeAccountsTextSize,
       homeTotalBalanceTextSize: defaults.homeTotalBalanceTextSize,
       homeBalancesHiddenByDefault: defaults.homeBalancesHiddenByDefault,
+      // Reset Security
+      appLockEnabled: defaults.appLockEnabled,
       // Preserve onboarding
       onboardingCompleted: current.onboardingCompleted,
     );
@@ -523,4 +532,10 @@ final assetSortOptionProvider = Provider<AssetSortOption>((ref) {
 final showAssetSelectorProvider = Provider<bool>((ref) {
   final settingsAsync = ref.watch(settingsProvider);
   return settingsAsync.valueOrNull?.showAssetSelector ?? true;
+});
+
+// Security providers
+final appLockEnabledProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.appLockEnabled ?? false;
 });

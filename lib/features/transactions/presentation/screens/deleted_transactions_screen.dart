@@ -8,6 +8,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
+import '../../../../design_system/components/feedback/empty_state.dart';
 import '../../../../design_system/components/feedback/notification.dart';
 import '../../../../design_system/components/layout/form_header.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
@@ -120,24 +121,19 @@ class DeletedTransactionsScreen extends ConsumerWidget {
                 data: (transactions) {
                   if (transactions.isEmpty) {
                     return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            LucideIcons.trash2,
-                            color: AppColors.textTertiary,
-                            size: 48,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          Text(
-                            totalCount == 0
-                                ? 'No deleted transactions'
-                                : 'No matching transactions',
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.screenPadding,
+                        ),
+                        child: EmptyState.centered(
+                          icon: LucideIcons.trash2,
+                          title: totalCount == 0
+                              ? 'No deleted transactions'
+                              : 'No matching transactions',
+                          subtitle: totalCount == 0
+                              ? 'Deleted transactions will appear here'
+                              : 'Try a different search term',
+                        ),
                       ),
                     );
                   }

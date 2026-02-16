@@ -5,7 +5,9 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../design_system/components/feedback/notification.dart';
 import '../../data/models/app_settings.dart';
+import '../providers/app_lock_provider.dart';
 import '../providers/settings_provider.dart';
 import '../widgets/settings_section.dart';
 import '../widgets/settings_tile.dart';
@@ -84,6 +86,8 @@ class PreferencesSettingsScreen extends ConsumerWidget {
                         _buildStartScreenTile(context, ref, settings),
                       ],
                     ),
+                    const SizedBox(height: AppSpacing.xl),
+                    _buildSecuritySection(context, ref, settings),
                     const SizedBox(height: AppSpacing.xxxl),
                   ],
                 ),
@@ -92,6 +96,49 @@ class PreferencesSettingsScreen extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSecuritySection(BuildContext context, WidgetRef ref, AppSettings settings) {
+    final biometricAvailable = ref.watch(biometricAvailableProvider);
+
+    return SettingsSection(
+      title: 'Security',
+      children: [
+        SettingsToggleTile(
+          title: 'App Lock',
+          description: biometricAvailable.when(
+            data: (available) => available
+                ? 'Require biometric or PIN to open app'
+                : 'Biometric auth not available on this device',
+            loading: () => 'Checking availability...',
+            error: (_, __) => 'Biometric auth not available',
+          ),
+          value: settings.appLockEnabled,
+          onChanged: (value) async {
+            final available = biometricAvailable.valueOrNull ?? false;
+            if (!available) {
+              if (context.mounted) {
+                context.showWarningNotification(
+                  'Biometric authentication is not available on this device',
+                );
+              }
+              return;
+            }
+
+            if (value) {
+              // Verify authentication before enabling
+              final service = ref.read(appLockServiceProvider);
+              final authenticated = await service.authenticate();
+              if (authenticated) {
+                ref.read(settingsProvider.notifier).setAppLockEnabled(true);
+              }
+            } else {
+              ref.read(settingsProvider.notifier).setAppLockEnabled(false);
+            }
+          },
+        ),
+      ],
     );
   }
 

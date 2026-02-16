@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../../../../core/utils/currency_formatter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/async_value_extensions.dart';
@@ -6,6 +8,7 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/animations/animated_counter.dart';
+import '../../../../design_system/components/feedback/notification.dart';
 import '../../../accounts/data/models/account.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../settings/data/models/app_settings.dart';
@@ -54,6 +57,16 @@ class _TotalBalanceCardState extends ConsumerState<TotalBalanceCard> {
     return GestureDetector(
       onTap: balancesHidden && !_balanceRevealed
           ? () => setState(() => _balanceRevealed = true)
+          : null,
+      onLongPress: showBalance
+          ? () {
+              Clipboard.setData(ClipboardData(
+                text: CurrencyFormatter.format(totalBalance),
+              ));
+              if (mounted) {
+                context.showSuccessNotification('Balance copied');
+              }
+            }
           : null,
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.xl),

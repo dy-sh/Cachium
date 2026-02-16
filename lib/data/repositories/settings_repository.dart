@@ -48,6 +48,7 @@ class SettingsRepository {
       categorySortOption: settings.categorySortOption.name,
       lastUsedIncomeCategoryId: settings.lastUsedIncomeCategoryId,
       lastUsedExpenseCategoryId: settings.lastUsedExpenseCategoryId,
+      appLockEnabled: settings.appLockEnabled,
     );
   }
 
@@ -102,6 +103,7 @@ class SettingsRepository {
       ),
       lastUsedIncomeCategoryId: data.lastUsedIncomeCategoryId,
       lastUsedExpenseCategoryId: data.lastUsedExpenseCategoryId,
+      appLockEnabled: data.appLockEnabled,
     );
   }
 

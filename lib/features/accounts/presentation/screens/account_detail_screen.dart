@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -75,20 +76,50 @@ class AccountDetailScreen extends ConsumerWidget {
             FormHeader(
               title: account.name,
               onClose: () => context.pop(),
-              trailing: GestureDetector(
-                onTap: () => context.push('/account/${account.id}/edit'),
-                child: Container(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceLight,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    LucideIcons.pencil,
-                    size: 18,
-                    color: AppColors.textSecondary,
-                  ),
+              trailing: PopupMenuButton<String>(
+                icon: Icon(
+                  LucideIcons.moreVertical,
+                  size: 20,
+                  color: AppColors.textSecondary,
                 ),
+                color: AppColors.surface,
+                onSelected: (value) async {
+                  if (value == 'edit') {
+                    context.push('/account/${account.id}/edit');
+                  } else if (value == 'duplicate') {
+                    await ref.read(accountsProvider.notifier).addAccount(
+                          name: '${account.name} (Copy)',
+                          type: account.type,
+                          initialBalance: account.initialBalance,
+                          customColor: account.customColor,
+                        );
+                    if (context.mounted) {
+                      context.showSuccessNotification('Account duplicated');
+                    }
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        Icon(LucideIcons.pencil, size: 16, color: AppColors.textSecondary),
+                        const SizedBox(width: AppSpacing.sm),
+                        Text('Edit', style: AppTypography.bodySmall),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'duplicate',
+                    child: Row(
+                      children: [
+                        Icon(LucideIcons.copy, size: 16, color: AppColors.textSecondary),
+                        const SizedBox(width: AppSpacing.sm),
+                        Text('Duplicate', style: AppTypography.bodySmall),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
 
@@ -136,13 +167,21 @@ class AccountDetailScreen extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(height: AppSpacing.xs),
-                        AnimatedCounter(
-                          value: account.balance,
-                          style: AppTypography.moneyLarge.copyWith(
-                            fontSize: 32,
-                            color: account.balance >= 0
-                                ? AppColors.textPrimary
-                                : AppColors.getTransactionColor('expense', intensity),
+                        GestureDetector(
+                          onLongPress: () {
+                            Clipboard.setData(ClipboardData(
+                              text: CurrencyFormatter.format(account.balance),
+                            ));
+                            context.showSuccessNotification('Balance copied');
+                          },
+                          child: AnimatedCounter(
+                            value: account.balance,
+                            style: AppTypography.moneyLarge.copyWith(
+                              fontSize: 32,
+                              color: account.balance >= 0
+                                  ? AppColors.textPrimary
+                                  : AppColors.getTransactionColor('expense', intensity),
+                            ),
                           ),
                         ),
                       ],

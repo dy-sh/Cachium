@@ -8,6 +8,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
+import '../../../../design_system/components/feedback/empty_state.dart';
 import '../../../../design_system/components/feedback/notification.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
@@ -60,39 +61,12 @@ class RecentTransactionsList extends ConsumerWidget {
         if (transactions.isEmpty) {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-            child: GestureDetector(
+            child: EmptyState.centered(
+              icon: LucideIcons.receipt,
+              title: 'No transactions yet',
+              subtitle: 'Tap to add your first transaction',
+              actionLabel: 'Add Transaction',
               onTap: () => context.push('/transaction/new'),
-              child: Container(
-                padding: const EdgeInsets.all(AppSpacing.xxl),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Column(
-                  children: [
-                    Icon(
-                      LucideIcons.receipt,
-                      size: 28,
-                      color: AppColors.textTertiary,
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      'No transactions yet',
-                      style: AppTypography.labelMedium.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      'Tap to add your first transaction',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textTertiary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ),
           );
         }

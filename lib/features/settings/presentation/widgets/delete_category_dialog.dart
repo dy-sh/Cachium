@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../design_system/components/feedback/confirmation_dialog.dart';
 import '../../../categories/data/models/category.dart';
 
 enum DeleteCategoryAction {
@@ -164,61 +165,16 @@ Future<DeleteCategoryAction?> showDeleteCategoryDialog({
   );
 }
 
-class SimpleDeleteConfirmationDialog extends StatelessWidget {
-  final Category category;
-
-  const SimpleDeleteConfirmationDialog({
-    super.key,
-    required this.category,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: AppColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      title: Text(
-        'Delete Category',
-        style: AppTypography.h4,
-      ),
-      content: Text(
-        'Are you sure you want to delete "${category.name}"? This action cannot be undone.',
-        style: AppTypography.bodyMedium.copyWith(
-          color: AppColors.textSecondary,
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: Text(
-            'Cancel',
-            style: AppTypography.button.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: Text(
-            'Delete',
-            style: AppTypography.button.copyWith(
-              color: AppColors.expense,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 Future<bool?> showSimpleDeleteConfirmationDialog({
   required BuildContext context,
   required Category category,
-}) {
-  return showDialog<bool>(
+}) async {
+  final result = await showConfirmationDialog(
     context: context,
-    builder: (context) => SimpleDeleteConfirmationDialog(category: category),
+    title: 'Delete Category',
+    message: 'Are you sure you want to delete "${category.name}"? This action cannot be undone.',
+    confirmLabel: 'Delete',
+    isDestructive: true,
   );
+  return result;
 }
