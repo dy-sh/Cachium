@@ -89,8 +89,11 @@ class SettingsData with _$SettingsData {
     /// Whether app lock (biometric/PIN) is enabled
     @Default(false) bool appLockEnabled,
 
-    /// App PIN code (stored as plaintext 4-6 digit string)
+    /// App PIN code (stored as plaintext 4-8 digit string)
     String? appPinCode,
+
+    /// App password (stored as plaintext string)
+    String? appPassword,
   }) = _SettingsData;
 
   factory SettingsData.fromJson(Map<String, dynamic> json) =>

@@ -102,6 +102,9 @@ mixin _$SettingsData {
   /// App PIN code (stored as plaintext 4-6 digit string)
   String? get appPinCode => throw _privateConstructorUsedError;
 
+  /// App password (stored as plaintext string)
+  String? get appPassword => throw _privateConstructorUsedError;
+
   /// Serializes this SettingsData to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
@@ -147,6 +150,7 @@ abstract class $SettingsDataCopyWith<$Res> {
     String? lastUsedExpenseCategoryId,
     bool appLockEnabled,
     String? appPinCode,
+    String? appPassword,
   });
 }
 
@@ -192,6 +196,7 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
     Object? lastUsedExpenseCategoryId = freezed,
     Object? appLockEnabled = null,
     Object? appPinCode = freezed,
+    Object? appPassword = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -303,6 +308,10 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
                 ? _value.appPinCode
                 : appPinCode // ignore: cast_nullable_to_non_nullable
                       as String?,
+            appPassword: freezed == appPassword
+                ? _value.appPassword
+                : appPassword // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
@@ -346,6 +355,7 @@ abstract class _$$SettingsDataImplCopyWith<$Res>
     String? lastUsedExpenseCategoryId,
     bool appLockEnabled,
     String? appPinCode,
+    String? appPassword,
   });
 }
 
@@ -390,6 +400,7 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
     Object? lastUsedExpenseCategoryId = freezed,
     Object? appLockEnabled = null,
     Object? appPinCode = freezed,
+    Object? appPassword = freezed,
   }) {
     return _then(
       _$SettingsDataImpl(
@@ -501,6 +512,10 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
             ? _value.appPinCode
             : appPinCode // ignore: cast_nullable_to_non_nullable
                   as String?,
+        appPassword: freezed == appPassword
+            ? _value.appPassword
+            : appPassword // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -537,6 +552,7 @@ class _$SettingsDataImpl implements _SettingsData {
     this.lastUsedExpenseCategoryId,
     this.appLockEnabled = false,
     this.appPinCode,
+    this.appPassword,
   });
 
   factory _$SettingsDataImpl.fromJson(Map<String, dynamic> json) =>
@@ -672,9 +688,13 @@ class _$SettingsDataImpl implements _SettingsData {
   @override
   final String? appPinCode;
 
+  /// App password (stored as plaintext string)
+  @override
+  final String? appPassword;
+
   @override
   String toString() {
-    return 'SettingsData(id: $id, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, currencySymbol: $currencySymbol, customCurrencySymbol: $customCurrencySymbol, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, categoriesFoldedCount: $categoriesFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, categorySortOption: $categorySortOption, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId, appLockEnabled: $appLockEnabled, appPinCode: $appPinCode)';
+    return 'SettingsData(id: $id, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, currencySymbol: $currencySymbol, customCurrencySymbol: $customCurrencySymbol, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, categoriesFoldedCount: $categoriesFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, categorySortOption: $categorySortOption, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId, appLockEnabled: $appLockEnabled, appPinCode: $appPinCode, appPassword: $appPassword)';
   }
 
   @override
@@ -740,7 +760,9 @@ class _$SettingsDataImpl implements _SettingsData {
             (identical(other.appLockEnabled, appLockEnabled) ||
                 other.appLockEnabled == appLockEnabled) &&
             (identical(other.appPinCode, appPinCode) ||
-                other.appPinCode == appPinCode));
+                other.appPinCode == appPinCode) &&
+            (identical(other.appPassword, appPassword) ||
+                other.appPassword == appPassword));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -774,6 +796,7 @@ class _$SettingsDataImpl implements _SettingsData {
     lastUsedExpenseCategoryId,
     appLockEnabled,
     appPinCode,
+    appPassword,
   ]);
 
   /// Create a copy of SettingsData
@@ -819,6 +842,7 @@ abstract class _SettingsData implements SettingsData {
     final String? lastUsedExpenseCategoryId,
     final bool appLockEnabled,
     final String? appPinCode,
+    final String? appPassword,
   }) = _$SettingsDataImpl;
 
   factory _SettingsData.fromJson(Map<String, dynamic> json) =
@@ -931,6 +955,10 @@ abstract class _SettingsData implements SettingsData {
   /// App PIN code (stored as plaintext 4-6 digit string)
   @override
   String? get appPinCode;
+
+  /// App password (stored as plaintext string)
+  @override
+  String? get appPassword;
 
   /// Create a copy of SettingsData
   /// with the given fields replaced by the non-null parameter values.

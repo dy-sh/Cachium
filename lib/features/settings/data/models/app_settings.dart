@@ -156,6 +156,7 @@ class AppSettings {
   // Security
   final bool appLockEnabled;
   final String? appPinCode;
+  final String? appPassword;
 
   // Onboarding
   final bool onboardingCompleted;
@@ -200,6 +201,7 @@ class AppSettings {
     this.homeBalancesHiddenByDefault = false,
     this.appLockEnabled = false,
     this.appPinCode,
+    this.appPassword,
     this.onboardingCompleted = false,
   });
 
@@ -255,6 +257,8 @@ class AppSettings {
     bool? appLockEnabled,
     String? appPinCode,
     bool clearAppPinCode = false,
+    String? appPassword,
+    bool clearAppPassword = false,
     bool? onboardingCompleted,
   }) {
     return AppSettings(
@@ -297,6 +301,7 @@ class AppSettings {
       homeBalancesHiddenByDefault: homeBalancesHiddenByDefault ?? this.homeBalancesHiddenByDefault,
       appLockEnabled: appLockEnabled ?? this.appLockEnabled,
       appPinCode: clearAppPinCode ? null : (appPinCode ?? this.appPinCode),
+      appPassword: clearAppPassword ? null : (appPassword ?? this.appPassword),
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
     );
   }

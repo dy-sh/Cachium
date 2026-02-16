@@ -271,6 +271,16 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     }
   }
 
+  Future<void> setAppPassword(String? password) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    if (password == null) {
+      await _saveAndUpdate(current.copyWith(clearAppPassword: true));
+    } else {
+      await _saveAndUpdate(current.copyWith(appPassword: password));
+    }
+  }
+
   // Onboarding
   Future<void> setOnboardingCompleted(bool completed) async {
     final current = state.valueOrNull;
@@ -345,6 +355,7 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
       // Reset Security
       appLockEnabled: defaults.appLockEnabled,
       appPinCode: defaults.appPinCode,
+      appPassword: defaults.appPassword,
       // Preserve onboarding
       onboardingCompleted: current.onboardingCompleted,
     );
@@ -554,4 +565,9 @@ final appLockEnabledProvider = Provider<bool>((ref) {
 final appPinCodeProvider = Provider<String?>((ref) {
   final settingsAsync = ref.watch(settingsProvider);
   return settingsAsync.valueOrNull?.appPinCode;
+});
+
+final appPasswordProvider = Provider<String?>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.appPassword;
 });

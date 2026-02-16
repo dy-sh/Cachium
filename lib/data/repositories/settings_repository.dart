@@ -50,6 +50,7 @@ class SettingsRepository {
       lastUsedExpenseCategoryId: settings.lastUsedExpenseCategoryId,
       appLockEnabled: settings.appLockEnabled,
       appPinCode: settings.appPinCode,
+      appPassword: settings.appPassword,
     );
   }
 
@@ -106,6 +107,7 @@ class SettingsRepository {
       lastUsedExpenseCategoryId: data.lastUsedExpenseCategoryId,
       appLockEnabled: data.appLockEnabled,
       appPinCode: data.appPinCode,
+      appPassword: data.appPassword,
     );
   }
 

@@ -102,6 +102,20 @@ class PreferencesSettingsScreen extends ConsumerWidget {
   Widget _buildSecuritySection(BuildContext context, WidgetRef ref, AppSettings settings) {
     final biometricAvailable = ref.watch(biometricAvailableProvider);
     final hasPinSet = settings.appPinCode != null;
+    final hasPasswordSet = settings.appPassword != null;
+    final hasAnyAuth = hasPinSet || hasPasswordSet;
+
+    String lockDescription() {
+      final hasBio = biometricAvailable.valueOrNull ?? false;
+      if (hasBio || hasAnyAuth) {
+        final methods = <String>[];
+        if (hasBio) methods.add('biometric');
+        if (hasPinSet) methods.add('PIN');
+        if (hasPasswordSet) methods.add('password');
+        return 'Require ${methods.join(' / ')} to open app';
+      }
+      return 'Set a PIN or password to lock the app';
+    }
 
     return SettingsSection(
       title: 'Security',
@@ -109,32 +123,24 @@ class PreferencesSettingsScreen extends ConsumerWidget {
         SettingsToggleTile(
           title: 'App Lock',
           description: biometricAvailable.when(
-            data: (available) => available
-                ? 'Require biometric or PIN to open app'
-                : hasPinSet
-                    ? 'Require PIN to open app'
-                    : 'Set a PIN or enable biometrics to lock the app',
+            data: (_) => lockDescription(),
             loading: () => 'Checking availability...',
-            error: (_, __) => hasPinSet
-                ? 'Require PIN to open app'
-                : 'Set a PIN to lock the app',
+            error: (_, __) => lockDescription(),
           ),
           value: settings.appLockEnabled,
           onChanged: (value) async {
             if (value) {
               final available = biometricAvailable.valueOrNull ?? false;
-              if (!available && !hasPinSet) {
-                // No biometric and no PIN — prompt to set PIN first
+              if (!available && !hasAnyAuth) {
                 if (context.mounted) {
                   context.showWarningNotification(
-                    'Set a PIN code first to enable App Lock',
+                    'Set a PIN or password first to enable App Lock',
                   );
                 }
                 return;
               }
 
               if (available) {
-                // Verify with biometric before enabling
                 final service = ref.read(appLockServiceProvider);
                 final authenticated = await service.authenticate();
                 if (!authenticated) return;
@@ -148,9 +154,16 @@ class PreferencesSettingsScreen extends ConsumerWidget {
         SettingsTile(
           title: hasPinSet ? 'Change PIN' : 'Set PIN Code',
           description: hasPinSet
-              ? 'Change or remove your PIN'
-              : 'Add a PIN as an alternative unlock method',
+              ? 'Change or remove your 4–8 digit PIN'
+              : 'Add a 4–8 digit PIN to unlock the app',
           onTap: () => _showPinSetupSheet(context, ref, hasPinSet),
+        ),
+        SettingsTile(
+          title: hasPasswordSet ? 'Change Password' : 'Set Password',
+          description: hasPasswordSet
+              ? 'Change or remove your password'
+              : 'Add a password to unlock the app',
+          onTap: () => _showPasswordSetupSheet(context, ref, hasPasswordSet),
         ),
       ],
     );
@@ -170,13 +183,72 @@ class PreferencesSettingsScreen extends ConsumerWidget {
       onPinRemoved: hasPinSet
           ? () {
               ref.read(settingsProvider.notifier).setAppPinCode(null);
-              // If no biometric available, also disable app lock
+              // If no other auth method, disable app lock
               final biometric = ref.read(biometricAvailableProvider).valueOrNull ?? false;
-              if (!biometric) {
+              final hasPassword = ref.read(settingsProvider).valueOrNull?.appPassword != null;
+              if (!biometric && !hasPassword) {
                 ref.read(settingsProvider.notifier).setAppLockEnabled(false);
               }
               Navigator.pop(context);
               context.showSuccessNotification('PIN removed');
+            }
+          : null,
+    );
+
+    if (!animationsEnabled) {
+      Navigator.of(context).push(
+        PageRouteBuilder(
+          opaque: false,
+          barrierDismissible: true,
+          barrierColor: Colors.black54,
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+          pageBuilder: (context, animation, secondaryAnimation) {
+            return Align(
+              alignment: Alignment.bottomCenter,
+              child: Material(
+                color: AppColors.surface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                child: modalContent,
+              ),
+            );
+          },
+        ),
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: AppColors.surface,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (context) => modalContent,
+      );
+    }
+  }
+
+  void _showPasswordSetupSheet(BuildContext context, WidgetRef ref, bool hasPasswordSet) {
+    final animationsEnabled = ref.read(formAnimationsEnabledProvider);
+    final modalContent = _PasswordSetupSheet(
+      hasPasswordSet: hasPasswordSet,
+      onPasswordSet: (password) {
+        ref.read(settingsProvider.notifier).setAppPassword(password);
+        Navigator.pop(context);
+        context.showSuccessNotification(
+          hasPasswordSet ? 'Password changed' : 'Password set',
+        );
+      },
+      onPasswordRemoved: hasPasswordSet
+          ? () {
+              ref.read(settingsProvider.notifier).setAppPassword(null);
+              final biometric = ref.read(biometricAvailableProvider).valueOrNull ?? false;
+              final hasPin = ref.read(settingsProvider).valueOrNull?.appPinCode != null;
+              if (!biometric && !hasPin) {
+                ref.read(settingsProvider.notifier).setAppLockEnabled(false);
+              }
+              Navigator.pop(context);
+              context.showSuccessNotification('Password removed');
             }
           : null,
     );
@@ -365,7 +437,8 @@ class _PinSetupSheetState extends State<_PinSetupSheet> {
   String _firstPin = '';
   String _currentPin = '';
   String? _error;
-  static const _pinLength = 4;
+  static const _minLength = 4;
+  static const _maxLength = 8;
 
   String get _title {
     if (_step == _PinStep.enter) {
@@ -375,40 +448,48 @@ class _PinSetupSheetState extends State<_PinSetupSheet> {
   }
 
   String get _subtitle {
-    if (_step == _PinStep.enter) return 'Enter a $_pinLength-digit PIN';
-    return 'Re-enter your PIN to confirm';
+    if (_step == _PinStep.enter) return 'Enter a $_minLength–$_maxLength digit PIN';
+    return 'Re-enter your ${_firstPin.length}-digit PIN to confirm';
+  }
+
+  bool get _canSubmit => _currentPin.length >= _minLength;
+
+  void _submit() {
+    if (!_canSubmit) return;
+    if (_step == _PinStep.enter) {
+      setState(() {
+        _firstPin = _currentPin;
+        _currentPin = '';
+        _step = _PinStep.confirm;
+      });
+    } else {
+      if (_currentPin == _firstPin) {
+        widget.onPinSet(_currentPin);
+      } else {
+        setState(() {
+          _error = 'PINs do not match';
+          _currentPin = '';
+          _step = _PinStep.enter;
+          _firstPin = '';
+        });
+      }
+    }
   }
 
   void _onDigit(String digit) {
-    if (_currentPin.length >= _pinLength) return;
+    final maxLen = _step == _PinStep.confirm ? _firstPin.length : _maxLength;
+    if (_currentPin.length >= maxLen) return;
 
     setState(() {
       _currentPin += digit;
       _error = null;
     });
 
-    if (_currentPin.length == _pinLength) {
+    // Auto-submit on confirm step when length matches
+    if (_step == _PinStep.confirm && _currentPin.length == _firstPin.length) {
       Future.delayed(const Duration(milliseconds: 150), () {
         if (!mounted) return;
-        if (_step == _PinStep.enter) {
-          setState(() {
-            _firstPin = _currentPin;
-            _currentPin = '';
-            _step = _PinStep.confirm;
-          });
-        } else {
-          // Confirm step
-          if (_currentPin == _firstPin) {
-            widget.onPinSet(_currentPin);
-          } else {
-            setState(() {
-              _error = 'PINs do not match';
-              _currentPin = '';
-              _step = _PinStep.enter;
-              _firstPin = '';
-            });
-          }
-        }
+        _submit();
       });
     }
   }
@@ -423,6 +504,8 @@ class _PinSetupSheetState extends State<_PinSetupSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final dotCount = _step == _PinStep.confirm ? _firstPin.length : _maxLength;
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -461,10 +544,10 @@ class _PinSetupSheetState extends State<_PinSetupSheet> {
             // PIN dots
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(_pinLength, (index) {
+              children: List.generate(dotCount, (index) {
                 final filled = index < _currentPin.length;
                 return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                  margin: const EdgeInsets.symmetric(horizontal: 6),
                   width: 14,
                   height: 14,
                   decoration: BoxDecoration(
@@ -480,7 +563,31 @@ class _PinSetupSheetState extends State<_PinSetupSheet> {
                 );
               }),
             ),
-            const SizedBox(height: AppSpacing.xxl),
+            // Confirm button (only on enter step — confirm step auto-submits)
+            if (_step == _PinStep.enter) ...[
+              const SizedBox(height: AppSpacing.lg),
+              GestureDetector(
+                onTap: _canSubmit ? _submit : null,
+                child: Container(
+                  width: 200,
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: _canSubmit ? AppColors.textPrimary : AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: _canSubmit ? null : Border.all(color: AppColors.border),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Next',
+                      style: AppTypography.labelLarge.copyWith(
+                        color: _canSubmit ? AppColors.background : AppColors.textTertiary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.lg),
             // Number pad
             _buildPad(),
             if (widget.hasPinSet && widget.onPinRemoved != null) ...[
@@ -564,6 +671,202 @@ class _PinSetupSheetState extends State<_PinSetupSheet> {
           ),
         );
       }).toList(),
+    );
+  }
+}
+
+enum _PasswordStep { enter, confirm }
+
+class _PasswordSetupSheet extends StatefulWidget {
+  final bool hasPasswordSet;
+  final ValueChanged<String> onPasswordSet;
+  final VoidCallback? onPasswordRemoved;
+
+  const _PasswordSetupSheet({
+    required this.hasPasswordSet,
+    required this.onPasswordSet,
+    this.onPasswordRemoved,
+  });
+
+  @override
+  State<_PasswordSetupSheet> createState() => _PasswordSetupSheetState();
+}
+
+class _PasswordSetupSheetState extends State<_PasswordSetupSheet> {
+  _PasswordStep _step = _PasswordStep.enter;
+  String _firstPassword = '';
+  String? _error;
+  final _controller = TextEditingController();
+  final _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  String get _title {
+    if (_step == _PasswordStep.enter) {
+      return widget.hasPasswordSet ? 'Enter New Password' : 'Set Password';
+    }
+    return 'Confirm Password';
+  }
+
+  String get _subtitle {
+    if (_step == _PasswordStep.enter) return 'Enter a password (4+ characters)';
+    return 'Re-enter your password to confirm';
+  }
+
+  void _submit() {
+    final text = _controller.text;
+    if (text.length < 4) {
+      setState(() => _error = 'Password must be at least 4 characters');
+      return;
+    }
+
+    if (_step == _PasswordStep.enter) {
+      setState(() {
+        _firstPassword = text;
+        _controller.clear();
+        _step = _PasswordStep.confirm;
+        _error = null;
+      });
+      _focusNode.requestFocus();
+    } else {
+      if (text == _firstPassword) {
+        widget.onPasswordSet(text);
+      } else {
+        setState(() {
+          _error = 'Passwords do not match';
+          _controller.clear();
+          _step = _PasswordStep.enter;
+          _firstPassword = '';
+        });
+        _focusNode.requestFocus();
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: AppSpacing.lg,
+          right: AppSpacing.lg,
+          top: AppSpacing.lg,
+          bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xxl),
+            Text(_title, style: AppTypography.h4),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              _subtitle,
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                _error!,
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.expense,
+                ),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.xxl),
+            TextField(
+              controller: _controller,
+              focusNode: _focusNode,
+              obscureText: true,
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textPrimary,
+              ),
+              decoration: InputDecoration(
+                hintText: _step == _PasswordStep.enter ? 'Password' : 'Confirm password',
+                hintStyle: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textTertiary,
+                ),
+                filled: true,
+                fillColor: AppColors.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppColors.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppColors.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppColors.textTertiary),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.md,
+                ),
+              ),
+              onSubmitted: (_) => _submit(),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            GestureDetector(
+              onTap: _submit,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.textPrimary,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    _step == _PasswordStep.enter ? 'Next' : 'Set Password',
+                    style: AppTypography.labelLarge.copyWith(
+                      color: AppColors.background,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            if (widget.hasPasswordSet && widget.onPasswordRemoved != null) ...[
+              const SizedBox(height: AppSpacing.lg),
+              GestureDetector(
+                onTap: widget.onPasswordRemoved,
+                child: Text(
+                  'Remove Password',
+                  style: AppTypography.labelMedium.copyWith(
+                    color: AppColors.expense,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.lg),
+          ],
+        ),
+      ),
     );
   }
 }
