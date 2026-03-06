@@ -31,6 +31,16 @@ flutter build ios            # iOS build
 - Focus on making code changes only
 - Let the user review and commit changes themselves
 
+## Feature Documentation
+
+**IMPORTANT:** After completing a new feature, always run the `feature-docs-updater` agent to keep documentation up to date.
+
+```
+/agents feature-docs-updater
+```
+
+This agent updates CLAUDE.md and any relevant docs to reflect new routes, providers, models, services, or architectural patterns introduced by the feature.
+
 ## Architecture
 
 ```
