@@ -4,6 +4,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
+import '../../../../../core/constants/currencies.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
 import '../../providers/category_breakdown_provider.dart';
 import '../../providers/chart_highlight_provider.dart';
@@ -22,7 +23,8 @@ class _TreemapChartState extends ConsumerState<TreemapChart> {
   @override
   Widget build(BuildContext context) {
     final breakdowns = ref.watch(categoryBreakdownProvider);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final mainCurrencyCode = ref.watch(mainCurrencyCodeProvider);
+    final currencySymbol = Currency.symbolFromCode(mainCurrencyCode);
     final highlightedCategory = ref.watch(chartHighlightProvider);
 
     if (breakdowns.isEmpty) return const SizedBox.shrink();

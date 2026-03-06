@@ -91,7 +91,7 @@ class _BudgetProgressItem extends ConsumerWidget {
                 ),
               ),
               Text(
-                '${CurrencyFormatter.formatSimple(progress.spent)} / ${CurrencyFormatter.formatSimple(progress.budget.amount)}',
+                '${CurrencyFormatter.formatSimple(progress.spent, currencyCode: ref.watch(mainCurrencyCodeProvider))} / ${CurrencyFormatter.formatSimple(progress.budget.amount, currencyCode: ref.watch(mainCurrencyCodeProvider))}',
                 style: AppTypography.bodySmall.copyWith(
                   color: progressColor,
                 ),

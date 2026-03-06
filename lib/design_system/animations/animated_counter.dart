@@ -9,6 +9,7 @@ class AnimatedCounter extends ConsumerStatefulWidget {
   final Duration duration;
   final String? prefix;
   final String? suffix;
+  final String? currencyCode;
 
   const AnimatedCounter({
     super.key,
@@ -17,6 +18,7 @@ class AnimatedCounter extends ConsumerStatefulWidget {
     this.duration = const Duration(milliseconds: 500),
     this.prefix,
     this.suffix,
+    this.currencyCode,
   });
 
   @override
@@ -79,9 +81,10 @@ class _AnimatedCounterState extends ConsumerState<AnimatedCounter>
   @override
   Widget build(BuildContext context) {
     final animationsEnabled = ref.watch(balanceCountersEnabledProvider);
+    final code = widget.currencyCode ?? 'USD';
 
     if (!animationsEnabled) {
-      final formattedValue = CurrencyFormatter.format(widget.value);
+      final formattedValue = CurrencyFormatter.format(widget.value, currencyCode: code);
       return Text(
         '${widget.prefix ?? ''}$formattedValue${widget.suffix ?? ''}',
         style: widget.style,
@@ -91,7 +94,7 @@ class _AnimatedCounterState extends ConsumerState<AnimatedCounter>
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
-        final formattedValue = CurrencyFormatter.format(_animation.value);
+        final formattedValue = CurrencyFormatter.format(_animation.value, currencyCode: code);
         return Text(
           '${widget.prefix ?? ''}$formattedValue${widget.suffix ?? ''}',
           style: widget.style,

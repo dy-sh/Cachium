@@ -3,6 +3,9 @@ import 'package:intl/intl.dart';
 import '../../../categories/data/models/category.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../data/models/category_time_series.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/utils/currency_conversion.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import 'filtered_transactions_provider.dart';
 import 'analytics_filter_provider.dart';
 
@@ -13,6 +16,8 @@ final categoryTimeSeriesProvider = Provider<List<CategoryTimeSeries>>((ref) {
   final transactions = ref.watch(filteredAnalyticsTransactionsProvider);
   final categoriesAsync = ref.watch(categoriesProvider);
   final filter = ref.watch(analyticsFilterProvider);
+  final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
 
   final categories = categoriesAsync.valueOrNull;
   if (categories == null || selectedIds.isEmpty) return [];
@@ -71,7 +76,7 @@ final categoryTimeSeriesProvider = Provider<List<CategoryTimeSeries>>((ref) {
     if (!selectedIds.contains(tx.categoryId)) continue;
     final k = getKey(tx.date);
     catPeriodAmounts[tx.categoryId] ??= {};
-    catPeriodAmounts[tx.categoryId]![k] = (catPeriodAmounts[tx.categoryId]![k] ?? 0) + tx.amount;
+    catPeriodAmounts[tx.categoryId]![k] = (catPeriodAmounts[tx.categoryId]![k] ?? 0) + convertedAmount(tx, rates, mainCurrency);
   }
 
   return selectedIds.where((id) => catMap.containsKey(id)).map((id) {

@@ -5,6 +5,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
+import '../../../../../core/constants/currencies.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
 import '../../../data/models/category_breakdown.dart';
 import '../../providers/category_breakdown_provider.dart';
@@ -18,7 +19,8 @@ class WhatIfSimulator extends ConsumerWidget {
     final breakdowns = ref.watch(categoryBreakdownProvider);
     final result = ref.watch(whatIfResultProvider);
     final adjustments = ref.watch(whatIfAdjustmentsProvider);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final mainCurrencyCode = ref.watch(mainCurrencyCodeProvider);
+    final currencySymbol = Currency.symbolFromCode(mainCurrencyCode);
 
     if (breakdowns.isEmpty) return const SizedBox.shrink();
 

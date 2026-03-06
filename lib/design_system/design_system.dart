@@ -31,6 +31,7 @@ export 'components/feedback/notification.dart';
 
 // Inputs
 export 'components/inputs/amount_input.dart';
+export 'components/inputs/currency_picker.dart';
 export 'components/inputs/date_picker.dart';
 export 'components/inputs/toggle.dart';
 export 'components/inputs/input_field.dart';

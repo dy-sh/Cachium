@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../transactions/data/models/transaction.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/utils/currency_conversion.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/financial_insight.dart';
 import 'filtered_transactions_provider.dart';
 
@@ -22,6 +25,8 @@ class DayOfWeekData {
 
 final spendingPatternsProvider = Provider<List<DayOfWeekData>>((ref) {
   final transactions = ref.watch(filteredAnalyticsTransactionsProvider);
+  final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
 
   final expenses = transactions.where((tx) => tx.type == TransactionType.expense).toList();
   if (expenses.isEmpty) return [];
@@ -32,7 +37,7 @@ final spendingPatternsProvider = Provider<List<DayOfWeekData>>((ref) {
 
   for (final tx in expenses) {
     final day = tx.date.weekday;
-    dayTotals[day] = (dayTotals[day] ?? 0) + tx.amount;
+    dayTotals[day] = (dayTotals[day] ?? 0) + convertedAmount(tx, rates, mainCurrency);
     dayCounts[day] = (dayCounts[day] ?? 0) + 1;
   }
 

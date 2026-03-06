@@ -19,6 +19,7 @@ _$TransactionDataImpl _$$TransactionDataImplFromJson(
   destinationAccountId: json['destinationAccountId'] as String?,
   assetId: json['assetId'] as String?,
   currency: json['currency'] as String? ?? 'USD',
+  conversionRate: (json['conversionRate'] as num?)?.toDouble() ?? 1.0,
   dateMillis: (json['dateMillis'] as num).toInt(),
   createdAtMillis: (json['createdAtMillis'] as num).toInt(),
 );
@@ -36,6 +37,7 @@ Map<String, dynamic> _$$TransactionDataImplToJson(
   'destinationAccountId': instance.destinationAccountId,
   'assetId': instance.assetId,
   'currency': instance.currency,
+  'conversionRate': instance.conversionRate,
   'dateMillis': instance.dateMillis,
   'createdAtMillis': instance.createdAtMillis,
 };

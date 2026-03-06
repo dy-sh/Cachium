@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/currencies.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/buttons/primary_button.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../../design_system/components/feedback/notification.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../../transactions/presentation/providers/transaction_form_provider.dart';
@@ -151,7 +153,7 @@ class _MarkAsSoldDialogState extends ConsumerState<_MarkAsSoldDialog> {
                 decoration: InputDecoration(
                   hintText: '0.00',
                   hintStyle: AppTypography.inputHint,
-                  prefixText: '\$ ',
+                  prefixText: '${Currency.symbolFromCode(ref.watch(mainCurrencyCodeProvider))} ',
                   prefixStyle: AppTypography.input.copyWith(
                     color: AppColors.textTertiary,
                   ),

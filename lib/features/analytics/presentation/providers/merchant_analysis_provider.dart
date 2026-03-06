@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/utils/currency_conversion.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/merchant_breakdown.dart';
 import 'analytics_filter_provider.dart';
 
@@ -8,6 +11,8 @@ import 'analytics_filter_provider.dart';
 final merchantAnalysisProvider = Provider<MerchantSummary>((ref) {
   final transactionsAsync = ref.watch(transactionsProvider);
   final filter = ref.watch(analyticsFilterProvider);
+  final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
   final transactions = transactionsAsync.valueOrNull;
 
   if (transactions == null || transactions.isEmpty) {
@@ -37,7 +42,7 @@ final merchantAnalysisProvider = Provider<MerchantSummary>((ref) {
   final breakdowns = <MerchantBreakdown>[];
   for (final entry in merchantGroups.entries) {
     final txs = entry.value;
-    final totalAmount = txs.fold<double>(0, (sum, tx) => sum + tx.amount);
+    final totalAmount = txs.fold<double>(0, (sum, tx) => sum + convertedAmount(tx, rates, mainCurrency));
     final avgAmount = totalAmount / txs.length;
 
     // Find primary category (most used)
@@ -83,6 +88,8 @@ final merchantAnalysisProvider = Provider<MerchantSummary>((ref) {
 /// Provides spending by merchant over time for trend charts
 final merchantTrendsProvider = Provider<Map<String, List<_MerchantDataPoint>>>((ref) {
   final transactionsAsync = ref.watch(transactionsProvider);
+  final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
   final transactions = transactionsAsync.valueOrNull;
 
   if (transactions == null) return {};
@@ -108,7 +115,7 @@ final merchantTrendsProvider = Provider<Map<String, List<_MerchantDataPoint>>>((
 
     merchantMonthly.putIfAbsent(normalizedMerchant, () => {});
     merchantMonthly[normalizedMerchant]![monthKey] =
-        (merchantMonthly[normalizedMerchant]![monthKey] ?? 0) + tx.amount;
+        (merchantMonthly[normalizedMerchant]![monthKey] ?? 0) + convertedAmount(tx, rates, mainCurrency);
   }
 
   // Convert to data points

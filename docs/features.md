@@ -419,4 +419,14 @@
 - Expression auto-resolves on blur, replacing text with computed value
 - Proper operator precedence (* and / before + and -)
 
+#### 15. Multi-currency support
+- Accounts and transactions each store their own `currencyCode` independently of the main currency
+- Account edit preserves `currencyCode`; transaction edit preserves `currencyCode` and `conversionRate`
+- Account form reset defaults to the user's main currency instead of hardcoded USD
+- Exchange rates are eagerly loaded when the transaction form opens and refreshed right before saving
+- `setConversionRate()` on `TransactionFormNotifier` allows reliable rate updates
+- All `CurrencyFormatter.format()` and `AnimatedCounter` calls use the correct per-account or per-transaction `currencyCode`
+- Aggregated totals (total balance, analytics, budgets) display in the main currency
+- Foreign-currency accounts and transactions show an "≈ $X,XXX.XX" subtitle in main currency on account detail, account cards, account preview list, and transaction detail screens
+
 ---

@@ -1,4 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/utils/currency_conversion.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../data/models/calendar_day_data.dart';
@@ -11,6 +14,8 @@ final cashFlowCalendarProvider = Provider<List<CalendarDayData>>((ref) {
   final filter = ref.watch(analyticsFilterProvider);
   final monthOffset = ref.watch(calendarMonthOffsetProvider);
   final transactionsAsync = ref.watch(transactionsProvider);
+  final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
 
   final allTransactions = transactionsAsync.valueOrNull;
   if (allTransactions == null) return [];
@@ -37,9 +42,9 @@ final cashFlowCalendarProvider = Provider<List<CalendarDayData>>((ref) {
   for (final tx in transactions) {
     final key = '${tx.date.year}-${tx.date.month}-${tx.date.day}';
     if (tx.type == TransactionType.income) {
-      incomeByDay[key] = (incomeByDay[key] ?? 0) + tx.amount;
+      incomeByDay[key] = (incomeByDay[key] ?? 0) + convertedAmount(tx, rates, mainCurrency);
     } else {
-      expenseByDay[key] = (expenseByDay[key] ?? 0) + tx.amount;
+      expenseByDay[key] = (expenseByDay[key] ?? 0) + convertedAmount(tx, rates, mainCurrency);
     }
   }
 

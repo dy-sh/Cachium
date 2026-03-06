@@ -5,11 +5,16 @@ import '../../../categories/data/models/category.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/utils/currency_conversion.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/financial_insight.dart';
 
 final recurringDetectionProvider = Provider<List<FinancialInsight>>((ref) {
   final transactionsAsync = ref.watch(transactionsProvider);
   final categoriesAsync = ref.watch(categoriesProvider);
+  final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
 
   final transactions = transactionsAsync.valueOrNull;
   final categories = categoriesAsync.valueOrNull;
@@ -20,7 +25,7 @@ final recurringDetectionProvider = Provider<List<FinancialInsight>>((ref) {
   // Group by (rounded amount to nearest integer, categoryId)
   final groups = <String, List<Transaction>>{};
   for (final tx in transactions) {
-    final key = '${tx.amount.round()}_${tx.categoryId}';
+    final key = '${convertedAmount(tx, rates, mainCurrency).round()}_${tx.categoryId}';
     groups.putIfAbsent(key, () => []).add(tx);
   }
 
@@ -68,7 +73,7 @@ final recurringDetectionProvider = Provider<List<FinancialInsight>>((ref) {
       ),
     );
 
-    final amount = txs.first.amount;
+    final amount = convertedAmount(txs.first, rates, mainCurrency);
     insights.add(FinancialInsight(
       message: '${cat.name}: ${amount.toStringAsFixed(0)} appears $frequency',
       type: InsightType.recurring,

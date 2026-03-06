@@ -31,8 +31,9 @@ class SettingsRepository {
       formAnimationsEnabled: settings.formAnimationsEnabled,
       balanceCountersEnabled: settings.balanceCountersEnabled,
       dateFormat: settings.dateFormat.name,
-      currencySymbol: settings.currencySymbol.name,
-      customCurrencySymbol: settings.customCurrencySymbol,
+      mainCurrencyCode: settings.mainCurrencyCode,
+      exchangeRateApiOption: settings.exchangeRateApiOption.name,
+      cachedExchangeRates: settings.cachedExchangeRates,
       firstDayOfWeek: settings.firstDayOfWeek.name,
       hapticFeedbackEnabled: settings.hapticFeedbackEnabled,
       startScreen: settings.startScreen.name,
@@ -73,11 +74,12 @@ class SettingsRepository {
         (e) => e.name == data.dateFormat,
         orElse: () => ui.DateFormatOption.mmddyyyy,
       ),
-      currencySymbol: ui.CurrencySymbol.values.firstWhere(
-        (e) => e.name == data.currencySymbol,
-        orElse: () => ui.CurrencySymbol.usd,
+      mainCurrencyCode: data.mainCurrencyCode,
+      exchangeRateApiOption: ui.ExchangeRateApiOption.values.firstWhere(
+        (e) => e.name == data.exchangeRateApiOption,
+        orElse: () => ui.ExchangeRateApiOption.frankfurter,
       ),
-      customCurrencySymbol: data.customCurrencySymbol,
+      cachedExchangeRates: data.cachedExchangeRates,
       firstDayOfWeek: ui.FirstDayOfWeek.values.firstWhere(
         (e) => e.name == data.firstDayOfWeek,
         orElse: () => ui.FirstDayOfWeek.sunday,

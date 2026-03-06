@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/utils/currency_conversion.dart';
 import '../../../categories/data/models/category.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/data/models/app_settings.dart';
@@ -15,6 +17,8 @@ List<CategoryBreakdown> _buildBreakdowns({
   required List<Category> categories,
   required ColorIntensity colorIntensity,
   required CategoryType fallbackType,
+  required Map<String, double> rates,
+  required String mainCurrency,
 }) {
   if (transactions.isEmpty) return [];
 
@@ -23,7 +27,7 @@ List<CategoryBreakdown> _buildBreakdowns({
 
   for (final tx in transactions) {
     categoryTotals[tx.categoryId] =
-        (categoryTotals[tx.categoryId] ?? 0) + tx.amount;
+        (categoryTotals[tx.categoryId] ?? 0) + convertedAmount(tx, rates, mainCurrency);
     categoryCounts[tx.categoryId] =
         (categoryCounts[tx.categoryId] ?? 0) + 1;
   }
@@ -65,6 +69,8 @@ final categoryBreakdownProvider = Provider<List<CategoryBreakdown>>((ref) {
   final categoriesAsync = ref.watch(categoriesProvider);
   final colorIntensity = ref.watch(colorIntensityProvider);
   final filter = ref.watch(analyticsFilterProvider);
+  final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
 
   final categories = categoriesAsync.valueOrNull;
   if (categories == null || transactions.isEmpty) return [];
@@ -93,6 +99,8 @@ final categoryBreakdownProvider = Provider<List<CategoryBreakdown>>((ref) {
     fallbackType: filter.typeFilter == AnalyticsTypeFilter.income
         ? CategoryType.income
         : CategoryType.expense,
+    rates: rates,
+    mainCurrency: mainCurrency,
   );
 });
 
@@ -107,6 +115,8 @@ final incomeCategoryBreakdownProvider = Provider<List<CategoryBreakdown>>((ref) 
   final transactions = ref.watch(filteredAnalyticsTransactionsProvider);
   final categoriesAsync = ref.watch(categoriesProvider);
   final colorIntensity = ref.watch(colorIntensityProvider);
+  final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
 
   final categories = categoriesAsync.valueOrNull;
   if (categories == null) return [];
@@ -120,5 +130,7 @@ final incomeCategoryBreakdownProvider = Provider<List<CategoryBreakdown>>((ref) 
     categories: categories,
     colorIntensity: colorIntensity,
     fallbackType: CategoryType.income,
+    rates: rates,
+    mainCurrency: mainCurrency,
   );
 });

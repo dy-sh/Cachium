@@ -49,6 +49,7 @@ class DemoData {
       type: AccountType.bank,
       balance: 4850.00,
       initialBalance: 4850.00,
+      currencyCode: 'USD',
       createdAt: DateTime.now().subtract(const Duration(days: 120)),
     ),
     Account(
@@ -57,6 +58,7 @@ class DemoData {
       type: AccountType.creditCard,
       balance: -1280.00,
       initialBalance: -1280.00,
+      currencyCode: 'EUR',
       createdAt: DateTime.now().subtract(const Duration(days: 120)),
     ),
     Account(
@@ -65,6 +67,7 @@ class DemoData {
       type: AccountType.cash,
       balance: 185.00,
       initialBalance: 185.00,
+      currencyCode: 'GBP',
       createdAt: DateTime.now().subtract(const Duration(days: 120)),
     ),
     Account(
@@ -73,6 +76,7 @@ class DemoData {
       type: AccountType.savings,
       balance: 9200.00,
       initialBalance: 9200.00,
+      currencyCode: 'USD',
       createdAt: DateTime.now().subtract(const Duration(days: 120)),
     ),
   ];
@@ -140,6 +144,20 @@ class DemoData {
     DateTime ago(int days) =>
         DateTime(now.year, now.month, now.day - days);
 
+    // Currency codes by account
+    const accountCurrencies = {
+      _checking: 'USD',
+      _credit: 'EUR',
+      _cash: 'GBP',
+      _savings: 'USD',
+    };
+    // Approximate conversion rates to USD (main currency)
+    const conversionRates = {
+      'USD': 1.0,
+      'EUR': 1.08,
+      'GBP': 1.27,
+    };
+
     // Transaction helper
     Transaction tx(
       double amount,
@@ -151,6 +169,7 @@ class DemoData {
       String? merchant,
       String? assetId,
     }) {
+      final currency = accountCurrencies[accountId] ?? 'USD';
       return Transaction(
         id: txId(),
         amount: amount,
@@ -161,6 +180,8 @@ class DemoData {
         note: note,
         merchant: merchant,
         assetId: assetId,
+        currencyCode: currency,
+        conversionRate: conversionRates[currency] ?? 1.0,
         createdAt: date,
       );
     }

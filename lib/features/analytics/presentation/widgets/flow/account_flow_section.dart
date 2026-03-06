@@ -4,6 +4,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
+import '../../../../../core/constants/currencies.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
 import '../../providers/account_flow_provider.dart';
 import 'flow_breakdown_list.dart';
@@ -16,7 +17,8 @@ class AccountFlowSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final flowData = ref.watch(accountFlowDataProvider);
     final viewMode = ref.watch(flowViewModeProvider);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final mainCurrencyCode = ref.watch(mainCurrencyCodeProvider);
+    final currencySymbol = Currency.symbolFromCode(mainCurrencyCode);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),

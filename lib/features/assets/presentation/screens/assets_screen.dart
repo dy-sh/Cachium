@@ -377,7 +377,7 @@ class _AssetCard extends ConsumerWidget {
                   Row(
                     children: [
                       Text(
-                        CurrencyFormatter.format(netCost.abs()),
+                        CurrencyFormatter.format(netCost.abs(), currencyCode: ref.watch(mainCurrencyCodeProvider)),
                         style: AppTypography.bodySmall.copyWith(
                           color: netCost > 0
                               ? AppColors.getTransactionColor('expense', intensity)

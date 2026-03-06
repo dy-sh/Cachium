@@ -6,6 +6,7 @@ import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
 import '../../../../categories/data/models/category.dart';
 import '../../../../categories/presentation/providers/categories_provider.dart';
+import '../../../../../core/constants/currencies.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
 import '../../providers/category_time_series_provider.dart';
 import '../charts/category_lines_chart.dart';
@@ -20,7 +21,8 @@ class CategoryComparisonSection extends ConsumerWidget {
     final seriesList = ref.watch(categoryTimeSeriesProvider);
     final categoriesAsync = ref.watch(categoriesProvider);
     final colorIntensity = ref.watch(colorIntensityProvider);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final mainCurrencyCode = ref.watch(mainCurrencyCodeProvider);
+    final currencySymbol = Currency.symbolFromCode(mainCurrencyCode);
 
     final categories = categoriesAsync.valueOrNull;
     // Only show root-level expense categories for selection

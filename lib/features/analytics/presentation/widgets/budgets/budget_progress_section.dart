@@ -10,6 +10,7 @@ import '../../../../../navigation/app_router.dart';
 import '../../../../budgets/data/models/budget_progress.dart';
 import '../../../../settings/data/models/app_settings.dart';
 import '../../../../budgets/presentation/providers/budget_provider.dart';
+import '../../../../../core/constants/currencies.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
 
 class BudgetProgressSection extends ConsumerWidget {
@@ -22,7 +23,8 @@ class BudgetProgressSection extends ConsumerWidget {
       budgetProgressProvider((year: now.year, month: now.month)),
     );
     final colorIntensity = ref.watch(colorIntensityProvider);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final mainCurrencyCode = ref.watch(mainCurrencyCodeProvider);
+    final currencySymbol = Currency.symbolFromCode(mainCurrencyCode);
     final accentColor = ref.watch(accentColorProvider);
 
     // Calculate % of month elapsed

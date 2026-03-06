@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/constants/currencies.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../providers/asset_analytics_providers.dart';
 
@@ -18,7 +19,8 @@ class AssetSpendingChart extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final monthlyData = ref.watch(assetMonthlySpendingProvider(assetId));
     final intensity = ref.watch(colorIntensityProvider);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final mainCurrencyCode = ref.watch(mainCurrencyCodeProvider);
+    final currencySymbol = Currency.symbolFromCode(mainCurrencyCode);
 
     if (monthlyData.length < 2) return const SizedBox.shrink();
 

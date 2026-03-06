@@ -608,6 +608,7 @@ class _TransactionGroupWidget extends ConsumerWidget {
                 CurrencyFormatter.formatWithSign(
                   group.netAmount.abs(),
                   group.netAmount >= 0 ? 'income' : 'expense',
+                  currencyCode: ref.watch(mainCurrencyCodeProvider),
                 ),
                 style: AppTypography.labelSmall.copyWith(
                   color: AppColors.textTertiary,
@@ -739,8 +740,8 @@ class _TransactionItem extends ConsumerWidget {
                 children: [
                   Text(
                     isTransfer
-                        ? CurrencyFormatter.format(transaction.amount)
-                        : CurrencyFormatter.formatWithSign(transaction.amount, transaction.type.name),
+                        ? CurrencyFormatter.format(transaction.amount, currencyCode: transaction.currencyCode)
+                        : CurrencyFormatter.formatWithSign(transaction.amount, transaction.type.name, currencyCode: transaction.currencyCode),
                     style: AppTypography.moneySmall.copyWith(color: color),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

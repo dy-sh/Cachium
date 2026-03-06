@@ -11,6 +11,7 @@ import '../../../../design_system/components/layout/page_layout.dart';
 import '../../../categories/data/models/category.dart';
 import '../../../settings/data/models/app_settings.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
+import '../../../../core/constants/currencies.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/budget.dart';
 import '../../data/models/budget_progress.dart';
@@ -39,7 +40,8 @@ class _BudgetSettingsScreenState extends ConsumerState<BudgetSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final colorIntensity = ref.watch(colorIntensityProvider);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final mainCurrencyCode = ref.watch(mainCurrencyCodeProvider);
+    final currencySymbol = Currency.symbolFromCode(mainCurrencyCode);
 
     final progressList = ref.watch(budgetProgressProvider(
       (year: _selectedYear, month: _selectedMonth),

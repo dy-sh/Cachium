@@ -1,7 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/utils/currency_conversion.dart';
 import '../../../accounts/data/models/account.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../data/models/account_comparison.dart';
 import 'filtered_transactions_provider.dart';
@@ -14,6 +17,8 @@ final accountComparisonDataProvider = Provider<List<AccountComparisonData>>((ref
   final transactions = ref.watch(filteredAnalyticsTransactionsProvider);
   final accountsAsync = ref.watch(accountsProvider);
   final filter = ref.watch(analyticsFilterProvider);
+  final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
 
   final accounts = accountsAsync.valueOrNull;
   if (accounts == null || selectedIds.isEmpty) return [];
@@ -70,13 +75,14 @@ final accountComparisonDataProvider = Provider<List<AccountComparisonData>>((ref
     final Map<String, double> periodNet = {};
 
     for (final tx in accountTxs) {
+      final amount = convertedAmount(tx, rates, mainCurrency);
       if (tx.type == TransactionType.income) {
-        totalIncome += tx.amount;
+        totalIncome += amount;
       } else {
-        totalExpense += tx.amount;
+        totalExpense += amount;
       }
       final k = getKey(tx.date);
-      periodNet[k] = (periodNet[k] ?? 0) + (tx.type == TransactionType.income ? tx.amount : -tx.amount);
+      periodNet[k] = (periodNet[k] ?? 0) + (tx.type == TransactionType.income ? amount : -amount);
     }
 
     // Build cumulative balance history

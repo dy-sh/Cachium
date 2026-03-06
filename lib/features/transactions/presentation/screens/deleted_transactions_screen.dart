@@ -28,7 +28,7 @@ final _filteredDeletedTransactionsProvider =
     if (query.isEmpty) return transactions;
 
     return transactions.where((tx) {
-      final amount = CurrencyFormatter.format(tx.amount).toLowerCase();
+      final amount = CurrencyFormatter.format(tx.amount, currencyCode: tx.currencyCode).toLowerCase();
       final amountRaw = tx.amount.toString();
       final note = tx.note?.toLowerCase() ?? '';
       final merchant = tx.merchant?.toLowerCase() ?? '';
@@ -219,6 +219,7 @@ class _DeletedTransactionItem extends ConsumerWidget {
                       CurrencyFormatter.formatWithSign(
                         transaction.amount,
                         transaction.type.name,
+                        currencyCode: transaction.currencyCode,
                       ),
                       style: AppTypography.bodySmall.copyWith(color: color),
                     ),

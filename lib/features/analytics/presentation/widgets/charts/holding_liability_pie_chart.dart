@@ -5,6 +5,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
+import '../../../../../core/constants/currencies.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
 import '../../providers/holding_liability_breakdown_provider.dart';
 
@@ -48,7 +49,8 @@ class _HoldingLiabilityPieChartState
   Widget build(BuildContext context) {
     final breakdown = ref.watch(holdingLiabilityBreakdownProvider);
     final colorIntensity = ref.watch(colorIntensityProvider);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final mainCurrencyCode = ref.watch(mainCurrencyCodeProvider);
+    final currencySymbol = Currency.symbolFromCode(mainCurrencyCode);
 
     final holdingColor = AppColors.getTransactionColor('income', colorIntensity);
     final liabilityColor =

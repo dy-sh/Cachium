@@ -6,6 +6,7 @@ import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
 import '../../../../accounts/presentation/providers/accounts_provider.dart';
+import '../../../../../core/constants/currencies.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
 import '../../../data/models/account_comparison.dart';
 import '../../providers/account_comparison_provider.dart';
@@ -19,7 +20,8 @@ class AccountComparisonSection extends ConsumerWidget {
     final selectedIds = ref.watch(selectedComparisonAccountIdsProvider);
     final comparisonData = ref.watch(accountComparisonDataProvider);
     final accountsAsync = ref.watch(accountsProvider);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final mainCurrencyCode = ref.watch(mainCurrencyCodeProvider);
+    final currencySymbol = Currency.symbolFromCode(mainCurrencyCode);
 
     final accounts = accountsAsync.valueOrNull ?? [];
 

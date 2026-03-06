@@ -5,6 +5,9 @@ import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../categories/data/models/category_tree_node.dart';
 import '../../data/models/analytics_filter.dart';
 import '../../data/models/date_range_preset.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/utils/currency_conversion.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/period_comparison.dart';
 import 'analytics_filter_provider.dart';
 
@@ -29,6 +32,8 @@ final periodComparisonDataProvider = Provider<PeriodComparisonData>((ref) {
   final categoriesAsync = ref.watch(categoriesProvider);
   final periodA = ref.watch(comparisonPeriodAProvider);
   final periodB = ref.watch(comparisonPeriodBProvider);
+  final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
 
   final transactions = transactionsAsync.valueOrNull;
   final categories = categoriesAsync.valueOrNull;
@@ -59,10 +64,11 @@ final periodComparisonDataProvider = Provider<PeriodComparisonData>((ref) {
   PeriodMetrics buildMetrics(String label, List<Transaction> txs) {
     double income = 0, expense = 0;
     for (final tx in txs) {
+      final amount = convertedAmount(tx, rates, mainCurrency);
       if (tx.type == TransactionType.income) {
-        income += tx.amount;
+        income += amount;
       } else {
-        expense += tx.amount;
+        expense += amount;
       }
     }
     return PeriodMetrics(label: label, income: income, expense: expense, transactionCount: txs.length);
@@ -74,10 +80,10 @@ final periodComparisonDataProvider = Provider<PeriodComparisonData>((ref) {
   final Map<String, String> catNames = {};
 
   for (final tx in txA) {
-    catAmountsA[tx.categoryId] = (catAmountsA[tx.categoryId] ?? 0) + tx.amount;
+    catAmountsA[tx.categoryId] = (catAmountsA[tx.categoryId] ?? 0) + convertedAmount(tx, rates, mainCurrency);
   }
   for (final tx in txB) {
-    catAmountsB[tx.categoryId] = (catAmountsB[tx.categoryId] ?? 0) + tx.amount;
+    catAmountsB[tx.categoryId] = (catAmountsB[tx.categoryId] ?? 0) + convertedAmount(tx, rates, mainCurrency);
   }
 
   final allCatIds = {...catAmountsA.keys, ...catAmountsB.keys};

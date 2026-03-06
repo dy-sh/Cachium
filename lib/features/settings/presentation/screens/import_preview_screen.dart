@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -300,7 +301,7 @@ class ImportPreviewScreen extends ConsumerWidget {
           final dt = entry.value as DateTime;
           valueStr = '${dt.month}/${dt.day}/${dt.year}';
         } else if (entry.value is double) {
-          valueStr = '\$${entry.value.toStringAsFixed(2)}';
+          valueStr = CurrencyFormatter.format(entry.value as double);
         } else if (entry.value?.toString().startsWith('CREATE:') == true) {
           valueStr = '${entry.value.toString().substring(7)} (new)';
         } else {

@@ -35,11 +35,14 @@ class SettingsData with _$SettingsData {
     /// Date format: 'mmddyyyy', 'ddmmyyyy', 'ddmmyyyyDot', 'yyyymmdd'
     @Default('mmddyyyy') String dateFormat,
 
-    /// Currency symbol: 'usd', 'eur', 'gbp', 'custom'
-    @Default('usd') String currencySymbol,
+    /// Main currency code (ISO 4217)
+    @Default('USD') String mainCurrencyCode,
 
-    /// Custom currency symbol when currencySymbol is 'custom'
-    String? customCurrencySymbol,
+    /// Exchange rate API option: 'frankfurter', 'exchangeRateHost', 'manual'
+    @Default('frankfurter') String exchangeRateApiOption,
+
+    /// Cached exchange rates as JSON string
+    String? cachedExchangeRates,
 
     /// First day of week: 'sunday' or 'monday'
     @Default('sunday') String firstDayOfWeek,

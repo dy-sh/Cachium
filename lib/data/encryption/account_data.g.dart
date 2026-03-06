@@ -15,6 +15,7 @@ _$AccountDataImpl _$$AccountDataImplFromJson(Map<String, dynamic> json) =>
       initialBalance: (json['initialBalance'] as num?)?.toDouble() ?? 0.0,
       customColorValue: (json['customColorValue'] as num?)?.toInt(),
       customIconCodePoint: (json['customIconCodePoint'] as num?)?.toInt(),
+      currencyCode: json['currencyCode'] as String? ?? 'USD',
       createdAtMillis: (json['createdAtMillis'] as num).toInt(),
     );
 
@@ -27,5 +28,6 @@ Map<String, dynamic> _$$AccountDataImplToJson(_$AccountDataImpl instance) =>
       'initialBalance': instance.initialBalance,
       'customColorValue': instance.customColorValue,
       'customIconCodePoint': instance.customIconCodePoint,
+      'currencyCode': instance.currencyCode,
       'createdAtMillis': instance.createdAtMillis,
     };

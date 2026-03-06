@@ -6,6 +6,8 @@ import '../../../categories/data/models/category.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../transactions/data/models/transaction.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/utils/currency_conversion.dart';
 import '../../data/models/sankey_flow.dart';
 import 'filtered_transactions_provider.dart';
 
@@ -17,6 +19,8 @@ final sankeyFlowDataProvider = Provider<SankeyData>((ref) {
   final accountsAsync = ref.watch(accountsProvider);
   final showAccounts = ref.watch(sankeyShowAccountsProvider);
   final colorIntensity = ref.watch(colorIntensityProvider);
+  final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
 
   final categories = categoriesAsync.valueOrNull;
   final accounts = accountsAsync.valueOrNull;
@@ -44,17 +48,18 @@ final sankeyFlowDataProvider = Provider<SankeyData>((ref) {
     final cat = catMap[tx.categoryId];
     final catId = cat?.parentId ?? tx.categoryId;
 
+    final amount = convertedAmount(tx, rates, mainCurrency);
     if (tx.type == TransactionType.income) {
-      incomeByCategory[catId] = (incomeByCategory[catId] ?? 0) + tx.amount;
+      incomeByCategory[catId] = (incomeByCategory[catId] ?? 0) + amount;
       if (showAccounts) {
         incomeToAccount[catId] ??= {};
-        incomeToAccount[catId]![tx.accountId] = (incomeToAccount[catId]![tx.accountId] ?? 0) + tx.amount;
+        incomeToAccount[catId]![tx.accountId] = (incomeToAccount[catId]![tx.accountId] ?? 0) + amount;
       }
     } else {
-      expenseByCategory[catId] = (expenseByCategory[catId] ?? 0) + tx.amount;
+      expenseByCategory[catId] = (expenseByCategory[catId] ?? 0) + amount;
       if (showAccounts) {
         accountToExpense[tx.accountId] ??= {};
-        accountToExpense[tx.accountId]![catId] = (accountToExpense[tx.accountId]![catId] ?? 0) + tx.amount;
+        accountToExpense[tx.accountId]![catId] = (accountToExpense[tx.accountId]![catId] ?? 0) + amount;
       }
     }
   }

@@ -42,6 +42,9 @@ mixin _$AccountData {
   /// Custom icon code point (optional)
   int? get customIconCodePoint => throw _privateConstructorUsedError;
 
+  /// Currency code (ISO 4217)
+  String get currencyCode => throw _privateConstructorUsedError;
+
   /// Matches the database createdAt field for integrity verification during import.
   /// Not exported as a separate CSV column to avoid duplication.
   int get createdAtMillis => throw _privateConstructorUsedError;
@@ -71,6 +74,7 @@ abstract class $AccountDataCopyWith<$Res> {
     double initialBalance,
     int? customColorValue,
     int? customIconCodePoint,
+    String currencyCode,
     int createdAtMillis,
   });
 }
@@ -97,6 +101,7 @@ class _$AccountDataCopyWithImpl<$Res, $Val extends AccountData>
     Object? initialBalance = null,
     Object? customColorValue = freezed,
     Object? customIconCodePoint = freezed,
+    Object? currencyCode = null,
     Object? createdAtMillis = null,
   }) {
     return _then(
@@ -129,6 +134,10 @@ class _$AccountDataCopyWithImpl<$Res, $Val extends AccountData>
                 ? _value.customIconCodePoint
                 : customIconCodePoint // ignore: cast_nullable_to_non_nullable
                       as int?,
+            currencyCode: null == currencyCode
+                ? _value.currencyCode
+                : currencyCode // ignore: cast_nullable_to_non_nullable
+                      as String,
             createdAtMillis: null == createdAtMillis
                 ? _value.createdAtMillis
                 : createdAtMillis // ignore: cast_nullable_to_non_nullable
@@ -156,6 +165,7 @@ abstract class _$$AccountDataImplCopyWith<$Res>
     double initialBalance,
     int? customColorValue,
     int? customIconCodePoint,
+    String currencyCode,
     int createdAtMillis,
   });
 }
@@ -181,6 +191,7 @@ class __$$AccountDataImplCopyWithImpl<$Res>
     Object? initialBalance = null,
     Object? customColorValue = freezed,
     Object? customIconCodePoint = freezed,
+    Object? currencyCode = null,
     Object? createdAtMillis = null,
   }) {
     return _then(
@@ -213,6 +224,10 @@ class __$$AccountDataImplCopyWithImpl<$Res>
             ? _value.customIconCodePoint
             : customIconCodePoint // ignore: cast_nullable_to_non_nullable
                   as int?,
+        currencyCode: null == currencyCode
+            ? _value.currencyCode
+            : currencyCode // ignore: cast_nullable_to_non_nullable
+                  as String,
         createdAtMillis: null == createdAtMillis
             ? _value.createdAtMillis
             : createdAtMillis // ignore: cast_nullable_to_non_nullable
@@ -233,6 +248,7 @@ class _$AccountDataImpl implements _AccountData {
     this.initialBalance = 0.0,
     this.customColorValue,
     this.customIconCodePoint,
+    this.currencyCode = 'USD',
     required this.createdAtMillis,
   });
 
@@ -268,6 +284,11 @@ class _$AccountDataImpl implements _AccountData {
   @override
   final int? customIconCodePoint;
 
+  /// Currency code (ISO 4217)
+  @override
+  @JsonKey()
+  final String currencyCode;
+
   /// Matches the database createdAt field for integrity verification during import.
   /// Not exported as a separate CSV column to avoid duplication.
   @override
@@ -275,7 +296,7 @@ class _$AccountDataImpl implements _AccountData {
 
   @override
   String toString() {
-    return 'AccountData(id: $id, name: $name, type: $type, balance: $balance, initialBalance: $initialBalance, customColorValue: $customColorValue, customIconCodePoint: $customIconCodePoint, createdAtMillis: $createdAtMillis)';
+    return 'AccountData(id: $id, name: $name, type: $type, balance: $balance, initialBalance: $initialBalance, customColorValue: $customColorValue, customIconCodePoint: $customIconCodePoint, currencyCode: $currencyCode, createdAtMillis: $createdAtMillis)';
   }
 
   @override
@@ -293,6 +314,8 @@ class _$AccountDataImpl implements _AccountData {
                 other.customColorValue == customColorValue) &&
             (identical(other.customIconCodePoint, customIconCodePoint) ||
                 other.customIconCodePoint == customIconCodePoint) &&
+            (identical(other.currencyCode, currencyCode) ||
+                other.currencyCode == currencyCode) &&
             (identical(other.createdAtMillis, createdAtMillis) ||
                 other.createdAtMillis == createdAtMillis));
   }
@@ -308,6 +331,7 @@ class _$AccountDataImpl implements _AccountData {
     initialBalance,
     customColorValue,
     customIconCodePoint,
+    currencyCode,
     createdAtMillis,
   );
 
@@ -334,6 +358,7 @@ abstract class _AccountData implements AccountData {
     final double initialBalance,
     final int? customColorValue,
     final int? customIconCodePoint,
+    final String currencyCode,
     required final int createdAtMillis,
   }) = _$AccountDataImpl;
 
@@ -367,6 +392,10 @@ abstract class _AccountData implements AccountData {
   /// Custom icon code point (optional)
   @override
   int? get customIconCodePoint;
+
+  /// Currency code (ISO 4217)
+  @override
+  String get currencyCode;
 
   /// Matches the database createdAt field for integrity verification during import.
   /// Not exported as a separate CSV column to avoid duplication.

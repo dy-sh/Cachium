@@ -9,6 +9,7 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../design_system/design_system.dart';
 import '../../../../navigation/app_router.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
 import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
@@ -22,6 +23,7 @@ class AccountsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final accountsAsync = ref.watch(accountsProvider);
     final totalBalance = ref.watch(totalBalanceProvider);
+    final mainCurrency = ref.watch(mainCurrencyCodeProvider);
     final accountsByType = ref.watch(accountsByTypeProvider);
     final intensity = ref.watch(colorIntensityProvider);
     final isLoading = accountsAsync.isLoading;
@@ -101,12 +103,13 @@ class AccountsScreen extends ConsumerWidget {
                   GestureDetector(
                     onLongPress: () {
                       Clipboard.setData(ClipboardData(
-                        text: CurrencyFormatter.format(totalBalance),
+                        text: CurrencyFormatter.format(totalBalance, currencyCode: mainCurrency),
                       ));
                       context.showSuccessNotification('Balance copied');
                     },
                     child: AnimatedCounter(
                       value: totalBalance,
+                      currencyCode: mainCurrency,
                       style: AppTypography.moneyLarge.copyWith(
                         fontSize: 38,
                         fontWeight: FontWeight.w400,
@@ -237,7 +240,7 @@ class _AccountCard extends ConsumerWidget {
       onTap: () => context.push('/account/${account.id}'),
       child: Container(
       width: 180,
-      height: 72,
+      height: account.currencyCode != ref.watch(mainCurrencyCodeProvider) ? 84 : 72,
       clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
         borderRadius: AppRadius.lgAll,
@@ -325,7 +328,7 @@ class _AccountCard extends ConsumerWidget {
                   ],
                 ),
                 Text(
-                  CurrencyFormatter.format(account.balance),
+                  CurrencyFormatter.format(account.balance, currencyCode: account.currencyCode),
                   style: AppTypography.moneySmall.copyWith(
                     color: account.balance >= 0 ? AppColors.textPrimary : expenseColor,
                     fontWeight: FontWeight.w700,
@@ -333,6 +336,21 @@ class _AccountCard extends ConsumerWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
+                if (account.currencyCode != ref.watch(mainCurrencyCodeProvider))
+                  Builder(builder: (context) {
+                    final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+                    final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
+                    final converted = convertToMainCurrency(account.balance, account.currencyCode, mainCurrency, rates);
+                    return Text(
+                      '\u2248 ${CurrencyFormatter.format(converted, currencyCode: mainCurrency)}',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.textTertiary,
+                        fontSize: 9,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    );
+                  }),
               ],
             ),
           ),

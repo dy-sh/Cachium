@@ -1,11 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/utils/currency_conversion.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/streak.dart';
 
 /// Calculates user streaks based on transaction history
 final streaksProvider = Provider<List<Streak>>((ref) {
   final transactionsAsync = ref.watch(transactionsProvider);
+  final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
   final transactions = transactionsAsync.valueOrNull;
 
   if (transactions == null || transactions.isEmpty) {
@@ -69,7 +74,7 @@ final streaksProvider = Provider<List<Streak>>((ref) {
   // Calculate under-budget streak (spending less than daily average)
   final expenses = transactions.where((tx) => tx.type == TransactionType.expense).toList();
   if (expenses.isNotEmpty) {
-    final totalExpense = expenses.fold<double>(0, (sum, tx) => sum + tx.amount);
+    final totalExpense = expenses.fold<double>(0, (sum, tx) => sum + convertedAmount(tx, rates, mainCurrency));
     final firstExpenseDate = expenses.map((tx) => tx.date).reduce((a, b) => a.isBefore(b) ? a : b);
     final daysSinceFirst = now.difference(firstExpenseDate).inDays + 1;
     final dailyAverage = totalExpense / daysSinceFirst;
@@ -83,7 +88,7 @@ final streaksProvider = Provider<List<Streak>>((ref) {
       final dayTx = txByDate[date] ?? [];
       final dayExpense = dayTx
           .where((tx) => tx.type == TransactionType.expense)
-          .fold<double>(0, (sum, tx) => sum + tx.amount);
+          .fold<double>(0, (sum, tx) => sum + convertedAmount(tx, rates, mainCurrency));
 
       if (dayExpense < dailyAverage && underBudgetActive) {
         currentUnderBudget++;

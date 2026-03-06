@@ -5,6 +5,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
+import '../../../../../core/constants/currencies.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
 import '../../../data/models/analytics_filter.dart';
 import '../../providers/analytics_filter_provider.dart';
@@ -50,7 +51,8 @@ class _CategoryPieChartState extends ConsumerState<CategoryPieChart>
   Widget build(BuildContext context) {
     final breakdowns = ref.watch(categoryBreakdownProvider);
     final filter = ref.watch(analyticsFilterProvider);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final mainCurrencyCode = ref.watch(mainCurrencyCodeProvider);
+    final currencySymbol = Currency.symbolFromCode(mainCurrencyCode);
     final highlightedCategory = ref.watch(chartHighlightProvider);
 
     if (breakdowns.isEmpty) {

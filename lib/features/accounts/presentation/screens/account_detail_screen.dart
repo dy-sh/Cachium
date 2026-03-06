@@ -10,6 +10,7 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../design_system/design_system.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../transactions/data/models/transaction.dart';
@@ -170,12 +171,13 @@ class AccountDetailScreen extends ConsumerWidget {
                         GestureDetector(
                           onLongPress: () {
                             Clipboard.setData(ClipboardData(
-                              text: CurrencyFormatter.format(account.balance),
+                              text: CurrencyFormatter.format(account.balance, currencyCode: account.currencyCode),
                             ));
                             context.showSuccessNotification('Balance copied');
                           },
                           child: AnimatedCounter(
                             value: account.balance,
+                            currencyCode: account.currencyCode,
                             style: AppTypography.moneyLarge.copyWith(
                               fontSize: 32,
                               color: account.balance >= 0
@@ -184,6 +186,21 @@ class AccountDetailScreen extends ConsumerWidget {
                             ),
                           ),
                         ),
+                        // Main currency equivalent for foreign currency accounts
+                        if (account.currencyCode != ref.watch(mainCurrencyCodeProvider)) ...[
+                          const SizedBox(height: AppSpacing.xs),
+                          Builder(builder: (context) {
+                            final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+                            final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
+                            final converted = convertToMainCurrency(account.balance, account.currencyCode, mainCurrency, rates);
+                            return Text(
+                              '\u2248 ${CurrencyFormatter.format(converted, currencyCode: mainCurrency)}',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.textTertiary,
+                              ),
+                            );
+                          }),
+                        ],
                       ],
                     ),
                   ),
@@ -198,6 +215,7 @@ class AccountDetailScreen extends ConsumerWidget {
                           label: 'Income',
                           amount: monthIncome,
                           color: AppColors.getTransactionColor('income', intensity),
+                          currencyCode: account.currencyCode,
                         ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
@@ -206,6 +224,7 @@ class AccountDetailScreen extends ConsumerWidget {
                           label: 'Expense',
                           amount: monthExpense,
                           color: AppColors.getTransactionColor('expense', intensity),
+                          currencyCode: account.currencyCode,
                         ),
                       ),
                     ],
@@ -255,11 +274,13 @@ class _StatCard extends StatelessWidget {
   final String label;
   final double amount;
   final Color color;
+  final String currencyCode;
 
   const _StatCard({
     required this.label,
     required this.amount,
     required this.color,
+    required this.currencyCode,
   });
 
   @override
@@ -282,7 +303,7 @@ class _StatCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            CurrencyFormatter.format(amount),
+            CurrencyFormatter.format(amount, currencyCode: currencyCode),
             style: AppTypography.moneySmall.copyWith(color: color),
           ),
         ],
@@ -375,8 +396,8 @@ class _AccountTransactionItem extends ConsumerWidget {
             ),
             Text(
               isTransfer
-                  ? CurrencyFormatter.format(transaction.amount)
-                  : CurrencyFormatter.formatWithSign(transaction.amount, transaction.type.name),
+                  ? CurrencyFormatter.format(transaction.amount, currencyCode: transaction.currencyCode)
+                  : CurrencyFormatter.formatWithSign(transaction.amount, transaction.type.name, currencyCode: transaction.currencyCode),
               style: AppTypography.moneySmall.copyWith(color: color),
             ),
           ],

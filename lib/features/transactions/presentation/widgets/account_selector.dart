@@ -6,6 +6,7 @@ import '../../../../core/constants/app_animations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/utils/currency_formatter.dart';
 import '../../../../design_system/design_system.dart';
 import '../../../accounts/data/models/account.dart';
 import '../../../settings/data/models/app_settings.dart';
@@ -273,7 +274,7 @@ class _AccountCard extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
           Text(
-            '\$${account.balance.toStringAsFixed(0)}',
+            CurrencyFormatter.formatSimple(account.balance, currencyCode: account.currencyCode),
             style: AppTypography.labelSmall.copyWith(
               color: AppColors.textSecondary.withValues(alpha: 0.7),
               fontSize: 10,

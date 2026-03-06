@@ -4,6 +4,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
+import '../../../../../core/constants/currencies.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
 import '../../providers/spending_patterns_provider.dart';
 
@@ -14,7 +15,8 @@ class SpendingHeatmap extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final patterns = ref.watch(spendingPatternsProvider);
     final colorIntensity = ref.watch(colorIntensityProvider);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final mainCurrencyCode = ref.watch(mainCurrencyCodeProvider);
+    final currencySymbol = Currency.symbolFromCode(mainCurrencyCode);
 
     if (patterns.isEmpty) return const SizedBox.shrink();
 

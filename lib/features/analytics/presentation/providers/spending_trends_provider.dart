@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/utils/currency_conversion.dart';
 import '../../../categories/data/models/category.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../data/models/date_range_preset.dart';
@@ -12,6 +15,8 @@ final spendingTrendsProvider = Provider<OverallTrend>((ref) {
   final filter = ref.watch(analyticsFilterProvider);
   final transactionsAsync = ref.watch(transactionsProvider);
   final categoriesAsync = ref.watch(categoriesProvider);
+  final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
 
   final transactions = transactionsAsync.valueOrNull;
   final categories = categoriesAsync.valueOrNull;
@@ -58,7 +63,7 @@ final spendingTrendsProvider = Provider<OverallTrend>((ref) {
     previousRange.contains(tx.date) && matchesFilters(tx)).toList();
 
   double sumByType(List<Transaction> txs, TransactionType type) =>
-    txs.where((t) => t.type == type).fold(0.0, (s, t) => s + t.amount);
+    txs.where((t) => t.type == type).fold(0.0, (s, t) => s + convertedAmount(t, rates, mainCurrency));
 
   final currentIncome = sumByType(currentTxs, TransactionType.income);
   final previousIncome = sumByType(previousTxs, TransactionType.income);
@@ -76,11 +81,11 @@ final spendingTrendsProvider = Provider<OverallTrend>((ref) {
 
   for (final tx in currentTxs.where((t) => t.type == TransactionType.expense)) {
     currentByCategory[tx.categoryId] =
-        (currentByCategory[tx.categoryId] ?? 0) + tx.amount;
+        (currentByCategory[tx.categoryId] ?? 0) + convertedAmount(tx, rates, mainCurrency);
   }
   for (final tx in previousTxs.where((t) => t.type == TransactionType.expense)) {
     previousByCategory[tx.categoryId] =
-        (previousByCategory[tx.categoryId] ?? 0) + tx.amount;
+        (previousByCategory[tx.categoryId] ?? 0) + convertedAmount(tx, rates, mainCurrency);
   }
 
   final allCategoryIds = {...currentByCategory.keys, ...previousByCategory.keys};
@@ -131,9 +136,9 @@ final spendingTrendsProvider = Provider<OverallTrend>((ref) {
     double exp = 0;
     for (final tx in transactions.where((tx) => range.contains(tx.date) && matchesFilters(tx))) {
       if (tx.type == TransactionType.income) {
-        inc += tx.amount;
+        inc += convertedAmount(tx, rates, mainCurrency);
       } else {
-        exp += tx.amount;
+        exp += convertedAmount(tx, rates, mainCurrency);
       }
     }
     incomeHistory.add(inc);

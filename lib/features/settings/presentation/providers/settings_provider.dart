@@ -72,16 +72,26 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     await _saveAndUpdate(current.copyWith(dateFormat: format));
   }
 
-  Future<void> setCurrencySymbol(CurrencySymbol symbol) async {
+  Future<void> setMainCurrencyCode(String code) async {
     final current = state.valueOrNull;
     if (current == null) return;
-    await _saveAndUpdate(current.copyWith(currencySymbol: symbol));
+    await _saveAndUpdate(current.copyWith(mainCurrencyCode: code));
   }
 
-  Future<void> setCustomCurrencySymbol(String symbol) async {
+  Future<void> setExchangeRateApiOption(ExchangeRateApiOption option) async {
     final current = state.valueOrNull;
     if (current == null) return;
-    await _saveAndUpdate(current.copyWith(customCurrencySymbol: symbol));
+    await _saveAndUpdate(current.copyWith(exchangeRateApiOption: option));
+  }
+
+  Future<void> setCachedExchangeRates(String? json) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    if (json == null) {
+      await _saveAndUpdate(current.copyWith(clearCachedExchangeRates: true));
+    } else {
+      await _saveAndUpdate(current.copyWith(cachedExchangeRates: json));
+    }
   }
 
   Future<void> setFirstDayOfWeek(FirstDayOfWeek day) async {
@@ -318,8 +328,9 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
       balanceCountersEnabled: defaults.balanceCountersEnabled,
       // Reset Formats
       dateFormat: defaults.dateFormat,
-      currencySymbol: defaults.currencySymbol,
-      customCurrencySymbol: defaults.customCurrencySymbol,
+      mainCurrencyCode: defaults.mainCurrencyCode,
+      exchangeRateApiOption: defaults.exchangeRateApiOption,
+      cachedExchangeRates: defaults.cachedExchangeRates,
       firstDayOfWeek: defaults.firstDayOfWeek,
       // Reset Preferences
       hapticFeedbackEnabled: defaults.hapticFeedbackEnabled,
@@ -388,9 +399,14 @@ final dateFormatProvider = Provider<DateFormatOption>((ref) {
   return settingsAsync.valueOrNull?.dateFormat ?? DateFormatOption.mmddyyyy;
 });
 
-final currencySymbolProvider = Provider<String>((ref) {
+final mainCurrencyCodeProvider = Provider<String>((ref) {
   final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.effectiveCurrencySymbol ?? '\$';
+  return settingsAsync.valueOrNull?.mainCurrencyCode ?? 'USD';
+});
+
+final exchangeRateApiOptionProvider = Provider<ExchangeRateApiOption>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.exchangeRateApiOption ?? ExchangeRateApiOption.frankfurter;
 });
 
 final firstDayOfWeekProvider = Provider<FirstDayOfWeek>((ref) {

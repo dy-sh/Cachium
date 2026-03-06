@@ -1,4 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/utils/currency_conversion.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../data/models/date_range_preset.dart';
 import '../../data/models/income_expense_summary.dart';
@@ -10,6 +13,8 @@ final incomeExpenseSummaryProvider = Provider<IncomeExpenseSummary>((ref) {
   final transactions = ref.watch(filteredAnalyticsTransactionsProvider);
   final filter = ref.watch(analyticsFilterProvider);
   final allTransactionsAsync = ref.watch(transactionsProvider);
+  final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
 
   double totalIncome = 0;
   double totalExpense = 0;
@@ -18,10 +23,10 @@ final incomeExpenseSummaryProvider = Provider<IncomeExpenseSummary>((ref) {
 
   for (final tx in transactions) {
     if (tx.type == TransactionType.income) {
-      totalIncome += tx.amount;
+      totalIncome += convertedAmount(tx, rates, mainCurrency);
       incomeCount++;
     } else {
-      totalExpense += tx.amount;
+      totalExpense += convertedAmount(tx, rates, mainCurrency);
       expenseCount++;
     }
   }
@@ -47,9 +52,9 @@ final incomeExpenseSummaryProvider = Provider<IncomeExpenseSummary>((ref) {
       if (filter.hasCategoryFilter && !filter.selectedCategoryIds.contains(tx.categoryId)) continue;
 
       if (tx.type == TransactionType.income) {
-        previousTotalIncome += tx.amount;
+        previousTotalIncome += convertedAmount(tx, rates, mainCurrency);
       } else {
-        previousTotalExpense += tx.amount;
+        previousTotalExpense += convertedAmount(tx, rates, mainCurrency);
       }
     }
   }
@@ -70,6 +75,8 @@ final incomeExpenseSummaryProvider = Provider<IncomeExpenseSummary>((ref) {
 final periodSummariesProvider = Provider<List<PeriodSummary>>((ref) {
   final transactions = ref.watch(filteredAnalyticsTransactionsProvider);
   final filter = ref.watch(analyticsFilterProvider);
+  final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
 
   if (transactions.isEmpty) return [];
 
@@ -77,21 +84,21 @@ final periodSummariesProvider = Provider<List<PeriodSummary>>((ref) {
 
   // Determine grouping
   if (dayCount <= 14) {
-    return _groupByDay(transactions, filter.dateRange.start, filter.dateRange.end);
+    return _groupByDay(transactions, filter.dateRange.start, filter.dateRange.end, rates, mainCurrency);
   } else if (dayCount <= 90) {
-    return _groupByWeek(transactions, filter.dateRange.start, filter.dateRange.end);
+    return _groupByWeek(transactions, filter.dateRange.start, filter.dateRange.end, rates, mainCurrency);
   } else {
-    return _groupByMonth(transactions, filter.dateRange.start, filter.dateRange.end);
+    return _groupByMonth(transactions, filter.dateRange.start, filter.dateRange.end, rates, mainCurrency);
   }
 });
 
-void _addTransaction(Map<dynamic, PeriodSummary> periods, dynamic key, Transaction tx) {
+void _addTransaction(Map<dynamic, PeriodSummary> periods, dynamic key, Transaction tx, Map<String, double> rates, String mainCurrency) {
   final existing = periods[key];
   if (existing == null) return;
   if (tx.type == TransactionType.income) {
-    periods[key] = existing.copyWith(income: existing.income + tx.amount);
+    periods[key] = existing.copyWith(income: existing.income + convertedAmount(tx, rates, mainCurrency));
   } else {
-    periods[key] = existing.copyWith(expense: existing.expense + tx.amount);
+    periods[key] = existing.copyWith(expense: existing.expense + convertedAmount(tx, rates, mainCurrency));
   }
 }
 
@@ -99,6 +106,8 @@ List<PeriodSummary> _groupByDay(
   List<Transaction> transactions,
   DateTime start,
   DateTime end,
+  Map<String, double> rates,
+  String mainCurrency,
 ) {
   final Map<String, PeriodSummary> periods = {};
 
@@ -120,7 +129,7 @@ List<PeriodSummary> _groupByDay(
   for (final tx in transactions) {
     final txDate = DateTime(tx.date.year, tx.date.month, tx.date.day);
     final key = '${txDate.month}/${txDate.day}';
-    _addTransaction(periods, key, tx);
+    _addTransaction(periods, key, tx, rates, mainCurrency);
   }
 
   final result = periods.values.toList();
@@ -132,6 +141,8 @@ List<PeriodSummary> _groupByWeek(
   List<Transaction> transactions,
   DateTime start,
   DateTime end,
+  Map<String, double> rates,
+  String mainCurrency,
 ) {
   final Map<int, PeriodSummary> periods = {};
 
@@ -167,7 +178,7 @@ List<PeriodSummary> _groupByWeek(
 
       if (!txDate.isBefore(period.periodStart) &&
           !txDate.isAfter(period.periodEnd)) {
-        _addTransaction(periods, entry.key, tx);
+        _addTransaction(periods, entry.key, tx, rates, mainCurrency);
         break;
       }
     }
@@ -182,6 +193,8 @@ List<PeriodSummary> _groupByMonth(
   List<Transaction> transactions,
   DateTime start,
   DateTime end,
+  Map<String, double> rates,
+  String mainCurrency,
 ) {
   final Map<String, PeriodSummary> periods = {};
 
@@ -208,7 +221,7 @@ List<PeriodSummary> _groupByMonth(
 
   for (final tx in transactions) {
     final key = '${tx.date.year}-${tx.date.month}';
-    _addTransaction(periods, key, tx);
+    _addTransaction(periods, key, tx, rates, mainCurrency);
   }
 
   final result = periods.values.toList();

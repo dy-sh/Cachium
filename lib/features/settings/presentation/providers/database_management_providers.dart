@@ -371,6 +371,7 @@ final databaseManagementProvider =
 class BalanceChange {
   final String accountId;
   final String accountName;
+  final String currencyCode;
   final double oldBalance;
   final double newBalance;
   final double initialBalance;
@@ -379,6 +380,7 @@ class BalanceChange {
   const BalanceChange({
     required this.accountId,
     required this.accountName,
+    this.currencyCode = 'USD',
     required this.oldBalance,
     required this.newBalance,
     required this.initialBalance,
@@ -439,6 +441,7 @@ class RecalculateBalancesNotifier extends Notifier<AsyncValue<RecalculatePreview
         changes.add(BalanceChange(
           accountId: account.id,
           accountName: account.name,
+          currencyCode: account.currencyCode,
           oldBalance: account.balance,
           newBalance: newBalance,
           initialBalance: account.initialBalance,

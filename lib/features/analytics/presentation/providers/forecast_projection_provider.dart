@@ -2,6 +2,9 @@ import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../transactions/data/models/transaction.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/utils/currency_conversion.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/forecast_projection.dart';
 import 'analytics_filter_provider.dart';
 import 'filtered_transactions_provider.dart';
@@ -9,6 +12,8 @@ import 'filtered_transactions_provider.dart';
 final forecastProjectionProvider = Provider<List<ForecastProjection>>((ref) {
   final transactions = ref.watch(filteredAnalyticsTransactionsProvider);
   final filter = ref.watch(analyticsFilterProvider);
+  final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
 
   if (transactions.isEmpty) return [];
 
@@ -22,7 +27,7 @@ final forecastProjectionProvider = Provider<List<ForecastProjection>>((ref) {
     final dayOffset = DateTime(tx.date.year, tx.date.month, tx.date.day)
         .difference(startDay)
         .inDays;
-    final amount = tx.type == TransactionType.income ? tx.amount : -tx.amount;
+    final amount = tx.type == TransactionType.income ? convertedAmount(tx, rates, mainCurrency) : -convertedAmount(tx, rates, mainCurrency);
     dailyNet[dayOffset] = (dailyNet[dayOffset] ?? 0) + amount;
   }
 

@@ -36,6 +36,7 @@ class AccountRepository {
       initialBalance: account.initialBalance,
       customColorValue: account.customColor?.toARGB32(),
       customIconCodePoint: account.customIcon?.codePoint,
+      currencyCode: account.currencyCode,
       createdAtMillis: account.createdAt.millisecondsSinceEpoch,
     );
   }
@@ -51,6 +52,7 @@ class AccountRepository {
       ),
       balance: data.balance,
       initialBalance: data.initialBalance,
+      currencyCode: data.currencyCode,
       customColor: data.customColorValue != null
           ? Color(data.customColorValue!)
           : null,

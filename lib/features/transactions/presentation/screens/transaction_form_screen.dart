@@ -6,6 +6,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/animations/haptic_helper.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
 import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -103,6 +104,9 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
         _initialized = true;
       });
     }
+
+    // Eagerly load exchange rates so they're available when saving
+    ref.watch(exchangeRatesProvider);
 
     final formState = ref.watch(transactionFormProvider);
     final incomeCategories = ref.watch(incomeCategoriesProvider);
@@ -245,9 +249,10 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                     const SizedBox(height: AppSpacing.xxl),
 
                     AmountInput(
-                      key: ValueKey('amount_${formState.editingTransactionId}'),
+                      key: ValueKey('amount_${formState.editingTransactionId}_${formState.currencyCode}'),
                       initialValue: formState.amount > 0 ? formState.amount : null,
                       transactionType: formState.type.name,
+                      currencyCode: formState.currencyCode,
                       autofocus: !isEditing,
                       onChanged: (amount) {
                         ref.read(transactionFormProvider.notifier).setAmount(amount);
@@ -452,33 +457,45 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                     label: isEditing ? 'Save Changes' : 'Save Transaction',
                     onPressed: formState.canSave
                         ? () async {
+                            // Refresh conversion rate before saving
+                            final mainCurrency = ref.read(mainCurrencyCodeProvider);
+                            if (formState.currencyCode != mainCurrency) {
+                              final latestRate = ref.read(exchangeRateProvider((from: formState.currencyCode, to: mainCurrency)));
+                              if (latestRate != 1.0) {
+                                ref.read(transactionFormProvider.notifier).setConversionRate(latestRate);
+                              }
+                            }
+                            final savedFormState = ref.read(transactionFormProvider);
+
                             // Save last used account and category
-                            ref.read(settingsProvider.notifier).setLastUsedAccountId(formState.accountId);
+                            ref.read(settingsProvider.notifier).setLastUsedAccountId(savedFormState.accountId);
                             if (!isTransfer) {
                               ref.read(settingsProvider.notifier).setLastUsedCategoryId(
-                                formState.type,
-                                formState.categoryId,
+                                savedFormState.type,
+                                savedFormState.categoryId,
                               );
                             }
 
                             if (isEditing) {
                               // Update existing transaction
                               final originalTransaction = ref.read(
-                                transactionByIdProvider(formState.editingTransactionId!),
+                                transactionByIdProvider(savedFormState.editingTransactionId!),
                               );
                               if (originalTransaction != null) {
                                 final updatedTransaction = originalTransaction.copyWith(
-                                  amount: formState.amount,
-                                  type: formState.type,
-                                  categoryId: isTransfer ? '' : formState.categoryId,
-                                  accountId: formState.accountId,
-                                  destinationAccountId: formState.destinationAccountId,
+                                  amount: savedFormState.amount,
+                                  type: savedFormState.type,
+                                  categoryId: isTransfer ? '' : savedFormState.categoryId,
+                                  accountId: savedFormState.accountId,
+                                  destinationAccountId: savedFormState.destinationAccountId,
                                   clearDestinationAccountId: !isTransfer,
-                                  assetId: formState.assetId,
-                                  clearAssetId: formState.assetId == null,
-                                  date: formState.date,
-                                  note: formState.note,
-                                  merchant: formState.merchant,
+                                  assetId: savedFormState.assetId,
+                                  clearAssetId: savedFormState.assetId == null,
+                                  currencyCode: savedFormState.currencyCode,
+                                  conversionRate: savedFormState.conversionRate,
+                                  date: savedFormState.date,
+                                  note: savedFormState.note,
+                                  merchant: savedFormState.merchant,
                                 );
                                 await ref.read(transactionsProvider.notifier)
                                     .updateTransaction(updatedTransaction);
@@ -486,15 +503,17 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                             } else {
                               // Add new transaction
                               await ref.read(transactionsProvider.notifier).addTransaction(
-                                    amount: formState.amount,
-                                    type: formState.type,
-                                    categoryId: isTransfer ? '' : formState.categoryId!,
-                                    accountId: formState.accountId!,
-                                    destinationAccountId: formState.destinationAccountId,
-                                    assetId: formState.assetId,
-                                    date: formState.date,
-                                    note: formState.note,
-                                    merchant: formState.merchant,
+                                    amount: savedFormState.amount,
+                                    type: savedFormState.type,
+                                    categoryId: isTransfer ? '' : savedFormState.categoryId!,
+                                    accountId: savedFormState.accountId!,
+                                    destinationAccountId: savedFormState.destinationAccountId,
+                                    assetId: savedFormState.assetId,
+                                    currencyCode: savedFormState.currencyCode,
+                                    conversionRate: savedFormState.conversionRate,
+                                    date: savedFormState.date,
+                                    note: savedFormState.note,
+                                    merchant: savedFormState.merchant,
                                   );
                             }
                             if (context.mounted) {

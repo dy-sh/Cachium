@@ -155,7 +155,7 @@ class _BalanceChangeCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      CurrencyFormatter.format(change.oldBalance),
+                      CurrencyFormatter.format(change.oldBalance, currencyCode: change.currencyCode),
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.textSecondary,
                       ),
@@ -179,7 +179,7 @@ class _BalanceChangeCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      CurrencyFormatter.format(change.newBalance),
+                      CurrencyFormatter.format(change.newBalance, currencyCode: change.currencyCode),
                       style: AppTypography.bodySmall.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -194,7 +194,7 @@ class _BalanceChangeCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Text(
-                '${isPositive ? '+' : ''}${CurrencyFormatter.format(change.difference)}',
+                '${isPositive ? '+' : ''}${CurrencyFormatter.format(change.difference, currencyCode: change.currencyCode)}',
                 style: AppTypography.labelMedium.copyWith(
                   color: diffColor,
                   fontWeight: FontWeight.w600,

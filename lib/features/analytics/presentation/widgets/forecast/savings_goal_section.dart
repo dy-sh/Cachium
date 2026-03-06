@@ -6,6 +6,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
+import '../../../../../core/constants/currencies.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
 import '../../providers/savings_goal_provider.dart';
 
@@ -30,7 +31,8 @@ class _SavingsGoalSectionState extends ConsumerState<SavingsGoalSection> {
   Widget build(BuildContext context) {
     final goal = ref.watch(savingsGoalProvider);
     final target = ref.watch(savingsGoalTargetProvider);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final mainCurrencyCode = ref.watch(mainCurrencyCodeProvider);
+    final currencySymbol = Currency.symbolFromCode(mainCurrencyCode);
     final accentColor = ref.watch(accentColorProvider);
 
     return Padding(

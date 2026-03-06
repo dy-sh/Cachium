@@ -4,6 +4,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
+import '../../../../../core/constants/currencies.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
 import '../../providers/budget_forecast_provider.dart';
 
@@ -13,7 +14,8 @@ class BudgetForecastCards extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final forecasts = ref.watch(budgetForecastProvider);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final mainCurrencyCode = ref.watch(mainCurrencyCodeProvider);
+    final currencySymbol = Currency.symbolFromCode(mainCurrencyCode);
 
     if (forecasts.isEmpty) return const SizedBox.shrink();
 

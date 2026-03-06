@@ -87,6 +87,7 @@ class Account {
   final AccountType type;
   final double balance;
   final double initialBalance;
+  final String currencyCode;
   final Color? customColor;
   final IconData? customIcon;
   final DateTime createdAt;
@@ -97,6 +98,7 @@ class Account {
     required this.type,
     required this.balance,
     required this.initialBalance,
+    this.currencyCode = 'USD',
     this.customColor,
     this.customIcon,
     required this.createdAt,
@@ -117,6 +119,7 @@ class Account {
     AccountType? type,
     double? balance,
     double? initialBalance,
+    String? currencyCode,
     Color? customColor,
     IconData? customIcon,
     DateTime? createdAt,
@@ -127,6 +130,7 @@ class Account {
       type: type ?? this.type,
       balance: balance ?? this.balance,
       initialBalance: initialBalance ?? this.initialBalance,
+      currencyCode: currencyCode ?? this.currencyCode,
       customColor: customColor ?? this.customColor,
       customIcon: customIcon ?? this.customIcon,
       createdAt: createdAt ?? this.createdAt,

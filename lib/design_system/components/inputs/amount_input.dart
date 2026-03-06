@@ -5,6 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../core/constants/currencies.dart';
 import '../../../features/settings/data/models/app_settings.dart';
 import '../../../features/settings/presentation/providers/settings_provider.dart';
 
@@ -14,6 +15,7 @@ class AmountInput extends ConsumerStatefulWidget {
   final String transactionType;
   final bool autofocus;
   final AmountDisplaySize? sizeOverride;
+  final String? currencyCode;
 
   const AmountInput({
     super.key,
@@ -22,6 +24,7 @@ class AmountInput extends ConsumerStatefulWidget {
     this.transactionType = 'expense',
     this.autofocus = false,
     this.sizeOverride,
+    this.currencyCode,
   });
 
   @override
@@ -146,7 +149,7 @@ class _FMAmountInputState extends ConsumerState<AmountInput> {
                 style: textStyle.copyWith(color: prefixDisplayColor),
               ),
               Text(
-                '\$',
+                Currency.symbolFromCode(widget.currencyCode ?? 'USD'),
                 style: textStyle.copyWith(
                   color: isSmall ? AppColors.textTertiary : AppColors.textSecondary,
                 ),
@@ -183,7 +186,7 @@ class _FMAmountInputState extends ConsumerState<AmountInput> {
           Padding(
             padding: const EdgeInsets.only(top: AppSpacing.xs),
             child: Text(
-              '= \$${_previewResult!.toStringAsFixed(2)}',
+              '= ${Currency.symbolFromCode(widget.currencyCode ?? 'USD')}${_previewResult!.toStringAsFixed(2)}',
               style: AppTypography.bodySmall.copyWith(
                 color: prefixColor.withValues(alpha: 0.7),
               ),

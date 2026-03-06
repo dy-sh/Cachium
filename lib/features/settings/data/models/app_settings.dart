@@ -92,15 +92,21 @@ enum AssetSortOption {
   }
 }
 
-enum CurrencySymbol {
-  usd('\$', 'USD'),
-  eur('\u20AC', 'EUR'),
-  gbp('\u00A3', 'GBP'),
-  custom('', 'Custom');
+enum ExchangeRateApiOption {
+  frankfurter,
+  exchangeRateHost,
+  manual;
 
-  final String symbol;
-  final String label;
-  const CurrencySymbol(this.symbol, this.label);
+  String get displayName {
+    switch (this) {
+      case ExchangeRateApiOption.frankfurter:
+        return 'Frankfurter (ECB)';
+      case ExchangeRateApiOption.exchangeRateHost:
+        return 'ExchangeRate.host';
+      case ExchangeRateApiOption.manual:
+        return 'Manual / Offline';
+    }
+  }
 }
 
 class AppSettings {
@@ -114,8 +120,9 @@ class AppSettings {
 
   // Formats
   final DateFormatOption dateFormat;
-  final CurrencySymbol currencySymbol;
-  final String? customCurrencySymbol;
+  final String mainCurrencyCode;
+  final ExchangeRateApiOption exchangeRateApiOption;
+  final String? cachedExchangeRates;
   final FirstDayOfWeek firstDayOfWeek;
 
   // Preferences
@@ -169,8 +176,9 @@ class AppSettings {
     this.formAnimationsEnabled = true,
     this.balanceCountersEnabled = true,
     this.dateFormat = DateFormatOption.mmddyyyy,
-    this.currencySymbol = CurrencySymbol.usd,
-    this.customCurrencySymbol,
+    this.mainCurrencyCode = 'USD',
+    this.exchangeRateApiOption = ExchangeRateApiOption.frankfurter,
+    this.cachedExchangeRates,
     this.firstDayOfWeek = FirstDayOfWeek.sunday,
     this.hapticFeedbackEnabled = true,
     this.startScreen = StartScreen.home,
@@ -205,13 +213,6 @@ class AppSettings {
     this.onboardingCompleted = false,
   });
 
-  String get effectiveCurrencySymbol {
-    if (currencySymbol == CurrencySymbol.custom && customCurrencySymbol != null) {
-      return customCurrencySymbol!;
-    }
-    return currencySymbol.symbol;
-  }
-
   Color get accentColor {
     return AppColors.getAccentColor(accentColorIndex, colorIntensity);
   }
@@ -224,8 +225,10 @@ class AppSettings {
     bool? formAnimationsEnabled,
     bool? balanceCountersEnabled,
     DateFormatOption? dateFormat,
-    CurrencySymbol? currencySymbol,
-    String? customCurrencySymbol,
+    String? mainCurrencyCode,
+    ExchangeRateApiOption? exchangeRateApiOption,
+    String? cachedExchangeRates,
+    bool clearCachedExchangeRates = false,
     FirstDayOfWeek? firstDayOfWeek,
     bool? hapticFeedbackEnabled,
     StartScreen? startScreen,
@@ -269,8 +272,9 @@ class AppSettings {
       formAnimationsEnabled: formAnimationsEnabled ?? this.formAnimationsEnabled,
       balanceCountersEnabled: balanceCountersEnabled ?? this.balanceCountersEnabled,
       dateFormat: dateFormat ?? this.dateFormat,
-      currencySymbol: currencySymbol ?? this.currencySymbol,
-      customCurrencySymbol: customCurrencySymbol ?? this.customCurrencySymbol,
+      mainCurrencyCode: mainCurrencyCode ?? this.mainCurrencyCode,
+      exchangeRateApiOption: exchangeRateApiOption ?? this.exchangeRateApiOption,
+      cachedExchangeRates: clearCachedExchangeRates ? null : (cachedExchangeRates ?? this.cachedExchangeRates),
       firstDayOfWeek: firstDayOfWeek ?? this.firstDayOfWeek,
       hapticFeedbackEnabled: hapticFeedbackEnabled ?? this.hapticFeedbackEnabled,
       startScreen: startScreen ?? this.startScreen,

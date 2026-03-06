@@ -5,6 +5,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
+import '../../../../../core/constants/currencies.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
 import '../../providers/income_expense_summary_provider.dart';
 
@@ -24,7 +25,8 @@ class _SavingsGaugeState extends ConsumerState<SavingsGauge> {
     final summary = ref.watch(incomeExpenseSummaryProvider);
     final colorIntensity = ref.watch(colorIntensityProvider);
     final accentColor = ref.watch(accentColorProvider);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final mainCurrencyCode = ref.watch(mainCurrencyCodeProvider);
+    final currencySymbol = Currency.symbolFromCode(mainCurrencyCode);
 
     if (summary.totalIncome == 0 && summary.totalExpense == 0) {
       return const SizedBox.shrink();

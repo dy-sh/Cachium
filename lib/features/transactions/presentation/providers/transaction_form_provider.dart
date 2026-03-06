@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../data/models/transaction.dart';
 import '../../data/models/transaction_template.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
@@ -9,6 +11,8 @@ class TransactionFormState {
   final String? categoryId;
   final String? accountId;
   final String? destinationAccountId; // For transfers
+  final String currencyCode;
+  final double conversionRate;
   final DateTime date;
   final String? note;
   final String? merchant;
@@ -33,6 +37,8 @@ class TransactionFormState {
     this.categoryId,
     this.accountId,
     this.destinationAccountId,
+    this.currencyCode = 'USD',
+    this.conversionRate = 1.0,
     this.assetId,
     required this.date,
     this.note,
@@ -99,6 +105,8 @@ class TransactionFormState {
     String? accountId,
     String? destinationAccountId,
     bool clearDestinationAccountId = false,
+    String? currencyCode,
+    double? conversionRate,
     String? assetId,
     bool clearAssetId = false,
     DateTime? date,
@@ -124,6 +132,8 @@ class TransactionFormState {
       destinationAccountId: clearDestinationAccountId
           ? null
           : (destinationAccountId ?? this.destinationAccountId),
+      currencyCode: currencyCode ?? this.currencyCode,
+      conversionRate: conversionRate ?? this.conversionRate,
       assetId: clearAssetId ? null : (assetId ?? this.assetId),
       date: date ?? this.date,
       note: note ?? this.note,
@@ -154,9 +164,12 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
     final lastUsedIncomeCategoryId = ref.read(lastUsedIncomeCategoryIdProvider);
     final lastUsedExpenseCategoryId = ref.read(lastUsedExpenseCategoryIdProvider);
 
+    final mainCurrency = ref.read(mainCurrencyCodeProvider);
+
     return TransactionFormState(
       type: defaultType,
       date: DateTime.now(),
+      currencyCode: mainCurrency,
       accountId: selectLastAccount ? lastUsedAccountId : null,
       categoryId: selectLastCategory
           ? (defaultType == TransactionType.income
@@ -231,7 +244,22 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
   }
 
   void setAccount(String accountId) {
-    state = state.copyWith(accountId: accountId);
+    // Set currency from account
+    final account = ref.read(accountByIdProvider(accountId));
+    final currencyCode = account?.currencyCode ?? state.currencyCode;
+    final mainCurrency = ref.read(mainCurrencyCodeProvider);
+
+    double conversionRate = 1.0;
+    if (currencyCode != mainCurrency) {
+      final rate = ref.read(exchangeRateProvider((from: currencyCode, to: mainCurrency)));
+      conversionRate = rate;
+    }
+
+    state = state.copyWith(
+      accountId: accountId,
+      currencyCode: currencyCode,
+      conversionRate: conversionRate,
+    );
   }
 
   void setDate(DateTime date) {
@@ -244,6 +272,10 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
 
   void setMerchant(String? merchant) {
     state = state.copyWith(merchant: merchant);
+  }
+
+  void setConversionRate(double rate) {
+    state = state.copyWith(conversionRate: rate);
   }
 
   void setAsset(String? assetId) {
@@ -262,10 +294,12 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
     final lastUsedAccountId = ref.read(lastUsedAccountIdProvider);
     final lastUsedIncomeCategoryId = ref.read(lastUsedIncomeCategoryIdProvider);
     final lastUsedExpenseCategoryId = ref.read(lastUsedExpenseCategoryIdProvider);
+    final mainCurrency = ref.read(mainCurrencyCodeProvider);
 
     state = TransactionFormState(
       type: defaultType,
       date: DateTime.now(),
+      currencyCode: mainCurrency,
       accountId: selectLastAccount ? lastUsedAccountId : null,
       categoryId: selectLastCategory
           ? (defaultType == TransactionType.income
@@ -299,6 +333,8 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
       categoryId: transaction.categoryId,
       accountId: transaction.accountId,
       destinationAccountId: transaction.destinationAccountId,
+      currencyCode: transaction.currencyCode,
+      conversionRate: transaction.conversionRate,
       assetId: transaction.assetId,
       date: transaction.date,
       note: transaction.note,

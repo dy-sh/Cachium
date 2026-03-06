@@ -2,6 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/utils/currency_conversion.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/recurring_transaction.dart';
 
 const _uuid = Uuid();
@@ -9,6 +12,8 @@ const _uuid = Uuid();
 /// Detects recurring/subscription transactions from transaction history
 final recurringTransactionsProvider = Provider<RecurringSummary>((ref) {
   final transactionsAsync = ref.watch(transactionsProvider);
+  final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
   final transactions = transactionsAsync.valueOrNull;
 
   if (transactions == null || transactions.length < 3) {
@@ -30,7 +35,7 @@ final recurringTransactionsProvider = Provider<RecurringSummary>((ref) {
   final groups = <String, List<Transaction>>{};
   for (final tx in expenses) {
     // Create group key: amount_category_merchant
-    final amountKey = tx.amount.round().toString();
+    final amountKey = convertedAmount(tx, rates, mainCurrency).round().toString();
     final merchantKey = tx.merchant?.toLowerCase().trim() ?? '';
     final key = '${amountKey}_${tx.categoryId}_$merchantKey';
     groups.putIfAbsent(key, () => []).add(tx);
@@ -91,7 +96,7 @@ final recurringTransactionsProvider = Provider<RecurringSummary>((ref) {
       id: _uuid.v4(),
       merchant: txs.first.merchant,
       categoryId: txs.first.categoryId,
-      amount: txs.first.amount,
+      amount: convertedAmount(txs.first, rates, mainCurrency),
       frequency: frequency,
       confidence: confidence,
       lastOccurrence: lastDate,

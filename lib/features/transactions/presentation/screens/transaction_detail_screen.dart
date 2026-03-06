@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../design_system/components/feedback/notification.dart';
@@ -152,14 +153,35 @@ class TransactionDetailScreen extends ConsumerWidget {
                           const SizedBox(height: AppSpacing.md),
                           Text(
                             isTransfer
-                                ? CurrencyFormatter.format(transaction.amount)
+                                ? CurrencyFormatter.format(transaction.amount, currencyCode: transaction.currencyCode)
                                 : CurrencyFormatter.formatWithSign(
-                                    transaction.amount, transaction.type.name),
+                                    transaction.amount, transaction.type.name, currencyCode: transaction.currencyCode),
                             style: AppTypography.moneyLarge.copyWith(
                               color: color,
                               fontSize: 34,
                             ),
                           ),
+                          // Main currency equivalent for foreign currency transactions
+                          if (transaction.currencyCode != ref.watch(mainCurrencyCodeProvider)) ...[
+                            const SizedBox(height: 2),
+                            Builder(builder: (context) {
+                              final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+                              final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
+                              final converted = convertTransactionToMainCurrency(
+                                transaction.amount,
+                                transaction.currencyCode,
+                                mainCurrency,
+                                rates,
+                                transaction.conversionRate,
+                              );
+                              return Text(
+                                '\u2248 ${CurrencyFormatter.format(converted, currencyCode: mainCurrency)}',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: AppColors.textTertiary,
+                                ),
+                              );
+                            }),
+                          ],
                           const SizedBox(height: AppSpacing.xs),
                           Container(
                             padding: const EdgeInsets.symmetric(

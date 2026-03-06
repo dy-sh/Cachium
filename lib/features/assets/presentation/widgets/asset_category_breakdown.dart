@@ -18,6 +18,7 @@ class AssetCategoryBreakdown extends ConsumerWidget {
     final categories = ref.watch(assetCategoryBreakdownProvider(assetId));
     final intensity = ref.watch(colorIntensityProvider);
     final bgOpacity = AppColors.getBgOpacity(intensity);
+    final currencyCode = ref.watch(mainCurrencyCodeProvider);
 
     if (categories.isEmpty) return const SizedBox.shrink();
 
@@ -63,7 +64,7 @@ class AssetCategoryBreakdown extends ConsumerWidget {
                             style: AppTypography.labelMedium,
                           ),
                           Text(
-                            CurrencyFormatter.format(entry.amount),
+                            CurrencyFormatter.format(entry.amount, currencyCode: currencyCode),
                             style: AppTypography.moneySmall,
                           ),
                         ],

@@ -45,11 +45,14 @@ mixin _$SettingsData {
   /// Date format: 'mmddyyyy', 'ddmmyyyy', 'ddmmyyyyDot', 'yyyymmdd'
   String get dateFormat => throw _privateConstructorUsedError;
 
-  /// Currency symbol: 'usd', 'eur', 'gbp', 'custom'
-  String get currencySymbol => throw _privateConstructorUsedError;
+  /// Main currency code (ISO 4217)
+  String get mainCurrencyCode => throw _privateConstructorUsedError;
 
-  /// Custom currency symbol when currencySymbol is 'custom'
-  String? get customCurrencySymbol => throw _privateConstructorUsedError;
+  /// Exchange rate API option: 'frankfurter', 'exchangeRateHost', 'manual'
+  String get exchangeRateApiOption => throw _privateConstructorUsedError;
+
+  /// Cached exchange rates as JSON string
+  String? get cachedExchangeRates => throw _privateConstructorUsedError;
 
   /// First day of week: 'sunday' or 'monday'
   String get firstDayOfWeek => throw _privateConstructorUsedError;
@@ -131,8 +134,9 @@ abstract class $SettingsDataCopyWith<$Res> {
     bool formAnimationsEnabled,
     bool balanceCountersEnabled,
     String dateFormat,
-    String currencySymbol,
-    String? customCurrencySymbol,
+    String mainCurrencyCode,
+    String exchangeRateApiOption,
+    String? cachedExchangeRates,
     String firstDayOfWeek,
     bool hapticFeedbackEnabled,
     String startScreen,
@@ -177,8 +181,9 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
     Object? formAnimationsEnabled = null,
     Object? balanceCountersEnabled = null,
     Object? dateFormat = null,
-    Object? currencySymbol = null,
-    Object? customCurrencySymbol = freezed,
+    Object? mainCurrencyCode = null,
+    Object? exchangeRateApiOption = null,
+    Object? cachedExchangeRates = freezed,
     Object? firstDayOfWeek = null,
     Object? hapticFeedbackEnabled = null,
     Object? startScreen = null,
@@ -232,13 +237,17 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
                 ? _value.dateFormat
                 : dateFormat // ignore: cast_nullable_to_non_nullable
                       as String,
-            currencySymbol: null == currencySymbol
-                ? _value.currencySymbol
-                : currencySymbol // ignore: cast_nullable_to_non_nullable
+            mainCurrencyCode: null == mainCurrencyCode
+                ? _value.mainCurrencyCode
+                : mainCurrencyCode // ignore: cast_nullable_to_non_nullable
                       as String,
-            customCurrencySymbol: freezed == customCurrencySymbol
-                ? _value.customCurrencySymbol
-                : customCurrencySymbol // ignore: cast_nullable_to_non_nullable
+            exchangeRateApiOption: null == exchangeRateApiOption
+                ? _value.exchangeRateApiOption
+                : exchangeRateApiOption // ignore: cast_nullable_to_non_nullable
+                      as String,
+            cachedExchangeRates: freezed == cachedExchangeRates
+                ? _value.cachedExchangeRates
+                : cachedExchangeRates // ignore: cast_nullable_to_non_nullable
                       as String?,
             firstDayOfWeek: null == firstDayOfWeek
                 ? _value.firstDayOfWeek
@@ -336,8 +345,9 @@ abstract class _$$SettingsDataImplCopyWith<$Res>
     bool formAnimationsEnabled,
     bool balanceCountersEnabled,
     String dateFormat,
-    String currencySymbol,
-    String? customCurrencySymbol,
+    String mainCurrencyCode,
+    String exchangeRateApiOption,
+    String? cachedExchangeRates,
     String firstDayOfWeek,
     bool hapticFeedbackEnabled,
     String startScreen,
@@ -381,8 +391,9 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
     Object? formAnimationsEnabled = null,
     Object? balanceCountersEnabled = null,
     Object? dateFormat = null,
-    Object? currencySymbol = null,
-    Object? customCurrencySymbol = freezed,
+    Object? mainCurrencyCode = null,
+    Object? exchangeRateApiOption = null,
+    Object? cachedExchangeRates = freezed,
     Object? firstDayOfWeek = null,
     Object? hapticFeedbackEnabled = null,
     Object? startScreen = null,
@@ -436,13 +447,17 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
             ? _value.dateFormat
             : dateFormat // ignore: cast_nullable_to_non_nullable
                   as String,
-        currencySymbol: null == currencySymbol
-            ? _value.currencySymbol
-            : currencySymbol // ignore: cast_nullable_to_non_nullable
+        mainCurrencyCode: null == mainCurrencyCode
+            ? _value.mainCurrencyCode
+            : mainCurrencyCode // ignore: cast_nullable_to_non_nullable
                   as String,
-        customCurrencySymbol: freezed == customCurrencySymbol
-            ? _value.customCurrencySymbol
-            : customCurrencySymbol // ignore: cast_nullable_to_non_nullable
+        exchangeRateApiOption: null == exchangeRateApiOption
+            ? _value.exchangeRateApiOption
+            : exchangeRateApiOption // ignore: cast_nullable_to_non_nullable
+                  as String,
+        cachedExchangeRates: freezed == cachedExchangeRates
+            ? _value.cachedExchangeRates
+            : cachedExchangeRates // ignore: cast_nullable_to_non_nullable
                   as String?,
         firstDayOfWeek: null == firstDayOfWeek
             ? _value.firstDayOfWeek
@@ -533,8 +548,9 @@ class _$SettingsDataImpl implements _SettingsData {
     this.formAnimationsEnabled = true,
     this.balanceCountersEnabled = true,
     this.dateFormat = 'mmddyyyy',
-    this.currencySymbol = 'usd',
-    this.customCurrencySymbol,
+    this.mainCurrencyCode = 'USD',
+    this.exchangeRateApiOption = 'frankfurter',
+    this.cachedExchangeRates,
     this.firstDayOfWeek = 'sunday',
     this.hapticFeedbackEnabled = true,
     this.startScreen = 'home',
@@ -598,14 +614,19 @@ class _$SettingsDataImpl implements _SettingsData {
   @JsonKey()
   final String dateFormat;
 
-  /// Currency symbol: 'usd', 'eur', 'gbp', 'custom'
+  /// Main currency code (ISO 4217)
   @override
   @JsonKey()
-  final String currencySymbol;
+  final String mainCurrencyCode;
 
-  /// Custom currency symbol when currencySymbol is 'custom'
+  /// Exchange rate API option: 'frankfurter', 'exchangeRateHost', 'manual'
   @override
-  final String? customCurrencySymbol;
+  @JsonKey()
+  final String exchangeRateApiOption;
+
+  /// Cached exchange rates as JSON string
+  @override
+  final String? cachedExchangeRates;
 
   /// First day of week: 'sunday' or 'monday'
   @override
@@ -694,7 +715,7 @@ class _$SettingsDataImpl implements _SettingsData {
 
   @override
   String toString() {
-    return 'SettingsData(id: $id, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, currencySymbol: $currencySymbol, customCurrencySymbol: $customCurrencySymbol, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, categoriesFoldedCount: $categoriesFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, categorySortOption: $categorySortOption, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId, appLockEnabled: $appLockEnabled, appPinCode: $appPinCode, appPassword: $appPassword)';
+    return 'SettingsData(id: $id, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, mainCurrencyCode: $mainCurrencyCode, exchangeRateApiOption: $exchangeRateApiOption, cachedExchangeRates: $cachedExchangeRates, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, categoriesFoldedCount: $categoriesFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, categorySortOption: $categorySortOption, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId, appLockEnabled: $appLockEnabled, appPinCode: $appPinCode, appPassword: $appPassword)';
   }
 
   @override
@@ -717,10 +738,12 @@ class _$SettingsDataImpl implements _SettingsData {
                 other.balanceCountersEnabled == balanceCountersEnabled) &&
             (identical(other.dateFormat, dateFormat) ||
                 other.dateFormat == dateFormat) &&
-            (identical(other.currencySymbol, currencySymbol) ||
-                other.currencySymbol == currencySymbol) &&
-            (identical(other.customCurrencySymbol, customCurrencySymbol) ||
-                other.customCurrencySymbol == customCurrencySymbol) &&
+            (identical(other.mainCurrencyCode, mainCurrencyCode) ||
+                other.mainCurrencyCode == mainCurrencyCode) &&
+            (identical(other.exchangeRateApiOption, exchangeRateApiOption) ||
+                other.exchangeRateApiOption == exchangeRateApiOption) &&
+            (identical(other.cachedExchangeRates, cachedExchangeRates) ||
+                other.cachedExchangeRates == cachedExchangeRates) &&
             (identical(other.firstDayOfWeek, firstDayOfWeek) ||
                 other.firstDayOfWeek == firstDayOfWeek) &&
             (identical(other.hapticFeedbackEnabled, hapticFeedbackEnabled) ||
@@ -777,8 +800,9 @@ class _$SettingsDataImpl implements _SettingsData {
     formAnimationsEnabled,
     balanceCountersEnabled,
     dateFormat,
-    currencySymbol,
-    customCurrencySymbol,
+    mainCurrencyCode,
+    exchangeRateApiOption,
+    cachedExchangeRates,
     firstDayOfWeek,
     hapticFeedbackEnabled,
     startScreen,
@@ -823,8 +847,9 @@ abstract class _SettingsData implements SettingsData {
     final bool formAnimationsEnabled,
     final bool balanceCountersEnabled,
     final String dateFormat,
-    final String currencySymbol,
-    final String? customCurrencySymbol,
+    final String mainCurrencyCode,
+    final String exchangeRateApiOption,
+    final String? cachedExchangeRates,
     final String firstDayOfWeek,
     final bool hapticFeedbackEnabled,
     final String startScreen,
@@ -880,13 +905,17 @@ abstract class _SettingsData implements SettingsData {
   @override
   String get dateFormat;
 
-  /// Currency symbol: 'usd', 'eur', 'gbp', 'custom'
+  /// Main currency code (ISO 4217)
   @override
-  String get currencySymbol;
+  String get mainCurrencyCode;
 
-  /// Custom currency symbol when currencySymbol is 'custom'
+  /// Exchange rate API option: 'frankfurter', 'exchangeRateHost', 'manual'
   @override
-  String? get customCurrencySymbol;
+  String get exchangeRateApiOption;
+
+  /// Cached exchange rates as JSON string
+  @override
+  String? get cachedExchangeRates;
 
   /// First day of week: 'sunday' or 'monday'
   @override

@@ -18,6 +18,7 @@ class SubscriptionTrackerSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final summary = ref.watch(recurringTransactionsProvider);
     final accentColor = ref.watch(accentColorProvider);
+    final currencyCode = ref.watch(mainCurrencyCodeProvider);
 
     if (summary.subscriptions.isEmpty) {
       return _buildEmptyState();
@@ -76,7 +77,7 @@ class SubscriptionTrackerSection extends ConsumerWidget {
                     Expanded(
                       child: _SummaryCard(
                         label: 'Monthly',
-                        value: CurrencyFormatter.format(summary.totalMonthly),
+                        value: CurrencyFormatter.format(summary.totalMonthly, currencyCode: currencyCode),
                         color: AppColors.orange,
                       ),
                     ),
@@ -84,7 +85,7 @@ class SubscriptionTrackerSection extends ConsumerWidget {
                     Expanded(
                       child: _SummaryCard(
                         label: 'Yearly',
-                        value: CurrencyFormatter.format(summary.totalYearly),
+                        value: CurrencyFormatter.format(summary.totalYearly, currencyCode: currencyCode),
                         color: AppColors.red,
                       ),
                     ),

@@ -41,6 +41,9 @@ class TransactionData with _$TransactionData {
     /// Currency code (default: USD)
     @Default('USD') String currency,
 
+    /// Conversion rate to main currency at transaction creation time
+    @Default(1.0) double conversionRate,
+
     /// Matches the database date field for integrity verification during import.
     /// Not exported as a separate CSV column to avoid duplication.
     required int dateMillis,

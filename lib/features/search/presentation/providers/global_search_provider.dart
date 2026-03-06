@@ -36,7 +36,7 @@ final globalSearchResultsProvider =
       results.add(GlobalSearchResult(
         id: account.id,
         title: account.name,
-        subtitle: '${account.type.displayName} \u2022 ${CurrencyFormatter.format(account.balance)}',
+        subtitle: '${account.type.displayName} \u2022 ${CurrencyFormatter.format(account.balance, currencyCode: account.currencyCode)}',
         type: SearchResultType.account,
         icon: account.icon,
         color: account.getColorWithIntensity(intensity),
@@ -66,7 +66,7 @@ final globalSearchResultsProvider =
 
     final note = tx.note?.toLowerCase() ?? '';
     final merchant = tx.merchant?.toLowerCase() ?? '';
-    final amount = CurrencyFormatter.format(tx.amount).toLowerCase();
+    final amount = CurrencyFormatter.format(tx.amount, currencyCode: tx.currencyCode).toLowerCase();
 
     if (note.contains(query) ||
         merchant.contains(query) ||
@@ -88,7 +88,7 @@ final globalSearchResultsProvider =
                 ? tx.merchant!
                 : (category?.name ?? 'Unknown')),
         subtitle:
-            '${CurrencyFormatter.formatWithSign(tx.amount, tx.type.name)} \u2022 ${account?.name ?? 'Unknown'} \u2022 ${DateFormatter.formatRelative(tx.date)}',
+            '${CurrencyFormatter.formatWithSign(tx.amount, tx.type.name, currencyCode: tx.currencyCode)} \u2022 ${account?.name ?? 'Unknown'} \u2022 ${DateFormatter.formatRelative(tx.date)}',
         type: SearchResultType.transaction,
         icon: isTransfer
             ? LucideIcons.arrowLeftRight

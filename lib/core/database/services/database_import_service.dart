@@ -422,6 +422,7 @@ class DatabaseImportService {
           encryptedBlob = (row['encrypted_blob'] ?? row['encryptedBlob']) as Uint8List;
         } else {
           // Plaintext format, need to encrypt using TransactionData model
+          final conversionRateRaw = row['conversion_rate'] ?? row['conversionRate'];
           final data = TransactionData(
             id: id,
             amount: ((row['amount']) as num).toDouble(),
@@ -430,6 +431,7 @@ class DatabaseImportService {
             type: row['type'] as String,
             note: row['note'] as String?,
             currency: row['currency'] as String? ?? 'USD',
+            conversionRate: conversionRateRaw != null ? (conversionRateRaw as num).toDouble() : 1.0,
             dateMillis: (row['date_millis'] ?? row['dateMillis'] ?? date) as int,
             createdAtMillis: (row['created_at_millis'] ?? row['createdAtMillis']) as int,
           );
@@ -485,6 +487,7 @@ class DatabaseImportService {
             initialBalance: ((row['initial_balance'] ?? row['initialBalance']) as num?)?.toDouble() ?? 0.0,
             customColorValue: (row['custom_color_value'] ?? row['customColorValue']) as int?,
             customIconCodePoint: (row['custom_icon_code_point'] ?? row['customIconCodePoint']) as int?,
+            currencyCode: (row['currency_code'] ?? row['currencyCode']) as String? ?? 'USD',
             createdAtMillis: (row['created_at_millis'] ?? row['createdAtMillis'] ?? createdAt) as int,
           );
           encryptedBlob = await encryptionService.encryptJson(data.toJson());
@@ -607,6 +610,7 @@ class DatabaseImportService {
           final note = (noteRaw.isEmpty || noteRaw == 'null') ? null : noteRaw;
 
           // Plaintext format, need to encrypt using TransactionData model
+          final conversionRateRaw = data['conversion_rate'] ?? data['conversionRate'];
           final transactionData = TransactionData(
             id: id,
             amount: double.parse(data['amount'].toString()),
@@ -615,6 +619,7 @@ class DatabaseImportService {
             type: data['type'].toString(),
             note: note,
             currency: data['currency']?.toString() ?? 'USD',
+            conversionRate: conversionRateRaw != null ? double.parse(conversionRateRaw.toString()) : 1.0,
             // Fall back to 'date' if date_millis not present
             dateMillis: dateMillisRaw != null ? int.parse(dateMillisRaw.toString()) : date,
             // Fall back to 'date' if created_at_millis not present
@@ -677,6 +682,7 @@ class DatabaseImportService {
           final customIconCodePoint = (data['custom_icon_code_point'] ?? data['customIconCodePoint']).toString();
           final initialBalanceStr = (data['initial_balance'] ?? data['initialBalance'])?.toString() ?? '0';
 
+          final currencyCodeStr = (data['currency_code'] ?? data['currencyCode'])?.toString() ?? '';
           final accountData = AccountData(
             id: id,
             name: data['name'].toString(),
@@ -685,6 +691,7 @@ class DatabaseImportService {
             initialBalance: initialBalanceStr.isEmpty ? 0.0 : double.parse(initialBalanceStr),
             customColorValue: customColorValue.isEmpty ? null : int.parse(customColorValue),
             customIconCodePoint: customIconCodePoint.isEmpty ? null : int.parse(customIconCodePoint),
+            currencyCode: currencyCodeStr.isEmpty ? 'USD' : currencyCodeStr,
             createdAtMillis: int.parse((data['created_at_millis'] ?? data['createdAtMillis'] ?? createdAt).toString()),
           );
           encryptedBlob = await encryptionService.encryptJson(accountData.toJson());

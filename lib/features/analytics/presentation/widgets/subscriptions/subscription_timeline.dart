@@ -7,6 +7,7 @@ import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
 import '../../../../../core/utils/currency_formatter.dart';
 import '../../../../categories/presentation/providers/categories_provider.dart';
+import '../../../../../core/constants/currencies.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
 import '../../providers/recurring_transactions_provider.dart';
 
@@ -18,7 +19,8 @@ class SubscriptionTimeline extends ConsumerWidget {
     final upcoming = ref.watch(upcomingSubscriptionsProvider);
     final categories = ref.watch(categoriesProvider).valueOrNull ?? [];
     final colorIntensity = ref.watch(colorIntensityProvider);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final mainCurrencyCode = ref.watch(mainCurrencyCodeProvider);
+    final currencySymbol = Currency.symbolFromCode(mainCurrencyCode);
 
     if (upcoming.isEmpty) {
       return const SizedBox.shrink();
@@ -64,6 +66,7 @@ class SubscriptionTimeline extends ConsumerWidget {
               categories: categories,
               colorIntensity: colorIntensity,
               currencySymbol: currencySymbol,
+              currencyCode: mainCurrencyCode,
             ),
           ],
           if (nextWeek.isNotEmpty) ...[
@@ -74,6 +77,7 @@ class SubscriptionTimeline extends ConsumerWidget {
               categories: categories,
               colorIntensity: colorIntensity,
               currencySymbol: currencySymbol,
+              currencyCode: mainCurrencyCode,
             ),
           ],
           if (later.isNotEmpty) ...[
@@ -85,6 +89,7 @@ class SubscriptionTimeline extends ConsumerWidget {
               categories: categories,
               colorIntensity: colorIntensity,
               currencySymbol: currencySymbol,
+              currencyCode: mainCurrencyCode,
             ),
           ],
         ],
@@ -99,6 +104,7 @@ class _TimelineSection extends StatelessWidget {
   final List<dynamic> categories;
   final dynamic colorIntensity;
   final String currencySymbol;
+  final String currencyCode;
 
   const _TimelineSection({
     required this.title,
@@ -106,6 +112,7 @@ class _TimelineSection extends StatelessWidget {
     required this.categories,
     required this.colorIntensity,
     required this.currencySymbol,
+    required this.currencyCode,
   });
 
   @override
@@ -165,7 +172,7 @@ class _TimelineSection extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
-                  CurrencyFormatter.format(sub.amount),
+                  CurrencyFormatter.format(sub.amount, currencyCode: currencyCode),
                   style: AppTypography.moneySmall.copyWith(
                     fontSize: 12,
                   ),

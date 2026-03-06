@@ -5,6 +5,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/constants/currencies.dart';
+import '../../../../design_system/components/inputs/currency_picker.dart';
 import '../../data/models/app_settings.dart';
 import '../providers/settings_provider.dart';
 import '../widgets/settings_section.dart';
@@ -24,6 +26,8 @@ class FormatsSettingsScreen extends ConsumerWidget {
         body: const Center(child: CircularProgressIndicator()),
       );
     }
+
+    final mainCurrency = Currency.fromCode(settings.mainCurrencyCode);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -80,11 +84,14 @@ class FormatsSettingsScreen extends ConsumerWidget {
                           onTap: () => _showDateFormatPicker(context, ref, settings),
                         ),
                         SettingsTile(
-                          title: 'Currency Symbol',
-                          value: settings.currencySymbol == CurrencySymbol.custom
-                              ? settings.customCurrencySymbol ?? '\$'
-                              : settings.currencySymbol.symbol,
+                          title: 'Main Currency',
+                          value: '${mainCurrency.flag} ${mainCurrency.code} (${mainCurrency.symbol})',
                           onTap: () => _showCurrencyPicker(context, ref, settings),
+                        ),
+                        SettingsTile(
+                          title: 'Exchange Rate Source',
+                          value: settings.exchangeRateApiOption.displayName,
+                          onTap: () => _showExchangeRateApiPicker(context, ref, settings),
                         ),
                         _buildFirstDayTile(context, ref, settings),
                       ],
@@ -220,14 +227,25 @@ class FormatsSettingsScreen extends ConsumerWidget {
   }
 
   void _showCurrencyPicker(BuildContext context, WidgetRef ref, AppSettings settings) {
+    showCurrencyPickerSheet(
+      context: context,
+      selectedCode: settings.mainCurrencyCode,
+      onSelected: (code) {
+        ref.read(settingsProvider.notifier).setMainCurrencyCode(code);
+      },
+    );
+  }
+
+  void _showExchangeRateApiPicker(BuildContext context, WidgetRef ref, AppSettings settings) {
     final animationsEnabled = ref.read(formAnimationsEnabledProvider);
-    final modalContent = _CurrencyPickerSheet(
-      settings: settings,
-      onSelected: (symbol, customValue) {
-        ref.read(settingsProvider.notifier).setCurrencySymbol(symbol);
-        if (symbol == CurrencySymbol.custom && customValue != null) {
-          ref.read(settingsProvider.notifier).setCustomCurrencySymbol(customValue);
-        }
+    final modalContent = _OptionPickerSheet(
+      title: 'Exchange Rate Source',
+      options: ExchangeRateApiOption.values.map((o) => o.displayName).toList(),
+      selectedIndex: ExchangeRateApiOption.values.indexOf(settings.exchangeRateApiOption),
+      onSelected: (index) {
+        ref.read(settingsProvider.notifier).setExchangeRateApiOption(
+          ExchangeRateApiOption.values[index],
+        );
         Navigator.pop(context);
       },
     );
@@ -256,7 +274,6 @@ class FormatsSettingsScreen extends ConsumerWidget {
       showModalBottomSheet(
         context: context,
         backgroundColor: AppColors.surface,
-        isScrollControlled: true,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
@@ -329,171 +346,6 @@ class _OptionPickerSheet extends StatelessWidget {
                 ),
               );
             }),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CurrencyPickerSheet extends StatefulWidget {
-  final AppSettings settings;
-  final void Function(CurrencySymbol symbol, String? customValue) onSelected;
-
-  const _CurrencyPickerSheet({
-    required this.settings,
-    required this.onSelected,
-  });
-
-  @override
-  State<_CurrencyPickerSheet> createState() => _CurrencyPickerSheetState();
-}
-
-class _CurrencyPickerSheetState extends State<_CurrencyPickerSheet> {
-  late TextEditingController _customController;
-  late CurrencySymbol _selectedSymbol;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedSymbol = widget.settings.currencySymbol;
-    _customController = TextEditingController(
-      text: widget.settings.customCurrencySymbol ?? '',
-    );
-  }
-
-  @override
-  void dispose() {
-    _customController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: AppSpacing.lg,
-          right: AppSpacing.lg,
-          top: AppSpacing.lg,
-          bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text('Currency Symbol', style: AppTypography.h4),
-            const SizedBox(height: AppSpacing.lg),
-            ...CurrencySymbol.values.where((s) => s != CurrencySymbol.custom).map((symbol) {
-              final isSelected = symbol == _selectedSymbol;
-              return GestureDetector(
-                onTap: () {
-                  widget.onSelected(symbol, null);
-                },
-                behavior: HitTestBehavior.opaque,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 32,
-                        child: Text(
-                          symbol.symbol,
-                          style: AppTypography.bodyLarge,
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          symbol.label,
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                      if (isSelected)
-                        Icon(
-                          LucideIcons.check,
-                          size: 18,
-                          color: AppColors.textPrimary,
-                        ),
-                    ],
-                  ),
-                ),
-              );
-            }),
-            const SizedBox(height: AppSpacing.md),
-            Row(
-              children: [
-                SizedBox(
-                  width: 60,
-                  child: TextField(
-                    controller: _customController,
-                    style: AppTypography.bodyLarge,
-                    maxLength: 3,
-                    decoration: InputDecoration(
-                      counterText: '',
-                      hintText: '\$',
-                      hintStyle: AppTypography.bodyLarge.copyWith(
-                        color: AppColors.textTertiary,
-                      ),
-                      filled: true,
-                      fillColor: AppColors.background,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: AppColors.border),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: AppColors.border),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: AppColors.textPrimary),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                        vertical: AppSpacing.sm,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      if (_customController.text.isNotEmpty) {
-                        widget.onSelected(CurrencySymbol.custom, _customController.text);
-                      }
-                    },
-                    child: Text(
-                      'Custom',
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: _selectedSymbol == CurrencySymbol.custom
-                            ? AppColors.textPrimary
-                            : AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                ),
-                if (_selectedSymbol == CurrencySymbol.custom)
-                  Icon(
-                    LucideIcons.check,
-                    size: 18,
-                    color: AppColors.textPrimary,
-                  ),
-              ],
-            ),
           ],
         ),
       ),

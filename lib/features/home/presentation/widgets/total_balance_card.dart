@@ -4,6 +4,7 @@ import '../../../../core/utils/currency_formatter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/async_value_extensions.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -27,6 +28,7 @@ class _TotalBalanceCardState extends ConsumerState<TotalBalanceCard> {
   @override
   Widget build(BuildContext context) {
     final totalBalance = ref.watch(totalBalanceProvider);
+    final mainCurrency = ref.watch(mainCurrencyCodeProvider);
     final intensity = ref.watch(colorIntensityProvider);
     final incomeColor = AppColors.getTransactionColor('income', intensity);
     final expenseColor = AppColors.getTransactionColor('expense', intensity);
@@ -61,7 +63,7 @@ class _TotalBalanceCardState extends ConsumerState<TotalBalanceCard> {
       onLongPress: showBalance
           ? () {
               Clipboard.setData(ClipboardData(
-                text: CurrencyFormatter.format(totalBalance),
+                text: CurrencyFormatter.format(totalBalance, currencyCode: mainCurrency),
               ));
               if (mounted) {
                 context.showSuccessNotification('Balance copied');
@@ -124,6 +126,7 @@ class _TotalBalanceCardState extends ConsumerState<TotalBalanceCard> {
               AnimatedCounter(
                 value: totalBalance,
                 style: mainBalanceStyle,
+                currencyCode: mainCurrency,
               )
             else
               Text(
@@ -140,6 +143,7 @@ class _TotalBalanceCardState extends ConsumerState<TotalBalanceCard> {
               expenseColor: expenseColor,
               isSmall: isSmall,
               showBalance: showBalance,
+              currencyCode: mainCurrency,
             ),
           ],
         ),
@@ -149,16 +153,31 @@ class _TotalBalanceCardState extends ConsumerState<TotalBalanceCard> {
 
   double _getHoldings(WidgetRef ref) {
     final accounts = ref.watch(accountsProvider).valueOrEmpty;
+    final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+    final rates = ref.watch(exchangeRatesProvider).valueOrNull;
     return accounts
         .where((a) => a.type.isHolding)
-        .fold(0.0, (sum, a) => sum + a.balance);
+        .fold(0.0, (sum, a) {
+      if (a.currencyCode == mainCurrency || rates == null) {
+        return sum + a.balance;
+      }
+      return sum + convertToMainCurrency(a.balance, a.currencyCode, mainCurrency, rates);
+    });
   }
 
   double _getLiabilities(WidgetRef ref) {
     final accounts = ref.watch(accountsProvider).valueOrEmpty;
+    final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+    final rates = ref.watch(exchangeRatesProvider).valueOrNull;
     return accounts
         .where((a) => a.type.isLiability)
-        .fold(0.0, (sum, a) => sum + a.balance.abs());
+        .fold(0.0, (sum, a) {
+      final balance = a.balance.abs();
+      if (a.currencyCode == mainCurrency || rates == null) {
+        return sum + balance;
+      }
+      return sum + convertToMainCurrency(balance, a.currencyCode, mainCurrency, rates);
+    });
   }
 }
 
@@ -169,6 +188,7 @@ class _BalanceBreakdown extends StatelessWidget {
   final Color expenseColor;
   final bool isSmall;
   final bool showBalance;
+  final String currencyCode;
 
   const _BalanceBreakdown({
     required this.holdings,
@@ -177,6 +197,7 @@ class _BalanceBreakdown extends StatelessWidget {
     required this.expenseColor,
     required this.isSmall,
     required this.showBalance,
+    required this.currencyCode,
   });
 
   @override
@@ -194,6 +215,7 @@ class _BalanceBreakdown extends StatelessWidget {
                 color: incomeColor,
                 isSmall: isSmall,
                 showBalance: showBalance,
+                currencyCode: currencyCode,
               ),
             ),
             Container(
@@ -209,6 +231,7 @@ class _BalanceBreakdown extends StatelessWidget {
                 alignRight: true,
                 isSmall: isSmall,
                 showBalance: showBalance,
+                currencyCode: currencyCode,
               ),
             ),
           ],
@@ -225,6 +248,7 @@ class _BalanceItem extends StatelessWidget {
   final bool alignRight;
   final bool isSmall;
   final bool showBalance;
+  final String currencyCode;
 
   const _BalanceItem({
     required this.label,
@@ -233,6 +257,7 @@ class _BalanceItem extends StatelessWidget {
     this.alignRight = false,
     required this.isSmall,
     required this.showBalance,
+    required this.currencyCode,
   });
 
   @override
@@ -293,6 +318,7 @@ class _BalanceItem extends StatelessWidget {
             AnimatedCounter(
               value: value,
               style: valueStyle,
+              currencyCode: currencyCode,
             )
           else
             Text(

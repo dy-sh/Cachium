@@ -157,6 +157,7 @@ class DatabaseExportService {
         type TEXT NOT NULL,
         note TEXT,
         currency TEXT NOT NULL DEFAULT 'USD',
+        conversion_rate REAL NOT NULL DEFAULT 1.0,
         date_millis INTEGER NOT NULL,
         created_at_millis INTEGER NOT NULL
       )
@@ -172,6 +173,7 @@ class DatabaseExportService {
         type TEXT NOT NULL,
         balance REAL NOT NULL,
         initial_balance REAL NOT NULL DEFAULT 0,
+        currency_code TEXT NOT NULL DEFAULT 'USD',
         custom_color_value INTEGER,
         custom_icon_code_point INTEGER,
         created_at_millis INTEGER NOT NULL
@@ -274,8 +276,8 @@ class DatabaseExportService {
 
     final stmt = exportDb.prepare(
       '''INSERT INTO transactions
-         (id, date, last_updated_at, is_deleted, amount, category_id, account_id, type, note, currency, date_millis, created_at_millis)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+         (id, date, last_updated_at, is_deleted, amount, category_id, account_id, type, note, currency, conversion_rate, date_millis, created_at_millis)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
     );
 
     for (final row in rows) {
@@ -293,6 +295,7 @@ class DatabaseExportService {
         data.type,
         data.note,
         data.currency,
+        data.conversionRate,
         data.dateMillis,
         data.createdAtMillis,
       ]);
@@ -306,8 +309,8 @@ class DatabaseExportService {
 
     final stmt = exportDb.prepare(
       '''INSERT INTO accounts
-         (id, created_at, last_updated_at, is_deleted, name, type, balance, initial_balance, custom_color_value, custom_icon_code_point, created_at_millis)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+         (id, created_at, last_updated_at, is_deleted, name, type, balance, initial_balance, currency_code, custom_color_value, custom_icon_code_point, created_at_millis)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
     );
 
     for (final row in rows) {
@@ -323,6 +326,7 @@ class DatabaseExportService {
         data.type,
         data.balance,
         data.initialBalance,
+        data.currencyCode,
         data.customColorValue,
         data.customIconCodePoint,
         data.createdAtMillis,
@@ -415,7 +419,7 @@ class DatabaseExportService {
             ..where((t) => t.isDeleted.equals(false)))
           .get();
       csvData.add([
-        'id', 'date', 'last_updated_at', 'amount', 'category_id', 'account_id', 'type', 'note', 'currency',
+        'id', 'date', 'last_updated_at', 'amount', 'category_id', 'account_id', 'type', 'note', 'currency', 'conversion_rate',
       ]);
 
       for (final row in rows) {
@@ -432,6 +436,7 @@ class DatabaseExportService {
           data.type,
           data.note ?? '',
           data.currency,
+          data.conversionRate,
         ]);
       }
     }
@@ -463,7 +468,7 @@ class DatabaseExportService {
             ..where((a) => a.isDeleted.equals(false)))
           .get();
       csvData.add([
-        'id', 'created_at', 'last_updated_at', 'name', 'type', 'balance', 'initial_balance', 'custom_color_value', 'custom_icon_code_point',
+        'id', 'created_at', 'last_updated_at', 'name', 'type', 'balance', 'initial_balance', 'currency_code', 'custom_color_value', 'custom_icon_code_point',
       ]);
 
       for (final row in rows) {
@@ -478,6 +483,7 @@ class DatabaseExportService {
           data.type,
           data.balance,
           data.initialBalance,
+          data.currencyCode,
           data.customColorValue ?? '',
           data.customIconCodePoint ?? '',
         ]);

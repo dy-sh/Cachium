@@ -17,6 +17,7 @@ class MerchantAnalysisSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final summary = ref.watch(merchantAnalysisProvider);
     final accentColor = ref.watch(accentColorProvider);
+    final currencyCode = ref.watch(mainCurrencyCodeProvider);
 
     if (summary.topMerchants.isEmpty) {
       return const SizedBox.shrink();
@@ -77,7 +78,7 @@ class MerchantAnalysisSection extends ConsumerWidget {
               Expanded(
                 child: _StatCard(
                   label: 'Total Spending',
-                  value: CurrencyFormatter.format(summary.totalSpending),
+                  value: CurrencyFormatter.format(summary.totalSpending, currencyCode: currencyCode),
                   icon: LucideIcons.dollarSign,
                   color: AppColors.expense,
                 ),

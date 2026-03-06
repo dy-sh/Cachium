@@ -8,6 +8,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/constants/currencies.dart';
 import '../../../../design_system/design_system.dart';
 import '../../../settings/presentation/providers/database_management_providers.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
@@ -167,8 +168,31 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                     ),
                     const SizedBox(height: AppSpacing.xxl),
 
+                    // Currency selector
+                    Row(
+                      children: [
+                        Text('Currency', style: AppTypography.labelMedium),
+                        const SizedBox(width: AppSpacing.md),
+                        CurrencyCodeChip(
+                          currencyCode: formState.currencyCode,
+                          onTap: () {
+                            showCurrencyPickerSheet(
+                              context: context,
+                              selectedCode: formState.currencyCode,
+                              onSelected: (code) {
+                                ref.read(accountFormProvider.notifier).setCurrencyCode(code);
+                              },
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+
                     if (!isEditing) ...[
-                      InputField(
+                      Builder(builder: (context) {
+                        final symbol = Currency.symbolFromCode(formState.currencyCode);
+                        return InputField(
                         label: 'Initial Balance',
                         hint: '0.00',
                         controller: _balanceController,
@@ -177,7 +201,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                           signed: true,
                         ),
                         prefix: Text(
-                          '\$',
+                          symbol,
                           style: AppTypography.input.copyWith(
                             color: AppColors.textSecondary,
                           ),
@@ -187,10 +211,13 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                                 double.tryParse(value) ?? 0,
                               );
                         },
-                      ),
+                      );
+                      }),
                     ] else ...[
                       // Initial balance (editable in edit mode)
-                      InputField(
+                      Builder(builder: (context) {
+                        final symbol = Currency.symbolFromCode(formState.currencyCode);
+                        return InputField(
                         key: ValueKey('initial_balance_${formState.editingAccountId}'),
                         label: 'Initial Balance',
                         hint: '0.00',
@@ -200,7 +227,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                           signed: true,
                         ),
                         prefix: Text(
-                          '\$',
+                          symbol,
                           style: AppTypography.input.copyWith(
                             color: AppColors.textSecondary,
                           ),
@@ -210,7 +237,8 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                                 double.tryParse(value) ?? 0,
                               );
                         },
-                      ),
+                      );
+                      }),
                       const SizedBox(height: AppSpacing.sm),
 
                       // Current balance info note
@@ -230,7 +258,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                           ),
                           const SizedBox(width: AppSpacing.sm),
                           Text(
-                            '\$${formState.currentBalance.toStringAsFixed(2)}',
+                            '${Currency.symbolFromCode(formState.currencyCode)}${formState.currentBalance.toStringAsFixed(2)}',
                             style: AppTypography.bodyMedium.copyWith(
                               color: AppColors.textSecondary,
                               fontWeight: FontWeight.w600,
@@ -340,6 +368,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                               type: formState.type,
                               initialBalance: formState.initialBalance,
                               balance: newBalance,
+                              currencyCode: formState.currencyCode,
                               customColor: customColor,
                             );
                             await ref.read(accountsProvider.notifier)
@@ -351,6 +380,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                                 name: formState.name,
                                 type: formState.type!,
                                 initialBalance: formState.initialBalance,
+                                currencyCode: formState.currencyCode,
                                 customColor: customColor,
                               );
                           ref.read(accountFormProvider.notifier).reset();
@@ -480,6 +510,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
     final change = BalanceChange(
       accountId: account.id,
       accountName: account.name,
+      currencyCode: account.currencyCode,
       oldBalance: formState.currentBalance,
       newBalance: expectedBalance,
       initialBalance: formState.initialBalance,

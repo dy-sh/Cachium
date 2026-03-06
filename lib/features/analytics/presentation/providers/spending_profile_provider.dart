@@ -4,6 +4,9 @@ import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../data/models/date_range_preset.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/utils/currency_conversion.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/spending_profile.dart';
 import 'analytics_filter_provider.dart';
 import 'period_comparison_provider.dart';
@@ -14,6 +17,8 @@ final spendingProfileProvider = Provider<List<SpendingProfile>>((ref) {
   final filter = ref.watch(analyticsFilterProvider);
   final periodA = ref.watch(comparisonPeriodAProvider);
   final periodB = ref.watch(comparisonPeriodBProvider);
+  final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
 
   final transactions = transactionsAsync.valueOrNull;
   final categories = categoriesAsync.valueOrNull;
@@ -44,7 +49,7 @@ final spendingProfileProvider = Provider<List<SpendingProfile>>((ref) {
       // Use parent category if exists
       final cat = catMap[tx.categoryId];
       final key = cat?.parentId ?? tx.categoryId;
-      map[key] = (map[key] ?? 0) + tx.amount;
+      map[key] = (map[key] ?? 0) + convertedAmount(tx, rates, mainCurrency);
     }
     return map;
   }

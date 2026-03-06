@@ -32,6 +32,9 @@ class AccountData with _$AccountData {
     /// Custom icon code point (optional)
     int? customIconCodePoint,
 
+    /// Currency code (ISO 4217)
+    @Default('USD') String currencyCode,
+
     /// Matches the database createdAt field for integrity verification during import.
     /// Not exported as a separate CSV column to avoid duplication.
     required int createdAtMillis,

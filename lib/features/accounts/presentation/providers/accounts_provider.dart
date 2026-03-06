@@ -1,11 +1,15 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/exceptions/app_exception.dart';
 import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/providers/database_providers.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/account.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 
@@ -33,6 +37,7 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
     required String name,
     required AccountType type,
     required double initialBalance,
+    String currencyCode = 'USD',
     Color? customColor,
   }) async {
     final previousState = state;
@@ -46,6 +51,7 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
         type: type,
         balance: initialBalance,
         initialBalance: initialBalance,
+        currencyCode: currencyCode,
         customColor: customColor,
         createdAt: DateTime.now(),
       );
@@ -286,7 +292,30 @@ final totalBalanceProvider = Provider<double>((ref) {
   final accountsAsync = ref.watch(accountsProvider);
   final accounts = accountsAsync.valueOrNull;
   if (accounts == null) return 0.0;
-  return accounts.fold(0.0, (sum, account) => sum + account.balance);
+
+  final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  final rates = ref.watch(exchangeRatesProvider).valueOrNull;
+
+  // ignore: avoid_print
+  if (kDebugMode) print('[totalBalance] mainCurrency=$mainCurrency, rates=${rates != null ? '${rates.length} rates (EUR=${rates['EUR']})' : 'NULL'}, accounts=${accounts.length}');
+
+  final total = accounts.fold(0.0, (sum, account) {
+    // ignore: avoid_print
+    if (kDebugMode) print('[totalBalance]   account="${account.name}" balance=${account.balance} currency=${account.currencyCode}');
+    if (account.currencyCode == mainCurrency || rates == null) {
+      return sum + account.balance;
+    }
+    return sum + convertToMainCurrency(
+      account.balance,
+      account.currencyCode,
+      mainCurrency,
+      rates,
+    );
+  });
+
+  // ignore: avoid_print
+  if (kDebugMode) print('[totalBalance] TOTAL = $total $mainCurrency');
+  return total;
 });
 
 final accountsByTypeProvider =

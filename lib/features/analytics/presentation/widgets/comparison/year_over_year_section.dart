@@ -6,6 +6,7 @@ import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
 import '../../../../settings/data/models/app_settings.dart';
+import '../../../../../core/constants/currencies.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
 import '../../../data/models/year_over_year_summary.dart';
 import '../../providers/year_over_year_provider.dart';
@@ -20,7 +21,8 @@ class YearOverYearSection extends ConsumerWidget {
     final selectedYears = ref.watch(yoySelectedYearsProvider);
     final availableYears = ref.watch(yoyAvailableYearsProvider);
     final colorIntensity = ref.watch(colorIntensityProvider);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final mainCurrencyCode = ref.watch(mainCurrencyCodeProvider);
+    final currencySymbol = Currency.symbolFromCode(mainCurrencyCode);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),

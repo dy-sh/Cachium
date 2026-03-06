@@ -6,6 +6,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
+import '../../../../../core/constants/currencies.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
 import '../../providers/spending_trends_provider.dart';
 
@@ -16,7 +17,8 @@ class SpendingTrendsSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final trend = ref.watch(spendingTrendsProvider);
     final colorIntensity = ref.watch(colorIntensityProvider);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final mainCurrencyCode = ref.watch(mainCurrencyCodeProvider);
+    final currencySymbol = Currency.symbolFromCode(mainCurrencyCode);
 
     if (!trend.hasData) return const SizedBox.shrink();
 

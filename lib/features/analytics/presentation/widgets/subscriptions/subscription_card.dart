@@ -27,6 +27,7 @@ class SubscriptionCard extends ConsumerWidget {
       orElse: () => categories.first,
     );
     final colorIntensity = ref.watch(colorIntensityProvider);
+    final currencyCode = ref.watch(mainCurrencyCodeProvider);
 
     final categoryColor = AppColors.getCategoryColors(colorIntensity)[category.colorIndex % 12];
 
@@ -85,7 +86,7 @@ class SubscriptionCard extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                CurrencyFormatter.format(subscription.amount),
+                CurrencyFormatter.format(subscription.amount, currencyCode: currencyCode),
                 style: AppTypography.moneySmall.copyWith(
                   fontWeight: FontWeight.w600,
                 ),

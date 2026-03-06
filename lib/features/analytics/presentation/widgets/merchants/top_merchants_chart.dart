@@ -21,6 +21,7 @@ class TopMerchantsChart extends ConsumerWidget {
     final summary = ref.watch(merchantAnalysisProvider);
     final categories = ref.watch(categoriesProvider).valueOrNull ?? [];
     final colorIntensity = ref.watch(colorIntensityProvider);
+    final currencyCode = ref.watch(mainCurrencyCodeProvider);
 
     if (summary.topMerchants.isEmpty) {
       return const SizedBox.shrink();
@@ -65,7 +66,7 @@ class TopMerchantsChart extends ConsumerWidget {
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
-                    CurrencyFormatter.format(merchant.totalAmount),
+                    CurrencyFormatter.format(merchant.totalAmount, currencyCode: currencyCode),
                     style: AppTypography.moneySmall.copyWith(
                       fontSize: 12,
                     ),
@@ -106,7 +107,7 @@ class TopMerchantsChart extends ConsumerWidget {
                   ),
                   const Spacer(),
                   Text(
-                    'avg ${CurrencyFormatter.format(merchant.averageTransaction)}',
+                    'avg ${CurrencyFormatter.format(merchant.averageTransaction, currencyCode: currencyCode)}',
                     style: AppTypography.labelSmall.copyWith(
                       color: AppColors.textTertiary,
                       fontSize: 10,

@@ -3,6 +3,9 @@ import '../../../accounts/data/models/account.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/utils/currency_conversion.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/net_worth_point.dart';
 import 'analytics_filter_provider.dart';
 
@@ -10,6 +13,8 @@ final netWorthHistoryProvider = Provider<List<NetWorthPoint>>((ref) {
   final transactionsAsync = ref.watch(transactionsProvider);
   final accountsAsync = ref.watch(accountsProvider);
   final filter = ref.watch(analyticsFilterProvider);
+  final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
 
   final transactions = transactionsAsync.valueOrNull;
   final accounts = accountsAsync.valueOrNull;
@@ -79,9 +84,9 @@ final netWorthHistoryProvider = Provider<List<NetWorthPoint>>((ref) {
         final accountId = tx.accountId;
         if (runningBalances.containsKey(accountId)) {
           if (tx.type == TransactionType.income) {
-            runningBalances[accountId] = runningBalances[accountId]! - tx.amount;
+            runningBalances[accountId] = runningBalances[accountId]! - convertedAmount(tx, rates, mainCurrency);
           } else {
-            runningBalances[accountId] = runningBalances[accountId]! + tx.amount;
+            runningBalances[accountId] = runningBalances[accountId]! + convertedAmount(tx, rates, mainCurrency);
           }
         }
         txIndex++;

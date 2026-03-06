@@ -4,6 +4,9 @@ import '../../../transactions/presentation/providers/transactions_provider.dart'
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../categories/data/models/category_tree_node.dart';
 import '../../data/models/analytics_filter.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/utils/currency_conversion.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/year_over_year_summary.dart';
 import 'analytics_filter_provider.dart';
 
@@ -31,6 +34,8 @@ final yearOverYearDataProvider = Provider<List<YearOverYearSummary>>((ref) {
   final categoriesAsync = ref.watch(categoriesProvider);
   final grouping = ref.watch(yoyGroupingProvider);
   final selectedYears = ref.watch(yoySelectedYearsProvider);
+  final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
 
   final transactions = transactionsAsync.valueOrNull;
   final categories = categoriesAsync.valueOrNull;
@@ -69,10 +74,11 @@ final yearOverYearDataProvider = Provider<List<YearOverYearSummary>>((ref) {
     yearPeriods[year] ??= {};
     yearPeriods[year]![periodIndex] ??= _Accumulator();
 
+    final amount = convertedAmount(tx, rates, mainCurrency);
     if (tx.type == TransactionType.income) {
-      yearPeriods[year]![periodIndex]!.income += tx.amount;
+      yearPeriods[year]![periodIndex]!.income += amount;
     } else {
-      yearPeriods[year]![periodIndex]!.expense += tx.amount;
+      yearPeriods[year]![periodIndex]!.expense += amount;
     }
   }
 

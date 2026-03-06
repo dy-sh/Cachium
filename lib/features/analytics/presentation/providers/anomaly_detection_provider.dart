@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/utils/currency_conversion.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/spending_anomaly.dart';
 import 'analytics_filter_provider.dart';
 
@@ -12,6 +15,8 @@ const _uuid = Uuid();
 final anomalyDetectionProvider = Provider<List<SpendingAnomaly>>((ref) {
   final transactionsAsync = ref.watch(transactionsProvider);
   final filter = ref.watch(analyticsFilterProvider);
+  final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
   final transactions = transactionsAsync.valueOrNull;
 
   if (transactions == null || transactions.length < 5) {
@@ -32,7 +37,7 @@ final anomalyDetectionProvider = Provider<List<SpendingAnomaly>>((ref) {
   final categoryStats = <String, _CategoryStats>{};
   for (final tx in expenses) {
     categoryStats.putIfAbsent(tx.categoryId, () => _CategoryStats());
-    categoryStats[tx.categoryId]!.amounts.add(tx.amount);
+    categoryStats[tx.categoryId]!.amounts.add(convertedAmount(tx, rates, mainCurrency));
     categoryStats[tx.categoryId]!.transactions.add(tx);
   }
 
@@ -54,9 +59,10 @@ final anomalyDetectionProvider = Provider<List<SpendingAnomaly>>((ref) {
     final stats = categoryStats[tx.categoryId];
     if (stats == null || stats.stdDev == 0) continue;
 
-    final zScore = (tx.amount - stats.mean) / stats.stdDev;
+    final txAmount = convertedAmount(tx, rates, mainCurrency);
+    final zScore = (txAmount - stats.mean) / stats.stdDev;
     if (zScore > 2) {
-      final percentAbove = ((tx.amount / stats.mean) - 1) * 100;
+      final percentAbove = ((txAmount / stats.mean) - 1) * 100;
       anomalies.add(SpendingAnomaly(
         id: _uuid.v4(),
         type: AnomalyType.unusualTransaction,
@@ -64,7 +70,7 @@ final anomalyDetectionProvider = Provider<List<SpendingAnomaly>>((ref) {
         message: 'Transaction ${percentAbove.toStringAsFixed(0)}% above category average',
         categoryId: tx.categoryId,
         transaction: tx,
-        amount: tx.amount,
+        amount: txAmount,
         averageAmount: stats.mean,
         percentageAboveAverage: percentAbove,
         detectedAt: now,
@@ -92,12 +98,12 @@ final anomalyDetectionProvider = Provider<List<SpendingAnomaly>>((ref) {
 
   for (final tx in periodTransactions) {
     currentCategoryTotals[tx.categoryId] =
-        (currentCategoryTotals[tx.categoryId] ?? 0) + tx.amount;
+        (currentCategoryTotals[tx.categoryId] ?? 0) + convertedAmount(tx, rates, mainCurrency);
   }
 
   for (final tx in previousTransactions) {
     previousCategoryTotals[tx.categoryId] =
-        (previousCategoryTotals[tx.categoryId] ?? 0) + tx.amount;
+        (previousCategoryTotals[tx.categoryId] ?? 0) + convertedAmount(tx, rates, mainCurrency);
   }
 
   for (final categoryId in currentCategoryTotals.keys) {

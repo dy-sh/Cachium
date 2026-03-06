@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/utils/currency_conversion.dart';
 import '../../../accounts/data/models/account.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/data/models/category.dart';
@@ -20,6 +22,8 @@ final accountFlowDataProvider = Provider<AccountFlowData>((ref) {
   final categoriesAsync = ref.watch(categoriesProvider);
   final colorIntensity = ref.watch(colorIntensityProvider);
   final viewMode = ref.watch(flowViewModeProvider);
+  final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
 
   final accounts = accountsAsync.valueOrNull;
   final categories = categoriesAsync.valueOrNull;
@@ -36,8 +40,8 @@ final accountFlowDataProvider = Provider<AccountFlowData>((ref) {
   final incomeTransactions = transactions.where((tx) => tx.type == TransactionType.income).toList();
   final expenseTransactions = transactions.where((tx) => tx.type == TransactionType.expense).toList();
 
-  final totalIncome = incomeTransactions.fold<double>(0, (s, tx) => s + tx.amount);
-  final totalExpense = expenseTransactions.fold<double>(0, (s, tx) => s + tx.amount);
+  final totalIncome = incomeTransactions.fold<double>(0, (s, tx) => s + convertedAmount(tx, rates, mainCurrency));
+  final totalExpense = expenseTransactions.fold<double>(0, (s, tx) => s + convertedAmount(tx, rates, mainCurrency));
 
   final incomeNodes = _buildNodes(
     transactions: incomeTransactions,
@@ -47,6 +51,8 @@ final accountFlowDataProvider = Provider<AccountFlowData>((ref) {
     colorIntensity: colorIntensity,
     viewMode: viewMode,
     isIncome: true,
+    rates: rates,
+    mainCurrency: mainCurrency,
   );
 
   final expenseNodes = _buildNodes(
@@ -57,6 +63,8 @@ final accountFlowDataProvider = Provider<AccountFlowData>((ref) {
     colorIntensity: colorIntensity,
     viewMode: viewMode,
     isIncome: false,
+    rates: rates,
+    mainCurrency: mainCurrency,
   );
 
   return AccountFlowData(
@@ -75,6 +83,8 @@ List<FlowNode> _buildNodes({
   required ColorIntensity colorIntensity,
   required FlowViewMode viewMode,
   required bool isIncome,
+  required Map<String, double> rates,
+  required String mainCurrency,
 }) {
   if (total == 0) return [];
 
@@ -85,7 +95,7 @@ List<FlowNode> _buildNodes({
   final Map<String, double> amounts = {};
   for (final tx in transactions) {
     final key = groupByCategory ? tx.categoryId : tx.accountId;
-    amounts[key] = (amounts[key] ?? 0) + tx.amount;
+    amounts[key] = (amounts[key] ?? 0) + convertedAmount(tx, rates, mainCurrency);
   }
 
   // Sort descending

@@ -209,6 +209,7 @@ class AssetDetailScreen extends ConsumerWidget {
                           label: 'Total Spent',
                           amount: totalSpent,
                           color: AppColors.getTransactionColor('expense', intensity),
+                          currencyCode: ref.watch(mainCurrencyCodeProvider),
                         ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
@@ -217,6 +218,7 @@ class AssetDetailScreen extends ConsumerWidget {
                           label: 'Revenue',
                           amount: totalIncome,
                           color: AppColors.getTransactionColor('income', intensity),
+                          currencyCode: ref.watch(mainCurrencyCodeProvider),
                         ),
                       ),
                     ],
@@ -228,6 +230,7 @@ class AssetDetailScreen extends ConsumerWidget {
                     color: netCost > 0
                         ? AppColors.getTransactionColor('expense', intensity)
                         : AppColors.getTransactionColor('income', intensity),
+                    currencyCode: ref.watch(mainCurrencyCodeProvider),
                   ),
 
                   // 3. Stats cards
@@ -305,11 +308,13 @@ class _CostCard extends StatelessWidget {
   final String label;
   final double amount;
   final Color color;
+  final String currencyCode;
 
   const _CostCard({
     required this.label,
     required this.amount,
     required this.color,
+    required this.currencyCode,
   });
 
   @override
@@ -332,7 +337,7 @@ class _CostCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            CurrencyFormatter.format(amount),
+            CurrencyFormatter.format(amount, currencyCode: currencyCode),
             style: AppTypography.moneySmall.copyWith(color: color),
           ),
         ],
@@ -370,14 +375,14 @@ class _MonthTransactionGroup extends ConsumerWidget {
                 children: [
                   if (group.expenseSubtotal > 0)
                     Text(
-                      '-${CurrencyFormatter.format(group.expenseSubtotal)}',
+                      '-${CurrencyFormatter.format(group.expenseSubtotal, currencyCode: ref.watch(mainCurrencyCodeProvider))}',
                       style: AppTypography.labelSmall.copyWith(color: expenseColor),
                     ),
                   if (group.expenseSubtotal > 0 && group.incomeSubtotal > 0)
                     const SizedBox(width: AppSpacing.sm),
                   if (group.incomeSubtotal > 0)
                     Text(
-                      '+${CurrencyFormatter.format(group.incomeSubtotal)}',
+                      '+${CurrencyFormatter.format(group.incomeSubtotal, currencyCode: ref.watch(mainCurrencyCodeProvider))}',
                       style: AppTypography.labelSmall.copyWith(color: incomeColor),
                     ),
                 ],
@@ -449,7 +454,7 @@ class _AssetTransactionItem extends ConsumerWidget {
               ),
             ),
             Text(
-              CurrencyFormatter.formatWithSign(transaction.amount, transaction.type.name),
+              CurrencyFormatter.formatWithSign(transaction.amount, transaction.type.name, currencyCode: transaction.currencyCode),
               style: AppTypography.moneySmall.copyWith(color: color),
             ),
           ],

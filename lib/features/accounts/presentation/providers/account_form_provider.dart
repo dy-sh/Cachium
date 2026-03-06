@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/account.dart';
 
 class AccountFormState {
@@ -7,6 +8,7 @@ class AccountFormState {
   final String name;
   final double initialBalance;
   final double transactionDelta; // sum of all transactions for this account
+  final String currencyCode;
   final String? editingAccountId;
   final int? customColorIndex; // null means use default type color
   final Color? originalCustomColor; // stored color from account being edited
@@ -16,6 +18,7 @@ class AccountFormState {
     this.name = '',
     this.initialBalance = 0,
     this.transactionDelta = 0,
+    this.currencyCode = 'USD',
     this.editingAccountId,
     this.customColorIndex,
     this.originalCustomColor,
@@ -35,6 +38,7 @@ class AccountFormState {
     String? name,
     double? initialBalance,
     double? transactionDelta,
+    String? currencyCode,
     String? editingAccountId,
     int? customColorIndex,
     bool clearCustomColor = false,
@@ -46,6 +50,7 @@ class AccountFormState {
       name: name ?? this.name,
       initialBalance: initialBalance ?? this.initialBalance,
       transactionDelta: transactionDelta ?? this.transactionDelta,
+      currencyCode: currencyCode ?? this.currencyCode,
       editingAccountId: editingAccountId ?? this.editingAccountId,
       customColorIndex: clearCustomColor ? null : (customColorIndex ?? this.customColorIndex),
       originalCustomColor: clearOriginalCustomColor ? null : (originalCustomColor ?? this.originalCustomColor),
@@ -56,7 +61,8 @@ class AccountFormState {
 class AccountFormNotifier extends AutoDisposeNotifier<AccountFormState> {
   @override
   AccountFormState build() {
-    return const AccountFormState();
+    final mainCurrency = ref.read(mainCurrencyCodeProvider);
+    return AccountFormState(currencyCode: mainCurrency);
   }
 
   void setType(AccountType type) {
@@ -73,7 +79,11 @@ class AccountFormNotifier extends AutoDisposeNotifier<AccountFormState> {
   }
 
   void reset() {
-    state = const AccountFormState();
+    state = AccountFormState(currencyCode: ref.read(mainCurrencyCodeProvider));
+  }
+
+  void setCurrencyCode(String code) {
+    state = state.copyWith(currencyCode: code);
   }
 
   void initForEdit(Account account) {
@@ -84,6 +94,7 @@ class AccountFormNotifier extends AutoDisposeNotifier<AccountFormState> {
       name: account.name,
       initialBalance: account.initialBalance,
       transactionDelta: transactionDelta,
+      currencyCode: account.currencyCode,
       editingAccountId: account.id,
       originalCustomColor: account.customColor,
     );

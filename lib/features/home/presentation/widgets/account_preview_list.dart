@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../design_system/components/feedback/empty_state.dart';
 import '../../../accounts/data/models/account.dart';
@@ -56,7 +57,12 @@ class _AccountPreviewListState extends ConsumerState<AccountPreviewList> {
           ),
         ),
       ),
-      data: (accounts) => accounts.isEmpty
+      data: (accounts) {
+        final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+        final hasForeignCurrency = accounts.any((a) => a.currencyCode != mainCurrency);
+        final listHeight = hasForeignCurrency ? 84.0 : 72.0;
+
+        return accounts.isEmpty
           ? Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
               child: EmptyState(
@@ -67,7 +73,7 @@ class _AccountPreviewListState extends ConsumerState<AccountPreviewList> {
               ),
             )
           : SizedBox(
-        height: 72,
+        height: listHeight,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
@@ -85,7 +91,8 @@ class _AccountPreviewListState extends ConsumerState<AccountPreviewList> {
             );
           },
         ),
-      ),
+      );
+      },
     );
   }
 }
@@ -225,11 +232,26 @@ class _AccountPreviewCard extends ConsumerWidget {
                   ],
                 ),
                 Text(
-                  showBalance ? CurrencyFormatter.format(account.balance) : '\u2022\u2022\u2022\u2022',
+                  showBalance ? CurrencyFormatter.format(account.balance, currencyCode: account.currencyCode) : '\u2022\u2022\u2022\u2022',
                   style: balanceStyle,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
+                if (showBalance && account.currencyCode != ref.watch(mainCurrencyCodeProvider))
+                  Builder(builder: (context) {
+                    final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+                    final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
+                    final converted = convertToMainCurrency(account.balance, account.currencyCode, mainCurrency, rates);
+                    return Text(
+                      '\u2248 ${CurrencyFormatter.format(converted, currencyCode: mainCurrency)}',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.textTertiary,
+                        fontSize: 9,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    );
+                  }),
               ],
             ),
           ),

@@ -5,6 +5,7 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../providers/asset_analytics_providers.dart';
 
 class AssetStatsCards extends ConsumerWidget {
@@ -15,6 +16,7 @@ class AssetStatsCards extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final stats = ref.watch(assetStatsProvider(assetId));
+    final mainCurrency = ref.watch(mainCurrencyCodeProvider);
 
     final timeOwnedText = _formatDuration(stats.timeOwned);
 
@@ -25,14 +27,14 @@ class AssetStatsCards extends ConsumerWidget {
             Expanded(
               child: _StatCard(
                 label: 'Monthly Avg',
-                value: CurrencyFormatter.format(stats.monthlyAverage),
+                value: CurrencyFormatter.format(stats.monthlyAverage, currencyCode: mainCurrency),
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: _StatCard(
                 label: 'Per Day',
-                value: CurrencyFormatter.format(stats.costPerDay),
+                value: CurrencyFormatter.format(stats.costPerDay, currencyCode: mainCurrency),
               ),
             ),
           ],

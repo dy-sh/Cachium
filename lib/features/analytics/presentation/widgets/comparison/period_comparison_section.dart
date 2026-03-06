@@ -6,6 +6,7 @@ import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
 import '../../../../../design_system/components/inputs/date_range_picker/date_range_picker.dart';
+import '../../../../../core/constants/currencies.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
 import '../../../data/models/date_range_preset.dart';
 import '../../providers/period_comparison_provider.dart';
@@ -23,7 +24,8 @@ class PeriodComparisonSection extends ConsumerWidget {
     final periodB = ref.watch(comparisonPeriodBProvider);
     final profiles = ref.watch(spendingProfileProvider);
     final colorIntensity = ref.watch(colorIntensityProvider);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final mainCurrencyCode = ref.watch(mainCurrencyCodeProvider);
+    final currencySymbol = Currency.symbolFromCode(mainCurrencyCode);
 
     final incomeColor = AppColors.getTransactionColor('income', colorIntensity);
     final expenseColor = AppColors.getTransactionColor('expense', colorIntensity);

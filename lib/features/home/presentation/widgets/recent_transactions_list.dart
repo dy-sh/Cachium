@@ -175,8 +175,8 @@ class _TransactionItem extends ConsumerWidget {
               ),
               Text(
                 isTransfer
-                    ? CurrencyFormatter.format(transaction.amount)
-                    : CurrencyFormatter.formatWithSign(transaction.amount, transaction.type.name),
+                    ? CurrencyFormatter.format(transaction.amount, currencyCode: transaction.currencyCode)
+                    : CurrencyFormatter.formatWithSign(transaction.amount, transaction.type.name, currencyCode: transaction.currencyCode),
                 style: AppTypography.moneySmall.copyWith(color: color),
               ),
             ],

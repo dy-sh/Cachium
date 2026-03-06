@@ -6,6 +6,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
+import '../../../../../core/constants/currencies.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
 import '../../../data/models/calendar_day_data.dart';
 import '../../providers/cash_flow_calendar_provider.dart';
@@ -25,7 +26,8 @@ class _CashFlowCalendarState extends ConsumerState<CashFlowCalendar> {
     final days = ref.watch(cashFlowCalendarProvider);
     final displayMonth = ref.watch(calendarDisplayMonthProvider);
     final colorIntensity = ref.watch(colorIntensityProvider);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final mainCurrencyCode = ref.watch(mainCurrencyCodeProvider);
+    final currencySymbol = Currency.symbolFromCode(mainCurrencyCode);
 
     final incomeColor = AppColors.getTransactionColor('income', colorIntensity);
     final expenseColor = AppColors.getTransactionColor('expense', colorIntensity);

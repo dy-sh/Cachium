@@ -3,14 +3,17 @@ import 'package:intl/intl.dart';
 
 import '../../features/settings/data/models/app_settings.dart';
 import '../../features/settings/presentation/providers/settings_provider.dart';
+import '../constants/currencies.dart';
 
-/// Settings-aware currency formatter that uses the user's currency symbol.
+/// Settings-aware currency formatter that uses the user's main currency.
 class SettingsCurrencyFormatter {
+  final String currencyCode;
   final String symbol;
   late final NumberFormat _currencyFormat;
   late final NumberFormat _compactFormat;
 
-  SettingsCurrencyFormatter({required this.symbol}) {
+  SettingsCurrencyFormatter({required this.currencyCode})
+      : symbol = Currency.symbolFromCode(currencyCode) {
     _currencyFormat = NumberFormat.currency(
       locale: 'en_US',
       symbol: symbol,
@@ -47,12 +50,29 @@ class SettingsCurrencyFormatter {
     }
     return format(amount);
   }
+
+  /// Format an amount in a specific currency (not the main currency).
+  String formatInCurrency(double amount, String targetCurrencyCode) {
+    final targetSymbol = Currency.symbolFromCode(targetCurrencyCode);
+    final formatter = NumberFormat.currency(
+      locale: 'en_US',
+      symbol: targetSymbol,
+      decimalDigits: 2,
+    );
+    return formatter.format(amount);
+  }
 }
 
-/// Provider for settings-aware currency formatter.
+/// Provider for settings-aware currency formatter using main currency.
 final currencyFormatterProvider = Provider<SettingsCurrencyFormatter>((ref) {
-  final symbol = ref.watch(currencySymbolProvider);
-  return SettingsCurrencyFormatter(symbol: symbol);
+  final currencyCode = ref.watch(mainCurrencyCodeProvider);
+  return SettingsCurrencyFormatter(currencyCode: currencyCode);
+});
+
+/// Provider for currency formatter for a specific currency code.
+final currencyFormatterForProvider =
+    Provider.family<SettingsCurrencyFormatter, String>((ref, currencyCode) {
+  return SettingsCurrencyFormatter(currencyCode: currencyCode);
 });
 
 /// Settings-aware date formatter that uses the user's date format preference.
