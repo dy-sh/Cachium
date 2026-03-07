@@ -120,27 +120,33 @@ class TransactionGroup {
     required this.transactions,
   });
 
-  double get netAmount {
+  /// Currency-aware net amount converted to main currency.
+  double netAmountInMainCurrency(Map<String, double> rates, String mainCurrency) {
     return transactions.fold(0.0, (sum, tx) {
-      if (tx.type == TransactionType.income) {
-        return sum + tx.amount;
-      } else if (tx.type == TransactionType.expense) {
-        return sum - tx.amount;
-      }
-      // Transfers are net zero
-      return sum;
+      if (tx.type == TransactionType.transfer) return sum;
+      final amount = _convertToMain(tx.amount, tx.currencyCode, mainCurrency, rates);
+      return tx.type == TransactionType.income ? sum + amount : sum - amount;
     });
   }
 
-  double get totalIncome {
+  double totalIncomeInMainCurrency(Map<String, double> rates, String mainCurrency) {
     return transactions
         .where((tx) => tx.type == TransactionType.income)
-        .fold(0.0, (sum, tx) => sum + tx.amount);
+        .fold(0.0, (sum, tx) => sum + _convertToMain(tx.amount, tx.currencyCode, mainCurrency, rates));
   }
 
-  double get totalExpense {
+  double totalExpenseInMainCurrency(Map<String, double> rates, String mainCurrency) {
     return transactions
         .where((tx) => tx.type == TransactionType.expense)
-        .fold(0.0, (sum, tx) => sum + tx.amount);
+        .fold(0.0, (sum, tx) => sum + _convertToMain(tx.amount, tx.currencyCode, mainCurrency, rates));
+  }
+
+  static double _convertToMain(double amount, String fromCurrency, String mainCurrency, Map<String, double> rates) {
+    if (fromCurrency == mainCurrency) return amount;
+    final fromRate = rates[fromCurrency];
+    if (fromRate != null && fromRate > 0) {
+      return double.parse((amount / fromRate).toStringAsFixed(2));
+    }
+    return amount;
   }
 }

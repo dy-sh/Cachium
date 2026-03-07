@@ -7,6 +7,7 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/providers/database_providers.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
 import '../../../../core/animations/haptic_helper.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
@@ -590,6 +591,10 @@ class _TransactionGroupWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+    final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
+    final netAmount = group.netAmountInMainCurrency(rates, mainCurrency);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -606,9 +611,9 @@ class _TransactionGroupWidget extends ConsumerWidget {
               ),
               Text(
                 CurrencyFormatter.formatWithSign(
-                  group.netAmount.abs(),
-                  group.netAmount >= 0 ? 'income' : 'expense',
-                  currencyCode: ref.watch(mainCurrencyCodeProvider),
+                  netAmount.abs(),
+                  netAmount >= 0 ? 'income' : 'expense',
+                  currencyCode: mainCurrency,
                 ),
                 style: AppTypography.labelSmall.copyWith(
                   color: AppColors.textTertiary,
@@ -734,27 +739,41 @@ class _TransactionItem extends ConsumerWidget {
           Flexible(
             flex: 0,
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 100),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    isTransfer
-                        ? CurrencyFormatter.format(transaction.amount, currencyCode: transaction.currencyCode)
-                        : CurrencyFormatter.formatWithSign(transaction.amount, transaction.type.name, currencyCode: transaction.currencyCode),
-                    style: AppTypography.moneySmall.copyWith(color: color),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (!isTransfer)
+              constraints: const BoxConstraints(maxWidth: 120),
+              child: Builder(builder: (context) {
+                final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+                final isForeign = transaction.currencyCode != mainCurrency;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
                     Text(
-                      account?.name ?? 'Unknown',
-                      style: AppTypography.labelSmall,
+                      isTransfer
+                          ? CurrencyFormatter.format(transaction.amount, currencyCode: transaction.currencyCode)
+                          : CurrencyFormatter.formatWithSign(transaction.amount, transaction.type.name, currencyCode: transaction.currencyCode),
+                      style: AppTypography.moneySmall.copyWith(color: color),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                ],
-              ),
+                    if (isForeign) Builder(builder: (context) {
+                      final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
+                      final converted = convertToMainCurrency(transaction.amount, transaction.currencyCode, mainCurrency, rates);
+                      return Text(
+                        '\u2248 ${CurrencyFormatter.format(converted, currencyCode: mainCurrency)}',
+                        style: AppTypography.labelSmall.copyWith(color: AppColors.textTertiary),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      );
+                    }),
+                    if (!isTransfer && !isForeign)
+                      Text(
+                        account?.name ?? 'Unknown',
+                        style: AppTypography.labelSmall,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                  ],
+                );
+              }),
             ),
           ),
         ],
@@ -819,12 +838,26 @@ class _TransactionItem extends ConsumerWidget {
         if (direction == DismissDirection.startToEnd) {
           // Duplicate: create new transaction with same details, today's date
           final tx = transaction;
+          final mainCurrency = ref.read(mainCurrencyCodeProvider);
+          final rates = ref.read(exchangeRatesProvider).valueOrNull ?? {};
+          // Recompute conversion rate using current live rates
+          final newConversionRate = (tx.currencyCode != mainCurrency && rates[tx.currencyCode] != null)
+              ? 1.0 / rates[tx.currencyCode]!
+              : tx.conversionRate;
+          final newMainCurrencyAmount = tx.currencyCode == mainCurrency
+              ? tx.amount
+              : double.parse((tx.amount * newConversionRate).toStringAsFixed(2));
           await ref.read(transactionsProvider.notifier).addTransaction(
                 amount: tx.amount,
                 type: tx.type,
                 categoryId: tx.categoryId,
                 accountId: tx.accountId,
                 destinationAccountId: tx.destinationAccountId,
+                currencyCode: tx.currencyCode,
+                conversionRate: newConversionRate,
+                destinationAmount: tx.destinationAmount,
+                mainCurrencyCode: mainCurrency,
+                mainCurrencyAmount: newMainCurrencyAmount,
                 date: DateTime.now(),
                 note: tx.note,
                 merchant: tx.merchant,

@@ -447,12 +447,29 @@ class _AccountTransactionItem extends ConsumerWidget {
                 ],
               ),
             ),
-            Text(
-              isTransfer
-                  ? CurrencyFormatter.format(transaction.amount, currencyCode: transaction.currencyCode)
-                  : CurrencyFormatter.formatWithSign(transaction.amount, transaction.type.name, currencyCode: transaction.currencyCode),
-              style: AppTypography.moneySmall.copyWith(color: color),
-            ),
+            Builder(builder: (context) {
+              final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+              final isForeign = transaction.currencyCode != mainCurrency;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    isTransfer
+                        ? CurrencyFormatter.format(transaction.amount, currencyCode: transaction.currencyCode)
+                        : CurrencyFormatter.formatWithSign(transaction.amount, transaction.type.name, currencyCode: transaction.currencyCode),
+                    style: AppTypography.moneySmall.copyWith(color: color),
+                  ),
+                  if (isForeign) Builder(builder: (context) {
+                    final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
+                    final converted = convertToMainCurrency(transaction.amount, transaction.currencyCode, mainCurrency, rates);
+                    return Text(
+                      '\u2248 ${CurrencyFormatter.format(converted, currencyCode: mainCurrency)}',
+                      style: AppTypography.labelSmall.copyWith(color: AppColors.textTertiary),
+                    );
+                  }),
+                ],
+              );
+            }),
           ],
         ),
       ),

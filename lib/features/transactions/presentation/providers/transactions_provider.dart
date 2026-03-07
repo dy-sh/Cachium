@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/providers/database_providers.dart';
 import '../../../../core/providers/exchange_rate_provider.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/transaction.dart';
 
 class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
@@ -350,14 +351,21 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
           destEffect += sign * convertedAmount;
         }
 
-        // Recalculate mainCurrencyAmount for cross-currency move
-        final newMainCurrencyAmount = double.parse(
-          (convertedAmount * tx.conversionRate).toStringAsFixed(2));
+        // Recalculate mainCurrencyAmount and conversionRate for cross-currency move
+        final mainCurrency = ref.read(mainCurrencyCodeProvider);
+        final rates = ref.read(exchangeRatesProvider).valueOrNull ?? {};
+        final newMainCurrencyAmount = convertToMainCurrency(
+          convertedAmount, toAccount.currencyCode, mainCurrency, rates);
+        final newConversionRate = (toAccount.currencyCode != mainCurrency && rates[toAccount.currencyCode] != null)
+            ? 1.0 / rates[toAccount.currencyCode]!
+            : tx.conversionRate;
         updatedTransactions.add(tx.copyWith(
           accountId: toAccountId,
           amount: convertedAmount,
           currencyCode: toAccount.currencyCode,
+          conversionRate: newConversionRate,
           destinationAmount: convertedDestAmount,
+          mainCurrencyCode: mainCurrency,
           mainCurrencyAmount: newMainCurrencyAmount,
         ));
       } else {

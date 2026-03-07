@@ -455,6 +455,18 @@
 - `convertedAmount()`, `convertToMainCurrency()`, and `convertTransactionToMainCurrency()` round results to 2 decimal places to prevent floating-point accumulation errors
 - `exchangeRatesStaleProvider` in `exchange_rate_provider.dart` derives whether rates are more than 24 hours old; `TotalBalanceCard` shows a warning icon next to "TOTAL BALANCE" when rates are stale and multiple account currencies are in use
 
+#### 22. Currency-aware daily group net amounts
+- `TransactionGroup` now computes `netAmountInMainCurrency()`, `totalIncomeInMainCurrency()`, and `totalExpenseInMainCurrency()` by converting each transaction to the main currency before aggregating, replacing the previous raw-amount sum that produced incorrect totals when a group contained transactions in multiple currencies
+
+#### 23. Converted amount subtitle in transaction lists
+- Foreign-currency transactions display an "≈ $X,XXX" subtitle showing the main-currency equivalent beneath the transaction amount in the main transactions screen, the home screen recent transactions list, and the account detail screen; matches the existing subtitle pattern used on account cards
+
+#### 24. Bug fix: duplicate transaction preserves currency fields
+- Swipe-to-duplicate now copies `currencyCode`, `conversionRate`, `destinationAmount`, `mainCurrencyCode`, and `mainCurrencyAmount` to the new transaction and recomputes the conversion rate using current live exchange rates, preventing currency data from being silently dropped on duplication
+
+#### 25. Bug fix: moveTransactionsToAccount correct mainCurrencyAmount
+- Fixed `moveTransactionsToAccount` computing the wrong `mainCurrencyAmount` when the source and destination accounts have different currencies; now calls `convertToMainCurrency()` using the destination account's currency and updates both `conversionRate` and `mainCurrencyCode` on each moved transaction
+
 #### 21. Historical main currency value storage
 - `mainCurrencyCode` and `mainCurrencyAmount` fields added to Transaction model and TransactionData DTO to snapshot the main-currency equivalent at the moment a transaction is saved
 - Transaction form computes and persists these fields on save; old records fall back to a calculated value via `conversionRate` for backward compatibility

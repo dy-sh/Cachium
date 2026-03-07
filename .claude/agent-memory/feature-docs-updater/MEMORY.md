@@ -7,7 +7,7 @@
 - New features go at the bottom of the "## New Features" section, incrementing the number.
 - Each entry uses bullet points under the `####` header (not a single-line format).
 - Sections are separated by `---` horizontal rules.
-- Current highest item in "New Features": 21 (as of 2026-03-07).
+- Current highest item in "New Features": 25 (as of 2026-03-07).
 
 ## features_new.md Structure
 - Created 2026-03-06 (did not previously exist).
