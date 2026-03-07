@@ -428,13 +428,23 @@ class DatabaseImportService {
           final amount = ((row['amount']) as num).toDouble();
           final mainCurrencyCodeRaw = row['main_currency_code'] ?? row['mainCurrencyCode'];
           final mainCurrencyAmountRaw = row['main_currency_amount'] ?? row['mainCurrencyAmount'];
+          // Parse optional fields (may not exist in old exports)
+          final destAccountIdRaw = row['destination_account_id'] ?? row['destinationAccountId'];
+          final destAmountRaw = row['destination_amount'] ?? row['destinationAmount'];
+          final merchantRaw = row['merchant'];
+          final assetIdRaw = row['asset_id'] ?? row['assetId'];
+
           final data = TransactionData(
             id: id,
             amount: amount,
             categoryId: (row['category_id'] ?? row['categoryId']) as String,
             accountId: (row['account_id'] ?? row['accountId']) as String,
+            destinationAccountId: destAccountIdRaw as String?,
+            destinationAmount: destAmountRaw != null ? (destAmountRaw as num).toDouble() : null,
             type: row['type'] as String,
             note: row['note'] as String?,
+            merchant: merchantRaw as String?,
+            assetId: assetIdRaw as String?,
             currency: row['currency'] as String? ?? 'USD',
             conversionRate: conversionRate,
             mainCurrencyCode: mainCurrencyCodeRaw as String? ?? 'USD',
@@ -1436,13 +1446,33 @@ class DatabaseImportService {
           final amount2 = double.parse(data['amount'].toString());
           final mainCurrencyCodeRaw2 = data['main_currency_code'] ?? data['mainCurrencyCode'];
           final mainCurrencyAmountRaw2 = data['main_currency_amount'] ?? data['mainCurrencyAmount'];
+          // Parse merchant - handle empty strings and "null" string
+          final merchantRaw2 = (data['merchant'])?.toString() ?? '';
+          final merchant2 = (merchantRaw2.isEmpty || merchantRaw2 == 'null') ? null : merchantRaw2;
+
+          // Parse destination_account_id
+          final destAccountIdRaw2 = (data['destination_account_id'] ?? data['destinationAccountId'])?.toString() ?? '';
+          final destinationAccountId2 = (destAccountIdRaw2.isEmpty || destAccountIdRaw2 == 'null') ? null : destAccountIdRaw2;
+
+          // Parse destination_amount
+          final destAmountRaw2 = (data['destination_amount'] ?? data['destinationAmount'])?.toString() ?? '';
+          final destinationAmount2 = (destAmountRaw2.isEmpty || destAmountRaw2 == 'null') ? null : double.parse(destAmountRaw2);
+
+          // Parse asset_id
+          final assetIdRaw2 = (data['asset_id'] ?? data['assetId'])?.toString() ?? '';
+          final assetId2 = (assetIdRaw2.isEmpty || assetIdRaw2 == 'null') ? null : assetIdRaw2;
+
           final transactionData = TransactionData(
             id: id,
             amount: amount2,
             categoryId: (data['category_id'] ?? data['categoryId']).toString(),
             accountId: (data['account_id'] ?? data['accountId']).toString(),
+            destinationAccountId: destinationAccountId2,
+            destinationAmount: destinationAmount2,
             type: data['type'].toString(),
             note: note,
+            merchant: merchant2,
+            assetId: assetId2,
             currency: data['currency']?.toString() ?? 'USD',
             conversionRate: conversionRate2,
             mainCurrencyCode: mainCurrencyCodeRaw2?.toString() ?? 'USD',

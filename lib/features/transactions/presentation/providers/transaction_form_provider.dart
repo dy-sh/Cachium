@@ -34,6 +34,8 @@ class TransactionFormState {
   final DateTime? originalDate;
   final String? originalNote;
   final String? originalMerchant;
+  final String? originalCurrencyCode;
+  final double? originalConversionRate;
   // Settings-driven validation
   final bool allowZeroAmount;
 
@@ -61,6 +63,8 @@ class TransactionFormState {
     this.originalDate,
     this.originalNote,
     this.originalMerchant,
+    this.originalCurrencyCode,
+    this.originalConversionRate,
     this.allowZeroAmount = false,
   });
 
@@ -91,7 +95,9 @@ class TransactionFormState {
         assetId != originalAssetId ||
         !_isSameDateTime(date, originalDate) ||
         note != originalNote ||
-        merchant != originalMerchant;
+        merchant != originalMerchant ||
+        currencyCode != originalCurrencyCode ||
+        conversionRate != originalConversionRate;
   }
 
   /// Compare dates ignoring seconds/milliseconds (only year, month, day, hour, minute).
@@ -134,6 +140,8 @@ class TransactionFormState {
     DateTime? originalDate,
     String? originalNote,
     String? originalMerchant,
+    String? originalCurrencyCode,
+    double? originalConversionRate,
     bool? allowZeroAmount,
   }) {
     return TransactionFormState(
@@ -164,6 +172,8 @@ class TransactionFormState {
       originalDate: originalDate ?? this.originalDate,
       originalNote: originalNote ?? this.originalNote,
       originalMerchant: originalMerchant ?? this.originalMerchant,
+      originalCurrencyCode: originalCurrencyCode ?? this.originalCurrencyCode,
+      originalConversionRate: originalConversionRate ?? this.originalConversionRate,
       allowZeroAmount: allowZeroAmount ?? this.allowZeroAmount,
     );
   }
@@ -413,6 +423,8 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
       originalDate: transaction.date,
       originalNote: transaction.note,
       originalMerchant: transaction.merchant,
+      originalCurrencyCode: transaction.currencyCode,
+      originalConversionRate: transaction.conversionRate,
       allowZeroAmount: allowZeroAmount,
     );
   }
