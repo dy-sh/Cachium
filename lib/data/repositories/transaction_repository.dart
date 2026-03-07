@@ -63,7 +63,7 @@ class TransactionRepository {
       conversionRate: data.conversionRate,
       destinationAmount: data.destinationAmount,
       mainCurrencyCode: data.mainCurrencyCode,
-      mainCurrencyAmount: data.mainCurrencyAmount ?? double.parse((data.amount * data.conversionRate).toStringAsFixed(2)),
+      mainCurrencyAmount: data.mainCurrencyAmount,
       date: DateTime.fromMillisecondsSinceEpoch(data.dateMillis),
       note: data.note,
       merchant: data.merchant,

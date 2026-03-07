@@ -18,7 +18,9 @@ class ConversionGainLossCard extends ConsumerWidget {
     final intensity = ref.watch(colorIntensityProvider);
     final mainCurrency = ref.watch(mainCurrencyCodeProvider);
 
-    if (data.totalGainLoss.abs() < 0.01) return const SizedBox.shrink();
+    if (data.totalGainLoss.abs() < 0.01 && !data.hasSkippedDueToMainCurrencyChange) {
+      return const SizedBox.shrink();
+    }
 
     final isPositive = data.totalGainLoss > 0;
     final color = isPositive
@@ -89,6 +91,23 @@ class ConversionGainLossCard extends ConsumerWidget {
                 ),
               );
             }),
+          ],
+          if (data.hasSkippedDueToMainCurrencyChange) ...[
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: [
+                Icon(LucideIcons.info, size: 14, color: AppColors.textTertiary),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: Text(
+                    'Some transactions were recorded under a different main currency and are excluded from this calculation.',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ],
         ],
       ),

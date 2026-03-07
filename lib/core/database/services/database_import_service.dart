@@ -11,6 +11,7 @@ import '../../../data/encryption/category_data.dart';
 import '../../../data/encryption/transaction_data.dart';
 import '../../../features/settings/data/models/csv_import_preview.dart';
 import '../../../features/settings/data/models/database_metrics.dart';
+import '../../utils/currency_conversion.dart';
 import '../app_database.dart';
 import 'encryption_service.dart';
 
@@ -437,7 +438,7 @@ class DatabaseImportService {
             currency: row['currency'] as String? ?? 'USD',
             conversionRate: conversionRate,
             mainCurrencyCode: mainCurrencyCodeRaw as String? ?? 'USD',
-            mainCurrencyAmount: mainCurrencyAmountRaw != null ? (mainCurrencyAmountRaw as num).toDouble() : double.parse((amount * conversionRate).toStringAsFixed(2)),
+            mainCurrencyAmount: mainCurrencyAmountRaw != null ? (mainCurrencyAmountRaw as num).toDouble() : roundCurrency(amount * conversionRate),
             dateMillis: (row['date_millis'] ?? row['dateMillis'] ?? date) as int,
             createdAtMillis: (row['created_at_millis'] ?? row['createdAtMillis']) as int,
           );
@@ -615,6 +616,22 @@ class DatabaseImportService {
           final noteRaw = data['note']?.toString() ?? '';
           final note = (noteRaw.isEmpty || noteRaw == 'null') ? null : noteRaw;
 
+          // Parse merchant - handle empty strings and "null" string
+          final merchantRaw = (data['merchant'])?.toString() ?? '';
+          final merchant = (merchantRaw.isEmpty || merchantRaw == 'null') ? null : merchantRaw;
+
+          // Parse destination_account_id
+          final destAccountIdRaw = (data['destination_account_id'] ?? data['destinationAccountId'])?.toString() ?? '';
+          final destinationAccountId = (destAccountIdRaw.isEmpty || destAccountIdRaw == 'null') ? null : destAccountIdRaw;
+
+          // Parse destination_amount
+          final destAmountRaw = (data['destination_amount'] ?? data['destinationAmount'])?.toString() ?? '';
+          final destinationAmount = (destAmountRaw.isEmpty || destAmountRaw == 'null') ? null : double.parse(destAmountRaw);
+
+          // Parse asset_id
+          final assetIdRaw = (data['asset_id'] ?? data['assetId'])?.toString() ?? '';
+          final assetId = (assetIdRaw.isEmpty || assetIdRaw == 'null') ? null : assetIdRaw;
+
           // Plaintext format, need to encrypt using TransactionData model
           final conversionRateRaw = data['conversion_rate'] ?? data['conversionRate'];
           final conversionRate = conversionRateRaw != null ? double.parse(conversionRateRaw.toString()) : 1.0;
@@ -626,14 +643,18 @@ class DatabaseImportService {
             amount: amount,
             categoryId: (data['category_id'] ?? data['categoryId']).toString(),
             accountId: (data['account_id'] ?? data['accountId']).toString(),
+            destinationAccountId: destinationAccountId,
+            destinationAmount: destinationAmount,
             type: data['type'].toString(),
             note: note,
+            merchant: merchant,
+            assetId: assetId,
             currency: data['currency']?.toString() ?? 'USD',
             conversionRate: conversionRate,
             mainCurrencyCode: mainCurrencyCodeRaw?.toString() ?? 'USD',
             mainCurrencyAmount: (mainCurrencyAmountRaw != null && mainCurrencyAmountRaw.toString().isNotEmpty)
                 ? double.parse(mainCurrencyAmountRaw.toString())
-                : double.parse((amount * conversionRate).toStringAsFixed(2)),
+                : roundCurrency(amount * conversionRate),
             // Fall back to 'date' if date_millis not present
             dateMillis: dateMillisRaw != null ? int.parse(dateMillisRaw.toString()) : date,
             // Fall back to 'date' if created_at_millis not present
@@ -1427,7 +1448,7 @@ class DatabaseImportService {
             mainCurrencyCode: mainCurrencyCodeRaw2?.toString() ?? 'USD',
             mainCurrencyAmount: (mainCurrencyAmountRaw2 != null && mainCurrencyAmountRaw2.toString().isNotEmpty)
                 ? double.parse(mainCurrencyAmountRaw2.toString())
-                : double.parse((amount2 * conversionRate2).toStringAsFixed(2)),
+                : roundCurrency(amount2 * conversionRate2),
             // Fall back to 'date' if date_millis not present
             dateMillis: dateMillisRaw != null ? int.parse(dateMillisRaw.toString()) : date,
             // Fall back to 'date' if created_at_millis not present

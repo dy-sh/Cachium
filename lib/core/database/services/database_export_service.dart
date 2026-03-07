@@ -423,7 +423,7 @@ class DatabaseExportService {
             ..where((t) => t.isDeleted.equals(false)))
           .get();
       csvData.add([
-        'id', 'date', 'last_updated_at', 'amount', 'category_id', 'account_id', 'type', 'note', 'currency', 'conversion_rate', 'main_currency_code', 'main_currency_amount',
+        'id', 'date', 'last_updated_at', 'amount', 'category_id', 'account_id', 'destination_account_id', 'destination_amount', 'type', 'note', 'merchant', 'currency', 'conversion_rate', 'main_currency_code', 'main_currency_amount', 'asset_id',
       ]);
 
       for (final row in rows) {
@@ -437,12 +437,16 @@ class DatabaseExportService {
           data.amount,
           data.categoryId,
           data.accountId,
+          data.destinationAccountId ?? '',
+          data.destinationAmount ?? '',
           data.type,
           data.note ?? '',
+          data.merchant ?? '',
           data.currency,
           data.conversionRate,
           data.mainCurrencyCode,
           data.mainCurrencyAmount ?? '',
+          data.assetId ?? '',
         ]);
       }
     }

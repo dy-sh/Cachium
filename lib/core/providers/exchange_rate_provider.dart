@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/settings/data/models/app_settings.dart';
 import '../../features/settings/presentation/providers/settings_provider.dart';
 import '../services/exchange_rate_service.dart';
+import '../utils/currency_conversion.dart';
 
 final exchangeRateServiceProvider = Provider<ExchangeRateService>((ref) {
   return ExchangeRateService();
@@ -125,7 +126,7 @@ double convertToMainCurrency(
     return amount;
   }
 
-  final result = double.parse((amount / fromRate).toStringAsFixed(2));
+  final result = roundCurrency(amount / fromRate);
   _log('[convertToMain] $amount $fromCurrency / $fromRate = $result $mainCurrency');
   return result;
 }
@@ -143,11 +144,11 @@ double convertTransactionToMainCurrency(
 
   final fromRate = rates[fromCurrency];
   if (fromRate != null) {
-    return double.parse((amount / fromRate).toStringAsFixed(2));
+    return roundCurrency(amount / fromRate);
   }
 
   // Fallback to stored rate
-  return double.parse((amount * storedConversionRate).toStringAsFixed(2));
+  return roundCurrency(amount * storedConversionRate);
 }
 
 /// Whether exchange rates are stale (>24h old) or missing.

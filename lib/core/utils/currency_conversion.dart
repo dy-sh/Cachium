@@ -1,6 +1,22 @@
 import '../../features/transactions/data/models/transaction.dart';
 import '../providers/exchange_rate_provider.dart';
 
+/// Round a currency value to [decimals] places (default 2).
+double roundCurrency(double value, {int decimals = 2}) {
+  final factor = _factors[decimals] ?? _pow10(decimals);
+  return (value * factor).roundToDouble() / factor;
+}
+
+const _factors = {0: 1.0, 1: 10.0, 2: 100.0, 3: 1000.0};
+
+double _pow10(int n) {
+  double result = 1;
+  for (int i = 0; i < n; i++) {
+    result *= 10;
+  }
+  return result;
+}
+
 /// Convert a transaction's amount to the main currency.
 ///
 /// Uses live exchange rates when available, falls back to the transaction's
@@ -14,11 +30,11 @@ double convertedAmount(
 
   final fromRate = rates[tx.currencyCode];
   if (fromRate != null && fromRate > 0) {
-    return double.parse((tx.amount / fromRate).toStringAsFixed(2));
+    return roundCurrency(tx.amount / fromRate);
   }
 
   // Fallback to stored conversion rate
-  return double.parse((tx.amount * tx.conversionRate).toStringAsFixed(2));
+  return roundCurrency(tx.amount * tx.conversionRate);
 }
 
 /// Convert a transaction's amount to the main currency, with sign.
@@ -50,6 +66,7 @@ double? conversionGainLoss(
   Map<String, double> rates,
   String currentMainCurrency,
 ) {
+  if (tx.mainCurrencyAmount == null) return null;
   if (tx.currencyCode == tx.mainCurrencyCode) return null;
   if (tx.mainCurrencyCode != currentMainCurrency) return null;
 
@@ -60,7 +77,7 @@ double? conversionGainLoss(
     rates,
     tx.conversionRate,
   );
-  final diff = currentValue - tx.mainCurrencyAmount;
+  final diff = currentValue - tx.mainCurrencyAmount!;
   if (diff.abs() < 0.005) return null;
-  return double.parse(diff.toStringAsFixed(2));
+  return roundCurrency(diff);
 }

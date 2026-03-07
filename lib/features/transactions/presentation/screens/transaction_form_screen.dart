@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/animations/haptic_helper.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/utils/currency_conversion.dart';
 import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -46,6 +47,7 @@ class TransactionFormScreen extends ConsumerStatefulWidget {
 class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   bool _initialized = false;
   bool _accountApplied = false;
+  bool _isSaving = false;
   late TextEditingController _noteController;
   late TextEditingController _merchantController;
 
@@ -258,6 +260,21 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                         ref.read(transactionFormProvider.notifier).setAmount(amount);
                       },
                     ),
+                    if (formState.currencyCode != ref.watch(mainCurrencyCodeProvider) &&
+                        ref.watch(exchangeRatesStaleProvider))
+                      Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.xs),
+                        child: Row(
+                          children: [
+                            Icon(LucideIcons.alertTriangle, size: 14, color: AppColors.yellow),
+                            const SizedBox(width: AppSpacing.xs),
+                            Text(
+                              'Exchange rates may be outdated',
+                              style: AppTypography.bodySmall.copyWith(color: AppColors.yellow),
+                            ),
+                          ],
+                        ),
+                      ),
                     const SizedBox(height: AppSpacing.xxl),
 
                     if (!isTransfer) ...[
@@ -490,38 +507,68 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                   ),
                   child: PrimaryButton(
                     label: isEditing ? 'Save Changes' : 'Save Transaction',
-                    onPressed: formState.canSave
+                    onPressed: formState.canSave && !_isSaving
                         ? () async {
-                            // Refresh conversion rate before saving
-                            final mainCurrency = ref.read(mainCurrencyCodeProvider);
-                            if (formState.currencyCode != mainCurrency) {
-                              final latestRate = ref.read(exchangeRateProvider((from: formState.currencyCode, to: mainCurrency)));
-                              if (latestRate != 1.0) {
-                                ref.read(transactionFormProvider.notifier).setConversionRate(latestRate);
+                            setState(() => _isSaving = true);
+                            try {
+                              final mainCurrency = ref.read(mainCurrencyCodeProvider);
+
+                              // Only refresh conversion rate if amount, currency, or account changed
+                              if (isEditing) {
+                                final originalTx = ref.read(
+                                  transactionByIdProvider(formState.editingTransactionId!),
+                                );
+                                if (originalTx == null) {
+                                  if (context.mounted) {
+                                    context.showErrorNotification('Transaction no longer exists');
+                                  }
+                                  return;
+                                }
+                                final amountChanged = formState.amount != originalTx.amount;
+                                final currencyChanged = formState.currencyCode != originalTx.currencyCode;
+                                final accountChanged = formState.accountId != originalTx.accountId;
+                                if ((amountChanged || currencyChanged || accountChanged) &&
+                                    formState.currencyCode != mainCurrency) {
+                                  final latestRate = ref.read(exchangeRateProvider((from: formState.currencyCode, to: mainCurrency)));
+                                  if (latestRate != 1.0) {
+                                    ref.read(transactionFormProvider.notifier).setConversionRate(latestRate);
+                                  }
+                                }
+                              } else {
+                                // New transaction: always refresh if foreign currency
+                                if (formState.currencyCode != mainCurrency) {
+                                  final latestRate = ref.read(exchangeRateProvider((from: formState.currencyCode, to: mainCurrency)));
+                                  if (latestRate != 1.0) {
+                                    ref.read(transactionFormProvider.notifier).setConversionRate(latestRate);
+                                  }
+                                }
                               }
-                            }
-                            final savedFormState = ref.read(transactionFormProvider);
+                              final savedFormState = ref.read(transactionFormProvider);
 
-                            // Save last used account and category
-                            ref.read(settingsProvider.notifier).setLastUsedAccountId(savedFormState.accountId);
-                            if (!isTransfer) {
-                              ref.read(settingsProvider.notifier).setLastUsedCategoryId(
-                                savedFormState.type,
-                                savedFormState.categoryId,
-                              );
-                            }
+                              // Validate conversion rate
+                              if (savedFormState.conversionRate <= 0 || !savedFormState.conversionRate.isFinite) {
+                                if (context.mounted) {
+                                  context.showErrorNotification('Invalid conversion rate');
+                                }
+                                return;
+                              }
 
-                            // Compute main currency snapshot
-                            final mainCurrencyAmount = (savedFormState.currencyCode == mainCurrency)
-                                ? savedFormState.amount
-                                : double.parse((savedFormState.amount * savedFormState.conversionRate).toStringAsFixed(2));
+                              // Compute main currency snapshot
+                              final mainCurrencyAmount = (savedFormState.currencyCode == mainCurrency)
+                                  ? savedFormState.amount
+                                  : roundCurrency(savedFormState.amount * savedFormState.conversionRate);
 
-                            if (isEditing) {
-                              // Update existing transaction
-                              final originalTransaction = ref.read(
-                                transactionByIdProvider(savedFormState.editingTransactionId!),
-                              );
-                              if (originalTransaction != null) {
+                              if (isEditing) {
+                                // Update existing transaction
+                                final originalTransaction = ref.read(
+                                  transactionByIdProvider(savedFormState.editingTransactionId!),
+                                );
+                                if (originalTransaction == null) {
+                                  if (context.mounted) {
+                                    context.showErrorNotification('Transaction no longer exists');
+                                  }
+                                  return;
+                                }
                                 final updatedTransaction = originalTransaction.copyWith(
                                   amount: savedFormState.amount,
                                   type: savedFormState.type,
@@ -543,31 +590,49 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                                 );
                                 await ref.read(transactionsProvider.notifier)
                                     .updateTransaction(updatedTransaction);
+                              } else {
+                                // Add new transaction
+                                await ref.read(transactionsProvider.notifier).addTransaction(
+                                      amount: savedFormState.amount,
+                                      type: savedFormState.type,
+                                      categoryId: isTransfer ? '' : savedFormState.categoryId!,
+                                      accountId: savedFormState.accountId!,
+                                      destinationAccountId: savedFormState.destinationAccountId,
+                                      assetId: savedFormState.assetId,
+                                      currencyCode: savedFormState.currencyCode,
+                                      conversionRate: savedFormState.conversionRate,
+                                      destinationAmount: savedFormState.destinationAmount,
+                                      mainCurrencyCode: mainCurrency,
+                                      mainCurrencyAmount: mainCurrencyAmount,
+                                      date: savedFormState.date,
+                                      note: savedFormState.note,
+                                      merchant: savedFormState.merchant,
+                                    );
                               }
-                            } else {
-                              // Add new transaction
-                              await ref.read(transactionsProvider.notifier).addTransaction(
-                                    amount: savedFormState.amount,
-                                    type: savedFormState.type,
-                                    categoryId: isTransfer ? '' : savedFormState.categoryId!,
-                                    accountId: savedFormState.accountId!,
-                                    destinationAccountId: savedFormState.destinationAccountId,
-                                    assetId: savedFormState.assetId,
-                                    currencyCode: savedFormState.currencyCode,
-                                    conversionRate: savedFormState.conversionRate,
-                                    destinationAmount: savedFormState.destinationAmount,
-                                    mainCurrencyCode: mainCurrency,
-                                    mainCurrencyAmount: mainCurrencyAmount,
-                                    date: savedFormState.date,
-                                    note: savedFormState.note,
-                                    merchant: savedFormState.merchant,
-                                  );
-                            }
-                            if (context.mounted) {
-                              context.pop();
-                              context.showSuccessNotification(
-                                isEditing ? 'Transaction updated' : 'Transaction saved',
-                              );
+
+                              // Save last used account and category after successful save
+                              ref.read(settingsProvider.notifier).setLastUsedAccountId(savedFormState.accountId);
+                              if (!isTransfer) {
+                                ref.read(settingsProvider.notifier).setLastUsedCategoryId(
+                                  savedFormState.type,
+                                  savedFormState.categoryId,
+                                );
+                              }
+
+                              if (context.mounted) {
+                                context.pop();
+                                context.showSuccessNotification(
+                                  isEditing ? 'Transaction updated' : 'Transaction saved',
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                context.showErrorNotification('Failed to save transaction');
+                              }
+                            } finally {
+                              if (mounted) {
+                                setState(() => _isSaving = false);
+                              }
                             }
                           }
                         : null,

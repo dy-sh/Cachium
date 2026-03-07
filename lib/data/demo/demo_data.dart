@@ -1,5 +1,6 @@
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../core/utils/currency_conversion.dart';
 import '../../features/accounts/data/models/account.dart';
 import '../../features/assets/data/models/asset.dart';
 import '../../features/transactions/data/models/transaction.dart';
@@ -174,7 +175,7 @@ class DemoData {
       // Main currency is USD for demo data
       final mainCurrencyAmount = currency == 'USD'
           ? amount
-          : double.parse((amount * rate).toStringAsFixed(2));
+          : roundCurrency(amount * rate);
       return Transaction(
         id: txId(),
         amount: amount,

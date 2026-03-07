@@ -467,6 +467,13 @@
 #### 25. Bug fix: moveTransactionsToAccount correct mainCurrencyAmount
 - Fixed `moveTransactionsToAccount` computing the wrong `mainCurrencyAmount` when the source and destination accounts have different currencies; now calls `convertToMainCurrency()` using the destination account's currency and updates both `conversionRate` and `mainCurrencyCode` on each moved transaction
 
+#### 26. Multi-currency robustness improvements
+- `Transaction.mainCurrencyAmount` is now `double?` instead of `double`, preventing legacy records with missing values from silently appearing as 0 and corrupting gain/loss calculations; `conversionGainLoss()` returns null when the field is null
+- `roundCurrency(double value, {int decimals = 2})` added to `currency_conversion.dart` as a centralised rounding helper, replacing scattered `double.parse(x.toStringAsFixed(2))` patterns across the codebase
+- Transaction form automatically refreshes exchange rates when a foreign-currency account is selected and rates are stale (>24h); a warning chip appears near the amount input while rates are stale
+- `ConversionGainLossData` gains a `hasSkippedDueToMainCurrencyChange` flag; `ConversionGainLossCard` shows an info banner when some transactions were recorded under a different main currency and are excluded from the gain/loss total
+- `conversionRate` field on `Transaction` and `TransactionFormState` is documented with dartdoc explaining the multiplier semantics: `amount * conversionRate ≈ mainCurrencyAmount`
+
 #### 21. Historical main currency value storage
 - `mainCurrencyCode` and `mainCurrencyAmount` fields added to Transaction model and TransactionData DTO to snapshot the main-currency equivalent at the moment a transaction is saved
 - Transaction form computes and persists these fields on save; old records fall back to a calculated value via `conversionRate` for backward compatibility

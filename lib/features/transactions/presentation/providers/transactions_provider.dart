@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/providers/database_providers.dart';
 import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/utils/currency_conversion.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/transaction.dart';
@@ -37,7 +38,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     final effectiveMainCurrencyAmount = mainCurrencyAmount ??
         (currencyCode == mainCurrencyCode
             ? amount
-            : double.parse((amount * conversionRate).toStringAsFixed(2)));
+            : roundCurrency(amount * conversionRate));
 
     final transaction = Transaction(
       id: _uuid.v4(),
@@ -340,9 +341,9 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
 
       if (isCrossCurrency) {
         // Convert amount to destination currency
-        final convertedAmount = double.parse((tx.amount * crossRate).toStringAsFixed(2));
+        final convertedAmount = roundCurrency(tx.amount * crossRate);
         final convertedDestAmount = tx.destinationAmount != null
-            ? double.parse((tx.destinationAmount! * crossRate).toStringAsFixed(2))
+            ? roundCurrency(tx.destinationAmount! * crossRate)
             : null;
 
         if (tx.type == TransactionType.transfer) {
@@ -401,23 +402,44 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     );
   }
 
-  /// Delete all transactions for a specific account
+  /// Delete all transactions for a specific account and reverse balance effects
   Future<void> deleteTransactionsForAccount(String accountId) async {
     final repo = ref.read(transactionRepositoryProvider);
     final db = ref.read(databaseProvider);
     final currentState = state.valueOrNull;
     if (currentState == null) return;
 
-    final transactionsToDelete = currentState.where((t) => t.accountId == accountId).toList();
+    // Find transactions where this account is the source
+    final sourceTransactions = currentState.where((t) => t.accountId == accountId).toList();
+    // Find transactions where this account is the transfer destination
+    final destTransactions = currentState.where(
+      (t) => t.destinationAccountId == accountId && t.accountId != accountId,
+    ).toList();
 
     // Wrap in database transaction to prevent locking issues
     await db.transaction(() async {
-      for (final tx in transactionsToDelete) {
+      // Delete source transactions and reverse their balance effects
+      for (final tx in sourceTransactions) {
         await repo.deleteTransaction(tx.id);
+
+        // Reverse the balance change on linked accounts
+        if (tx.type == TransactionType.transfer && tx.destinationAccountId != null &&
+            tx.destinationAccountId != accountId) {
+          // This account is source of a transfer — reverse the credit on destination
+          await ref.read(accountsProvider.notifier).updateBalance(
+                tx.destinationAccountId!, -(tx.destinationAmount ?? tx.amount));
+        }
+      }
+
+      // For transfers where this account is the destination, reverse the debit on source
+      for (final tx in destTransactions) {
+        // Reverse the debit from source account (transfer debits source by tx.amount)
+        await ref.read(accountsProvider.notifier).updateBalance(
+              tx.accountId, tx.amount);
       }
     });
 
-    // Update local state
+    // Update local state — remove transactions where this account is the source
     state = state.whenData(
       (transactions) => transactions.where((t) => t.accountId != accountId).toList(),
     );

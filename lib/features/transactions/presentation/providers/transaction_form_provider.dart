@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/utils/currency_conversion.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../data/models/transaction.dart';
 import '../../data/models/transaction_template.dart';
@@ -12,7 +13,10 @@ class TransactionFormState {
   final String? accountId;
   final String? destinationAccountId; // For transfers
   final String currencyCode;
+
+  /// Multiplier: `amount * conversionRate ≈ mainCurrencyAmount`.
   final double conversionRate;
+
   final double? destinationAmount;
   final DateTime date;
   final String? note;
@@ -272,6 +276,12 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
 
     double conversionRate = 1.0;
     if (currencyCode != mainCurrency) {
+      // Auto-refresh rates if stale and this is a foreign-currency account
+      final isStale = ref.read(exchangeRatesStaleProvider);
+      if (isStale) {
+        ref.read(exchangeRatesProvider.notifier).refresh();
+      }
+
       final rate = ref.read(exchangeRateProvider((from: currencyCode, to: mainCurrency)));
       conversionRate = rate;
     }
@@ -325,7 +335,7 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
     if (state.amount > 0) {
       final rate = ref.read(exchangeRateProvider((from: srcAccount.currencyCode, to: dstAccount.currencyCode)));
       final converted = state.amount * rate;
-      state = state.copyWith(destinationAmount: double.parse(converted.toStringAsFixed(2)));
+      state = state.copyWith(destinationAmount: roundCurrency(converted));
     }
   }
 

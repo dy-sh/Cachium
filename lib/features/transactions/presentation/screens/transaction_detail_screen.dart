@@ -264,12 +264,13 @@ class TransactionDetailScreen extends ConsumerWidget {
                               value: transaction.merchant!,
                             ),
                           // Original value & rate change for foreign-currency transactions
-                          if (transaction.currencyCode != transaction.mainCurrencyCode) ...[
+                          if (transaction.currencyCode != transaction.mainCurrencyCode &&
+                              transaction.mainCurrencyAmount != null) ...[
                             _DetailRow(
                               icon: LucideIcons.stamp,
                               label: 'Original Value',
                               value: CurrencyFormatter.format(
-                                transaction.mainCurrencyAmount,
+                                transaction.mainCurrencyAmount!,
                                 currencyCode: transaction.mainCurrencyCode,
                               ),
                             ),

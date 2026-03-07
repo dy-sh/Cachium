@@ -8,6 +8,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/providers/database_providers.dart';
 import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/utils/currency_conversion.dart';
 import '../../../../core/animations/haptic_helper.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
@@ -846,7 +847,7 @@ class _TransactionItem extends ConsumerWidget {
               : tx.conversionRate;
           final newMainCurrencyAmount = tx.currencyCode == mainCurrency
               ? tx.amount
-              : double.parse((tx.amount * newConversionRate).toStringAsFixed(2));
+              : roundCurrency(tx.amount * newConversionRate);
           await ref.read(transactionsProvider.notifier).addTransaction(
                 amount: tx.amount,
                 type: tx.type,

@@ -242,7 +242,7 @@ class AccountDetailScreen extends ConsumerWidget {
                         if (gl != null) totalGainLoss += gl;
                       }
                       if (totalGainLoss.abs() < 0.01) return const SizedBox.shrink();
-                      totalGainLoss = double.parse(totalGainLoss.toStringAsFixed(2));
+                      totalGainLoss = roundCurrency(totalGainLoss);
                       final isPositive = totalGainLoss > 0;
                       final glColor = isPositive
                           ? AppColors.getTransactionColor('income', intensity)

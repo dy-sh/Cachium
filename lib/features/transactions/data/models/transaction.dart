@@ -1,3 +1,5 @@
+import '../../../../core/utils/currency_conversion.dart';
+
 enum TransactionType {
   income,
   expense,
@@ -26,10 +28,17 @@ class Transaction {
   final String? destinationAccountId; // For transfers: the receiving account
   final String? assetId; // Optional link to an asset
   final String currencyCode;
-  final double conversionRate; // Rate to main currency at creation time
+
+  /// Multiplier: `amount * conversionRate ≈ mainCurrencyAmount`.
+  /// Stored at creation time so gain/loss can be computed later.
+  final double conversionRate;
+
   final double? destinationAmount; // For cross-currency transfers: amount in destination currency
   final String mainCurrencyCode; // App's main currency when transaction was created
-  final double mainCurrencyAmount; // Amount converted to main currency at creation time
+
+  /// Snapshot of `amount` converted to the main currency at creation time.
+  /// Null for legacy records created before this field was introduced.
+  final double? mainCurrencyAmount;
   final DateTime date;
   final String? note;
   final String? merchant;
@@ -47,7 +56,7 @@ class Transaction {
     this.conversionRate = 1.0,
     this.destinationAmount,
     this.mainCurrencyCode = 'USD',
-    this.mainCurrencyAmount = 0,
+    this.mainCurrencyAmount,
     required this.date,
     this.note,
     this.merchant,
@@ -72,6 +81,7 @@ class Transaction {
     bool clearDestinationAmount = false,
     String? mainCurrencyCode,
     double? mainCurrencyAmount,
+    bool clearMainCurrencyAmount = false,
     DateTime? date,
     String? note,
     String? merchant,
@@ -93,7 +103,9 @@ class Transaction {
           ? null
           : (destinationAmount ?? this.destinationAmount),
       mainCurrencyCode: mainCurrencyCode ?? this.mainCurrencyCode,
-      mainCurrencyAmount: mainCurrencyAmount ?? this.mainCurrencyAmount,
+      mainCurrencyAmount: clearMainCurrencyAmount
+          ? null
+          : (mainCurrencyAmount ?? this.mainCurrencyAmount),
       date: date ?? this.date,
       note: note ?? this.note,
       merchant: merchant ?? this.merchant,
@@ -145,7 +157,7 @@ class TransactionGroup {
     if (fromCurrency == mainCurrency) return amount;
     final fromRate = rates[fromCurrency];
     if (fromRate != null && fromRate > 0) {
-      return double.parse((amount / fromRate).toStringAsFixed(2));
+      return roundCurrency(amount / fromRate);
     }
     return amount;
   }

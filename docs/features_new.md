@@ -1,6 +1,7 @@
 # New Features Log
 
 ## 2026-03-07
+- **Multi-Currency Robustness Improvements**: `Transaction.mainCurrencyAmount` is now nullable (`double?`) so legacy records with missing values no longer silently appear as 0; `conversionGainLoss()` returns null when the snapshot is absent. A shared `roundCurrency()` helper centralises 2-decimal rounding. The transaction form auto-refreshes stale exchange rates when a foreign-currency account is selected and shows a warning chip while rates are stale. The Conversion Gain/Loss card displays an info banner when transactions recorded under a different main currency are excluded from the total (`hasSkippedDueToMainCurrencyChange`). `conversionRate` is now documented with dartdoc explaining its multiplier semantics.
 - **Currency-Aware Daily Group Net Amounts**: Transaction groups now convert each transaction to the main currency before summing, so daily net, income, and expense totals are correct when a group contains transactions in multiple currencies.
 - **Converted Amount Subtitle in Transaction Lists**: Foreign-currency transactions now show an "≈ $X,XXX" main-currency equivalent subtitle in the main transactions screen, the home screen recent transactions list, and the account detail screen.
 - **Bug Fix: Duplicate Transaction Preserves Currency Fields**: Swipe-to-duplicate now correctly copies all currency fields (`currencyCode`, `conversionRate`, `destinationAmount`, `mainCurrencyCode`, `mainCurrencyAmount`) and recomputes the conversion rate from live exchange rates.
