@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../features/settings/data/models/app_settings.dart';
 import '../../features/settings/presentation/providers/settings_provider.dart';
 import '../services/exchange_rate_service.dart';
 
@@ -19,10 +20,21 @@ class ExchangeRatesNotifier extends AsyncNotifier<Map<String, double>> {
   @override
   Future<Map<String, double>> build() async {
     final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+    final apiOption = ref.watch(exchangeRateApiOptionProvider);
     final service = ref.read(exchangeRateServiceProvider);
     final settings = ref.read(settingsProvider).valueOrNull;
 
-    _log('[ExchangeRates] build() mainCurrency=$mainCurrency');
+    // Wire up the selected API
+    switch (apiOption) {
+      case ExchangeRateApiOption.frankfurter:
+        service.setApi(FrankfurterApi());
+      case ExchangeRateApiOption.exchangeRateHost:
+        service.setApi(OpenExchangeRateApi());
+      case ExchangeRateApiOption.manual:
+        service.setApi(ManualRatesApi());
+    }
+
+    _log('[ExchangeRates] build() mainCurrency=$mainCurrency api=${apiOption.name}');
 
     // Try to load cached rates from settings first
     final cachedJson = settings?.cachedExchangeRates;
@@ -38,6 +50,16 @@ class ExchangeRatesNotifier extends AsyncNotifier<Map<String, double>> {
       }
     } else {
       _log('[ExchangeRates] No cached rates found');
+    }
+
+    // Check if rates are stale (>24h) or fresh enough to skip fetch
+    final lastFetch = settings?.lastRateFetchTimestamp;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final isStale = lastFetch == null || (now - lastFetch) > 24 * 60 * 60 * 1000;
+
+    if (!isStale && service.cachedRates.isNotEmpty) {
+      _log('[ExchangeRates] Rates are fresh (${((now - lastFetch) / 3600000).toStringAsFixed(1)}h old), using cache');
+      return service.cachedRates;
     }
 
     try {
@@ -63,6 +85,9 @@ class ExchangeRatesNotifier extends AsyncNotifier<Map<String, double>> {
     try {
       final json = jsonEncode(rates);
       ref.read(settingsProvider.notifier).setCachedExchangeRates(json);
+      ref.read(settingsProvider.notifier).setLastRateFetchTimestamp(
+        DateTime.now().millisecondsSinceEpoch,
+      );
     } catch (_) {}
   }
 

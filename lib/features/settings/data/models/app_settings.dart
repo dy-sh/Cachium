@@ -102,7 +102,7 @@ enum ExchangeRateApiOption {
       case ExchangeRateApiOption.frankfurter:
         return 'Frankfurter (ECB)';
       case ExchangeRateApiOption.exchangeRateHost:
-        return 'ExchangeRate.host';
+        return 'Open ER-API';
       case ExchangeRateApiOption.manual:
         return 'Manual / Offline';
     }
@@ -123,6 +123,7 @@ class AppSettings {
   final String mainCurrencyCode;
   final ExchangeRateApiOption exchangeRateApiOption;
   final String? cachedExchangeRates;
+  final int? lastRateFetchTimestamp;
   final FirstDayOfWeek firstDayOfWeek;
 
   // Preferences
@@ -179,6 +180,7 @@ class AppSettings {
     this.mainCurrencyCode = 'USD',
     this.exchangeRateApiOption = ExchangeRateApiOption.frankfurter,
     this.cachedExchangeRates,
+    this.lastRateFetchTimestamp,
     this.firstDayOfWeek = FirstDayOfWeek.sunday,
     this.hapticFeedbackEnabled = true,
     this.startScreen = StartScreen.home,
@@ -229,6 +231,7 @@ class AppSettings {
     ExchangeRateApiOption? exchangeRateApiOption,
     String? cachedExchangeRates,
     bool clearCachedExchangeRates = false,
+    int? lastRateFetchTimestamp,
     FirstDayOfWeek? firstDayOfWeek,
     bool? hapticFeedbackEnabled,
     StartScreen? startScreen,
@@ -275,6 +278,7 @@ class AppSettings {
       mainCurrencyCode: mainCurrencyCode ?? this.mainCurrencyCode,
       exchangeRateApiOption: exchangeRateApiOption ?? this.exchangeRateApiOption,
       cachedExchangeRates: clearCachedExchangeRates ? null : (cachedExchangeRates ?? this.cachedExchangeRates),
+      lastRateFetchTimestamp: lastRateFetchTimestamp ?? this.lastRateFetchTimestamp,
       firstDayOfWeek: firstDayOfWeek ?? this.firstDayOfWeek,
       hapticFeedbackEnabled: hapticFeedbackEnabled ?? this.hapticFeedbackEnabled,
       startScreen: startScreen ?? this.startScreen,

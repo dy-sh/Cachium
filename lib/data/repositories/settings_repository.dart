@@ -34,6 +34,7 @@ class SettingsRepository {
       mainCurrencyCode: settings.mainCurrencyCode,
       exchangeRateApiOption: settings.exchangeRateApiOption.name,
       cachedExchangeRates: settings.cachedExchangeRates,
+      lastRateFetchTimestamp: settings.lastRateFetchTimestamp,
       firstDayOfWeek: settings.firstDayOfWeek.name,
       hapticFeedbackEnabled: settings.hapticFeedbackEnabled,
       startScreen: settings.startScreen.name,
@@ -80,6 +81,7 @@ class SettingsRepository {
         orElse: () => ui.ExchangeRateApiOption.frankfurter,
       ),
       cachedExchangeRates: data.cachedExchangeRates,
+      lastRateFetchTimestamp: data.lastRateFetchTimestamp,
       firstDayOfWeek: ui.FirstDayOfWeek.values.firstWhere(
         (e) => e.name == data.firstDayOfWeek,
         orElse: () => ui.FirstDayOfWeek.sunday,

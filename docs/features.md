@@ -429,4 +429,23 @@
 - Aggregated totals (total balance, analytics, budgets) display in the main currency
 - Foreign-currency accounts and transactions show an "≈ $X,XXX.XX" subtitle in main currency on account detail, account cards, account preview list, and transaction detail screens
 
+#### 16. Cross-currency transfer destination amount
+- `destinationAmount` field on Transaction model and TransactionData DTO stores the credited amount separately from the debited amount
+- Transaction form shows an editable destination amount field when source and destination accounts have different currencies
+- `transactions_provider` credits destination accounts using `destinationAmount` (not `amount`) for correct cross-currency balance updates
+
+#### 17. Exchange rate API selection
+- `ExchangeRatesNotifier.build()` reads `exchangeRateApiOption` from settings and calls `service.setApi()` with the correct implementation before fetching
+- Replaced broken ExchangeRate.host implementation with `OpenExchangeRateApi` using `open.er-api.com` (free, no key required); display name is "Open ER-API"
+
+#### 18. Rate staleness indicator
+- `lastRateFetchTimestamp` stored in AppSettings and SettingsData
+- Formats settings screen shows "Rates as of: X" with staleness indication and a manual refresh button
+- Auto-skips fetch if rates are less than 24 hours old
+
+#### 19. Manual exchange rate editor
+- New `ManualRatesScreen` at route `/settings/formats/manual-rates` (`AppRoutes.manualRates`)
+- When Manual mode is selected in formats settings, an "Edit Rates" button appears
+- Users can add currencies and set custom exchange rates without relying on an external API
+
 ---

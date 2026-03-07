@@ -38,6 +38,7 @@ class TransactionRepository {
       assetId: transaction.assetId,
       currency: transaction.currencyCode,
       conversionRate: transaction.conversionRate,
+      destinationAmount: transaction.destinationAmount,
       dateMillis: transaction.date.millisecondsSinceEpoch,
       createdAtMillis: transaction.createdAt.millisecondsSinceEpoch,
     );
@@ -58,6 +59,7 @@ class TransactionRepository {
       assetId: data.assetId,
       currencyCode: data.currency,
       conversionRate: data.conversionRate,
+      destinationAmount: data.destinationAmount,
       date: DateTime.fromMillisecondsSinceEpoch(data.dateMillis),
       note: data.note,
       merchant: data.merchant,
@@ -115,6 +117,7 @@ class TransactionRepository {
     bool isDeleted = false,
     String currency = 'USD',
     double conversionRate = 1.0,
+    double? destinationAmount,
   }) async {
     try {
       final data = TransactionData(
@@ -129,6 +132,7 @@ class TransactionRepository {
         assetId: transaction.assetId,
         currency: currency,
         conversionRate: conversionRate,
+        destinationAmount: destinationAmount ?? transaction.destinationAmount,
         dateMillis: transaction.date.millisecondsSinceEpoch,
         createdAtMillis: transaction.createdAt.millisecondsSinceEpoch,
       );

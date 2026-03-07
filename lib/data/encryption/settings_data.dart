@@ -44,6 +44,9 @@ class SettingsData with _$SettingsData {
     /// Cached exchange rates as JSON string
     String? cachedExchangeRates,
 
+    /// Timestamp of last successful rate fetch
+    int? lastRateFetchTimestamp,
+
     /// First day of week: 'sunday' or 'monday'
     @Default('sunday') String firstDayOfWeek,
 

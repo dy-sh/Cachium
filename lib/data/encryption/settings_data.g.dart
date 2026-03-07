@@ -20,6 +20,7 @@ _$SettingsDataImpl _$$SettingsDataImplFromJson(Map<String, dynamic> json) =>
       exchangeRateApiOption:
           json['exchangeRateApiOption'] as String? ?? 'frankfurter',
       cachedExchangeRates: json['cachedExchangeRates'] as String?,
+      lastRateFetchTimestamp: (json['lastRateFetchTimestamp'] as num?)?.toInt(),
       firstDayOfWeek: json['firstDayOfWeek'] as String? ?? 'sunday',
       hapticFeedbackEnabled: json['hapticFeedbackEnabled'] as bool? ?? true,
       startScreen: json['startScreen'] as String? ?? 'home',
@@ -55,6 +56,7 @@ Map<String, dynamic> _$$SettingsDataImplToJson(_$SettingsDataImpl instance) =>
       'mainCurrencyCode': instance.mainCurrencyCode,
       'exchangeRateApiOption': instance.exchangeRateApiOption,
       'cachedExchangeRates': instance.cachedExchangeRates,
+      'lastRateFetchTimestamp': instance.lastRateFetchTimestamp,
       'firstDayOfWeek': instance.firstDayOfWeek,
       'hapticFeedbackEnabled': instance.hapticFeedbackEnabled,
       'startScreen': instance.startScreen,

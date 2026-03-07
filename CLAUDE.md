@@ -150,6 +150,25 @@ Key methods in `AppColors`:
 - Opacity helpers: `getBgOpacity()`, `getBorderOpacity()`
 - Color manipulation: `lighten()`, `darken()`, `withOpacity()`
 
+## Multi-Currency
+
+The app supports per-account and per-transaction currency codes independent of the main currency.
+
+**Transaction model fields:**
+- `currencyCode` - currency of the transaction amount
+- `conversionRate` - rate used to convert to main currency for aggregation
+- `destinationAmount` - for cross-currency transfers: the actual amount credited to the destination account (may differ from `amount` due to exchange rate)
+
+**Exchange rate providers:**
+- `ExchangeRatesNotifier` reads `exchangeRateApiOption` from settings and calls `service.setApi()` before fetching; auto-skips fetch if rates are less than 24h old (`lastRateFetchTimestamp` in AppSettings)
+- Supported APIs: Open ER-API (`open.er-api.com`, free, no key), Manual (user-defined rates via `ManualRatesScreen`)
+- Manual rates are edited at `/settings/formats/manual-rates`
+
+**Key conventions:**
+- All `CurrencyFormatter.format()` and `AnimatedCounter` calls pass the per-account or per-transaction `currencyCode`
+- Aggregated totals (total balance, analytics, budgets) always display in the main currency
+- Foreign-currency items show an "≈ $X,XXX.XX" subtitle converted to main currency
+
 ## Database Management
 
 **IMPORTANT:** Do NOT create database migration logic when the schema changes. The app is in testing/development phase and not used in production. Simply increment `schemaVersion` in `app_database.dart` - the existing `MigrationStrategy` will recreate all tables automatically.
@@ -172,6 +191,7 @@ The app includes comprehensive database import/export functionality accessible v
 - `/settings/database` - Main database settings page
 - `/settings/database/export-sqlite` - SQLite export options
 - `/settings/database/export-csv` - CSV export options
+- `/settings/formats/manual-rates` - Manual exchange rate editor (`AppRoutes.manualRates`)
 
 ## Key Files
 
@@ -185,3 +205,6 @@ The app includes comprehensive database import/export functionality accessible v
 - `lib/features/settings/presentation/providers/database_management_providers.dart` - Database management providers
 - `lib/features/categories/data/models/category.dart` - Category with hierarchy support
 - `lib/design_system/components/feedback/notification.dart` - Custom notification system (replaces SnackBar)
+- `lib/core/services/exchange_rate_service.dart` - Exchange rate fetching; active API set via `setApi()` before fetch
+- `lib/core/providers/exchange_rate_provider.dart` - `ExchangeRatesNotifier` wires API from settings on build
+- `lib/features/settings/presentation/screens/manual_rates_screen.dart` - Manual exchange rate editor

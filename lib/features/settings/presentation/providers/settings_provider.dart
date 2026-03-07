@@ -94,6 +94,12 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     }
   }
 
+  Future<void> setLastRateFetchTimestamp(int timestamp) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    await _saveAndUpdate(current.copyWith(lastRateFetchTimestamp: timestamp));
+  }
+
   Future<void> setFirstDayOfWeek(FirstDayOfWeek day) async {
     final current = state.valueOrNull;
     if (current == null) return;
@@ -331,6 +337,7 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
       mainCurrencyCode: defaults.mainCurrencyCode,
       exchangeRateApiOption: defaults.exchangeRateApiOption,
       cachedExchangeRates: defaults.cachedExchangeRates,
+      lastRateFetchTimestamp: defaults.lastRateFetchTimestamp,
       firstDayOfWeek: defaults.firstDayOfWeek,
       // Reset Preferences
       hapticFeedbackEnabled: defaults.hapticFeedbackEnabled,

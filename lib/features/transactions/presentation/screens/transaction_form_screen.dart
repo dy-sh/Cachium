@@ -400,6 +400,41 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                             : null,
                       ),
                       const SizedBox(height: AppSpacing.xxl),
+
+                      // Cross-currency destination amount
+                      if (formState.destinationAmount != null) Builder(
+                        builder: (context) {
+                          final dstAccount = formState.destinationAccountId != null
+                              ? ref.watch(accountByIdProvider(formState.destinationAccountId!))
+                              : null;
+                          final dstCurrency = dstAccount?.currencyCode ?? '';
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Destination Amount ($dstCurrency)', style: AppTypography.labelMedium),
+                              const SizedBox(height: AppSpacing.sm),
+                              AmountInput(
+                                key: ValueKey('dest_amount_${formState.destinationAccountId}_$dstCurrency'),
+                                initialValue: formState.destinationAmount,
+                                transactionType: 'transfer',
+                                currencyCode: dstCurrency,
+                                autofocus: false,
+                                onChanged: (amount) {
+                                  ref.read(transactionFormProvider.notifier).setDestinationAmount(amount);
+                                },
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(top: AppSpacing.xs),
+                                child: Text(
+                                  'Auto-calculated from exchange rate. Adjust if needed.',
+                                  style: AppTypography.bodySmall.copyWith(color: AppColors.textTertiary),
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.xxl),
+                            ],
+                          );
+                        },
+                      ),
                     ],
 
                     DateSelector(
@@ -489,6 +524,8 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                                   accountId: savedFormState.accountId,
                                   destinationAccountId: savedFormState.destinationAccountId,
                                   clearDestinationAccountId: !isTransfer,
+                                  destinationAmount: savedFormState.destinationAmount,
+                                  clearDestinationAmount: !isTransfer || savedFormState.destinationAmount == null,
                                   assetId: savedFormState.assetId,
                                   clearAssetId: savedFormState.assetId == null,
                                   currencyCode: savedFormState.currencyCode,
@@ -511,6 +548,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                                     assetId: savedFormState.assetId,
                                     currencyCode: savedFormState.currencyCode,
                                     conversionRate: savedFormState.conversionRate,
+                                    destinationAmount: savedFormState.destinationAmount,
                                     date: savedFormState.date,
                                     note: savedFormState.note,
                                     merchant: savedFormState.merchant,

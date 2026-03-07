@@ -6,6 +6,8 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/constants/currencies.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../design_system/components/feedback/notification.dart';
 import '../../../../design_system/components/inputs/currency_picker.dart';
 import '../../data/models/app_settings.dart';
 import '../providers/settings_provider.dart';
@@ -93,6 +95,7 @@ class FormatsSettingsScreen extends ConsumerWidget {
                           value: settings.exchangeRateApiOption.displayName,
                           onTap: () => _showExchangeRateApiPicker(context, ref, settings),
                         ),
+                        _buildRateStatusTile(context, ref, settings),
                         _buildFirstDayTile(context, ref, settings),
                       ],
                     ),
@@ -103,6 +106,116 @@ class FormatsSettingsScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildRateStatusTile(BuildContext context, WidgetRef ref, AppSettings settings) {
+    if (settings.exchangeRateApiOption == ExchangeRateApiOption.manual) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Rates', style: AppTypography.bodySmall.copyWith(color: AppColors.textTertiary)),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Using manual / cached rates',
+                    style: AppTypography.bodySmall.copyWith(color: AppColors.textTertiary),
+                  ),
+                ],
+              ),
+            ),
+            GestureDetector(
+              onTap: () => context.push('/settings/formats/manual-rates'),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Text(
+                  'Edit Rates',
+                  style: AppTypography.labelSmall.copyWith(color: AppColors.textSecondary),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final lastFetch = settings.lastRateFetchTimestamp;
+    String statusText;
+    if (lastFetch == null) {
+      statusText = 'Never fetched';
+    } else {
+      final fetchTime = DateTime.fromMillisecondsSinceEpoch(lastFetch);
+      final diff = DateTime.now().difference(fetchTime);
+      if (diff.inMinutes < 1) {
+        statusText = 'Just now';
+      } else if (diff.inHours < 1) {
+        statusText = '${diff.inMinutes}m ago';
+      } else if (diff.inHours < 24) {
+        statusText = '${diff.inHours}h ago';
+      } else {
+        statusText = '${diff.inDays}d ago (stale)';
+      }
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Rates as of', style: AppTypography.bodySmall.copyWith(color: AppColors.textTertiary)),
+                const SizedBox(height: 2),
+                Text(
+                  statusText,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: lastFetch != null && DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(lastFetch)).inHours >= 24
+                        ? AppColors.amber
+                        : AppColors.textTertiary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          GestureDetector(
+            onTap: () async {
+              await ref.read(exchangeRatesProvider.notifier).refresh();
+              if (context.mounted) {
+                context.showSuccessNotification('Exchange rates refreshed');
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Icon(
+                LucideIcons.refreshCw,
+                size: 16,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

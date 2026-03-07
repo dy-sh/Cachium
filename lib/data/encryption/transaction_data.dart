@@ -44,6 +44,9 @@ class TransactionData with _$TransactionData {
     /// Conversion rate to main currency at transaction creation time
     @Default(1.0) double conversionRate,
 
+    /// For cross-currency transfers: amount in destination currency
+    double? destinationAmount,
+
     /// Matches the database date field for integrity verification during import.
     /// Not exported as a separate CSV column to avoid duplication.
     required int dateMillis,

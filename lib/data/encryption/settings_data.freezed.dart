@@ -54,6 +54,9 @@ mixin _$SettingsData {
   /// Cached exchange rates as JSON string
   String? get cachedExchangeRates => throw _privateConstructorUsedError;
 
+  /// Timestamp of last successful rate fetch
+  int? get lastRateFetchTimestamp => throw _privateConstructorUsedError;
+
   /// First day of week: 'sunday' or 'monday'
   String get firstDayOfWeek => throw _privateConstructorUsedError;
 
@@ -137,6 +140,7 @@ abstract class $SettingsDataCopyWith<$Res> {
     String mainCurrencyCode,
     String exchangeRateApiOption,
     String? cachedExchangeRates,
+    int? lastRateFetchTimestamp,
     String firstDayOfWeek,
     bool hapticFeedbackEnabled,
     String startScreen,
@@ -184,6 +188,7 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
     Object? mainCurrencyCode = null,
     Object? exchangeRateApiOption = null,
     Object? cachedExchangeRates = freezed,
+    Object? lastRateFetchTimestamp = freezed,
     Object? firstDayOfWeek = null,
     Object? hapticFeedbackEnabled = null,
     Object? startScreen = null,
@@ -249,6 +254,10 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
                 ? _value.cachedExchangeRates
                 : cachedExchangeRates // ignore: cast_nullable_to_non_nullable
                       as String?,
+            lastRateFetchTimestamp: freezed == lastRateFetchTimestamp
+                ? _value.lastRateFetchTimestamp
+                : lastRateFetchTimestamp // ignore: cast_nullable_to_non_nullable
+                      as int?,
             firstDayOfWeek: null == firstDayOfWeek
                 ? _value.firstDayOfWeek
                 : firstDayOfWeek // ignore: cast_nullable_to_non_nullable
@@ -348,6 +357,7 @@ abstract class _$$SettingsDataImplCopyWith<$Res>
     String mainCurrencyCode,
     String exchangeRateApiOption,
     String? cachedExchangeRates,
+    int? lastRateFetchTimestamp,
     String firstDayOfWeek,
     bool hapticFeedbackEnabled,
     String startScreen,
@@ -394,6 +404,7 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
     Object? mainCurrencyCode = null,
     Object? exchangeRateApiOption = null,
     Object? cachedExchangeRates = freezed,
+    Object? lastRateFetchTimestamp = freezed,
     Object? firstDayOfWeek = null,
     Object? hapticFeedbackEnabled = null,
     Object? startScreen = null,
@@ -459,6 +470,10 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
             ? _value.cachedExchangeRates
             : cachedExchangeRates // ignore: cast_nullable_to_non_nullable
                   as String?,
+        lastRateFetchTimestamp: freezed == lastRateFetchTimestamp
+            ? _value.lastRateFetchTimestamp
+            : lastRateFetchTimestamp // ignore: cast_nullable_to_non_nullable
+                  as int?,
         firstDayOfWeek: null == firstDayOfWeek
             ? _value.firstDayOfWeek
             : firstDayOfWeek // ignore: cast_nullable_to_non_nullable
@@ -551,6 +566,7 @@ class _$SettingsDataImpl implements _SettingsData {
     this.mainCurrencyCode = 'USD',
     this.exchangeRateApiOption = 'frankfurter',
     this.cachedExchangeRates,
+    this.lastRateFetchTimestamp,
     this.firstDayOfWeek = 'sunday',
     this.hapticFeedbackEnabled = true,
     this.startScreen = 'home',
@@ -627,6 +643,10 @@ class _$SettingsDataImpl implements _SettingsData {
   /// Cached exchange rates as JSON string
   @override
   final String? cachedExchangeRates;
+
+  /// Timestamp of last successful rate fetch
+  @override
+  final int? lastRateFetchTimestamp;
 
   /// First day of week: 'sunday' or 'monday'
   @override
@@ -715,7 +735,7 @@ class _$SettingsDataImpl implements _SettingsData {
 
   @override
   String toString() {
-    return 'SettingsData(id: $id, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, mainCurrencyCode: $mainCurrencyCode, exchangeRateApiOption: $exchangeRateApiOption, cachedExchangeRates: $cachedExchangeRates, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, categoriesFoldedCount: $categoriesFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, categorySortOption: $categorySortOption, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId, appLockEnabled: $appLockEnabled, appPinCode: $appPinCode, appPassword: $appPassword)';
+    return 'SettingsData(id: $id, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, mainCurrencyCode: $mainCurrencyCode, exchangeRateApiOption: $exchangeRateApiOption, cachedExchangeRates: $cachedExchangeRates, lastRateFetchTimestamp: $lastRateFetchTimestamp, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, categoriesFoldedCount: $categoriesFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, categorySortOption: $categorySortOption, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId, appLockEnabled: $appLockEnabled, appPinCode: $appPinCode, appPassword: $appPassword)';
   }
 
   @override
@@ -744,6 +764,8 @@ class _$SettingsDataImpl implements _SettingsData {
                 other.exchangeRateApiOption == exchangeRateApiOption) &&
             (identical(other.cachedExchangeRates, cachedExchangeRates) ||
                 other.cachedExchangeRates == cachedExchangeRates) &&
+            (identical(other.lastRateFetchTimestamp, lastRateFetchTimestamp) ||
+                other.lastRateFetchTimestamp == lastRateFetchTimestamp) &&
             (identical(other.firstDayOfWeek, firstDayOfWeek) ||
                 other.firstDayOfWeek == firstDayOfWeek) &&
             (identical(other.hapticFeedbackEnabled, hapticFeedbackEnabled) ||
@@ -803,6 +825,7 @@ class _$SettingsDataImpl implements _SettingsData {
     mainCurrencyCode,
     exchangeRateApiOption,
     cachedExchangeRates,
+    lastRateFetchTimestamp,
     firstDayOfWeek,
     hapticFeedbackEnabled,
     startScreen,
@@ -850,6 +873,7 @@ abstract class _SettingsData implements SettingsData {
     final String mainCurrencyCode,
     final String exchangeRateApiOption,
     final String? cachedExchangeRates,
+    final int? lastRateFetchTimestamp,
     final String firstDayOfWeek,
     final bool hapticFeedbackEnabled,
     final String startScreen,
@@ -916,6 +940,10 @@ abstract class _SettingsData implements SettingsData {
   /// Cached exchange rates as JSON string
   @override
   String? get cachedExchangeRates;
+
+  /// Timestamp of last successful rate fetch
+  @override
+  int? get lastRateFetchTimestamp;
 
   /// First day of week: 'sunday' or 'monday'
   @override

@@ -22,6 +22,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     String? assetId,
     String currencyCode = 'USD',
     double conversionRate = 1.0,
+    double? destinationAmount,
     required DateTime date,
     String? note,
     String? merchant,
@@ -39,6 +40,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
       assetId: assetId,
       currencyCode: currencyCode,
       conversionRate: conversionRate,
+      destinationAmount: destinationAmount,
       date: date,
       note: note,
       merchant: merchant,
@@ -52,9 +54,9 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
 
       // Update account balances
       if (type == TransactionType.transfer && destinationAccountId != null) {
-        // Transfer: debit source, credit destination
+        // Transfer: debit source, credit destination (use destinationAmount for cross-currency)
         await ref.read(accountsProvider.notifier).updateBalance(accountId, -amount);
-        await ref.read(accountsProvider.notifier).updateBalance(destinationAccountId, amount);
+        await ref.read(accountsProvider.notifier).updateBalance(destinationAccountId, destinationAmount ?? amount);
       } else {
         final balanceChange = type == TransactionType.income ? amount : -amount;
         await ref.read(accountsProvider.notifier).updateBalance(accountId, balanceChange);
@@ -83,7 +85,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
               originalTransaction.accountId, originalTransaction.amount);
         if (originalTransaction.destinationAccountId != null) {
           await ref.read(accountsProvider.notifier).updateBalance(
-                originalTransaction.destinationAccountId!, -originalTransaction.amount);
+                originalTransaction.destinationAccountId!, -(originalTransaction.destinationAmount ?? originalTransaction.amount));
         }
       } else {
         final reverseChange = originalTransaction.type == TransactionType.income
@@ -99,7 +101,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
               transaction.accountId, -transaction.amount);
         if (transaction.destinationAccountId != null) {
           await ref.read(accountsProvider.notifier).updateBalance(
-                transaction.destinationAccountId!, transaction.amount);
+                transaction.destinationAccountId!, transaction.destinationAmount ?? transaction.amount);
         }
       } else {
         final newChange = transaction.type == TransactionType.income
@@ -142,7 +144,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
               transaction.accountId, transaction.amount);
         if (transaction.destinationAccountId != null) {
           await ref.read(accountsProvider.notifier).updateBalance(
-                transaction.destinationAccountId!, -transaction.amount);
+                transaction.destinationAccountId!, -(transaction.destinationAmount ?? transaction.amount));
         }
       } else {
         final balanceChange =
@@ -177,7 +179,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
               transaction.accountId, -transaction.amount);
         if (transaction.destinationAccountId != null) {
           await ref.read(accountsProvider.notifier).updateBalance(
-                transaction.destinationAccountId!, transaction.amount);
+                transaction.destinationAccountId!, transaction.destinationAmount ?? transaction.amount);
         }
       } else {
         final balanceChange =
@@ -218,7 +220,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
                 transaction.accountId, transaction.amount);
           if (transaction.destinationAccountId != null) {
             await ref.read(accountsProvider.notifier).updateBalance(
-                  transaction.destinationAccountId!, -transaction.amount);
+                  transaction.destinationAccountId!, -(transaction.destinationAmount ?? transaction.amount));
           }
         } else {
           final balanceChange =
@@ -255,7 +257,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
                 transaction.accountId, -transaction.amount);
           if (transaction.destinationAccountId != null) {
             await ref.read(accountsProvider.notifier).updateBalance(
-                  transaction.destinationAccountId!, transaction.amount);
+                  transaction.destinationAccountId!, transaction.destinationAmount ?? transaction.amount);
           }
         } else {
           final balanceChange =

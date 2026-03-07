@@ -54,6 +54,9 @@ mixin _$TransactionData {
   /// Conversion rate to main currency at transaction creation time
   double get conversionRate => throw _privateConstructorUsedError;
 
+  /// For cross-currency transfers: amount in destination currency
+  double? get destinationAmount => throw _privateConstructorUsedError;
+
   /// Matches the database date field for integrity verification during import.
   /// Not exported as a separate CSV column to avoid duplication.
   int get dateMillis => throw _privateConstructorUsedError;
@@ -91,6 +94,7 @@ abstract class $TransactionDataCopyWith<$Res> {
     String? assetId,
     String currency,
     double conversionRate,
+    double? destinationAmount,
     int dateMillis,
     int createdAtMillis,
   });
@@ -122,6 +126,7 @@ class _$TransactionDataCopyWithImpl<$Res, $Val extends TransactionData>
     Object? assetId = freezed,
     Object? currency = null,
     Object? conversionRate = null,
+    Object? destinationAmount = freezed,
     Object? dateMillis = null,
     Object? createdAtMillis = null,
   }) {
@@ -171,6 +176,10 @@ class _$TransactionDataCopyWithImpl<$Res, $Val extends TransactionData>
                 ? _value.conversionRate
                 : conversionRate // ignore: cast_nullable_to_non_nullable
                       as double,
+            destinationAmount: freezed == destinationAmount
+                ? _value.destinationAmount
+                : destinationAmount // ignore: cast_nullable_to_non_nullable
+                      as double?,
             dateMillis: null == dateMillis
                 ? _value.dateMillis
                 : dateMillis // ignore: cast_nullable_to_non_nullable
@@ -206,6 +215,7 @@ abstract class _$$TransactionDataImplCopyWith<$Res>
     String? assetId,
     String currency,
     double conversionRate,
+    double? destinationAmount,
     int dateMillis,
     int createdAtMillis,
   });
@@ -236,6 +246,7 @@ class __$$TransactionDataImplCopyWithImpl<$Res>
     Object? assetId = freezed,
     Object? currency = null,
     Object? conversionRate = null,
+    Object? destinationAmount = freezed,
     Object? dateMillis = null,
     Object? createdAtMillis = null,
   }) {
@@ -285,6 +296,10 @@ class __$$TransactionDataImplCopyWithImpl<$Res>
             ? _value.conversionRate
             : conversionRate // ignore: cast_nullable_to_non_nullable
                   as double,
+        destinationAmount: freezed == destinationAmount
+            ? _value.destinationAmount
+            : destinationAmount // ignore: cast_nullable_to_non_nullable
+                  as double?,
         dateMillis: null == dateMillis
             ? _value.dateMillis
             : dateMillis // ignore: cast_nullable_to_non_nullable
@@ -313,6 +328,7 @@ class _$TransactionDataImpl implements _TransactionData {
     this.assetId,
     this.currency = 'USD',
     this.conversionRate = 1.0,
+    this.destinationAmount,
     required this.dateMillis,
     required this.createdAtMillis,
   });
@@ -366,6 +382,10 @@ class _$TransactionDataImpl implements _TransactionData {
   @JsonKey()
   final double conversionRate;
 
+  /// For cross-currency transfers: amount in destination currency
+  @override
+  final double? destinationAmount;
+
   /// Matches the database date field for integrity verification during import.
   /// Not exported as a separate CSV column to avoid duplication.
   @override
@@ -378,7 +398,7 @@ class _$TransactionDataImpl implements _TransactionData {
 
   @override
   String toString() {
-    return 'TransactionData(id: $id, amount: $amount, categoryId: $categoryId, accountId: $accountId, type: $type, note: $note, merchant: $merchant, destinationAccountId: $destinationAccountId, assetId: $assetId, currency: $currency, conversionRate: $conversionRate, dateMillis: $dateMillis, createdAtMillis: $createdAtMillis)';
+    return 'TransactionData(id: $id, amount: $amount, categoryId: $categoryId, accountId: $accountId, type: $type, note: $note, merchant: $merchant, destinationAccountId: $destinationAccountId, assetId: $assetId, currency: $currency, conversionRate: $conversionRate, destinationAmount: $destinationAmount, dateMillis: $dateMillis, createdAtMillis: $createdAtMillis)';
   }
 
   @override
@@ -403,6 +423,8 @@ class _$TransactionDataImpl implements _TransactionData {
                 other.currency == currency) &&
             (identical(other.conversionRate, conversionRate) ||
                 other.conversionRate == conversionRate) &&
+            (identical(other.destinationAmount, destinationAmount) ||
+                other.destinationAmount == destinationAmount) &&
             (identical(other.dateMillis, dateMillis) ||
                 other.dateMillis == dateMillis) &&
             (identical(other.createdAtMillis, createdAtMillis) ||
@@ -424,6 +446,7 @@ class _$TransactionDataImpl implements _TransactionData {
     assetId,
     currency,
     conversionRate,
+    destinationAmount,
     dateMillis,
     createdAtMillis,
   );
@@ -458,6 +481,7 @@ abstract class _TransactionData implements TransactionData {
     final String? assetId,
     final String currency,
     final double conversionRate,
+    final double? destinationAmount,
     required final int dateMillis,
     required final int createdAtMillis,
   }) = _$TransactionDataImpl;
@@ -508,6 +532,10 @@ abstract class _TransactionData implements TransactionData {
   /// Conversion rate to main currency at transaction creation time
   @override
   double get conversionRate;
+
+  /// For cross-currency transfers: amount in destination currency
+  @override
+  double? get destinationAmount;
 
   /// Matches the database date field for integrity verification during import.
   /// Not exported as a separate CSV column to avoid duplication.

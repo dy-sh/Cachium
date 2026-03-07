@@ -44,16 +44,16 @@ class FrankfurterApi implements ExchangeRateApi {
   }
 }
 
-class ExchangeRateHostApi implements ExchangeRateApi {
+class OpenExchangeRateApi implements ExchangeRateApi {
   @override
-  String get name => 'ExchangeRate.host';
+  String get name => 'Open ER-API';
 
   @override
   Future<Map<String, double>> fetchRates(String baseCurrency) async {
     final client = HttpClient();
     try {
       final request = await client.getUrl(
-        Uri.parse('https://api.exchangerate.host/latest?base=$baseCurrency'),
+        Uri.parse('https://open.er-api.com/v6/latest/$baseCurrency'),
       );
       final response = await request.close();
 

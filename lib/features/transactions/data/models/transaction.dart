@@ -27,6 +27,7 @@ class Transaction {
   final String? assetId; // Optional link to an asset
   final String currencyCode;
   final double conversionRate; // Rate to main currency at creation time
+  final double? destinationAmount; // For cross-currency transfers: amount in destination currency
   final DateTime date;
   final String? note;
   final String? merchant;
@@ -42,6 +43,7 @@ class Transaction {
     this.assetId,
     this.currencyCode = 'USD',
     this.conversionRate = 1.0,
+    this.destinationAmount,
     required this.date,
     this.note,
     this.merchant,
@@ -62,6 +64,8 @@ class Transaction {
     bool clearAssetId = false,
     String? currencyCode,
     double? conversionRate,
+    double? destinationAmount,
+    bool clearDestinationAmount = false,
     DateTime? date,
     String? note,
     String? merchant,
@@ -79,6 +83,9 @@ class Transaction {
       assetId: clearAssetId ? null : (assetId ?? this.assetId),
       currencyCode: currencyCode ?? this.currencyCode,
       conversionRate: conversionRate ?? this.conversionRate,
+      destinationAmount: clearDestinationAmount
+          ? null
+          : (destinationAmount ?? this.destinationAmount),
       date: date ?? this.date,
       note: note ?? this.note,
       merchant: merchant ?? this.merchant,

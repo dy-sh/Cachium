@@ -13,6 +13,7 @@ class TransactionFormState {
   final String? destinationAccountId; // For transfers
   final String currencyCode;
   final double conversionRate;
+  final double? destinationAmount;
   final DateTime date;
   final String? note;
   final String? merchant;
@@ -39,6 +40,7 @@ class TransactionFormState {
     this.destinationAccountId,
     this.currencyCode = 'USD',
     this.conversionRate = 1.0,
+    this.destinationAmount,
     this.assetId,
     required this.date,
     this.note,
@@ -107,6 +109,8 @@ class TransactionFormState {
     bool clearDestinationAccountId = false,
     String? currencyCode,
     double? conversionRate,
+    double? destinationAmount,
+    bool clearDestinationAmount = false,
     String? assetId,
     bool clearAssetId = false,
     DateTime? date,
@@ -134,6 +138,9 @@ class TransactionFormState {
           : (destinationAccountId ?? this.destinationAccountId),
       currencyCode: currencyCode ?? this.currencyCode,
       conversionRate: conversionRate ?? this.conversionRate,
+      destinationAmount: clearDestinationAmount
+          ? null
+          : (destinationAmount ?? this.destinationAmount),
       assetId: clearAssetId ? null : (assetId ?? this.assetId),
       date: date ?? this.date,
       note: note ?? this.note,
@@ -214,10 +221,18 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
   }
 
   void setDestinationAccount(String? accountId) {
+    if (accountId == null) {
+      state = state.copyWith(
+        clearDestinationAccountId: true,
+        clearDestinationAmount: true,
+      );
+      return;
+    }
+
     state = state.copyWith(
       destinationAccountId: accountId,
-      clearDestinationAccountId: accountId == null,
     );
+    _recalculateDestinationAmount();
   }
 
   /// Apply last used account if setting is enabled and no account is selected.
@@ -237,6 +252,7 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
 
   void setAmount(double amount) {
     state = state.copyWith(amount: amount);
+    _recalculateDestinationAmount();
   }
 
   void setCategory(String categoryId) {
@@ -260,6 +276,7 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
       currencyCode: currencyCode,
       conversionRate: conversionRate,
     );
+    _recalculateDestinationAmount();
   }
 
   void setDate(DateTime date) {
@@ -276,6 +293,35 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
 
   void setConversionRate(double rate) {
     state = state.copyWith(conversionRate: rate);
+  }
+
+  void setDestinationAmount(double? amount) {
+    state = state.copyWith(
+      destinationAmount: amount,
+      clearDestinationAmount: amount == null,
+    );
+  }
+
+  void _recalculateDestinationAmount() {
+    if (!state.isTransfer || state.accountId == null || state.destinationAccountId == null) {
+      return;
+    }
+    final srcAccount = ref.read(accountByIdProvider(state.accountId!));
+    final dstAccount = ref.read(accountByIdProvider(state.destinationAccountId!));
+    if (srcAccount == null || dstAccount == null) return;
+
+    if (srcAccount.currencyCode == dstAccount.currencyCode) {
+      // Same currency - no destinationAmount needed
+      state = state.copyWith(clearDestinationAmount: true);
+      return;
+    }
+
+    // Cross-currency: calculate using live rates
+    if (state.amount > 0) {
+      final rate = ref.read(exchangeRateProvider((from: srcAccount.currencyCode, to: dstAccount.currencyCode)));
+      final converted = state.amount * rate;
+      state = state.copyWith(destinationAmount: double.parse(converted.toStringAsFixed(2)));
+    }
   }
 
   void setAsset(String? assetId) {
@@ -335,6 +381,7 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
       destinationAccountId: transaction.destinationAccountId,
       currencyCode: transaction.currencyCode,
       conversionRate: transaction.conversionRate,
+      destinationAmount: transaction.destinationAmount,
       assetId: transaction.assetId,
       date: transaction.date,
       note: transaction.note,
