@@ -161,6 +161,7 @@ The app supports per-account and per-transaction currency codes independent of t
 
 **Exchange rate providers:**
 - `ExchangeRatesNotifier` reads `exchangeRateApiOption` from settings and calls `service.setApi()` before fetching; auto-skips fetch if rates are less than 24h old (`lastRateFetchTimestamp` in AppSettings)
+- `exchangeRatesStaleProvider` (derived `Provider<bool>`) is `true` when `lastRateFetchTimestamp` is more than 24h ago; consumed by `TotalBalanceCard` to show a warning icon when multiple account currencies are in use
 - Supported APIs: Open ER-API (`open.er-api.com`, free, no key), Manual (user-defined rates via `ManualRatesScreen`)
 - Manual rates are edited at `/settings/formats/manual-rates`
 
@@ -168,6 +169,9 @@ The app supports per-account and per-transaction currency codes independent of t
 - All `CurrencyFormatter.format()` and `AnimatedCounter` calls pass the per-account or per-transaction `currencyCode`
 - Aggregated totals (total balance, analytics, budgets) always display in the main currency
 - Foreign-currency items show an "≈ $X,XXX.XX" subtitle converted to main currency
+- `convertedAmount()`, `convertToMainCurrency()`, and `convertTransactionToMainCurrency()` round to 2 decimal places — do not skip this when adding new conversion helpers
+- `deleteTransactionsForCategory` and `moveTransactionsToAccount` in `transactions_provider.dart` treat transfers specially: both source and destination account balances are adjusted; cross-currency moves use live exchange rates for conversion
+- `TransactionFormNotifier.hasChanges()` tracks `originalDestinationAmount`; always include it when comparing original vs. current form state
 
 ## Database Management
 

@@ -25,6 +25,7 @@ class TransactionFormState {
   final String? originalCategoryId;
   final String? originalAccountId;
   final String? originalDestinationAccountId;
+  final double? originalDestinationAmount;
   final String? originalAssetId;
   final DateTime? originalDate;
   final String? originalNote;
@@ -51,6 +52,7 @@ class TransactionFormState {
     this.originalCategoryId,
     this.originalAccountId,
     this.originalDestinationAccountId,
+    this.originalDestinationAmount,
     this.originalAssetId,
     this.originalDate,
     this.originalNote,
@@ -81,6 +83,7 @@ class TransactionFormState {
         categoryId != originalCategoryId ||
         accountId != originalAccountId ||
         destinationAccountId != originalDestinationAccountId ||
+        destinationAmount != originalDestinationAmount ||
         assetId != originalAssetId ||
         !_isSameDateTime(date, originalDate) ||
         note != originalNote ||
@@ -122,6 +125,7 @@ class TransactionFormState {
     String? originalCategoryId,
     String? originalAccountId,
     String? originalDestinationAccountId,
+    double? originalDestinationAmount,
     String? originalAssetId,
     DateTime? originalDate,
     String? originalNote,
@@ -151,6 +155,7 @@ class TransactionFormState {
       originalCategoryId: originalCategoryId ?? this.originalCategoryId,
       originalAccountId: originalAccountId ?? this.originalAccountId,
       originalDestinationAccountId: originalDestinationAccountId ?? this.originalDestinationAccountId,
+      originalDestinationAmount: originalDestinationAmount ?? this.originalDestinationAmount,
       originalAssetId: originalAssetId ?? this.originalAssetId,
       originalDate: originalDate ?? this.originalDate,
       originalNote: originalNote ?? this.originalNote,
@@ -393,6 +398,7 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
       originalCategoryId: transaction.categoryId,
       originalAccountId: transaction.accountId,
       originalDestinationAccountId: transaction.destinationAccountId,
+      originalDestinationAmount: transaction.destinationAmount,
       originalAssetId: transaction.assetId,
       originalDate: transaction.date,
       originalNote: transaction.note,

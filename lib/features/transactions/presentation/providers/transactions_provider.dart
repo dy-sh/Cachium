@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/providers/database_providers.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../data/models/transaction.dart';
 
@@ -297,39 +298,84 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
 
     if (transactionsToMove.isEmpty) return;
 
-    // Calculate total balance effect of all transactions
-    // Income = +amount, Expense = -amount
-    double totalEffect = 0;
+    // Get account currencies for cross-currency conversion
+    final fromAccount = ref.read(accountByIdProvider(fromAccountId));
+    final toAccount = ref.read(accountByIdProvider(toAccountId));
+    final isCrossCurrency = fromAccount != null && toAccount != null &&
+        fromAccount.currencyCode != toAccount.currencyCode;
+
+    // Get exchange rate if cross-currency
+    double crossRate = 1.0;
+    if (isCrossCurrency) {
+      crossRate = ref.read(exchangeRateProvider((
+        from: fromAccount.currencyCode,
+        to: toAccount.currencyCode,
+      )));
+    }
+
+    // Calculate total balance effect on source account (in source currency)
+    // and prepare updated transactions
+    double sourceEffect = 0;
+    double destEffect = 0;
+    final updatedTransactions = <Transaction>[];
+
     for (final tx in transactionsToMove) {
-      if (tx.type == TransactionType.income) {
-        totalEffect += tx.amount;
+      final sign = tx.type == TransactionType.income ? 1.0 : -1.0;
+      // For transfers, the source debit was -amount (already applied)
+      if (tx.type == TransactionType.transfer) {
+        sourceEffect -= tx.amount; // Source was debited by -amount
       } else {
-        totalEffect -= tx.amount;
+        sourceEffect += sign * tx.amount;
+      }
+
+      if (isCrossCurrency) {
+        // Convert amount to destination currency
+        final convertedAmount = double.parse((tx.amount * crossRate).toStringAsFixed(2));
+        final convertedDestAmount = tx.destinationAmount != null
+            ? double.parse((tx.destinationAmount! * crossRate).toStringAsFixed(2))
+            : null;
+
+        if (tx.type == TransactionType.transfer) {
+          destEffect -= convertedAmount;
+        } else {
+          destEffect += sign * convertedAmount;
+        }
+
+        updatedTransactions.add(tx.copyWith(
+          accountId: toAccountId,
+          amount: convertedAmount,
+          currencyCode: toAccount.currencyCode,
+          destinationAmount: convertedDestAmount,
+        ));
+      } else {
+        if (tx.type == TransactionType.transfer) {
+          destEffect -= tx.amount;
+        } else {
+          destEffect += sign * tx.amount;
+        }
+        updatedTransactions.add(tx.copyWith(accountId: toAccountId));
       }
     }
 
     // Wrap in database transaction to prevent locking issues
     await db.transaction(() async {
       // Update transactions in database
-      for (final tx in transactionsToMove) {
-        final updatedTx = tx.copyWith(accountId: toAccountId);
-        await repo.updateTransaction(updatedTx);
+      for (final tx in updatedTransactions) {
+        await repo.updateTransaction(tx);
       }
 
       // Update account balances:
       // Remove the effect from source account (reverse it)
-      await ref.read(accountsProvider.notifier).updateBalance(fromAccountId, -totalEffect);
+      await ref.read(accountsProvider.notifier).updateBalance(fromAccountId, -sourceEffect);
       // Add the effect to target account
-      await ref.read(accountsProvider.notifier).updateBalance(toAccountId, totalEffect);
+      await ref.read(accountsProvider.notifier).updateBalance(toAccountId, destEffect);
     });
 
     // Update local state for transactions
+    final updatedMap = {for (final tx in updatedTransactions) tx.id: tx};
     state = state.whenData(
       (transactions) => transactions.map((t) {
-        if (t.accountId == fromAccountId) {
-          return t.copyWith(accountId: toAccountId);
-        }
-        return t;
+        return updatedMap[t.id] ?? t;
       }).toList(),
     );
   }
@@ -403,12 +449,22 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
         await repo.deleteTransaction(tx.id);
 
         // Reverse the balance change
-        final balanceChange =
-            tx.type == TransactionType.income ? -tx.amount : tx.amount;
-        await ref.read(accountsProvider.notifier).updateBalance(
-              tx.accountId,
-              balanceChange,
-            );
+        if (tx.type == TransactionType.transfer) {
+          // Reverse transfer: credit source, debit destination
+          await ref.read(accountsProvider.notifier).updateBalance(
+                tx.accountId, tx.amount);
+          if (tx.destinationAccountId != null) {
+            await ref.read(accountsProvider.notifier).updateBalance(
+                  tx.destinationAccountId!, -(tx.destinationAmount ?? tx.amount));
+          }
+        } else {
+          final balanceChange =
+              tx.type == TransactionType.income ? -tx.amount : tx.amount;
+          await ref.read(accountsProvider.notifier).updateBalance(
+                tx.accountId,
+                balanceChange,
+              );
+        }
       }
     });
 

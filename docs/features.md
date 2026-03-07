@@ -448,4 +448,11 @@
 - When Manual mode is selected in formats settings, an "Edit Rates" button appears
 - Users can add currencies and set custom exchange rates without relying on an external API
 
+#### 20. Multi-currency bug fixes and robustness
+- `deleteTransactionsForCategory` now correctly reverses both source and destination account balances for transfer transactions instead of treating them as income/expense
+- `moveTransactionsToAccount` handles cross-currency account moves by converting amounts using live exchange rates when source and destination accounts have different currencies; also properly handles transfer transactions
+- `hasChanges()` in `TransactionFormNotifier` tracks `originalDestinationAmount` so editing only the destination amount correctly enables the save button
+- `convertedAmount()`, `convertToMainCurrency()`, and `convertTransactionToMainCurrency()` round results to 2 decimal places to prevent floating-point accumulation errors
+- `exchangeRatesStaleProvider` in `exchange_rate_provider.dart` derives whether rates are more than 24 hours old; `TotalBalanceCard` shows a warning icon next to "TOTAL BALANCE" when rates are stale and multiple account currencies are in use
+
 ---

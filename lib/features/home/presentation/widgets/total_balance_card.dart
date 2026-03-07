@@ -37,6 +37,8 @@ class _TotalBalanceCardState extends ConsumerState<TotalBalanceCard> {
     final textSize = ref.watch(homeTotalBalanceTextSizeProvider);
     final balancesHidden = ref.watch(homeBalancesHiddenByDefaultProvider);
     final isSmall = textSize == AmountDisplaySize.small;
+    final ratesStale = ref.watch(exchangeRatesStaleProvider);
+    final hasMultipleCurrencies = _hasMultipleCurrencies(ref);
 
     // If balances are hidden by default, use local state to track reveal
     final showBalance = !balancesHidden || _balanceRevealed;
@@ -117,6 +119,17 @@ class _TotalBalanceCardState extends ConsumerState<TotalBalanceCard> {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
+                if (ratesStale && hasMultipleCurrencies) ...[
+                  const SizedBox(width: AppSpacing.xs),
+                  Tooltip(
+                    message: 'Exchange rates are outdated',
+                    child: Icon(
+                      Icons.warning_amber_rounded,
+                      size: 14,
+                      color: AppColors.getTransactionColor('expense', intensity).withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
               ],
             ),
             const SizedBox(height: AppSpacing.md),
@@ -149,6 +162,12 @@ class _TotalBalanceCardState extends ConsumerState<TotalBalanceCard> {
         ),
       ),
     );
+  }
+
+  bool _hasMultipleCurrencies(WidgetRef ref) {
+    final accounts = ref.watch(accountsProvider).valueOrEmpty;
+    final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+    return accounts.any((a) => a.currencyCode != mainCurrency);
   }
 
   double _getHoldings(WidgetRef ref) {

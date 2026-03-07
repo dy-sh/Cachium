@@ -125,7 +125,7 @@ double convertToMainCurrency(
     return amount;
   }
 
-  final result = amount / fromRate;
+  final result = double.parse((amount / fromRate).toStringAsFixed(2));
   _log('[convertToMain] $amount $fromCurrency / $fromRate = $result $mainCurrency');
   return result;
 }
@@ -143,12 +143,24 @@ double convertTransactionToMainCurrency(
 
   final fromRate = rates[fromCurrency];
   if (fromRate != null) {
-    return amount / fromRate;
+    return double.parse((amount / fromRate).toStringAsFixed(2));
   }
 
   // Fallback to stored rate
-  return amount * storedConversionRate;
+  return double.parse((amount * storedConversionRate).toStringAsFixed(2));
 }
+
+/// Whether exchange rates are stale (>24h old) or missing.
+final exchangeRatesStaleProvider = Provider<bool>((ref) {
+  final settings = ref.watch(settingsProvider).valueOrNull;
+  if (settings == null) return false;
+
+  final lastFetch = settings.lastRateFetchTimestamp;
+  if (lastFetch == null) return true;
+
+  final now = DateTime.now().millisecondsSinceEpoch;
+  return (now - lastFetch) > 24 * 60 * 60 * 1000;
+});
 
 final exchangeRateProvider =
     Provider.family<double, ({String from, String to})>((ref, params) {

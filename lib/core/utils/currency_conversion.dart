@@ -13,11 +13,11 @@ double convertedAmount(
 
   final fromRate = rates[tx.currencyCode];
   if (fromRate != null && fromRate > 0) {
-    return tx.amount / fromRate;
+    return double.parse((tx.amount / fromRate).toStringAsFixed(2));
   }
 
   // Fallback to stored conversion rate
-  return tx.amount * tx.conversionRate;
+  return double.parse((tx.amount * tx.conversionRate).toStringAsFixed(2));
 }
 
 /// Convert a transaction's amount to the main currency, with sign.
