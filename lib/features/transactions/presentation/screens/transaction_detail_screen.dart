@@ -7,6 +7,7 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/utils/currency_conversion.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../design_system/components/feedback/notification.dart';
@@ -262,6 +263,34 @@ class TransactionDetailScreen extends ConsumerWidget {
                               label: 'Merchant',
                               value: transaction.merchant!,
                             ),
+                          // Original value & rate change for foreign-currency transactions
+                          if (transaction.currencyCode != transaction.mainCurrencyCode) ...[
+                            _DetailRow(
+                              icon: LucideIcons.stamp,
+                              label: 'Original Value',
+                              value: CurrencyFormatter.format(
+                                transaction.mainCurrencyAmount,
+                                currencyCode: transaction.mainCurrencyCode,
+                              ),
+                            ),
+                            Builder(builder: (context) {
+                              final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+                              final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
+                              final gainLoss = conversionGainLoss(transaction, rates, mainCurrency);
+                              if (gainLoss == null) return const SizedBox.shrink();
+                              final isPositive = gainLoss > 0;
+                              final glColor = isPositive
+                                  ? AppColors.getTransactionColor('income', intensity)
+                                  : AppColors.getTransactionColor('expense', intensity);
+                              final sign = isPositive ? '+' : '';
+                              return _DetailRow(
+                                icon: isPositive ? LucideIcons.trendingUp : LucideIcons.trendingDown,
+                                label: 'Rate Change',
+                                value: '$sign${CurrencyFormatter.format(gainLoss, currencyCode: mainCurrency)}',
+                                valueColor: glColor,
+                              );
+                            }),
+                          ],
                           if (transaction.note != null &&
                               transaction.note!.isNotEmpty)
                             _DetailRow(

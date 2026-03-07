@@ -57,6 +57,12 @@ mixin _$TransactionData {
   /// For cross-currency transfers: amount in destination currency
   double? get destinationAmount => throw _privateConstructorUsedError;
 
+  /// App's main currency when transaction was created
+  String get mainCurrencyCode => throw _privateConstructorUsedError;
+
+  /// Amount converted to main currency at creation time
+  double? get mainCurrencyAmount => throw _privateConstructorUsedError;
+
   /// Matches the database date field for integrity verification during import.
   /// Not exported as a separate CSV column to avoid duplication.
   int get dateMillis => throw _privateConstructorUsedError;
@@ -95,6 +101,8 @@ abstract class $TransactionDataCopyWith<$Res> {
     String currency,
     double conversionRate,
     double? destinationAmount,
+    String mainCurrencyCode,
+    double? mainCurrencyAmount,
     int dateMillis,
     int createdAtMillis,
   });
@@ -127,6 +135,8 @@ class _$TransactionDataCopyWithImpl<$Res, $Val extends TransactionData>
     Object? currency = null,
     Object? conversionRate = null,
     Object? destinationAmount = freezed,
+    Object? mainCurrencyCode = null,
+    Object? mainCurrencyAmount = freezed,
     Object? dateMillis = null,
     Object? createdAtMillis = null,
   }) {
@@ -180,6 +190,14 @@ class _$TransactionDataCopyWithImpl<$Res, $Val extends TransactionData>
                 ? _value.destinationAmount
                 : destinationAmount // ignore: cast_nullable_to_non_nullable
                       as double?,
+            mainCurrencyCode: null == mainCurrencyCode
+                ? _value.mainCurrencyCode
+                : mainCurrencyCode // ignore: cast_nullable_to_non_nullable
+                      as String,
+            mainCurrencyAmount: freezed == mainCurrencyAmount
+                ? _value.mainCurrencyAmount
+                : mainCurrencyAmount // ignore: cast_nullable_to_non_nullable
+                      as double?,
             dateMillis: null == dateMillis
                 ? _value.dateMillis
                 : dateMillis // ignore: cast_nullable_to_non_nullable
@@ -216,6 +234,8 @@ abstract class _$$TransactionDataImplCopyWith<$Res>
     String currency,
     double conversionRate,
     double? destinationAmount,
+    String mainCurrencyCode,
+    double? mainCurrencyAmount,
     int dateMillis,
     int createdAtMillis,
   });
@@ -247,6 +267,8 @@ class __$$TransactionDataImplCopyWithImpl<$Res>
     Object? currency = null,
     Object? conversionRate = null,
     Object? destinationAmount = freezed,
+    Object? mainCurrencyCode = null,
+    Object? mainCurrencyAmount = freezed,
     Object? dateMillis = null,
     Object? createdAtMillis = null,
   }) {
@@ -300,6 +322,14 @@ class __$$TransactionDataImplCopyWithImpl<$Res>
             ? _value.destinationAmount
             : destinationAmount // ignore: cast_nullable_to_non_nullable
                   as double?,
+        mainCurrencyCode: null == mainCurrencyCode
+            ? _value.mainCurrencyCode
+            : mainCurrencyCode // ignore: cast_nullable_to_non_nullable
+                  as String,
+        mainCurrencyAmount: freezed == mainCurrencyAmount
+            ? _value.mainCurrencyAmount
+            : mainCurrencyAmount // ignore: cast_nullable_to_non_nullable
+                  as double?,
         dateMillis: null == dateMillis
             ? _value.dateMillis
             : dateMillis // ignore: cast_nullable_to_non_nullable
@@ -329,6 +359,8 @@ class _$TransactionDataImpl implements _TransactionData {
     this.currency = 'USD',
     this.conversionRate = 1.0,
     this.destinationAmount,
+    this.mainCurrencyCode = 'USD',
+    this.mainCurrencyAmount,
     required this.dateMillis,
     required this.createdAtMillis,
   });
@@ -386,6 +418,15 @@ class _$TransactionDataImpl implements _TransactionData {
   @override
   final double? destinationAmount;
 
+  /// App's main currency when transaction was created
+  @override
+  @JsonKey()
+  final String mainCurrencyCode;
+
+  /// Amount converted to main currency at creation time
+  @override
+  final double? mainCurrencyAmount;
+
   /// Matches the database date field for integrity verification during import.
   /// Not exported as a separate CSV column to avoid duplication.
   @override
@@ -398,7 +439,7 @@ class _$TransactionDataImpl implements _TransactionData {
 
   @override
   String toString() {
-    return 'TransactionData(id: $id, amount: $amount, categoryId: $categoryId, accountId: $accountId, type: $type, note: $note, merchant: $merchant, destinationAccountId: $destinationAccountId, assetId: $assetId, currency: $currency, conversionRate: $conversionRate, destinationAmount: $destinationAmount, dateMillis: $dateMillis, createdAtMillis: $createdAtMillis)';
+    return 'TransactionData(id: $id, amount: $amount, categoryId: $categoryId, accountId: $accountId, type: $type, note: $note, merchant: $merchant, destinationAccountId: $destinationAccountId, assetId: $assetId, currency: $currency, conversionRate: $conversionRate, destinationAmount: $destinationAmount, mainCurrencyCode: $mainCurrencyCode, mainCurrencyAmount: $mainCurrencyAmount, dateMillis: $dateMillis, createdAtMillis: $createdAtMillis)';
   }
 
   @override
@@ -425,6 +466,10 @@ class _$TransactionDataImpl implements _TransactionData {
                 other.conversionRate == conversionRate) &&
             (identical(other.destinationAmount, destinationAmount) ||
                 other.destinationAmount == destinationAmount) &&
+            (identical(other.mainCurrencyCode, mainCurrencyCode) ||
+                other.mainCurrencyCode == mainCurrencyCode) &&
+            (identical(other.mainCurrencyAmount, mainCurrencyAmount) ||
+                other.mainCurrencyAmount == mainCurrencyAmount) &&
             (identical(other.dateMillis, dateMillis) ||
                 other.dateMillis == dateMillis) &&
             (identical(other.createdAtMillis, createdAtMillis) ||
@@ -447,6 +492,8 @@ class _$TransactionDataImpl implements _TransactionData {
     currency,
     conversionRate,
     destinationAmount,
+    mainCurrencyCode,
+    mainCurrencyAmount,
     dateMillis,
     createdAtMillis,
   );
@@ -482,6 +529,8 @@ abstract class _TransactionData implements TransactionData {
     final String currency,
     final double conversionRate,
     final double? destinationAmount,
+    final String mainCurrencyCode,
+    final double? mainCurrencyAmount,
     required final int dateMillis,
     required final int createdAtMillis,
   }) = _$TransactionDataImpl;
@@ -536,6 +585,14 @@ abstract class _TransactionData implements TransactionData {
   /// For cross-currency transfers: amount in destination currency
   @override
   double? get destinationAmount;
+
+  /// App's main currency when transaction was created
+  @override
+  String get mainCurrencyCode;
+
+  /// Amount converted to main currency at creation time
+  @override
+  double? get mainCurrencyAmount;
 
   /// Matches the database date field for integrity verification during import.
   /// Not exported as a separate CSV column to avoid duplication.

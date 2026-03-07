@@ -39,6 +39,8 @@ class TransactionRepository {
       currency: transaction.currencyCode,
       conversionRate: transaction.conversionRate,
       destinationAmount: transaction.destinationAmount,
+      mainCurrencyCode: transaction.mainCurrencyCode,
+      mainCurrencyAmount: transaction.mainCurrencyAmount,
       dateMillis: transaction.date.millisecondsSinceEpoch,
       createdAtMillis: transaction.createdAt.millisecondsSinceEpoch,
     );
@@ -60,6 +62,8 @@ class TransactionRepository {
       currencyCode: data.currency,
       conversionRate: data.conversionRate,
       destinationAmount: data.destinationAmount,
+      mainCurrencyCode: data.mainCurrencyCode,
+      mainCurrencyAmount: data.mainCurrencyAmount ?? double.parse((data.amount * data.conversionRate).toStringAsFixed(2)),
       date: DateTime.fromMillisecondsSinceEpoch(data.dateMillis),
       note: data.note,
       merchant: data.merchant,
@@ -118,6 +122,8 @@ class TransactionRepository {
     String currency = 'USD',
     double conversionRate = 1.0,
     double? destinationAmount,
+    String? mainCurrencyCode,
+    double? mainCurrencyAmount,
   }) async {
     try {
       final data = TransactionData(
@@ -133,6 +139,8 @@ class TransactionRepository {
         currency: currency,
         conversionRate: conversionRate,
         destinationAmount: destinationAmount ?? transaction.destinationAmount,
+        mainCurrencyCode: mainCurrencyCode ?? transaction.mainCurrencyCode,
+        mainCurrencyAmount: mainCurrencyAmount ?? transaction.mainCurrencyAmount,
         dateMillis: transaction.date.millisecondsSinceEpoch,
         createdAtMillis: transaction.createdAt.millisecondsSinceEpoch,
       );

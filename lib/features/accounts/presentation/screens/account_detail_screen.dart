@@ -7,6 +7,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/utils/currency_conversion.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../design_system/design_system.dart';
@@ -229,6 +230,58 @@ class AccountDetailScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
+
+                  // Currency impact for foreign-currency accounts
+                  if (account.currencyCode != ref.watch(mainCurrencyCodeProvider))
+                    Builder(builder: (context) {
+                      final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+                      final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
+                      double totalGainLoss = 0;
+                      for (final tx in transactions) {
+                        final gl = conversionGainLoss(tx, rates, mainCurrency);
+                        if (gl != null) totalGainLoss += gl;
+                      }
+                      if (totalGainLoss.abs() < 0.01) return const SizedBox.shrink();
+                      totalGainLoss = double.parse(totalGainLoss.toStringAsFixed(2));
+                      final isPositive = totalGainLoss > 0;
+                      final glColor = isPositive
+                          ? AppColors.getTransactionColor('income', intensity)
+                          : AppColors.getTransactionColor('expense', intensity);
+                      final sign = isPositive ? '+' : '';
+                      return Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.sm),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: AppRadius.mdAll,
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                isPositive ? LucideIcons.trendingUp : LucideIcons.trendingDown,
+                                size: 16,
+                                color: glColor,
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Text(
+                                'Currency Impact',
+                                style: AppTypography.labelSmall.copyWith(
+                                  color: AppColors.textTertiary,
+                                ),
+                              ),
+                              const Spacer(),
+                              Text(
+                                '$sign${CurrencyFormatter.format(totalGainLoss, currencyCode: mainCurrency)}',
+                                style: AppTypography.moneySmall.copyWith(color: glColor),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
 
                   const SizedBox(height: AppSpacing.xxl),
 

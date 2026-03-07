@@ -24,12 +24,19 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     String currencyCode = 'USD',
     double conversionRate = 1.0,
     double? destinationAmount,
+    String mainCurrencyCode = 'USD',
+    double? mainCurrencyAmount,
     required DateTime date,
     String? note,
     String? merchant,
   }) async {
     final repo = ref.read(transactionRepositoryProvider);
     final db = ref.read(databaseProvider);
+
+    final effectiveMainCurrencyAmount = mainCurrencyAmount ??
+        (currencyCode == mainCurrencyCode
+            ? amount
+            : double.parse((amount * conversionRate).toStringAsFixed(2)));
 
     final transaction = Transaction(
       id: _uuid.v4(),
@@ -42,6 +49,8 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
       currencyCode: currencyCode,
       conversionRate: conversionRate,
       destinationAmount: destinationAmount,
+      mainCurrencyCode: mainCurrencyCode,
+      mainCurrencyAmount: effectiveMainCurrencyAmount,
       date: date,
       note: note,
       merchant: merchant,
@@ -341,11 +350,15 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
           destEffect += sign * convertedAmount;
         }
 
+        // Recalculate mainCurrencyAmount for cross-currency move
+        final newMainCurrencyAmount = double.parse(
+          (convertedAmount * tx.conversionRate).toStringAsFixed(2));
         updatedTransactions.add(tx.copyWith(
           accountId: toAccountId,
           amount: convertedAmount,
           currencyCode: toAccount.currencyCode,
           destinationAmount: convertedDestAmount,
+          mainCurrencyAmount: newMainCurrencyAmount,
         ));
       } else {
         if (tx.type == TransactionType.transfer) {

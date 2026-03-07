@@ -158,6 +158,8 @@ The app supports per-account and per-transaction currency codes independent of t
 - `currencyCode` - currency of the transaction amount
 - `conversionRate` - rate used to convert to main currency for aggregation
 - `destinationAmount` - for cross-currency transfers: the actual amount credited to the destination account (may differ from `amount` due to exchange rate)
+- `mainCurrencyCode` - snapshot of the main currency code at the time the transaction was saved
+- `mainCurrencyAmount` - snapshot of the main-currency equivalent amount at save time; nullable for backward compatibility with older records (fallback: `amount * conversionRate`)
 
 **Exchange rate providers:**
 - `ExchangeRatesNotifier` reads `exchangeRateApiOption` from settings and calls `service.setApi()` before fetching; auto-skips fetch if rates are less than 24h old (`lastRateFetchTimestamp` in AppSettings)
@@ -170,8 +172,10 @@ The app supports per-account and per-transaction currency codes independent of t
 - Aggregated totals (total balance, analytics, budgets) always display in the main currency
 - Foreign-currency items show an "≈ $X,XXX.XX" subtitle converted to main currency
 - `convertedAmount()`, `convertToMainCurrency()`, and `convertTransactionToMainCurrency()` round to 2 decimal places — do not skip this when adding new conversion helpers
+- `conversionGainLoss()` in `currency_conversion.dart` computes the difference between a transaction's `mainCurrencyAmount` snapshot and its current converted value — use this for all gain/loss calculations
 - `deleteTransactionsForCategory` and `moveTransactionsToAccount` in `transactions_provider.dart` treat transfers specially: both source and destination account balances are adjusted; cross-currency moves use live exchange rates for conversion
 - `TransactionFormNotifier.hasChanges()` tracks `originalDestinationAmount`; always include it when comparing original vs. current form state
+- When saving a transaction, always compute and persist `mainCurrencyCode` and `mainCurrencyAmount` so the historical snapshot is available for gain/loss display; do not leave them null on new records
 
 ## Database Management
 
@@ -211,4 +215,7 @@ The app includes comprehensive database import/export functionality accessible v
 - `lib/design_system/components/feedback/notification.dart` - Custom notification system (replaces SnackBar)
 - `lib/core/services/exchange_rate_service.dart` - Exchange rate fetching; active API set via `setApi()` before fetch
 - `lib/core/providers/exchange_rate_provider.dart` - `ExchangeRatesNotifier` wires API from settings on build
+- `lib/core/utils/currency_conversion.dart` - Conversion helpers including `conversionGainLoss()`
 - `lib/features/settings/presentation/screens/manual_rates_screen.dart` - Manual exchange rate editor
+- `lib/features/analytics/presentation/providers/conversion_gain_loss_provider.dart` - Aggregates conversion gain/loss across transactions for the Analytics Overview tab
+- `lib/features/analytics/presentation/widgets/currency/conversion_gain_loss_card.dart` - "Conversion Gain/Loss" card widget shown in Analytics Overview

@@ -170,6 +170,11 @@ class DemoData {
       String? assetId,
     }) {
       final currency = accountCurrencies[accountId] ?? 'USD';
+      final rate = conversionRates[currency] ?? 1.0;
+      // Main currency is USD for demo data
+      final mainCurrencyAmount = currency == 'USD'
+          ? amount
+          : double.parse((amount * rate).toStringAsFixed(2));
       return Transaction(
         id: txId(),
         amount: amount,
@@ -181,7 +186,9 @@ class DemoData {
         merchant: merchant,
         assetId: assetId,
         currencyCode: currency,
-        conversionRate: conversionRates[currency] ?? 1.0,
+        conversionRate: rate,
+        mainCurrencyCode: 'USD',
+        mainCurrencyAmount: mainCurrencyAmount,
         createdAt: date,
       );
     }

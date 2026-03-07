@@ -28,6 +28,8 @@ class Transaction {
   final String currencyCode;
   final double conversionRate; // Rate to main currency at creation time
   final double? destinationAmount; // For cross-currency transfers: amount in destination currency
+  final String mainCurrencyCode; // App's main currency when transaction was created
+  final double mainCurrencyAmount; // Amount converted to main currency at creation time
   final DateTime date;
   final String? note;
   final String? merchant;
@@ -44,6 +46,8 @@ class Transaction {
     this.currencyCode = 'USD',
     this.conversionRate = 1.0,
     this.destinationAmount,
+    this.mainCurrencyCode = 'USD',
+    this.mainCurrencyAmount = 0,
     required this.date,
     this.note,
     this.merchant,
@@ -66,6 +70,8 @@ class Transaction {
     double? conversionRate,
     double? destinationAmount,
     bool clearDestinationAmount = false,
+    String? mainCurrencyCode,
+    double? mainCurrencyAmount,
     DateTime? date,
     String? note,
     String? merchant,
@@ -86,6 +92,8 @@ class Transaction {
       destinationAmount: clearDestinationAmount
           ? null
           : (destinationAmount ?? this.destinationAmount),
+      mainCurrencyCode: mainCurrencyCode ?? this.mainCurrencyCode,
+      mainCurrencyAmount: mainCurrencyAmount ?? this.mainCurrencyAmount,
       date: date ?? this.date,
       note: note ?? this.note,
       merchant: merchant ?? this.merchant,

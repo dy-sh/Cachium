@@ -423,15 +423,21 @@ class DatabaseImportService {
         } else {
           // Plaintext format, need to encrypt using TransactionData model
           final conversionRateRaw = row['conversion_rate'] ?? row['conversionRate'];
+          final conversionRate = conversionRateRaw != null ? (conversionRateRaw as num).toDouble() : 1.0;
+          final amount = ((row['amount']) as num).toDouble();
+          final mainCurrencyCodeRaw = row['main_currency_code'] ?? row['mainCurrencyCode'];
+          final mainCurrencyAmountRaw = row['main_currency_amount'] ?? row['mainCurrencyAmount'];
           final data = TransactionData(
             id: id,
-            amount: ((row['amount']) as num).toDouble(),
+            amount: amount,
             categoryId: (row['category_id'] ?? row['categoryId']) as String,
             accountId: (row['account_id'] ?? row['accountId']) as String,
             type: row['type'] as String,
             note: row['note'] as String?,
             currency: row['currency'] as String? ?? 'USD',
-            conversionRate: conversionRateRaw != null ? (conversionRateRaw as num).toDouble() : 1.0,
+            conversionRate: conversionRate,
+            mainCurrencyCode: mainCurrencyCodeRaw as String? ?? 'USD',
+            mainCurrencyAmount: mainCurrencyAmountRaw != null ? (mainCurrencyAmountRaw as num).toDouble() : double.parse((amount * conversionRate).toStringAsFixed(2)),
             dateMillis: (row['date_millis'] ?? row['dateMillis'] ?? date) as int,
             createdAtMillis: (row['created_at_millis'] ?? row['createdAtMillis']) as int,
           );
@@ -611,15 +617,23 @@ class DatabaseImportService {
 
           // Plaintext format, need to encrypt using TransactionData model
           final conversionRateRaw = data['conversion_rate'] ?? data['conversionRate'];
+          final conversionRate = conversionRateRaw != null ? double.parse(conversionRateRaw.toString()) : 1.0;
+          final amount = double.parse(data['amount'].toString());
+          final mainCurrencyCodeRaw = data['main_currency_code'] ?? data['mainCurrencyCode'];
+          final mainCurrencyAmountRaw = data['main_currency_amount'] ?? data['mainCurrencyAmount'];
           final transactionData = TransactionData(
             id: id,
-            amount: double.parse(data['amount'].toString()),
+            amount: amount,
             categoryId: (data['category_id'] ?? data['categoryId']).toString(),
             accountId: (data['account_id'] ?? data['accountId']).toString(),
             type: data['type'].toString(),
             note: note,
             currency: data['currency']?.toString() ?? 'USD',
-            conversionRate: conversionRateRaw != null ? double.parse(conversionRateRaw.toString()) : 1.0,
+            conversionRate: conversionRate,
+            mainCurrencyCode: mainCurrencyCodeRaw?.toString() ?? 'USD',
+            mainCurrencyAmount: (mainCurrencyAmountRaw != null && mainCurrencyAmountRaw.toString().isNotEmpty)
+                ? double.parse(mainCurrencyAmountRaw.toString())
+                : double.parse((amount * conversionRate).toStringAsFixed(2)),
             // Fall back to 'date' if date_millis not present
             dateMillis: dateMillisRaw != null ? int.parse(dateMillisRaw.toString()) : date,
             // Fall back to 'date' if created_at_millis not present
@@ -1396,14 +1410,24 @@ class DatabaseImportService {
           final noteRaw = data['note']?.toString() ?? '';
           final note = (noteRaw.isEmpty || noteRaw == 'null') ? null : noteRaw;
 
+          final conversionRateRaw2 = data['conversion_rate'] ?? data['conversionRate'];
+          final conversionRate2 = conversionRateRaw2 != null ? double.parse(conversionRateRaw2.toString()) : 1.0;
+          final amount2 = double.parse(data['amount'].toString());
+          final mainCurrencyCodeRaw2 = data['main_currency_code'] ?? data['mainCurrencyCode'];
+          final mainCurrencyAmountRaw2 = data['main_currency_amount'] ?? data['mainCurrencyAmount'];
           final transactionData = TransactionData(
             id: id,
-            amount: double.parse(data['amount'].toString()),
+            amount: amount2,
             categoryId: (data['category_id'] ?? data['categoryId']).toString(),
             accountId: (data['account_id'] ?? data['accountId']).toString(),
             type: data['type'].toString(),
             note: note,
             currency: data['currency']?.toString() ?? 'USD',
+            conversionRate: conversionRate2,
+            mainCurrencyCode: mainCurrencyCodeRaw2?.toString() ?? 'USD',
+            mainCurrencyAmount: (mainCurrencyAmountRaw2 != null && mainCurrencyAmountRaw2.toString().isNotEmpty)
+                ? double.parse(mainCurrencyAmountRaw2.toString())
+                : double.parse((amount2 * conversionRate2).toStringAsFixed(2)),
             // Fall back to 'date' if date_millis not present
             dateMillis: dateMillisRaw != null ? int.parse(dateMillisRaw.toString()) : date,
             // Fall back to 'date' if created_at_millis not present

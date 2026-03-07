@@ -19,6 +19,7 @@ import '../flow/account_flow_section.dart';
 import '../calendar/cash_flow_calendar.dart';
 import '../charts/spending_heatmap.dart';
 import '../budgets/budget_progress_section.dart';
+import '../currency/conversion_gain_loss_card.dart';
 import '../scroll_anchored_list.dart';
 
 class OverviewTab extends StatelessWidget {
@@ -29,6 +30,12 @@ class OverviewTab extends StatelessWidget {
     return ScrollAnchoredList(
       sections: [
         const PeriodSummaryCards(),
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.screenPadding,
+          ),
+          child: const ConversionGainLossCard(),
+        ),
         Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.screenPadding,

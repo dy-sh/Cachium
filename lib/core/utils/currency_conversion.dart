@@ -1,4 +1,5 @@
 import '../../features/transactions/data/models/transaction.dart';
+import '../providers/exchange_rate_provider.dart';
 
 /// Convert a transaction's amount to the main currency.
 ///
@@ -36,4 +37,30 @@ double convertedSignedAmount(
     case TransactionType.transfer:
       return 0;
   }
+}
+
+/// Calculates the conversion gain/loss for a foreign-currency transaction.
+///
+/// Returns null when:
+/// - Transaction is in the same currency as its stored main currency
+/// - The app's main currency has changed since the transaction was created
+/// - The difference is negligible (< $0.01)
+double? conversionGainLoss(
+  Transaction tx,
+  Map<String, double> rates,
+  String currentMainCurrency,
+) {
+  if (tx.currencyCode == tx.mainCurrencyCode) return null;
+  if (tx.mainCurrencyCode != currentMainCurrency) return null;
+
+  final currentValue = convertTransactionToMainCurrency(
+    tx.amount,
+    tx.currencyCode,
+    currentMainCurrency,
+    rates,
+    tx.conversionRate,
+  );
+  final diff = currentValue - tx.mainCurrencyAmount;
+  if (diff.abs() < 0.005) return null;
+  return double.parse(diff.toStringAsFixed(2));
 }

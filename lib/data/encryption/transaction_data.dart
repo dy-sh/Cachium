@@ -47,6 +47,12 @@ class TransactionData with _$TransactionData {
     /// For cross-currency transfers: amount in destination currency
     double? destinationAmount,
 
+    /// App's main currency when transaction was created
+    @Default('USD') String mainCurrencyCode,
+
+    /// Amount converted to main currency at creation time
+    double? mainCurrencyAmount,
+
     /// Matches the database date field for integrity verification during import.
     /// Not exported as a separate CSV column to avoid duplication.
     required int dateMillis,

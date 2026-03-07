@@ -511,6 +511,11 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                               );
                             }
 
+                            // Compute main currency snapshot
+                            final mainCurrencyAmount = (savedFormState.currencyCode == mainCurrency)
+                                ? savedFormState.amount
+                                : double.parse((savedFormState.amount * savedFormState.conversionRate).toStringAsFixed(2));
+
                             if (isEditing) {
                               // Update existing transaction
                               final originalTransaction = ref.read(
@@ -530,6 +535,8 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                                   clearAssetId: savedFormState.assetId == null,
                                   currencyCode: savedFormState.currencyCode,
                                   conversionRate: savedFormState.conversionRate,
+                                  mainCurrencyCode: mainCurrency,
+                                  mainCurrencyAmount: mainCurrencyAmount,
                                   date: savedFormState.date,
                                   note: savedFormState.note,
                                   merchant: savedFormState.merchant,
@@ -549,6 +556,8 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                                     currencyCode: savedFormState.currencyCode,
                                     conversionRate: savedFormState.conversionRate,
                                     destinationAmount: savedFormState.destinationAmount,
+                                    mainCurrencyCode: mainCurrency,
+                                    mainCurrencyAmount: mainCurrencyAmount,
                                     date: savedFormState.date,
                                     note: savedFormState.note,
                                     merchant: savedFormState.merchant,

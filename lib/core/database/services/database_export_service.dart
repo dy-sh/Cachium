@@ -158,6 +158,8 @@ class DatabaseExportService {
         note TEXT,
         currency TEXT NOT NULL DEFAULT 'USD',
         conversion_rate REAL NOT NULL DEFAULT 1.0,
+        main_currency_code TEXT NOT NULL DEFAULT 'USD',
+        main_currency_amount REAL,
         date_millis INTEGER NOT NULL,
         created_at_millis INTEGER NOT NULL
       )
@@ -276,8 +278,8 @@ class DatabaseExportService {
 
     final stmt = exportDb.prepare(
       '''INSERT INTO transactions
-         (id, date, last_updated_at, is_deleted, amount, category_id, account_id, type, note, currency, conversion_rate, date_millis, created_at_millis)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+         (id, date, last_updated_at, is_deleted, amount, category_id, account_id, type, note, currency, conversion_rate, main_currency_code, main_currency_amount, date_millis, created_at_millis)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
     );
 
     for (final row in rows) {
@@ -296,6 +298,8 @@ class DatabaseExportService {
         data.note,
         data.currency,
         data.conversionRate,
+        data.mainCurrencyCode,
+        data.mainCurrencyAmount,
         data.dateMillis,
         data.createdAtMillis,
       ]);
@@ -419,7 +423,7 @@ class DatabaseExportService {
             ..where((t) => t.isDeleted.equals(false)))
           .get();
       csvData.add([
-        'id', 'date', 'last_updated_at', 'amount', 'category_id', 'account_id', 'type', 'note', 'currency', 'conversion_rate',
+        'id', 'date', 'last_updated_at', 'amount', 'category_id', 'account_id', 'type', 'note', 'currency', 'conversion_rate', 'main_currency_code', 'main_currency_amount',
       ]);
 
       for (final row in rows) {
@@ -437,6 +441,8 @@ class DatabaseExportService {
           data.note ?? '',
           data.currency,
           data.conversionRate,
+          data.mainCurrencyCode,
+          data.mainCurrencyAmount ?? '',
         ]);
       }
     }

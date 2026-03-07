@@ -455,4 +455,13 @@
 - `convertedAmount()`, `convertToMainCurrency()`, and `convertTransactionToMainCurrency()` round results to 2 decimal places to prevent floating-point accumulation errors
 - `exchangeRatesStaleProvider` in `exchange_rate_provider.dart` derives whether rates are more than 24 hours old; `TotalBalanceCard` shows a warning icon next to "TOTAL BALANCE" when rates are stale and multiple account currencies are in use
 
+#### 21. Historical main currency value storage
+- `mainCurrencyCode` and `mainCurrencyAmount` fields added to Transaction model and TransactionData DTO to snapshot the main-currency equivalent at the moment a transaction is saved
+- Transaction form computes and persists these fields on save; old records fall back to a calculated value via `conversionRate` for backward compatibility
+- Transaction detail screen shows "Original Value" (the snapshotted main-currency amount) and "Rate Change" (gain/loss since creation) for foreign-currency transactions
+- Account detail screen aggregates and displays "Currency Impact" for foreign-currency accounts, summarising total conversion gain/loss
+- New `conversionGainLoss()` utility in `currency_conversion.dart` computes the difference between the historical and current converted values
+- Analytics Overview tab gains a "Conversion Gain/Loss" card (`ConversionGainLossCard`) driven by `conversionGainLossProvider`, showing the total conversion impact across all foreign-currency transactions in the selected period
+- Export/import updated to include `main_currency_code` and `main_currency_amount` columns with fallback defaults for older files; demo data seeded with these fields
+
 ---
