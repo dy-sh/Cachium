@@ -63,6 +63,9 @@ class CategoriesNotifier extends AsyncNotifier<List<Category>> {
     final previousState = state;
 
     try {
+      // Safety guard: prevent orphaning transactions
+      _assertNoCategoryTransactions({id});
+
       final repo = ref.read(categoryRepositoryProvider);
 
       // Optimistically update local state
@@ -236,6 +239,9 @@ class CategoriesNotifier extends AsyncNotifier<List<Category>> {
     final allIdsToRemove = {...descendants, id};
 
     try {
+      // Safety guard: prevent orphaning transactions
+      _assertNoCategoryTransactions(allIdsToRemove);
+
       final db = ref.read(databaseProvider);
       final repo = ref.read(categoryRepositoryProvider);
 
@@ -272,6 +278,8 @@ class CategoriesNotifier extends AsyncNotifier<List<Category>> {
     final children = categories.where((c) => c.parentId == id).toList();
 
     try {
+      // Safety guard: prevent orphaning transactions (only check parent, children are promoted)
+      _assertNoCategoryTransactions({id});
       final rootSiblings = categories
           .where((c) => c.parentId == parent.parentId && c.type == parent.type)
           .toList();
@@ -308,6 +316,18 @@ class CategoriesNotifier extends AsyncNotifier<List<Category>> {
       Error.throwWithStackTrace(
         e is AppException ? e : RepositoryException.delete(entityType: 'Category', entityId: id, cause: e),
         st,
+      );
+    }
+  }
+
+  /// Throws [ValidationException] if any active transactions reference the given category IDs.
+  void _assertNoCategoryTransactions(Set<String> categoryIds) {
+    final transactions = ref.read(transactionsProvider).valueOrNull ?? [];
+    final hasReferences = transactions.any((t) => categoryIds.contains(t.categoryId));
+    if (hasReferences) {
+      throw const ValidationException(
+        message: 'Cannot delete category with existing transactions. Reassign transactions first.',
+        code: 'CATEGORY_HAS_TRANSACTIONS',
       );
     }
   }
