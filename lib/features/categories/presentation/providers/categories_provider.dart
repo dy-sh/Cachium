@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/exceptions/app_exception.dart';
 import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/providers/database_providers.dart';
+import '../../../budgets/presentation/providers/budget_provider.dart';
 import '../../../transactions/presentation/providers/recurring_rules_provider.dart';
 import '../../../transactions/presentation/providers/transaction_templates_provider.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
@@ -77,7 +78,7 @@ class CategoriesNotifier extends AsyncNotifier<List<Category>> {
       await repo.deleteCategory(id);
 
       // Clean up recurring rules and templates referencing this category
-      await _cleanupRulesAndTemplatesForCategories({id});
+      await _cleanupReferencesForCategories({id});
     } catch (e, st) {
       state = previousState;
       Error.throwWithStackTrace(
@@ -259,7 +260,7 @@ class CategoriesNotifier extends AsyncNotifier<List<Category>> {
       });
 
       // Clean up recurring rules and templates referencing deleted categories
-      await _cleanupRulesAndTemplatesForCategories(allIdsToRemove);
+      await _cleanupReferencesForCategories(allIdsToRemove);
     } catch (e, st) {
       state = previousState;
       Error.throwWithStackTrace(
@@ -307,7 +308,7 @@ class CategoriesNotifier extends AsyncNotifier<List<Category>> {
       });
 
       // Clean up recurring rules and templates referencing deleted category
-      await _cleanupRulesAndTemplatesForCategories({id});
+      await _cleanupReferencesForCategories({id});
 
       // Refresh state from database
       await refresh();
@@ -332,8 +333,16 @@ class CategoriesNotifier extends AsyncNotifier<List<Category>> {
     }
   }
 
-  /// Clean up recurring rules and templates that reference deleted category IDs.
-  Future<void> _cleanupRulesAndTemplatesForCategories(Set<String> categoryIds) async {
+  /// Clean up budgets, recurring rules, and templates that reference deleted category IDs.
+  Future<void> _cleanupReferencesForCategories(Set<String> categoryIds) async {
+    // Delete budgets referencing deleted categories
+    final budgets = ref.read(budgetsProvider).valueOrNull ?? [];
+    for (final budget in budgets) {
+      if (categoryIds.contains(budget.categoryId)) {
+        await ref.read(budgetsProvider.notifier).deleteBudget(budget.id);
+      }
+    }
+
     final rules = ref.read(recurringRulesProvider).valueOrNull ?? [];
     for (final rule in rules) {
       if (categoryIds.contains(rule.categoryId)) {

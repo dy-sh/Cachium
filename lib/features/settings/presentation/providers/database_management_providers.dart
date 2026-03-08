@@ -54,6 +54,10 @@ final databaseConsistencyServiceProvider =
     transactionRepository: ref.watch(transactionRepositoryProvider),
     accountRepository: ref.watch(accountRepositoryProvider),
     categoryRepository: ref.watch(categoryRepositoryProvider),
+    budgetRepository: ref.watch(budgetRepositoryProvider),
+    savingsGoalRepository: ref.watch(savingsGoalRepositoryProvider),
+    recurringRuleRepository: ref.watch(recurringRuleRepositoryProvider),
+    transactionTemplateRepository: ref.watch(transactionTemplateRepositoryProvider),
   );
 });
 

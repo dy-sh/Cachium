@@ -23,6 +23,10 @@ class DatabaseConsistency {
   final int categoriesWithInvalidParent;
   final int accountsWithIncorrectBalance;
   final int duplicateTransactions;
+  final int budgetsWithInvalidCategory;
+  final int savingsGoalsWithInvalidAccount;
+  final int rulesWithInvalidReferences;
+  final int templatesWithInvalidReferences;
 
   const DatabaseConsistency({
     required this.transactionsWithInvalidCategory,
@@ -30,6 +34,10 @@ class DatabaseConsistency {
     required this.categoriesWithInvalidParent,
     required this.accountsWithIncorrectBalance,
     required this.duplicateTransactions,
+    this.budgetsWithInvalidCategory = 0,
+    this.savingsGoalsWithInvalidAccount = 0,
+    this.rulesWithInvalidReferences = 0,
+    this.templatesWithInvalidReferences = 0,
   });
 
   bool get isConsistent => totalIssues == 0;
@@ -39,7 +47,11 @@ class DatabaseConsistency {
       transactionsWithInvalidAccount +
       categoriesWithInvalidParent +
       accountsWithIncorrectBalance +
-      duplicateTransactions;
+      duplicateTransactions +
+      budgetsWithInvalidCategory +
+      savingsGoalsWithInvalidAccount +
+      rulesWithInvalidReferences +
+      templatesWithInvalidReferences;
 
   /// Returns all checks for display in the details popup.
   List<ConsistencyCheck> get allChecks => [
@@ -67,6 +79,26 @@ class DatabaseConsistency {
           label: 'Accounts with incorrect balance',
           count: accountsWithIncorrectBalance,
           icon: LucideIcons.calculator,
+        ),
+        ConsistencyCheck(
+          label: 'Budgets with invalid category',
+          count: budgetsWithInvalidCategory,
+          icon: LucideIcons.pieChart,
+        ),
+        ConsistencyCheck(
+          label: 'Savings goals with invalid account',
+          count: savingsGoalsWithInvalidAccount,
+          icon: LucideIcons.piggyBank,
+        ),
+        ConsistencyCheck(
+          label: 'Recurring rules with invalid references',
+          count: rulesWithInvalidReferences,
+          icon: LucideIcons.repeat,
+        ),
+        ConsistencyCheck(
+          label: 'Templates with invalid references',
+          count: templatesWithInvalidReferences,
+          icon: LucideIcons.fileText,
         ),
       ];
 

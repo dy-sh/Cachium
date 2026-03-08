@@ -11,6 +11,7 @@ import '../../../../core/providers/database_providers.dart';
 import '../../../../core/providers/exchange_rate_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../transactions/data/models/transaction.dart';
+import '../../../savings_goals/presentation/providers/savings_goals_provider.dart';
 import '../../../transactions/presentation/providers/recurring_rules_provider.dart';
 import '../../../transactions/presentation/providers/transaction_templates_provider.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
@@ -192,6 +193,9 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
           }
         }
 
+        // Clear linkedAccountId on savings goals referencing this account
+        await _clearLinkedAccountOnGoals(accountId);
+
         // Delete the account
         await accountRepo.deleteAccount(accountId);
       });
@@ -304,6 +308,9 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
             targetAccount.copyWith(balance: targetAccount.balance + totalEffect);
         await accountRepo.updateAccount(updatedTarget);
 
+        // Clear linkedAccountId on savings goals referencing the source account
+        await _clearLinkedAccountOnGoals(sourceAccountId);
+
         // Delete the source account
         await accountRepo.deleteAccount(sourceAccountId);
       });
@@ -349,6 +356,17 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
         e is AppException ? e : RepositoryException.update(entityType: 'Account', entityId: accountId, cause: e),
         st,
       );
+    }
+  }
+
+  /// Clear linkedAccountId on savings goals that reference the given account.
+  Future<void> _clearLinkedAccountOnGoals(String accountId) async {
+    final goals = ref.read(savingsGoalsProvider).valueOrNull ?? [];
+    for (final goal in goals) {
+      if (goal.linkedAccountId == accountId) {
+        await ref.read(savingsGoalsProvider.notifier).updateGoal(
+              goal.copyWith(clearLinkedAccountId: true));
+      }
     }
   }
 

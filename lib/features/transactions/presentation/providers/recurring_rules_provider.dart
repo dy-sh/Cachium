@@ -3,8 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/database_providers.dart';
 import '../../../../core/providers/exchange_rate_provider.dart';
 import '../../../../core/utils/currency_conversion.dart';
+import '../../../accounts/presentation/providers/accounts_provider.dart';
+import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart' show mainCurrencyCodeProvider;
 import '../../data/models/recurring_rule.dart';
+import '../../data/models/transaction.dart';
 import 'transactions_provider.dart';
 
 class RecurringRulesNotifier extends AsyncNotifier<List<RecurringRule>> {
@@ -50,6 +53,19 @@ class RecurringRulesNotifier extends AsyncNotifier<List<RecurringRule>> {
     for (final rule in rules) {
       if (!rule.isActive) continue;
       if (ruleIds != null && !ruleIds.contains(rule.id)) continue;
+
+      // Validate that referenced entities still exist
+      final accountExists = ref.read(accountByIdProvider(rule.accountId)) != null;
+      final categoryExists = ref.read(categoryByIdProvider(rule.categoryId)) != null;
+      final destAccountValid = rule.type != TransactionType.transfer ||
+          rule.destinationAccountId == null ||
+          ref.read(accountByIdProvider(rule.destinationAccountId!)) != null;
+
+      if (!accountExists || !categoryExists || !destAccountValid) {
+        // Deactivate rules with invalid references
+        await repository.updateRule(rule.copyWith(isActive: false));
+        continue;
+      }
 
       var lastGenerated = rule.lastGeneratedDate;
       var nextDate = rule.frequency.nextDate(lastGenerated);
