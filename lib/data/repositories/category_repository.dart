@@ -21,6 +21,9 @@ class CategoryRepository {
 
   static const _entityType = 'Category';
 
+  int _lastCorruptedCount = 0;
+  int get lastCorruptedCount => _lastCorruptedCount;
+
   CategoryRepository({
     required this.database,
     required this.encryptionService,
@@ -240,6 +243,7 @@ class CategoryRepository {
   Stream<List<ui.Category>> watchAllCategories() {
     return database.watchAllCategories().asyncMap((rows) async {
       final categories = <ui.Category>[];
+      int corruptedCount = 0;
 
       for (final row in rows) {
         try {
@@ -250,11 +254,12 @@ class CategoryRepository {
           );
           categories.add(_toCategory(data));
         } catch (_) {
-          // Skip corrupted rows in stream to maintain stability
+          corruptedCount++;
           continue;
         }
       }
 
+      _lastCorruptedCount = corruptedCount;
       return categories;
     });
   }

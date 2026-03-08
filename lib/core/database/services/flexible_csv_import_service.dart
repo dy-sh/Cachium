@@ -681,7 +681,11 @@ class FlexibleCsvImportService {
           ? Color(values['customColor'] as int)
           : null,
       customIcon: values['customIcon'] != null
-          ? IconData(values['customIcon'] as int, fontFamily: 'MaterialIcons')
+          ? IconData(
+              values['customIcon'] as int,
+              fontFamily: values['customIconFontFamily'] as String? ?? 'MaterialIcons',
+              fontPackage: values['customIconFontPackage'] as String?,
+            )
           : null,
       createdAt: values['createdAt'] as DateTime? ?? DateTime.now(),
     );

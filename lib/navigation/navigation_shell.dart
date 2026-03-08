@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../core/constants/app_colors.dart';
-import '../design_system/components/layout/bottom_nav_bar.dart';
+import '../core/providers/corruption_status_provider.dart';
+import '../design_system/design_system.dart';
 import '../features/transactions/presentation/providers/recurring_rules_provider.dart';
 import '../features/transactions/presentation/widgets/pending_recurring_dialog.dart';
 import 'app_router.dart';
@@ -21,12 +22,14 @@ class NavigationShell extends ConsumerStatefulWidget {
 
 class _NavigationShellState extends ConsumerState<NavigationShell> {
   bool _checkedPending = false;
+  bool _checkedCorruption = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkPendingRecurring();
+      _checkCorruption();
     });
   }
 
@@ -50,6 +53,19 @@ class _NavigationShellState extends ConsumerState<NavigationShell> {
       }
     } catch (_) {
       // Non-fatal: recurring check failure shouldn't block the app
+    }
+  }
+
+  void _checkCorruption() {
+    if (_checkedCorruption) return;
+    _checkedCorruption = true;
+
+    final status = ref.read(corruptionStatusProvider);
+    if (status.hasCorruption && mounted) {
+      context.showWarningNotification(
+        '${status.total} corrupted database record${status.total == 1 ? '' : 's'} detected. '
+        'Check Settings > Database for details.',
+      );
     }
   }
 

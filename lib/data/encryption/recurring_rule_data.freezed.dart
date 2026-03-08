@@ -30,6 +30,8 @@ mixin _$RecurringRuleData {
   String? get destinationAccountId => throw _privateConstructorUsedError;
   String? get merchant => throw _privateConstructorUsedError;
   String? get note => throw _privateConstructorUsedError;
+  String get currencyCode => throw _privateConstructorUsedError;
+  double? get destinationAmount => throw _privateConstructorUsedError;
   String get frequency => throw _privateConstructorUsedError;
   int get startDateMillis => throw _privateConstructorUsedError;
   int? get endDateMillis => throw _privateConstructorUsedError;
@@ -64,6 +66,8 @@ abstract class $RecurringRuleDataCopyWith<$Res> {
     String? destinationAccountId,
     String? merchant,
     String? note,
+    String currencyCode,
+    double? destinationAmount,
     String frequency,
     int startDateMillis,
     int? endDateMillis,
@@ -97,6 +101,8 @@ class _$RecurringRuleDataCopyWithImpl<$Res, $Val extends RecurringRuleData>
     Object? destinationAccountId = freezed,
     Object? merchant = freezed,
     Object? note = freezed,
+    Object? currencyCode = null,
+    Object? destinationAmount = freezed,
     Object? frequency = null,
     Object? startDateMillis = null,
     Object? endDateMillis = freezed,
@@ -142,6 +148,14 @@ class _$RecurringRuleDataCopyWithImpl<$Res, $Val extends RecurringRuleData>
                 ? _value.note
                 : note // ignore: cast_nullable_to_non_nullable
                       as String?,
+            currencyCode: null == currencyCode
+                ? _value.currencyCode
+                : currencyCode // ignore: cast_nullable_to_non_nullable
+                      as String,
+            destinationAmount: freezed == destinationAmount
+                ? _value.destinationAmount
+                : destinationAmount // ignore: cast_nullable_to_non_nullable
+                      as double?,
             frequency: null == frequency
                 ? _value.frequency
                 : frequency // ignore: cast_nullable_to_non_nullable
@@ -191,6 +205,8 @@ abstract class _$$RecurringRuleDataImplCopyWith<$Res>
     String? destinationAccountId,
     String? merchant,
     String? note,
+    String currencyCode,
+    double? destinationAmount,
     String frequency,
     int startDateMillis,
     int? endDateMillis,
@@ -223,6 +239,8 @@ class __$$RecurringRuleDataImplCopyWithImpl<$Res>
     Object? destinationAccountId = freezed,
     Object? merchant = freezed,
     Object? note = freezed,
+    Object? currencyCode = null,
+    Object? destinationAmount = freezed,
     Object? frequency = null,
     Object? startDateMillis = null,
     Object? endDateMillis = freezed,
@@ -268,6 +286,14 @@ class __$$RecurringRuleDataImplCopyWithImpl<$Res>
             ? _value.note
             : note // ignore: cast_nullable_to_non_nullable
                   as String?,
+        currencyCode: null == currencyCode
+            ? _value.currencyCode
+            : currencyCode // ignore: cast_nullable_to_non_nullable
+                  as String,
+        destinationAmount: freezed == destinationAmount
+            ? _value.destinationAmount
+            : destinationAmount // ignore: cast_nullable_to_non_nullable
+                  as double?,
         frequency: null == frequency
             ? _value.frequency
             : frequency // ignore: cast_nullable_to_non_nullable
@@ -310,6 +336,8 @@ class _$RecurringRuleDataImpl implements _RecurringRuleData {
     this.destinationAccountId,
     this.merchant,
     this.note,
+    this.currencyCode = 'USD',
+    this.destinationAmount,
     required this.frequency,
     required this.startDateMillis,
     this.endDateMillis,
@@ -340,6 +368,11 @@ class _$RecurringRuleDataImpl implements _RecurringRuleData {
   @override
   final String? note;
   @override
+  @JsonKey()
+  final String currencyCode;
+  @override
+  final double? destinationAmount;
+  @override
   final String frequency;
   @override
   final int startDateMillis;
@@ -355,7 +388,7 @@ class _$RecurringRuleDataImpl implements _RecurringRuleData {
 
   @override
   String toString() {
-    return 'RecurringRuleData(id: $id, name: $name, amount: $amount, type: $type, categoryId: $categoryId, accountId: $accountId, destinationAccountId: $destinationAccountId, merchant: $merchant, note: $note, frequency: $frequency, startDateMillis: $startDateMillis, endDateMillis: $endDateMillis, lastGeneratedDateMillis: $lastGeneratedDateMillis, isActive: $isActive, createdAtMillis: $createdAtMillis)';
+    return 'RecurringRuleData(id: $id, name: $name, amount: $amount, type: $type, categoryId: $categoryId, accountId: $accountId, destinationAccountId: $destinationAccountId, merchant: $merchant, note: $note, currencyCode: $currencyCode, destinationAmount: $destinationAmount, frequency: $frequency, startDateMillis: $startDateMillis, endDateMillis: $endDateMillis, lastGeneratedDateMillis: $lastGeneratedDateMillis, isActive: $isActive, createdAtMillis: $createdAtMillis)';
   }
 
   @override
@@ -376,6 +409,10 @@ class _$RecurringRuleDataImpl implements _RecurringRuleData {
             (identical(other.merchant, merchant) ||
                 other.merchant == merchant) &&
             (identical(other.note, note) || other.note == note) &&
+            (identical(other.currencyCode, currencyCode) ||
+                other.currencyCode == currencyCode) &&
+            (identical(other.destinationAmount, destinationAmount) ||
+                other.destinationAmount == destinationAmount) &&
             (identical(other.frequency, frequency) ||
                 other.frequency == frequency) &&
             (identical(other.startDateMillis, startDateMillis) ||
@@ -406,6 +443,8 @@ class _$RecurringRuleDataImpl implements _RecurringRuleData {
     destinationAccountId,
     merchant,
     note,
+    currencyCode,
+    destinationAmount,
     frequency,
     startDateMillis,
     endDateMillis,
@@ -442,6 +481,8 @@ abstract class _RecurringRuleData implements RecurringRuleData {
     final String? destinationAccountId,
     final String? merchant,
     final String? note,
+    final String currencyCode,
+    final double? destinationAmount,
     required final String frequency,
     required final int startDateMillis,
     final int? endDateMillis,
@@ -471,6 +512,10 @@ abstract class _RecurringRuleData implements RecurringRuleData {
   String? get merchant;
   @override
   String? get note;
+  @override
+  String get currencyCode;
+  @override
+  double? get destinationAmount;
   @override
   String get frequency;
   @override

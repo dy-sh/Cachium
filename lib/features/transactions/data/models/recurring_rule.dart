@@ -67,6 +67,8 @@ class RecurringRule {
   final String? destinationAccountId;
   final String? merchant;
   final String? note;
+  final String currencyCode;
+  final double? destinationAmount;
   final RecurrenceFrequency frequency;
   final DateTime startDate;
   final DateTime? endDate;
@@ -84,6 +86,8 @@ class RecurringRule {
     this.destinationAccountId,
     this.merchant,
     this.note,
+    this.currencyCode = 'USD',
+    this.destinationAmount,
     required this.frequency,
     required this.startDate,
     this.endDate,
@@ -103,6 +107,9 @@ class RecurringRule {
     bool clearDestinationAccountId = false,
     String? merchant,
     String? note,
+    String? currencyCode,
+    double? destinationAmount,
+    bool clearDestinationAmount = false,
     RecurrenceFrequency? frequency,
     DateTime? startDate,
     DateTime? endDate,
@@ -123,6 +130,10 @@ class RecurringRule {
           : (destinationAccountId ?? this.destinationAccountId),
       merchant: merchant ?? this.merchant,
       note: note ?? this.note,
+      currencyCode: currencyCode ?? this.currencyCode,
+      destinationAmount: clearDestinationAmount
+          ? null
+          : (destinationAmount ?? this.destinationAmount),
       frequency: frequency ?? this.frequency,
       startDate: startDate ?? this.startDate,
       endDate: clearEndDate ? null : (endDate ?? this.endDate),

@@ -12,6 +12,9 @@ class SavingsGoalRepository {
 
   static const _entityType = 'SavingsGoal';
 
+  int _lastCorruptedCount = 0;
+  int get lastCorruptedCount => _lastCorruptedCount;
+
   SavingsGoalRepository({
     required this.database,
     required this.encryptionService,
@@ -103,6 +106,7 @@ class SavingsGoalRepository {
     try {
       final rows = await database.getAllSavingsGoals();
       final goals = <ui.SavingsGoal>[];
+      int corruptedCount = 0;
 
       for (final row in rows) {
         try {
@@ -113,9 +117,10 @@ class SavingsGoalRepository {
           );
           goals.add(_toGoal(data));
         } catch (_) {
-          // Skip corrupted rows
+          corruptedCount++;
         }
       }
+      _lastCorruptedCount = corruptedCount;
       return goals;
     } catch (e) {
       throw RepositoryException.fetch(entityType: _entityType, cause: e);

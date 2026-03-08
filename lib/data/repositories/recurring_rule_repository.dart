@@ -12,6 +12,9 @@ class RecurringRuleRepository {
 
   static const _entityType = 'RecurringRule';
 
+  int _lastCorruptedCount = 0;
+  int get lastCorruptedCount => _lastCorruptedCount;
+
   RecurringRuleRepository({
     required this.database,
     required this.encryptionService,
@@ -28,6 +31,8 @@ class RecurringRuleRepository {
       destinationAccountId: rule.destinationAccountId,
       merchant: rule.merchant,
       note: rule.note,
+      currencyCode: rule.currencyCode,
+      destinationAmount: rule.destinationAmount,
       frequency: rule.frequency.name,
       startDateMillis: rule.startDate.millisecondsSinceEpoch,
       endDateMillis: rule.endDate?.millisecondsSinceEpoch,
@@ -51,6 +56,8 @@ class RecurringRuleRepository {
       destinationAccountId: data.destinationAccountId,
       merchant: data.merchant,
       note: data.note,
+      currencyCode: data.currencyCode,
+      destinationAmount: data.destinationAmount,
       frequency: ui.RecurrenceFrequency.values.firstWhere(
         (e) => e.name == data.frequency,
         orElse: () => ui.RecurrenceFrequency.monthly,
@@ -113,6 +120,7 @@ class RecurringRuleRepository {
       final rows = await database.getAllRecurringRules();
       final rules = <ui.RecurringRule>[];
 
+      int corruptedCount = 0;
       for (final row in rows) {
         try {
           final data = await encryptionService.decryptRecurringRule(
@@ -122,9 +130,10 @@ class RecurringRuleRepository {
           );
           rules.add(_toRule(data));
         } catch (_) {
-          // Skip corrupted rows
+          corruptedCount++;
         }
       }
+      _lastCorruptedCount = corruptedCount;
       return rules;
     } catch (e) {
       throw RepositoryException.fetch(entityType: _entityType, cause: e);
@@ -134,6 +143,7 @@ class RecurringRuleRepository {
   Stream<List<ui.RecurringRule>> watchAllRules() {
     return database.watchAllRecurringRules().asyncMap((rows) async {
       final rules = <ui.RecurringRule>[];
+      int corruptedCount = 0;
       for (final row in rows) {
         try {
           final data = await encryptionService.decryptRecurringRule(
@@ -143,9 +153,10 @@ class RecurringRuleRepository {
           );
           rules.add(_toRule(data));
         } catch (_) {
-          // Skip corrupted rows
+          corruptedCount++;
         }
       }
+      _lastCorruptedCount = corruptedCount;
       return rules;
     });
   }

@@ -16,6 +16,9 @@ class AssetRepository {
 
   static const _entityType = 'Asset';
 
+  int _lastCorruptedCount = 0;
+  int get lastCorruptedCount => _lastCorruptedCount;
+
   AssetRepository({
     required this.database,
     required this.encryptionService,
@@ -160,6 +163,7 @@ class AssetRepository {
   Stream<List<ui.Asset>> watchAllAssets() {
     return database.watchAllAssets().asyncMap((rows) async {
       final assets = <ui.Asset>[];
+      int corruptedCount = 0;
 
       for (final row in rows) {
         try {
@@ -170,11 +174,12 @@ class AssetRepository {
           );
           assets.add(_toAsset(data));
         } catch (_) {
-          // Skip corrupted rows in stream to maintain stability
+          corruptedCount++;
           continue;
         }
       }
 
+      _lastCorruptedCount = corruptedCount;
       return assets;
     });
   }

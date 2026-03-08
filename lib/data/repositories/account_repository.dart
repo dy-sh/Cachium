@@ -21,6 +21,9 @@ class AccountRepository {
 
   static const _entityType = 'Account';
 
+  int _lastCorruptedCount = 0;
+  int get lastCorruptedCount => _lastCorruptedCount;
+
   AccountRepository({
     required this.database,
     required this.encryptionService,
@@ -36,6 +39,8 @@ class AccountRepository {
       initialBalance: account.initialBalance,
       customColorValue: account.customColor?.toARGB32(),
       customIconCodePoint: account.customIcon?.codePoint,
+      customIconFontFamily: account.customIcon?.fontFamily,
+      customIconFontPackage: account.customIcon?.fontPackage,
       currencyCode: account.currencyCode,
       createdAtMillis: account.createdAt.millisecondsSinceEpoch,
     );
@@ -57,7 +62,11 @@ class AccountRepository {
           ? Color(data.customColorValue!)
           : null,
       customIcon: data.customIconCodePoint != null
-          ? IconData(data.customIconCodePoint!, fontFamily: 'MaterialIcons')
+          ? IconData(
+              data.customIconCodePoint!,
+              fontFamily: data.customIconFontFamily ?? 'MaterialIcons',
+              fontPackage: data.customIconFontPackage,
+            )
           : null,
       createdAt: DateTime.fromMillisecondsSinceEpoch(data.createdAtMillis),
     );
@@ -238,6 +247,7 @@ class AccountRepository {
   Stream<List<ui.Account>> watchAllAccounts() {
     return database.watchAllAccounts().asyncMap((rows) async {
       final accounts = <ui.Account>[];
+      int corruptedCount = 0;
 
       for (final row in rows) {
         try {
@@ -248,11 +258,12 @@ class AccountRepository {
           );
           accounts.add(_toAccount(data));
         } catch (_) {
-          // Skip corrupted rows in stream to maintain stability
+          corruptedCount++;
           continue;
         }
       }
 
+      _lastCorruptedCount = corruptedCount;
       return accounts;
     });
   }

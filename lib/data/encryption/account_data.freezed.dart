@@ -42,6 +42,12 @@ mixin _$AccountData {
   /// Custom icon code point (optional)
   int? get customIconCodePoint => throw _privateConstructorUsedError;
 
+  /// Custom icon font family (optional, e.g. 'lucide')
+  String? get customIconFontFamily => throw _privateConstructorUsedError;
+
+  /// Custom icon font package (optional, e.g. 'lucide_icons')
+  String? get customIconFontPackage => throw _privateConstructorUsedError;
+
   /// Currency code (ISO 4217)
   String get currencyCode => throw _privateConstructorUsedError;
 
@@ -74,6 +80,8 @@ abstract class $AccountDataCopyWith<$Res> {
     double initialBalance,
     int? customColorValue,
     int? customIconCodePoint,
+    String? customIconFontFamily,
+    String? customIconFontPackage,
     String currencyCode,
     int createdAtMillis,
   });
@@ -101,6 +109,8 @@ class _$AccountDataCopyWithImpl<$Res, $Val extends AccountData>
     Object? initialBalance = null,
     Object? customColorValue = freezed,
     Object? customIconCodePoint = freezed,
+    Object? customIconFontFamily = freezed,
+    Object? customIconFontPackage = freezed,
     Object? currencyCode = null,
     Object? createdAtMillis = null,
   }) {
@@ -134,6 +144,14 @@ class _$AccountDataCopyWithImpl<$Res, $Val extends AccountData>
                 ? _value.customIconCodePoint
                 : customIconCodePoint // ignore: cast_nullable_to_non_nullable
                       as int?,
+            customIconFontFamily: freezed == customIconFontFamily
+                ? _value.customIconFontFamily
+                : customIconFontFamily // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            customIconFontPackage: freezed == customIconFontPackage
+                ? _value.customIconFontPackage
+                : customIconFontPackage // ignore: cast_nullable_to_non_nullable
+                      as String?,
             currencyCode: null == currencyCode
                 ? _value.currencyCode
                 : currencyCode // ignore: cast_nullable_to_non_nullable
@@ -165,6 +183,8 @@ abstract class _$$AccountDataImplCopyWith<$Res>
     double initialBalance,
     int? customColorValue,
     int? customIconCodePoint,
+    String? customIconFontFamily,
+    String? customIconFontPackage,
     String currencyCode,
     int createdAtMillis,
   });
@@ -191,6 +211,8 @@ class __$$AccountDataImplCopyWithImpl<$Res>
     Object? initialBalance = null,
     Object? customColorValue = freezed,
     Object? customIconCodePoint = freezed,
+    Object? customIconFontFamily = freezed,
+    Object? customIconFontPackage = freezed,
     Object? currencyCode = null,
     Object? createdAtMillis = null,
   }) {
@@ -224,6 +246,14 @@ class __$$AccountDataImplCopyWithImpl<$Res>
             ? _value.customIconCodePoint
             : customIconCodePoint // ignore: cast_nullable_to_non_nullable
                   as int?,
+        customIconFontFamily: freezed == customIconFontFamily
+            ? _value.customIconFontFamily
+            : customIconFontFamily // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        customIconFontPackage: freezed == customIconFontPackage
+            ? _value.customIconFontPackage
+            : customIconFontPackage // ignore: cast_nullable_to_non_nullable
+                  as String?,
         currencyCode: null == currencyCode
             ? _value.currencyCode
             : currencyCode // ignore: cast_nullable_to_non_nullable
@@ -248,6 +278,8 @@ class _$AccountDataImpl implements _AccountData {
     this.initialBalance = 0.0,
     this.customColorValue,
     this.customIconCodePoint,
+    this.customIconFontFamily,
+    this.customIconFontPackage,
     this.currencyCode = 'USD',
     required this.createdAtMillis,
   });
@@ -284,6 +316,14 @@ class _$AccountDataImpl implements _AccountData {
   @override
   final int? customIconCodePoint;
 
+  /// Custom icon font family (optional, e.g. 'lucide')
+  @override
+  final String? customIconFontFamily;
+
+  /// Custom icon font package (optional, e.g. 'lucide_icons')
+  @override
+  final String? customIconFontPackage;
+
   /// Currency code (ISO 4217)
   @override
   @JsonKey()
@@ -296,7 +336,7 @@ class _$AccountDataImpl implements _AccountData {
 
   @override
   String toString() {
-    return 'AccountData(id: $id, name: $name, type: $type, balance: $balance, initialBalance: $initialBalance, customColorValue: $customColorValue, customIconCodePoint: $customIconCodePoint, currencyCode: $currencyCode, createdAtMillis: $createdAtMillis)';
+    return 'AccountData(id: $id, name: $name, type: $type, balance: $balance, initialBalance: $initialBalance, customColorValue: $customColorValue, customIconCodePoint: $customIconCodePoint, customIconFontFamily: $customIconFontFamily, customIconFontPackage: $customIconFontPackage, currencyCode: $currencyCode, createdAtMillis: $createdAtMillis)';
   }
 
   @override
@@ -314,6 +354,10 @@ class _$AccountDataImpl implements _AccountData {
                 other.customColorValue == customColorValue) &&
             (identical(other.customIconCodePoint, customIconCodePoint) ||
                 other.customIconCodePoint == customIconCodePoint) &&
+            (identical(other.customIconFontFamily, customIconFontFamily) ||
+                other.customIconFontFamily == customIconFontFamily) &&
+            (identical(other.customIconFontPackage, customIconFontPackage) ||
+                other.customIconFontPackage == customIconFontPackage) &&
             (identical(other.currencyCode, currencyCode) ||
                 other.currencyCode == currencyCode) &&
             (identical(other.createdAtMillis, createdAtMillis) ||
@@ -331,6 +375,8 @@ class _$AccountDataImpl implements _AccountData {
     initialBalance,
     customColorValue,
     customIconCodePoint,
+    customIconFontFamily,
+    customIconFontPackage,
     currencyCode,
     createdAtMillis,
   );
@@ -358,6 +404,8 @@ abstract class _AccountData implements AccountData {
     final double initialBalance,
     final int? customColorValue,
     final int? customIconCodePoint,
+    final String? customIconFontFamily,
+    final String? customIconFontPackage,
     final String currencyCode,
     required final int createdAtMillis,
   }) = _$AccountDataImpl;
@@ -392,6 +440,14 @@ abstract class _AccountData implements AccountData {
   /// Custom icon code point (optional)
   @override
   int? get customIconCodePoint;
+
+  /// Custom icon font family (optional, e.g. 'lucide')
+  @override
+  String? get customIconFontFamily;
+
+  /// Custom icon font package (optional, e.g. 'lucide_icons')
+  @override
+  String? get customIconFontPackage;
 
   /// Currency code (ISO 4217)
   @override

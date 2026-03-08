@@ -2,6 +2,7 @@ import '../../../data/repositories/account_repository.dart';
 import '../../../data/repositories/category_repository.dart';
 import '../../../data/repositories/transaction_repository.dart';
 import '../../../features/settings/data/models/database_consistency.dart';
+import '../../utils/balance_calculation.dart';
 
 /// Service for checking database consistency.
 ///
@@ -69,13 +70,8 @@ class DatabaseConsistencyService {
       }
     }
 
-    // Count accounts with incorrect balance
-    // Reuse the same logic from RecalculateBalancesNotifier
-    final Map<String, double> accountDeltas = {};
-    for (final tx in transactions) {
-      final delta = tx.type.name == 'income' ? tx.amount : -tx.amount;
-      accountDeltas[tx.accountId] = (accountDeltas[tx.accountId] ?? 0) + delta;
-    }
+    // Count accounts with incorrect balance (handles income, expense, and transfers)
+    final accountDeltas = calculateAccountDeltas(transactions);
 
     int accountsWithIncorrectBalance = 0;
     for (final account in accounts) {

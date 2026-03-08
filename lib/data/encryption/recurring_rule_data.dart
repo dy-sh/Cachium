@@ -16,6 +16,8 @@ class RecurringRuleData with _$RecurringRuleData {
     String? destinationAccountId,
     String? merchant,
     String? note,
+    @Default('USD') String currencyCode,
+    double? destinationAmount,
     required String frequency,
     required int startDateMillis,
     int? endDateMillis,

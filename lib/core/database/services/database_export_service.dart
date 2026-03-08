@@ -268,6 +268,8 @@ class DatabaseExportService {
         currency_code TEXT NOT NULL DEFAULT 'USD',
         custom_color_value INTEGER,
         custom_icon_code_point INTEGER,
+        custom_icon_font_family TEXT,
+        custom_icon_font_package TEXT,
         created_at_millis INTEGER NOT NULL
       )
     ''');
@@ -344,6 +346,8 @@ class DatabaseExportService {
         destination_account_id TEXT,
         merchant TEXT,
         note TEXT,
+        currency_code TEXT NOT NULL DEFAULT 'USD',
+        destination_amount REAL,
         frequency TEXT NOT NULL,
         start_date_millis INTEGER NOT NULL,
         end_date_millis INTEGER,
@@ -602,8 +606,8 @@ class DatabaseExportService {
 
     final stmt = exportDb.prepare(
       '''INSERT INTO accounts
-         (id, created_at, last_updated_at, is_deleted, name, type, balance, initial_balance, currency_code, custom_color_value, custom_icon_code_point, created_at_millis)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+         (id, created_at, last_updated_at, is_deleted, name, type, balance, initial_balance, currency_code, custom_color_value, custom_icon_code_point, custom_icon_font_family, custom_icon_font_package, created_at_millis)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
     );
 
     for (final row in rows) {
@@ -622,6 +626,8 @@ class DatabaseExportService {
         data.currencyCode,
         data.customColorValue,
         data.customIconCodePoint,
+        data.customIconFontFamily,
+        data.customIconFontPackage,
         data.createdAtMillis,
       ]);
     }
@@ -729,8 +735,8 @@ class DatabaseExportService {
 
     final stmt = exportDb.prepare(
       '''INSERT INTO recurring_rules
-         (id, created_at, last_updated_at, is_deleted, name, amount, type, category_id, account_id, destination_account_id, merchant, note, frequency, start_date_millis, end_date_millis, last_generated_date_millis, is_active, created_at_millis)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+         (id, created_at, last_updated_at, is_deleted, name, amount, type, category_id, account_id, destination_account_id, merchant, note, currency_code, destination_amount, frequency, start_date_millis, end_date_millis, last_generated_date_millis, is_active, created_at_millis)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
     );
 
     for (final row in rows) {
@@ -750,6 +756,8 @@ class DatabaseExportService {
         data.destinationAccountId,
         data.merchant,
         data.note,
+        data.currencyCode,
+        data.destinationAmount,
         data.frequency,
         data.startDateMillis,
         data.endDateMillis,
@@ -931,7 +939,7 @@ class DatabaseExportService {
     } else {
       final rows = await database.select(database.accounts).get();
       csvData.add([
-        'id', 'created_at', 'last_updated_at', 'is_deleted', 'name', 'type', 'balance', 'initial_balance', 'currency_code', 'custom_color_value', 'custom_icon_code_point',
+        'id', 'created_at', 'last_updated_at', 'is_deleted', 'name', 'type', 'balance', 'initial_balance', 'currency_code', 'custom_color_value', 'custom_icon_code_point', 'custom_icon_font_family', 'custom_icon_font_package',
       ]);
 
       for (final row in rows) {
@@ -950,6 +958,8 @@ class DatabaseExportService {
           data.currencyCode,
           data.customColorValue ?? '',
           data.customIconCodePoint ?? '',
+          data.customIconFontFamily ?? '',
+          data.customIconFontPackage ?? '',
         ]);
       }
     }
@@ -1136,7 +1146,7 @@ class DatabaseExportService {
     } else {
       final rows = await database.select(database.recurringRules).get();
       csvData.add([
-        'id', 'created_at', 'last_updated_at', 'is_deleted', 'name', 'amount', 'type', 'category_id', 'account_id', 'destination_account_id', 'merchant', 'note', 'frequency', 'start_date_millis', 'end_date_millis', 'last_generated_date_millis', 'is_active', 'created_at_millis',
+        'id', 'created_at', 'last_updated_at', 'is_deleted', 'name', 'amount', 'type', 'category_id', 'account_id', 'destination_account_id', 'merchant', 'note', 'currency_code', 'destination_amount', 'frequency', 'start_date_millis', 'end_date_millis', 'last_generated_date_millis', 'is_active', 'created_at_millis',
       ]);
 
       for (final row in rows) {
@@ -1156,6 +1166,8 @@ class DatabaseExportService {
           data.destinationAccountId ?? '',
           data.merchant ?? '',
           data.note ?? '',
+          data.currencyCode,
+          data.destinationAmount ?? '',
           data.frequency,
           data.startDateMillis,
           data.endDateMillis ?? '',

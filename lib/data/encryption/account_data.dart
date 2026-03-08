@@ -32,6 +32,12 @@ class AccountData with _$AccountData {
     /// Custom icon code point (optional)
     int? customIconCodePoint,
 
+    /// Custom icon font family (optional, e.g. 'lucide')
+    String? customIconFontFamily,
+
+    /// Custom icon font package (optional, e.g. 'lucide_icons')
+    String? customIconFontPackage,
+
     /// Currency code (ISO 4217)
     @Default('USD') String currencyCode,
 

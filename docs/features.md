@@ -474,6 +474,26 @@
 - `ConversionGainLossData` gains a `hasSkippedDueToMainCurrencyChange` flag; `ConversionGainLossCard` shows an info banner when some transactions were recorded under a different main currency and are excluded from the gain/loss total
 - `conversionRate` field on `Transaction` and `TransactionFormState` is documented with dartdoc explaining the multiplier semantics: `amount * conversionRate ≈ mainCurrencyAmount`
 
+#### 27. Shared balance calculation helper
+- `calculateAccountDeltas()` in `lib/core/utils/balance_calculation.dart` computes the net balance change across a list of transactions for a given account, correctly debiting the source and crediting the destination for transfer transactions
+- Used by `RecalculateBalancesNotifier` and `DatabaseConsistencyService` to eliminate duplicated (and previously incorrect) per-feature balance logic
+
+#### 28. Account icon font family persistence
+- `customIconFontFamily` and `customIconFontPackage` fields added to `AccountData` so custom icons from packages other than MaterialIcons are stored and restored correctly
+- `AccountRepository._toAccount()` uses the stored font family/package instead of hardcoding 'MaterialIcons'; SQLite plaintext export/import, CSV export/import, and flexible CSV import updated to include these columns
+
+#### 29. Recurring rules currency fields
+- `currencyCode` and `destinationAmount` fields added to `RecurringRule`, `RecurringRuleData`, `RecurringRuleRepository`, form state, and form screen so recurring rules correctly carry currency information
+- `generatePendingTransactions()` now computes and passes `currencyCode`, `conversionRate`, and `mainCurrencyAmount` when creating transactions from recurring rules; export/import updated for the new fields
+
+#### 30. Balance reconciliation after import
+- `DatabaseImportService._reconcileAccountBalances()` recalculates each account's balance from `initialBalance + calculateAccountDeltas(transactions)` immediately after every import
+- Corrects any balance mismatches introduced by the imported data and emits warnings for each account that was adjusted
+
+#### 31. Corruption visibility
+- `_lastCorruptedCount` tracking added to `AccountRepository`, `CategoryRepository`, `RecurringRuleRepository`, `SavingsGoalRepository`, `AssetRepository`, and `TransactionTemplateRepository`
+- `corruption_status_provider.dart` aggregates counts across all repositories; `NavigationShell` shows a warning notification on startup when corruption is detected; `DatabaseSettingsScreen` displays the corruption count in the maintenance section
+
 #### 21. Historical main currency value storage
 - `mainCurrencyCode` and `mainCurrencyAmount` fields added to Transaction model and TransactionData DTO to snapshot the main-currency equivalent at the moment a transaction is saved
 - Transaction form computes and persists these fields on save; old records fall back to a calculated value via `conversionRate` for backward compatibility

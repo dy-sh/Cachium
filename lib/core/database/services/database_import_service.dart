@@ -14,8 +14,10 @@ import '../../../data/encryption/recurring_rule_data.dart';
 import '../../../data/encryption/savings_goal_data.dart';
 import '../../../data/encryption/transaction_data.dart';
 import '../../../data/encryption/transaction_template_data.dart';
+import '../../../features/transactions/data/models/transaction.dart' as tx;
 import '../../../features/settings/data/models/csv_import_preview.dart';
 import '../../../features/settings/data/models/database_metrics.dart';
+import '../../utils/balance_calculation.dart';
 import '../../utils/currency_conversion.dart';
 import '../app_database.dart';
 import 'encryption_service.dart';
@@ -407,6 +409,9 @@ class DatabaseImportService {
       importDb.dispose();
     }
 
+    // Reconcile account balances from transaction history
+    await _reconcileAccountBalances(errors);
+
     return ImportResult(
       transactionsImported: transactionsImported,
       accountsImported: accountsImported,
@@ -458,6 +463,9 @@ class DatabaseImportService {
         savingsGoalsImported += await _importSavingsGoalsFromCsv(path, errors);
       }
     }
+
+    // Reconcile account balances from transaction history
+    await _reconcileAccountBalances(errors);
 
     return ImportResult(
       transactionsImported: transactionsImported,
@@ -604,6 +612,8 @@ class DatabaseImportService {
             initialBalance: ((row['initial_balance'] ?? row['initialBalance']) as num?)?.toDouble() ?? 0.0,
             customColorValue: (row['custom_color_value'] ?? row['customColorValue']) as int?,
             customIconCodePoint: (row['custom_icon_code_point'] ?? row['customIconCodePoint']) as int?,
+            customIconFontFamily: (row['custom_icon_font_family'] ?? row['customIconFontFamily']) as String?,
+            customIconFontPackage: (row['custom_icon_font_package'] ?? row['customIconFontPackage']) as String?,
             currencyCode: (row['currency_code'] ?? row['currencyCode']) as String? ?? 'USD',
             createdAtMillis: (row['created_at_millis'] ?? row['createdAtMillis'] ?? createdAt) as int,
           );
@@ -828,6 +838,8 @@ class DatabaseImportService {
           final initialBalanceStr = (data['initial_balance'] ?? data['initialBalance'])?.toString() ?? '0';
 
           final currencyCodeStr = (data['currency_code'] ?? data['currencyCode'])?.toString() ?? '';
+          final customIconFontFamily = (data['custom_icon_font_family'] ?? data['customIconFontFamily'])?.toString() ?? '';
+          final customIconFontPackage = (data['custom_icon_font_package'] ?? data['customIconFontPackage'])?.toString() ?? '';
           final accountData = AccountData(
             id: id,
             name: data['name'].toString(),
@@ -836,6 +848,8 @@ class DatabaseImportService {
             initialBalance: initialBalanceStr.isEmpty ? 0.0 : double.parse(initialBalanceStr),
             customColorValue: customColorValue.isEmpty ? null : int.parse(customColorValue),
             customIconCodePoint: customIconCodePoint.isEmpty ? null : int.parse(customIconCodePoint),
+            customIconFontFamily: customIconFontFamily.isEmpty ? null : customIconFontFamily,
+            customIconFontPackage: customIconFontPackage.isEmpty ? null : customIconFontPackage,
             currencyCode: currencyCodeStr.isEmpty ? 'USD' : currencyCodeStr,
             createdAtMillis: int.parse((data['created_at_millis'] ?? data['createdAtMillis'] ?? createdAt).toString()),
           );
@@ -1127,6 +1141,7 @@ class DatabaseImportService {
           encryptedBlob = (row['encrypted_blob'] ?? row['encryptedBlob']) as Uint8List;
         } else {
           final isActiveRaw = row['is_active'] ?? row['isActive'];
+          final destAmountRaw = row['destination_amount'] ?? row['destinationAmount'];
           final data = RecurringRuleData(
             id: id,
             name: row['name'] as String,
@@ -1137,6 +1152,8 @@ class DatabaseImportService {
             destinationAccountId: (row['destination_account_id'] ?? row['destinationAccountId']) as String?,
             merchant: row['merchant'] as String?,
             note: row['note'] as String?,
+            currencyCode: (row['currency_code'] ?? row['currencyCode']) as String? ?? 'USD',
+            destinationAmount: destAmountRaw != null ? (destAmountRaw as num).toDouble() : null,
             frequency: row['frequency'] as String,
             startDateMillis: (row['start_date_millis'] ?? row['startDateMillis']) as int,
             endDateMillis: (row['end_date_millis'] ?? row['endDateMillis']) as int?,
@@ -1441,6 +1458,9 @@ class DatabaseImportService {
           final isActiveRaw = (data['is_active'] ?? data['isActive'])?.toString() ?? '1';
           final createdAtMillisRaw = data['created_at_millis'] ?? data['createdAtMillis'];
 
+          final currencyCodeRaw = (data['currency_code'] ?? data['currencyCode'])?.toString() ?? '';
+          final destAmountRaw = (data['destination_amount'] ?? data['destinationAmount'])?.toString() ?? '';
+
           final ruleData = RecurringRuleData(
             id: id,
             name: data['name'].toString(),
@@ -1451,6 +1471,8 @@ class DatabaseImportService {
             destinationAccountId: (destAccountIdRaw.isEmpty || destAccountIdRaw == 'null') ? null : destAccountIdRaw,
             merchant: (merchantRaw.isEmpty || merchantRaw == 'null') ? null : merchantRaw,
             note: (noteRaw.isEmpty || noteRaw == 'null') ? null : noteRaw,
+            currencyCode: currencyCodeRaw.isEmpty ? 'USD' : currencyCodeRaw,
+            destinationAmount: (destAmountRaw.isEmpty || destAmountRaw == 'null') ? null : double.parse(destAmountRaw),
             frequency: data['frequency'].toString(),
             startDateMillis: int.parse((data['start_date_millis'] ?? data['startDateMillis']).toString()),
             endDateMillis: (endDateMillisRaw.isEmpty || endDateMillisRaw == 'null') ? null : int.parse(endDateMillisRaw),
@@ -2402,5 +2424,97 @@ class DatabaseImportService {
     }
 
     return (imported: imported, skipped: skipped);
+  }
+
+  /// Recalculate and fix account balances from transaction history after import.
+  ///
+  /// For each account, computes expectedBalance = initialBalance + deltas,
+  /// and updates the stored balance if it differs. Adds warnings for mismatches.
+  Future<void> _reconcileAccountBalances(List<String> errors) async {
+    try {
+      // Decrypt all accounts
+      final accountRows = await database.select(database.accounts).get();
+      final transactionRows = await database.select(database.transactions).get();
+
+      // Decrypt transactions
+      final transactions = <tx.Transaction>[];
+      for (final row in transactionRows) {
+        if (row.isDeleted) continue;
+        try {
+          final json = await encryptionService.decryptJson(row.encryptedBlob);
+          final data = TransactionData.fromJson(json);
+          transactions.add(tx.Transaction(
+            id: data.id,
+            amount: data.amount,
+            type: tx.TransactionType.values.firstWhere(
+              (t) => t.name == data.type,
+              orElse: () => tx.TransactionType.expense,
+            ),
+            categoryId: data.categoryId,
+            accountId: data.accountId,
+            destinationAccountId: data.destinationAccountId,
+            destinationAmount: data.destinationAmount,
+            currencyCode: data.currency,
+            conversionRate: data.conversionRate,
+            mainCurrencyCode: data.mainCurrencyCode,
+            mainCurrencyAmount: data.mainCurrencyAmount,
+            date: DateTime.fromMillisecondsSinceEpoch(data.dateMillis),
+            createdAt: DateTime.fromMillisecondsSinceEpoch(data.createdAtMillis),
+          ));
+        } catch (_) {
+          // Skip corrupted transactions
+        }
+      }
+
+      final deltas = calculateAccountDeltas(transactions);
+
+      for (final row in accountRows) {
+        if (row.isDeleted) continue;
+        try {
+          final json = await encryptionService.decryptJson(row.encryptedBlob);
+          final data = AccountData.fromJson(json);
+          final delta = deltas[data.id] ?? 0;
+          final expectedBalance = roundCurrency(data.initialBalance + delta);
+
+          if ((data.balance - expectedBalance).abs() > 0.001) {
+            errors.add(
+              'Account "${data.name}" balance adjusted: '
+              '${data.balance} -> $expectedBalance',
+            );
+
+            // Update the account with corrected balance
+            final corrected = AccountData(
+              id: data.id,
+              name: data.name,
+              type: data.type,
+              balance: expectedBalance,
+              initialBalance: data.initialBalance,
+              customColorValue: data.customColorValue,
+              customIconCodePoint: data.customIconCodePoint,
+              customIconFontFamily: data.customIconFontFamily,
+              customIconFontPackage: data.customIconFontPackage,
+              currencyCode: data.currencyCode,
+              createdAtMillis: data.createdAtMillis,
+            );
+            final encryptedBlob =
+                await encryptionService.encryptJson(corrected.toJson());
+
+            await database.into(database.accounts).insertOnConflictUpdate(
+              AccountsCompanion(
+                id: Value(row.id),
+                createdAt: Value(row.createdAt),
+                lastUpdatedAt: Value(DateTime.now().millisecondsSinceEpoch),
+                isDeleted: Value(row.isDeleted),
+                encryptedBlob: Value(encryptedBlob),
+              ),
+            );
+          }
+        } catch (_) {
+          // Skip corrupted accounts
+        }
+      }
+    } catch (e) {
+      errors.add('Balance reconciliation failed: $e');
+    }
   }
 }

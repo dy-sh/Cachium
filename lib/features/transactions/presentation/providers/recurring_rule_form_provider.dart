@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/providers/database_providers.dart';
 import '../../data/models/recurring_rule.dart';
 import '../../data/models/transaction.dart';
 
@@ -12,6 +13,8 @@ class RecurringRuleFormState {
   final String? destinationAccountId;
   final String? merchant;
   final String? note;
+  final String currencyCode;
+  final double? destinationAmount;
   final RecurrenceFrequency frequency;
   final DateTime startDate;
   final DateTime? endDate;
@@ -38,6 +41,8 @@ class RecurringRuleFormState {
     this.destinationAccountId,
     this.merchant,
     this.note,
+    this.currencyCode = 'USD',
+    this.destinationAmount,
     this.frequency = RecurrenceFrequency.monthly,
     DateTime? startDate,
     this.endDate,
@@ -104,6 +109,9 @@ class RecurringRuleFormState {
     bool clearMerchant = false,
     String? note,
     bool clearNote = false,
+    String? currencyCode,
+    double? destinationAmount,
+    bool clearDestinationAmount = false,
     RecurrenceFrequency? frequency,
     DateTime? startDate,
     DateTime? endDate,
@@ -132,6 +140,10 @@ class RecurringRuleFormState {
           : (destinationAccountId ?? this.destinationAccountId),
       merchant: clearMerchant ? null : (merchant ?? this.merchant),
       note: clearNote ? null : (note ?? this.note),
+      currencyCode: currencyCode ?? this.currencyCode,
+      destinationAmount: clearDestinationAmount
+          ? null
+          : (destinationAmount ?? this.destinationAmount),
       frequency: frequency ?? this.frequency,
       startDate: startDate ?? this.startDate,
       endDate: clearEndDate ? null : (endDate ?? this.endDate),
@@ -169,6 +181,8 @@ class RecurringRuleFormNotifier
       destinationAccountId: rule.destinationAccountId,
       merchant: rule.merchant,
       note: rule.note,
+      currencyCode: rule.currencyCode,
+      destinationAmount: rule.destinationAmount,
       frequency: rule.frequency,
       startDate: rule.startDate,
       endDate: rule.endDate,
@@ -201,8 +215,19 @@ class RecurringRuleFormNotifier
   void setCategory(String categoryId) =>
       state = state.copyWith(categoryId: categoryId);
 
-  void setAccount(String accountId) =>
-      state = state.copyWith(accountId: accountId);
+  void setAccount(String accountId) async {
+    state = state.copyWith(accountId: accountId);
+    // Auto-populate currency from account
+    try {
+      final account =
+          await ref.read(accountRepositoryProvider).getAccount(accountId);
+      if (account != null) {
+        state = state.copyWith(currencyCode: account.currencyCode);
+      }
+    } catch (_) {
+      // Non-fatal: keep default currency
+    }
+  }
 
   void setDestinationAccount(String? accountId) {
     state = state.copyWith(

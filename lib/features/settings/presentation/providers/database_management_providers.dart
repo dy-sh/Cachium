@@ -7,6 +7,7 @@ import '../../../../core/database/services/database_import_service.dart';
 import '../../../../core/database/services/database_metrics_service.dart';
 import '../../../../core/providers/database_providers.dart';
 import '../../../../core/providers/provider_utils.dart';
+import '../../../../core/utils/balance_calculation.dart';
 import '../../../../data/demo/demo_data.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../data/models/app_settings.dart';
@@ -425,12 +426,8 @@ class RecalculateBalancesNotifier extends Notifier<AsyncValue<RecalculatePreview
       final accounts = await accountRepo.getAllAccounts();
       final transactions = await transactionRepo.getAllTransactions();
 
-      // Group transactions by account
-      final Map<String, double> accountDeltas = {};
-      for (final tx in transactions) {
-        final delta = tx.type.name == 'income' ? tx.amount : -tx.amount;
-        accountDeltas[tx.accountId] = (accountDeltas[tx.accountId] ?? 0) + delta;
-      }
+      // Group transactions by account (handles income, expense, and transfers)
+      final accountDeltas = calculateAccountDeltas(transactions);
 
       // Calculate changes for each account
       final changes = <BalanceChange>[];

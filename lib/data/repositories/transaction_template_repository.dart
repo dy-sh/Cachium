@@ -11,6 +11,9 @@ class TransactionTemplateRepository {
 
   static const _entityType = 'TransactionTemplate';
 
+  int _lastCorruptedCount = 0;
+  int get lastCorruptedCount => _lastCorruptedCount;
+
   TransactionTemplateRepository({
     required this.database,
     required this.encryptionService,
@@ -97,6 +100,7 @@ class TransactionTemplateRepository {
     try {
       final rows = await database.getAllTransactionTemplates();
       final templates = <ui.TransactionTemplate>[];
+      int corruptedCount = 0;
 
       for (final row in rows) {
         try {
@@ -107,9 +111,10 @@ class TransactionTemplateRepository {
           );
           templates.add(_toTemplate(data));
         } catch (_) {
-          // Skip corrupted rows
+          corruptedCount++;
         }
       }
+      _lastCorruptedCount = corruptedCount;
       return templates;
     } catch (e) {
       throw RepositoryException.fetch(entityType: _entityType, cause: e);

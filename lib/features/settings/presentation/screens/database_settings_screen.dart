@@ -7,6 +7,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/providers/corruption_status_provider.dart';
 import '../../../../design_system/design_system.dart';
 import '../../../../navigation/app_router.dart';
 import '../providers/database_management_providers.dart';
@@ -118,6 +119,8 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
                       _buildSectionLabel('MAINTENANCE'),
                       const SizedBox(height: AppSpacing.sm),
                       const DatabaseConsistencyCard(),
+                      const SizedBox(height: AppSpacing.md),
+                      _buildCorruptionInfo(),
                       const SizedBox(height: AppSpacing.md),
                       Container(
                         decoration: BoxDecoration(
@@ -253,6 +256,32 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
     } else {
       context.go(AppRoutes.home);
     }
+  }
+
+  Widget _buildCorruptionInfo() {
+    final status = ref.watch(corruptionStatusProvider);
+    if (!status.hasCorruption) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.red.withValues(alpha: 0.1),
+        borderRadius: AppRadius.card,
+        border: Border.all(color: AppColors.red.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(LucideIcons.alertTriangle, size: 18, color: AppColors.red),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              '${status.total} corrupted record${status.total == 1 ? '' : 's'} detected',
+              style: AppTypography.bodySmall.copyWith(color: AppColors.red),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildSectionLabel(String label) {

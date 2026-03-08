@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/providers/database_providers.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/utils/currency_conversion.dart';
+import '../../../settings/presentation/providers/settings_provider.dart' show mainCurrencyCodeProvider;
 import '../../data/models/recurring_rule.dart';
 import 'transactions_provider.dart';
 
@@ -56,6 +59,20 @@ class RecurringRulesNotifier extends AsyncNotifier<List<RecurringRule>> {
         // Check if we've passed the end date
         if (rule.endDate != null && nextDate.isAfter(rule.endDate!)) break;
 
+        // Compute currency fields
+        final mainCurrency = ref.read(mainCurrencyCodeProvider);
+        final rates = ref.read(exchangeRatesProvider).valueOrNull ?? {};
+        double conversionRate = 1.0;
+        if (rule.currencyCode != mainCurrency) {
+          final fromRate = rates[rule.currencyCode];
+          if (fromRate != null && fromRate > 0) {
+            conversionRate = 1.0 / fromRate;
+          }
+        }
+        final mainCurrencyAmount = rule.currencyCode == mainCurrency
+            ? rule.amount
+            : roundCurrency(rule.amount * conversionRate);
+
         // Create the transaction
         await transactionsNotifier.addTransaction(
           amount: rule.amount,
@@ -63,6 +80,11 @@ class RecurringRulesNotifier extends AsyncNotifier<List<RecurringRule>> {
           categoryId: rule.categoryId,
           accountId: rule.accountId,
           destinationAccountId: rule.destinationAccountId,
+          currencyCode: rule.currencyCode,
+          conversionRate: conversionRate,
+          destinationAmount: rule.destinationAmount,
+          mainCurrencyCode: mainCurrency,
+          mainCurrencyAmount: mainCurrencyAmount,
           date: nextDate,
           note: rule.note,
           merchant: rule.merchant,

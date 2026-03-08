@@ -417,6 +417,11 @@ class _RecurringRuleFormScreenState
                                   clearDestinationAccountId: !isTransfer,
                                   merchant: formState.merchant,
                                   note: formState.note,
+                                  currencyCode: formState.currencyCode,
+                                  destinationAmount:
+                                      formState.destinationAmount,
+                                  clearDestinationAmount:
+                                      formState.destinationAmount == null,
                                   frequency: formState.frequency,
                                   startDate: formState.startDate,
                                   endDate: formState.endDate,
@@ -440,6 +445,9 @@ class _RecurringRuleFormScreenState
                                     formState.destinationAccountId,
                                 merchant: formState.merchant,
                                 note: formState.note,
+                                currencyCode: formState.currencyCode,
+                                destinationAmount:
+                                    formState.destinationAmount,
                                 frequency: formState.frequency,
                                 startDate: formState.startDate,
                                 endDate: formState.endDate,
