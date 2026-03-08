@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/exceptions/app_exception.dart';
 import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/providers/database_providers.dart';
+import '../../../transactions/presentation/providers/recurring_rules_provider.dart';
+import '../../../transactions/presentation/providers/transaction_templates_provider.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../data/models/category.dart';
 import '../../data/models/category_tree_node.dart';
@@ -70,6 +72,9 @@ class CategoriesNotifier extends AsyncNotifier<List<Category>> {
 
       // Soft delete in database
       await repo.deleteCategory(id);
+
+      // Clean up recurring rules and templates referencing this category
+      await _cleanupRulesAndTemplatesForCategories({id});
     } catch (e, st) {
       state = previousState;
       Error.throwWithStackTrace(
@@ -246,6 +251,9 @@ class CategoriesNotifier extends AsyncNotifier<List<Category>> {
         }
         await repo.deleteCategory(id);
       });
+
+      // Clean up recurring rules and templates referencing deleted categories
+      await _cleanupRulesAndTemplatesForCategories(allIdsToRemove);
     } catch (e, st) {
       state = previousState;
       Error.throwWithStackTrace(
@@ -290,6 +298,9 @@ class CategoriesNotifier extends AsyncNotifier<List<Category>> {
         await repo.deleteCategory(id);
       });
 
+      // Clean up recurring rules and templates referencing deleted category
+      await _cleanupRulesAndTemplatesForCategories({id});
+
       // Refresh state from database
       await refresh();
     } catch (e, st) {
@@ -298,6 +309,23 @@ class CategoriesNotifier extends AsyncNotifier<List<Category>> {
         e is AppException ? e : RepositoryException.delete(entityType: 'Category', entityId: id, cause: e),
         st,
       );
+    }
+  }
+
+  /// Clean up recurring rules and templates that reference deleted category IDs.
+  Future<void> _cleanupRulesAndTemplatesForCategories(Set<String> categoryIds) async {
+    final rules = ref.read(recurringRulesProvider).valueOrNull ?? [];
+    for (final rule in rules) {
+      if (categoryIds.contains(rule.categoryId)) {
+        await ref.read(recurringRulesProvider.notifier).deleteRule(rule.id);
+      }
+    }
+
+    final templates = ref.read(transactionTemplatesProvider).valueOrNull ?? [];
+    for (final template in templates) {
+      if (template.categoryId != null && categoryIds.contains(template.categoryId)) {
+        await ref.read(transactionTemplatesProvider.notifier).deleteTemplate(template.id);
+      }
     }
   }
 

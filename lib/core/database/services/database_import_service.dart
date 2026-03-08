@@ -409,11 +409,12 @@ class DatabaseImportService {
       importDb.dispose();
     }
 
-    // Reconcile account balances from transaction history
+    // Validate foreign key references and reconcile balances
+    final transactionsSkippedFromValidation = await _validateForeignKeys(errors);
     await _reconcileAccountBalances(errors);
 
     return ImportResult(
-      transactionsImported: transactionsImported,
+      transactionsImported: transactionsImported - transactionsSkippedFromValidation,
       accountsImported: accountsImported,
       categoriesImported: categoriesImported,
       settingsImported: settingsImported,
@@ -422,6 +423,7 @@ class DatabaseImportService {
       recurringRulesImported: recurringRulesImported,
       savingsGoalsImported: savingsGoalsImported,
       templatesImported: templatesImported,
+      transactionsSkipped: transactionsSkippedFromValidation,
       errors: errors,
     );
   }
@@ -464,11 +466,12 @@ class DatabaseImportService {
       }
     }
 
-    // Reconcile account balances from transaction history
+    // Validate foreign key references and reconcile balances
+    final transactionsSkippedFromValidation = await _validateForeignKeys(errors);
     await _reconcileAccountBalances(errors);
 
     return ImportResult(
-      transactionsImported: transactionsImported,
+      transactionsImported: transactionsImported - transactionsSkippedFromValidation,
       accountsImported: accountsImported,
       categoriesImported: categoriesImported,
       settingsImported: settingsImported,
@@ -477,6 +480,7 @@ class DatabaseImportService {
       recurringRulesImported: recurringRulesImported,
       savingsGoalsImported: savingsGoalsImported,
       templatesImported: templatesImported,
+      transactionsSkipped: transactionsSkippedFromValidation,
       errors: errors,
     );
   }
@@ -2534,6 +2538,65 @@ class DatabaseImportService {
     }
 
     return (imported: imported, skipped: skipped);
+  }
+
+  /// Validate that imported transactions reference existing accounts and categories.
+  /// Soft-deletes orphaned transactions and returns the count of skipped transactions.
+  Future<int> _validateForeignKeys(List<String> errors) async {
+    int skipped = 0;
+
+    try {
+      // Collect valid account IDs
+      final accountRows = await database.select(database.accounts).get();
+      final validAccountIds = <String>{};
+      for (final row in accountRows) {
+        if (!row.isDeleted) {
+          validAccountIds.add(row.id);
+        }
+      }
+
+      // Collect valid category IDs
+      final categoryRows = await database.select(database.categories).get();
+      final validCategoryIds = <String>{};
+      for (final row in categoryRows) {
+        if (!row.isDeleted) {
+          validCategoryIds.add(row.id);
+        }
+      }
+
+      // Check transactions for orphaned references
+      final transactionRows = await database.select(database.transactions).get();
+      for (final row in transactionRows) {
+        if (row.isDeleted) continue;
+        try {
+          final json = await encryptionService.decryptJson(row.encryptedBlob);
+          final data = TransactionData.fromJson(json);
+
+          final hasValidAccount = validAccountIds.contains(data.accountId);
+          final hasValidCategory = data.categoryId.isEmpty || validCategoryIds.contains(data.categoryId);
+
+          if (!hasValidAccount || !hasValidCategory) {
+            final reasons = <String>[];
+            if (!hasValidAccount) reasons.add('account "${data.accountId}" not found');
+            if (!hasValidCategory) reasons.add('category "${data.categoryId}" not found');
+
+            errors.add('Skipped transaction ${data.id}: ${reasons.join(', ')}');
+
+            // Soft-delete the orphaned transaction
+            await (database.update(database.transactions)
+                  ..where((t) => t.id.equals(row.id)))
+                .write(const TransactionsCompanion(isDeleted: Value(true)));
+            skipped++;
+          }
+        } catch (_) {
+          // Skip corrupted transactions
+        }
+      }
+    } catch (e) {
+      errors.add('Foreign key validation error: $e');
+    }
+
+    return skipped;
   }
 
   /// Recalculate and fix account balances from transaction history after import.

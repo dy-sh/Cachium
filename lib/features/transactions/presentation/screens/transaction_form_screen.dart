@@ -594,7 +594,10 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                                   ? ((savedFormState.currencyCode == mainCurrency)
                                       ? savedFormState.amount
                                       : roundCurrency(savedFormState.amount * savedFormState.conversionRate))
-                                  : savedFormState.originalMainCurrencyAmount;
+                                  : (savedFormState.originalMainCurrencyAmount ??
+                                      (savedFormState.currencyCode == mainCurrency
+                                          ? savedFormState.amount
+                                          : roundCurrency(savedFormState.amount * savedFormState.conversionRate)));
 
                               final effectiveMainCurrencyCode = currencyFieldsChanged
                                   ? mainCurrency
