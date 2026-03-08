@@ -494,6 +494,13 @@
 - `_lastCorruptedCount` tracking added to `AccountRepository`, `CategoryRepository`, `RecurringRuleRepository`, `SavingsGoalRepository`, `AssetRepository`, and `TransactionTemplateRepository`
 - `corruption_status_provider.dart` aggregates counts across all repositories; `NavigationShell` shows a warning notification on startup when corruption is detected; `DatabaseSettingsScreen` displays the corruption count in the maintenance section
 
+#### 32. Transaction data integrity fixes
+- `TransactionFormState` gains `originalMainCurrencyAmount` and `originalMainCurrencyCode` tracking fields populated by `initForEdit()`; the save handler now conditionally preserves historical snapshots, only recalculating `mainCurrencyAmount`/`mainCurrencyCode` when amount, `currencyCode`, or `conversionRate` actually changed
+- `isCrossCurrencyTransferProvider` added to `transaction_form_provider.dart`; the save handler blocks saving with an error notification when a transfer is cross-currency and `destinationAmount` is null; debug assertions in `transactions_provider.dart` catch the same condition at add/update time
+- All three import paths in `DatabaseImportService` (`_importTransactionsFromSqlite`, `_importTransactionsFromCsv`, `_importTransactionsFromCsvSkipDuplicates`) now preserve null `mainCurrencyAmount` instead of fabricating a value with `roundCurrency(amount * conversionRate)`
+- Individual `double.parse`/`int.parse` calls in both CSV import methods are wrapped in field-specific try-catch blocks, surfacing granular error messages for amount, conversionRate, destinationAmount, mainCurrencyAmount, dateMillis, createdAtMillis, date, and lastUpdatedAt
+- `DeletedTransactionsScreen` converted to `ConsumerStatefulWidget`; after deleted transactions load it checks `repo.lastCorruptedCount > 0` and shows a warning notification listing how many corrupted transactions could not be loaded
+
 #### 21. Historical main currency value storage
 - `mainCurrencyCode` and `mainCurrencyAmount` fields added to Transaction model and TransactionData DTO to snapshot the main-currency equivalent at the moment a transaction is saved
 - Transaction form computes and persists these fields on save; old records fall back to a calculated value via `conversionRate` for backward compatibility

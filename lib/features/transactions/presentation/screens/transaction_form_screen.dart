@@ -572,10 +572,33 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                                 }
                               }
 
-                              // Compute main currency snapshot
-                              final mainCurrencyAmount = (savedFormState.currencyCode == mainCurrency)
-                                  ? savedFormState.amount
-                                  : roundCurrency(savedFormState.amount * savedFormState.conversionRate);
+                              // Fix 2: Block cross-currency transfers without destinationAmount
+                              if (isTransfer && savedFormState.destinationAccountId != null) {
+                                final srcAcct = ref.read(accountByIdProvider(savedFormState.accountId!));
+                                final dstAcct = ref.read(accountByIdProvider(savedFormState.destinationAccountId!));
+                                if (srcAcct != null && dstAcct != null &&
+                                    srcAcct.currencyCode != dstAcct.currencyCode &&
+                                    savedFormState.destinationAmount == null) {
+                                  if (context.mounted) {
+                                    context.showErrorNotification('Destination amount is required for cross-currency transfers');
+                                  }
+                                  return;
+                                }
+                              }
+
+                              // Compute main currency snapshot — preserve historical values
+                              // when only non-currency fields changed during edit
+                              final bool currencyFieldsChanged = !isEditing || savedFormState.hasCurrencyFieldChanges;
+
+                              final mainCurrencyAmount = currencyFieldsChanged
+                                  ? ((savedFormState.currencyCode == mainCurrency)
+                                      ? savedFormState.amount
+                                      : roundCurrency(savedFormState.amount * savedFormState.conversionRate))
+                                  : savedFormState.originalMainCurrencyAmount;
+
+                              final effectiveMainCurrencyCode = currencyFieldsChanged
+                                  ? mainCurrency
+                                  : (savedFormState.originalMainCurrencyCode ?? mainCurrency);
 
                               if (isEditing) {
                                 // Update existing transaction
@@ -601,7 +624,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                                   clearAssetId: savedFormState.assetId == null,
                                   currencyCode: savedFormState.currencyCode,
                                   conversionRate: savedFormState.conversionRate,
-                                  mainCurrencyCode: mainCurrency,
+                                  mainCurrencyCode: effectiveMainCurrencyCode,
                                   mainCurrencyAmount: mainCurrencyAmount,
                                   date: savedFormState.date,
                                   note: savedFormState.note,
@@ -621,7 +644,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                                       currencyCode: savedFormState.currencyCode,
                                       conversionRate: savedFormState.conversionRate,
                                       destinationAmount: savedFormState.destinationAmount,
-                                      mainCurrencyCode: mainCurrency,
+                                      mainCurrencyCode: effectiveMainCurrencyCode,
                                       mainCurrencyAmount: mainCurrencyAmount,
                                       date: savedFormState.date,
                                       note: savedFormState.note,

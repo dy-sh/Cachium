@@ -36,6 +36,9 @@ class TransactionFormState {
   final String? originalMerchant;
   final String? originalCurrencyCode;
   final double? originalConversionRate;
+  // Historical main currency snapshots (only set when editing)
+  final double? originalMainCurrencyAmount;
+  final String? originalMainCurrencyCode;
   // Settings-driven validation
   final bool allowZeroAmount;
 
@@ -65,6 +68,8 @@ class TransactionFormState {
     this.originalMerchant,
     this.originalCurrencyCode,
     this.originalConversionRate,
+    this.originalMainCurrencyAmount,
+    this.originalMainCurrencyCode,
     this.allowZeroAmount = false,
   });
 
@@ -82,6 +87,14 @@ class TransactionFormState {
   }
 
   bool get isEditing => editingTransactionId != null;
+
+  /// Whether currency-relevant fields changed from the original (amount, currencyCode, conversionRate).
+  bool get hasCurrencyFieldChanges {
+    if (!isEditing) return true;
+    return amount != originalAmount ||
+        currencyCode != originalCurrencyCode ||
+        conversionRate != originalConversionRate;
+  }
 
   /// Check if any field has changed from original (for edit mode).
   bool get hasChanges {
@@ -142,6 +155,8 @@ class TransactionFormState {
     String? originalMerchant,
     String? originalCurrencyCode,
     double? originalConversionRate,
+    double? originalMainCurrencyAmount,
+    String? originalMainCurrencyCode,
     bool? allowZeroAmount,
   }) {
     return TransactionFormState(
@@ -174,10 +189,25 @@ class TransactionFormState {
       originalMerchant: originalMerchant ?? this.originalMerchant,
       originalCurrencyCode: originalCurrencyCode ?? this.originalCurrencyCode,
       originalConversionRate: originalConversionRate ?? this.originalConversionRate,
+      originalMainCurrencyAmount: originalMainCurrencyAmount ?? this.originalMainCurrencyAmount,
+      originalMainCurrencyCode: originalMainCurrencyCode ?? this.originalMainCurrencyCode,
       allowZeroAmount: allowZeroAmount ?? this.allowZeroAmount,
     );
   }
 }
+
+/// Whether a transfer is cross-currency (source and destination have different currencies).
+/// Requires account providers to resolve currencies.
+final isCrossCurrencyTransferProvider = Provider.autoDispose<bool>((ref) {
+  final form = ref.watch(transactionFormProvider);
+  if (!form.isTransfer || form.accountId == null || form.destinationAccountId == null) {
+    return false;
+  }
+  final src = ref.watch(accountByIdProvider(form.accountId!));
+  final dst = ref.watch(accountByIdProvider(form.destinationAccountId!));
+  if (src == null || dst == null) return false;
+  return src.currencyCode != dst.currencyCode;
+});
 
 class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> {
   @override
@@ -425,6 +455,8 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
       originalMerchant: transaction.merchant,
       originalCurrencyCode: transaction.currencyCode,
       originalConversionRate: transaction.conversionRate,
+      originalMainCurrencyAmount: transaction.mainCurrencyAmount,
+      originalMainCurrencyCode: transaction.mainCurrencyCode,
       allowZeroAmount: allowZeroAmount,
     );
   }

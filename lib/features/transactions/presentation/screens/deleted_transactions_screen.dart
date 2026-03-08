@@ -15,6 +15,7 @@ import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/transaction.dart';
+import '../../../../core/providers/database_providers.dart';
 import '../providers/transactions_provider.dart';
 
 final _deletedSearchQueryProvider = StateProvider.autoDispose<String>((ref) => '');
@@ -43,13 +44,40 @@ final _filteredDeletedTransactionsProvider =
   });
 });
 
-class DeletedTransactionsScreen extends ConsumerWidget {
+class DeletedTransactionsScreen extends ConsumerStatefulWidget {
   const DeletedTransactionsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DeletedTransactionsScreen> createState() => _DeletedTransactionsScreenState();
+}
+
+class _DeletedTransactionsScreenState extends ConsumerState<DeletedTransactionsScreen> {
+  bool _corruptionWarningShown = false;
+
+  @override
+  Widget build(BuildContext context) {
     final filteredAsync = ref.watch(_filteredDeletedTransactionsProvider);
     final totalCount = ref.watch(deletedTransactionsProvider).valueOrNull?.length ?? 0;
+
+    // Show corruption warning once after data loads
+    if (!_corruptionWarningShown) {
+      final deletedData = ref.watch(deletedTransactionsProvider);
+      deletedData.whenData((_) {
+        final repo = ref.read(transactionRepositoryProvider);
+        if (repo.lastCorruptedCount > 0) {
+          _corruptionWarningShown = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              context.showWarningNotification(
+                '${repo.lastCorruptedCount} corrupted transaction(s) could not be loaded',
+              );
+            }
+          });
+        } else {
+          _corruptionWarningShown = true;
+        }
+      });
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,

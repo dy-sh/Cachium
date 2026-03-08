@@ -67,6 +67,14 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
       // Update account balances
       if (type == TransactionType.transfer && destinationAccountId != null) {
         // Transfer: debit source, credit destination (use destinationAmount for cross-currency)
+        final srcAccount = ref.read(accountByIdProvider(accountId));
+        final dstAccount = ref.read(accountByIdProvider(destinationAccountId));
+        assert(
+          destinationAmount != null ||
+              srcAccount == null || dstAccount == null ||
+              srcAccount.currencyCode == dstAccount.currencyCode,
+          'Cross-currency transfer must have destinationAmount',
+        );
         await ref.read(accountsProvider.notifier).updateBalance(accountId, -amount);
         await ref.read(accountsProvider.notifier).updateBalance(destinationAccountId, destinationAmount ?? amount);
       } else {
@@ -118,6 +126,14 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
         await ref.read(accountsProvider.notifier).updateBalance(
               transaction.accountId, -transaction.amount);
         if (transaction.destinationAccountId != null) {
+          final srcAcct = ref.read(accountByIdProvider(transaction.accountId));
+          final dstAcct = ref.read(accountByIdProvider(transaction.destinationAccountId!));
+          assert(
+            transaction.destinationAmount != null ||
+                srcAcct == null || dstAcct == null ||
+                srcAcct.currencyCode == dstAcct.currencyCode,
+            'Cross-currency transfer must have destinationAmount',
+          );
           await ref.read(accountsProvider.notifier).updateBalance(
                 transaction.destinationAccountId!, transaction.destinationAmount ?? transaction.amount);
         }
