@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
@@ -18,6 +20,9 @@ class TransactionRepository {
   final EncryptionService encryptionService;
 
   static const _entityType = 'Transaction';
+
+  int _lastCorruptedCount = 0;
+  int get lastCorruptedCount => _lastCorruptedCount;
 
   TransactionRepository({
     required this.database,
@@ -228,6 +233,7 @@ class TransactionRepository {
       final rows = await database.getAllDeletedTransactions();
       final transactions = <ui.Transaction>[];
 
+      int corruptedCount = 0;
       for (final row in rows) {
         try {
           final data = await encryptionService.decrypt(
@@ -236,12 +242,14 @@ class TransactionRepository {
             expectedDateMillis: row.date,
           );
           transactions.add(_toTransaction(data));
-        } catch (_) {
-          // Skip corrupted rows
+        } catch (e) {
+          debugPrint('WARNING: Corrupted deleted transaction row id=${row.id}: $e');
+          corruptedCount++;
           continue;
         }
       }
 
+      _lastCorruptedCount = corruptedCount;
       return transactions;
     } catch (e) {
       if (e is RepositoryException) rethrow;
@@ -316,6 +324,7 @@ class TransactionRepository {
   Stream<List<ui.Transaction>> watchAllTransactions() {
     return database.watchAllTransactions().asyncMap((rows) async {
       final transactions = <ui.Transaction>[];
+      int corruptedCount = 0;
 
       for (final row in rows) {
         try {
@@ -325,12 +334,14 @@ class TransactionRepository {
             expectedDateMillis: row.date,
           );
           transactions.add(_toTransaction(data));
-        } catch (_) {
-          // Skip corrupted rows in stream to maintain stability
+        } catch (e) {
+          debugPrint('WARNING: Corrupted transaction row id=${row.id}: $e');
+          corruptedCount++;
           continue;
         }
       }
 
+      _lastCorruptedCount = corruptedCount;
       return transactions;
     });
   }

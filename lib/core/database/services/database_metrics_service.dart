@@ -13,6 +13,11 @@ class DatabaseMetricsService {
     final transactionCount = await _getTransactionCount();
     final categoryCount = await _getCategoryCount();
     final accountCount = await _getAccountCount();
+    final budgetCount = await _getBudgetCount();
+    final assetCount = await _getAssetCount();
+    final recurringRuleCount = await _getRecurringRuleCount();
+    final savingsGoalCount = await _getSavingsGoalCount();
+    final templateCount = await _getTemplateCount();
     final oldestRecord = await _getOldestRecordDate();
     final newestRecord = await _getNewestRecordDate();
 
@@ -20,6 +25,11 @@ class DatabaseMetricsService {
       transactionCount: transactionCount,
       categoryCount: categoryCount,
       accountCount: accountCount,
+      budgetCount: budgetCount,
+      assetCount: assetCount,
+      recurringRuleCount: recurringRuleCount,
+      savingsGoalCount: savingsGoalCount,
+      templateCount: templateCount,
       oldestRecord: oldestRecord,
       newestRecord: newestRecord,
     );
@@ -50,6 +60,51 @@ class DatabaseMetricsService {
 
     final result = await query.getSingle();
     return result.read(database.accounts.id.count()) ?? 0;
+  }
+
+  Future<int> _getBudgetCount() async {
+    final query = database.selectOnly(database.budgets)
+      ..addColumns([database.budgets.id.count()])
+      ..where(database.budgets.isDeleted.equals(false));
+
+    final result = await query.getSingle();
+    return result.read(database.budgets.id.count()) ?? 0;
+  }
+
+  Future<int> _getAssetCount() async {
+    final query = database.selectOnly(database.assets)
+      ..addColumns([database.assets.id.count()])
+      ..where(database.assets.isDeleted.equals(false));
+
+    final result = await query.getSingle();
+    return result.read(database.assets.id.count()) ?? 0;
+  }
+
+  Future<int> _getRecurringRuleCount() async {
+    final query = database.selectOnly(database.recurringRules)
+      ..addColumns([database.recurringRules.id.count()])
+      ..where(database.recurringRules.isDeleted.equals(false));
+
+    final result = await query.getSingle();
+    return result.read(database.recurringRules.id.count()) ?? 0;
+  }
+
+  Future<int> _getSavingsGoalCount() async {
+    final query = database.selectOnly(database.savingsGoals)
+      ..addColumns([database.savingsGoals.id.count()])
+      ..where(database.savingsGoals.isDeleted.equals(false));
+
+    final result = await query.getSingle();
+    return result.read(database.savingsGoals.id.count()) ?? 0;
+  }
+
+  Future<int> _getTemplateCount() async {
+    final query = database.selectOnly(database.transactionTemplates)
+      ..addColumns([database.transactionTemplates.id.count()])
+      ..where(database.transactionTemplates.isDeleted.equals(false));
+
+    final result = await query.getSingle();
+    return result.read(database.transactionTemplates.id.count()) ?? 0;
   }
 
   Future<DateTime?> _getOldestRecordDate() async {

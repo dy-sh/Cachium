@@ -553,6 +553,25 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                                 return;
                               }
 
+                              // Validate account still exists
+                              final account = ref.read(accountByIdProvider(savedFormState.accountId!));
+                              if (account == null) {
+                                if (context.mounted) {
+                                  context.showErrorNotification('Selected account no longer exists');
+                                }
+                                return;
+                              }
+                              // Validate category still exists (not for transfers)
+                              if (!isTransfer && savedFormState.categoryId != null) {
+                                final category = ref.read(categoryByIdProvider(savedFormState.categoryId!));
+                                if (category == null) {
+                                  if (context.mounted) {
+                                    context.showErrorNotification('Selected category no longer exists');
+                                  }
+                                  return;
+                                }
+                              }
+
                               // Compute main currency snapshot
                               final mainCurrencyAmount = (savedFormState.currencyCode == mainCurrency)
                                   ? savedFormState.amount

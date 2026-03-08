@@ -85,9 +85,15 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
 
     // Get original transaction to calculate balance difference
     final currentState = state.valueOrNull;
-    if (currentState == null) return;
+    if (currentState == null) {
+      throw StateError('Transactions not loaded');
+    }
 
-    final originalTransaction = currentState.firstWhere((t) => t.id == transaction.id);
+    final index = currentState.indexWhere((t) => t.id == transaction.id);
+    if (index == -1) {
+      throw StateError('Transaction ${transaction.id} not found');
+    }
+    final originalTransaction = currentState[index];
 
     // Wrap in database transaction to prevent locking issues
     await db.transaction(() async {
@@ -140,9 +146,15 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
 
     // Get transaction before deleting for balance reversal
     final currentState = state.valueOrNull;
-    if (currentState == null) return;
+    if (currentState == null) {
+      throw StateError('Transactions not loaded');
+    }
 
-    final transaction = currentState.firstWhere((t) => t.id == id);
+    final deleteIndex = currentState.indexWhere((t) => t.id == id);
+    if (deleteIndex == -1) {
+      throw StateError('Transaction $id not found');
+    }
+    final transaction = currentState[deleteIndex];
 
     // Wrap in database transaction to prevent locking issues
     await db.transaction(() async {
@@ -219,11 +231,17 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     final db = ref.read(databaseProvider);
 
     final currentState = state.valueOrNull;
-    if (currentState == null) return;
+    if (currentState == null) {
+      throw StateError('Transactions not loaded');
+    }
 
     await db.transaction(() async {
       for (final id in ids) {
-        final transaction = currentState.firstWhere((t) => t.id == id);
+        final batchIndex = currentState.indexWhere((t) => t.id == id);
+        if (batchIndex == -1) {
+          throw StateError('Transaction $id not found');
+        }
+        final transaction = currentState[batchIndex];
         await repo.deleteTransaction(id);
 
         // Reverse the balance change
@@ -303,7 +321,9 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     final repo = ref.read(transactionRepositoryProvider);
     final db = ref.read(databaseProvider);
     final currentState = state.valueOrNull;
-    if (currentState == null) return;
+    if (currentState == null) {
+      throw StateError('Transactions not loaded');
+    }
 
     final transactionsToMove = currentState.where((t) => t.accountId == fromAccountId).toList();
 
@@ -407,7 +427,9 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     final repo = ref.read(transactionRepositoryProvider);
     final db = ref.read(databaseProvider);
     final currentState = state.valueOrNull;
-    if (currentState == null) return;
+    if (currentState == null) {
+      throw StateError('Transactions not loaded');
+    }
 
     // Find transactions where this account is the source
     final sourceTransactions = currentState.where((t) => t.accountId == accountId).toList();
@@ -450,7 +472,9 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     final repo = ref.read(transactionRepositoryProvider);
     final db = ref.read(databaseProvider);
     final currentState = state.valueOrNull;
-    if (currentState == null) return;
+    if (currentState == null) {
+      throw StateError('Transactions not loaded');
+    }
 
     final transactionsToMove = currentState.where((t) => t.categoryId == fromCategoryId).toList();
 
@@ -481,7 +505,9 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     final repo = ref.read(transactionRepositoryProvider);
     final db = ref.read(databaseProvider);
     final currentState = state.valueOrNull;
-    if (currentState == null) return;
+    if (currentState == null) {
+      throw StateError('Transactions not loaded');
+    }
 
     final transactionsToDelete = currentState.where((t) => t.categoryId == categoryId).toList();
 

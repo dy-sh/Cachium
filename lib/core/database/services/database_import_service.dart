@@ -7,8 +7,13 @@ import 'package:drift/drift.dart';
 import 'package:sqlite3/sqlite3.dart' as sql;
 
 import '../../../data/encryption/account_data.dart';
+import '../../../data/encryption/asset_data.dart';
+import '../../../data/encryption/budget_data.dart';
 import '../../../data/encryption/category_data.dart';
+import '../../../data/encryption/recurring_rule_data.dart';
+import '../../../data/encryption/savings_goal_data.dart';
 import '../../../data/encryption/transaction_data.dart';
+import '../../../data/encryption/transaction_template_data.dart';
 import '../../../features/settings/data/models/csv_import_preview.dart';
 import '../../../features/settings/data/models/database_metrics.dart';
 import '../../utils/currency_conversion.dart';
@@ -34,6 +39,11 @@ class ImportResult {
   final int accountsImported;
   final int categoriesImported;
   final int settingsImported;
+  final int budgetsImported;
+  final int assetsImported;
+  final int recurringRulesImported;
+  final int savingsGoalsImported;
+  final int templatesImported;
   final int transactionsSkipped;
   final List<String> errors;
 
@@ -42,11 +52,16 @@ class ImportResult {
     required this.accountsImported,
     required this.categoriesImported,
     this.settingsImported = 0,
+    this.budgetsImported = 0,
+    this.assetsImported = 0,
+    this.recurringRulesImported = 0,
+    this.savingsGoalsImported = 0,
+    this.templatesImported = 0,
     this.transactionsSkipped = 0,
     this.errors = const [],
   });
 
-  int get totalImported => transactionsImported + accountsImported + categoriesImported + settingsImported;
+  int get totalImported => transactionsImported + accountsImported + categoriesImported + settingsImported + budgetsImported + assetsImported + recurringRulesImported + savingsGoalsImported + templatesImported;
   bool get hasErrors => errors.isNotEmpty;
 }
 
@@ -142,6 +157,11 @@ class DatabaseImportService {
     await database.deleteAllAccounts();
     await database.deleteAllCategories();
     await database.deleteAllSettings();
+    await database.deleteAllBudgets();
+    await database.deleteAllAssets();
+    await database.deleteAllRecurringRules();
+    await database.deleteAllSavingsGoals();
+    await database.deleteAllTransactionTemplates();
 
     // Then import from the file
     return importFromSqlite(path);
@@ -289,6 +309,11 @@ class DatabaseImportService {
     int accountsImported = 0;
     int categoriesImported = 0;
     int settingsImported = 0;
+    int budgetsImported = 0;
+    int assetsImported = 0;
+    int recurringRulesImported = 0;
+    int savingsGoalsImported = 0;
+    int templatesImported = 0;
 
     try {
       // Detect format by checking for encryptedBlob column
@@ -328,6 +353,56 @@ class DatabaseImportService {
           errors,
         );
       }
+
+      // Import budgets
+      if (_tableExists(importDb, 'budgets')) {
+        final isEncryptedBudgets = _hasEncryptedBlob(importDb, 'budgets');
+        budgetsImported = await _importBudgetsFromSqlite(
+          importDb,
+          isEncryptedBudgets,
+          errors,
+        );
+      }
+
+      // Import assets
+      if (_tableExists(importDb, 'assets')) {
+        final isEncryptedAssets = _hasEncryptedBlob(importDb, 'assets');
+        assetsImported = await _importAssetsFromSqlite(
+          importDb,
+          isEncryptedAssets,
+          errors,
+        );
+      }
+
+      // Import recurring rules
+      if (_tableExists(importDb, 'recurring_rules')) {
+        final isEncryptedRules = _hasEncryptedBlob(importDb, 'recurring_rules');
+        recurringRulesImported = await _importRecurringRulesFromSqlite(
+          importDb,
+          isEncryptedRules,
+          errors,
+        );
+      }
+
+      // Import savings goals
+      if (_tableExists(importDb, 'savings_goals')) {
+        final isEncryptedGoals = _hasEncryptedBlob(importDb, 'savings_goals');
+        savingsGoalsImported = await _importSavingsGoalsFromSqlite(
+          importDb,
+          isEncryptedGoals,
+          errors,
+        );
+      }
+
+      // Import transaction templates
+      if (_tableExists(importDb, 'transaction_templates')) {
+        final isEncryptedTemplates = _hasEncryptedBlob(importDb, 'transaction_templates');
+        templatesImported = await _importTransactionTemplatesFromSqlite(
+          importDb,
+          isEncryptedTemplates,
+          errors,
+        );
+      }
     } finally {
       importDb.dispose();
     }
@@ -337,6 +412,11 @@ class DatabaseImportService {
       accountsImported: accountsImported,
       categoriesImported: categoriesImported,
       settingsImported: settingsImported,
+      budgetsImported: budgetsImported,
+      assetsImported: assetsImported,
+      recurringRulesImported: recurringRulesImported,
+      savingsGoalsImported: savingsGoalsImported,
+      templatesImported: templatesImported,
       errors: errors,
     );
   }
@@ -349,11 +429,18 @@ class DatabaseImportService {
     int accountsImported = 0;
     int categoriesImported = 0;
     int settingsImported = 0;
+    int budgetsImported = 0;
+    int assetsImported = 0;
+    int recurringRulesImported = 0;
+    int savingsGoalsImported = 0;
+    int templatesImported = 0;
 
     for (final path in paths) {
       final fileName = path.split('/').last.toLowerCase();
 
-      if (fileName.contains('transaction')) {
+      if (fileName.contains('transaction_template')) {
+        templatesImported += await _importTransactionTemplatesFromCsv(path, errors);
+      } else if (fileName.contains('transaction')) {
         transactionsImported += await _importTransactionsFromCsv(path, errors);
       } else if (fileName.contains('account')) {
         accountsImported += await _importAccountsFromCsv(path, errors);
@@ -361,6 +448,14 @@ class DatabaseImportService {
         categoriesImported += await _importCategoriesFromCsv(path, errors);
       } else if (fileName.contains('settings')) {
         settingsImported += await _importSettingsFromCsv(path, errors);
+      } else if (fileName.contains('budget')) {
+        budgetsImported += await _importBudgetsFromCsv(path, errors);
+      } else if (fileName.contains('asset')) {
+        assetsImported += await _importAssetsFromCsv(path, errors);
+      } else if (fileName.contains('recurring')) {
+        recurringRulesImported += await _importRecurringRulesFromCsv(path, errors);
+      } else if (fileName.contains('savings') || fileName.contains('goal')) {
+        savingsGoalsImported += await _importSavingsGoalsFromCsv(path, errors);
       }
     }
 
@@ -369,6 +464,11 @@ class DatabaseImportService {
       accountsImported: accountsImported,
       categoriesImported: categoriesImported,
       settingsImported: settingsImported,
+      budgetsImported: budgetsImported,
+      assetsImported: assetsImported,
+      recurringRulesImported: recurringRulesImported,
+      savingsGoalsImported: savingsGoalsImported,
+      templatesImported: templatesImported,
       errors: errors,
     );
   }
@@ -900,6 +1000,628 @@ class DatabaseImportService {
     return count;
   }
 
+  // SQLite import methods for 5 additional tables
+
+  Future<int> _importBudgetsFromSqlite(
+    sql.Database importDb,
+    bool isEncrypted,
+    List<String> errors,
+  ) async {
+    int count = 0;
+    final rows = importDb.select('SELECT * FROM budgets');
+
+    for (final row in rows) {
+      try {
+        final id = row['id'] as String;
+        final createdAt = (row['created_at'] ?? row['createdAt']) as int;
+        final lastUpdatedAt = (row['last_updated_at'] ?? row['lastUpdatedAt']) as int;
+        final isDeleted = ((row['is_deleted'] ?? row['isDeleted']) as int) == 1;
+
+        Uint8List encryptedBlob;
+
+        if (isEncrypted) {
+          encryptedBlob = (row['encrypted_blob'] ?? row['encryptedBlob']) as Uint8List;
+        } else {
+          final data = BudgetData(
+            id: id,
+            categoryId: (row['category_id'] ?? row['categoryId']) as String,
+            amount: (row['amount'] as num).toDouble(),
+            year: (row['year']) as int,
+            month: (row['month']) as int,
+            createdAtMillis: (row['created_at_millis'] ?? row['createdAtMillis'] ?? createdAt) as int,
+          );
+          encryptedBlob = await encryptionService.encryptJson(data.toJson());
+        }
+
+        await database.into(database.budgets).insertOnConflictUpdate(
+          BudgetsCompanion(
+            id: Value(id),
+            createdAt: Value(createdAt),
+            lastUpdatedAt: Value(lastUpdatedAt),
+            isDeleted: Value(isDeleted),
+            encryptedBlob: Value(encryptedBlob),
+          ),
+        );
+        count++;
+      } catch (e) {
+        errors.add('Failed to import budget: $e');
+      }
+    }
+
+    return count;
+  }
+
+  Future<int> _importAssetsFromSqlite(
+    sql.Database importDb,
+    bool isEncrypted,
+    List<String> errors,
+  ) async {
+    int count = 0;
+    final rows = importDb.select('SELECT * FROM assets');
+
+    for (final row in rows) {
+      try {
+        final id = row['id'] as String;
+        final createdAt = (row['created_at'] ?? row['createdAt']) as int;
+        final sortOrder = (row['sort_order'] ?? row['sortOrder'] ?? 0) as int;
+        final lastUpdatedAt = (row['last_updated_at'] ?? row['lastUpdatedAt']) as int;
+        final isDeleted = ((row['is_deleted'] ?? row['isDeleted']) as int) == 1;
+
+        Uint8List encryptedBlob;
+
+        if (isEncrypted) {
+          encryptedBlob = (row['encrypted_blob'] ?? row['encryptedBlob']) as Uint8List;
+        } else {
+          final data = AssetData(
+            id: id,
+            name: row['name'] as String,
+            iconCodePoint: (row['icon_code_point'] ?? row['iconCodePoint']) as int,
+            iconFontFamily: (row['icon_font_family'] ?? row['iconFontFamily']) as String?,
+            iconFontPackage: (row['icon_font_package'] ?? row['iconFontPackage']) as String?,
+            colorIndex: (row['color_index'] ?? row['colorIndex']) as int,
+            status: row['status'] as String,
+            note: row['note'] as String?,
+            sortOrder: sortOrder,
+            createdAtMillis: (row['created_at_millis'] ?? row['createdAtMillis'] ?? createdAt) as int,
+          );
+          encryptedBlob = await encryptionService.encryptJson(data.toJson());
+        }
+
+        await database.into(database.assets).insertOnConflictUpdate(
+          AssetsCompanion(
+            id: Value(id),
+            createdAt: Value(createdAt),
+            sortOrder: Value(sortOrder),
+            lastUpdatedAt: Value(lastUpdatedAt),
+            isDeleted: Value(isDeleted),
+            encryptedBlob: Value(encryptedBlob),
+          ),
+        );
+        count++;
+      } catch (e) {
+        errors.add('Failed to import asset: $e');
+      }
+    }
+
+    return count;
+  }
+
+  Future<int> _importRecurringRulesFromSqlite(
+    sql.Database importDb,
+    bool isEncrypted,
+    List<String> errors,
+  ) async {
+    int count = 0;
+    final rows = importDb.select('SELECT * FROM recurring_rules');
+
+    for (final row in rows) {
+      try {
+        final id = row['id'] as String;
+        final createdAt = (row['created_at'] ?? row['createdAt']) as int;
+        final lastUpdatedAt = (row['last_updated_at'] ?? row['lastUpdatedAt']) as int;
+        final isDeleted = ((row['is_deleted'] ?? row['isDeleted']) as int) == 1;
+
+        Uint8List encryptedBlob;
+
+        if (isEncrypted) {
+          encryptedBlob = (row['encrypted_blob'] ?? row['encryptedBlob']) as Uint8List;
+        } else {
+          final isActiveRaw = row['is_active'] ?? row['isActive'];
+          final data = RecurringRuleData(
+            id: id,
+            name: row['name'] as String,
+            amount: (row['amount'] as num).toDouble(),
+            type: row['type'] as String,
+            categoryId: (row['category_id'] ?? row['categoryId']) as String,
+            accountId: (row['account_id'] ?? row['accountId']) as String,
+            destinationAccountId: (row['destination_account_id'] ?? row['destinationAccountId']) as String?,
+            merchant: row['merchant'] as String?,
+            note: row['note'] as String?,
+            frequency: row['frequency'] as String,
+            startDateMillis: (row['start_date_millis'] ?? row['startDateMillis']) as int,
+            endDateMillis: (row['end_date_millis'] ?? row['endDateMillis']) as int?,
+            lastGeneratedDateMillis: (row['last_generated_date_millis'] ?? row['lastGeneratedDateMillis']) as int,
+            isActive: isActiveRaw == null || (isActiveRaw as int) == 1,
+            createdAtMillis: (row['created_at_millis'] ?? row['createdAtMillis'] ?? createdAt) as int,
+          );
+          encryptedBlob = await encryptionService.encryptJson(data.toJson());
+        }
+
+        await database.into(database.recurringRules).insertOnConflictUpdate(
+          RecurringRulesCompanion(
+            id: Value(id),
+            createdAt: Value(createdAt),
+            lastUpdatedAt: Value(lastUpdatedAt),
+            isDeleted: Value(isDeleted),
+            encryptedBlob: Value(encryptedBlob),
+          ),
+        );
+        count++;
+      } catch (e) {
+        errors.add('Failed to import recurring rule: $e');
+      }
+    }
+
+    return count;
+  }
+
+  Future<int> _importSavingsGoalsFromSqlite(
+    sql.Database importDb,
+    bool isEncrypted,
+    List<String> errors,
+  ) async {
+    int count = 0;
+    final rows = importDb.select('SELECT * FROM savings_goals');
+
+    for (final row in rows) {
+      try {
+        final id = row['id'] as String;
+        final createdAt = (row['created_at'] ?? row['createdAt']) as int;
+        final lastUpdatedAt = (row['last_updated_at'] ?? row['lastUpdatedAt']) as int;
+        final isDeleted = ((row['is_deleted'] ?? row['isDeleted']) as int) == 1;
+
+        Uint8List encryptedBlob;
+
+        if (isEncrypted) {
+          encryptedBlob = (row['encrypted_blob'] ?? row['encryptedBlob']) as Uint8List;
+        } else {
+          final data = SavingsGoalData(
+            id: id,
+            name: row['name'] as String,
+            targetAmount: (row['target_amount'] ?? row['targetAmount'] as num).toDouble(),
+            currentAmount: ((row['current_amount'] ?? row['currentAmount'] ?? 0) as num).toDouble(),
+            colorIndex: (row['color_index'] ?? row['colorIndex']) as int,
+            iconCodePoint: (row['icon_code_point'] ?? row['iconCodePoint']) as int,
+            iconFontFamily: (row['icon_font_family'] ?? row['iconFontFamily']) as String?,
+            iconFontPackage: (row['icon_font_package'] ?? row['iconFontPackage']) as String?,
+            linkedAccountId: (row['linked_account_id'] ?? row['linkedAccountId']) as String?,
+            targetDateMillis: (row['target_date_millis'] ?? row['targetDateMillis']) as int?,
+            note: row['note'] as String?,
+            createdAtMillis: (row['created_at_millis'] ?? row['createdAtMillis'] ?? createdAt) as int,
+          );
+          encryptedBlob = await encryptionService.encryptJson(data.toJson());
+        }
+
+        await database.into(database.savingsGoals).insertOnConflictUpdate(
+          SavingsGoalsCompanion(
+            id: Value(id),
+            createdAt: Value(createdAt),
+            lastUpdatedAt: Value(lastUpdatedAt),
+            isDeleted: Value(isDeleted),
+            encryptedBlob: Value(encryptedBlob),
+          ),
+        );
+        count++;
+      } catch (e) {
+        errors.add('Failed to import savings goal: $e');
+      }
+    }
+
+    return count;
+  }
+
+  Future<int> _importTransactionTemplatesFromSqlite(
+    sql.Database importDb,
+    bool isEncrypted,
+    List<String> errors,
+  ) async {
+    int count = 0;
+    final rows = importDb.select('SELECT * FROM transaction_templates');
+
+    for (final row in rows) {
+      try {
+        final id = row['id'] as String;
+        final createdAt = (row['created_at'] ?? row['createdAt']) as int;
+        final lastUpdatedAt = (row['last_updated_at'] ?? row['lastUpdatedAt']) as int;
+        final isDeleted = ((row['is_deleted'] ?? row['isDeleted']) as int) == 1;
+
+        Uint8List encryptedBlob;
+
+        if (isEncrypted) {
+          encryptedBlob = (row['encrypted_blob'] ?? row['encryptedBlob']) as Uint8List;
+        } else {
+          final amountRaw = row['amount'];
+          final data = TransactionTemplateData(
+            id: id,
+            name: row['name'] as String,
+            amount: amountRaw != null ? (amountRaw as num).toDouble() : null,
+            type: row['type'] as String,
+            categoryId: (row['category_id'] ?? row['categoryId']) as String?,
+            accountId: (row['account_id'] ?? row['accountId']) as String?,
+            destinationAccountId: (row['destination_account_id'] ?? row['destinationAccountId']) as String?,
+            assetId: (row['asset_id'] ?? row['assetId']) as String?,
+            merchant: row['merchant'] as String?,
+            note: row['note'] as String?,
+            createdAtMillis: (row['created_at_millis'] ?? row['createdAtMillis'] ?? createdAt) as int,
+          );
+          encryptedBlob = await encryptionService.encryptJson(data.toJson());
+        }
+
+        await database.into(database.transactionTemplates).insertOnConflictUpdate(
+          TransactionTemplatesCompanion(
+            id: Value(id),
+            createdAt: Value(createdAt),
+            lastUpdatedAt: Value(lastUpdatedAt),
+            isDeleted: Value(isDeleted),
+            encryptedBlob: Value(encryptedBlob),
+          ),
+        );
+        count++;
+      } catch (e) {
+        errors.add('Failed to import transaction template: $e');
+      }
+    }
+
+    return count;
+  }
+
+  // CSV import methods for 5 additional tables
+
+  Future<int> _importBudgetsFromCsv(String path, List<String> errors) async {
+    int count = 0;
+    final content = await File(path).readAsString();
+    final rows = const CsvToListConverter().convert(content);
+
+    if (rows.isEmpty) return 0;
+
+    final headers = rows.first.map((e) => e.toString()).toList();
+    final hasEncryptedBlob = headers.contains('encrypted_blob') || headers.contains('encryptedBlob');
+
+    for (int i = 1; i < rows.length; i++) {
+      try {
+        final row = rows[i];
+        final Map<String, dynamic> data = {};
+        for (int j = 0; j < headers.length; j++) {
+          data[headers[j]] = row[j];
+        }
+
+        final id = data['id'].toString();
+        final createdAt = int.parse((data['created_at'] ?? data['createdAt']).toString());
+        final lastUpdatedAt = int.parse((data['last_updated_at'] ?? data['lastUpdatedAt']).toString());
+        final isDeletedRaw = data['is_deleted'] ?? data['isDeleted'];
+        final isDeleted = isDeletedRaw != null && isDeletedRaw.toString() == '1';
+
+        Uint8List encryptedBlob;
+
+        if (hasEncryptedBlob) {
+          encryptedBlob = base64Decode((data['encrypted_blob'] ?? data['encryptedBlob']).toString());
+        } else {
+          final createdAtMillisRaw = data['created_at_millis'] ?? data['createdAtMillis'];
+          final budgetData = BudgetData(
+            id: id,
+            categoryId: (data['category_id'] ?? data['categoryId']).toString(),
+            amount: double.parse(data['amount'].toString()),
+            year: int.parse(data['year'].toString()),
+            month: int.parse(data['month'].toString()),
+            createdAtMillis: createdAtMillisRaw != null ? int.parse(createdAtMillisRaw.toString()) : createdAt,
+          );
+          encryptedBlob = await encryptionService.encryptJson(budgetData.toJson());
+        }
+
+        await database.into(database.budgets).insertOnConflictUpdate(
+          BudgetsCompanion(
+            id: Value(id),
+            createdAt: Value(createdAt),
+            lastUpdatedAt: Value(lastUpdatedAt),
+            isDeleted: Value(isDeleted),
+            encryptedBlob: Value(encryptedBlob),
+          ),
+        );
+        count++;
+      } catch (e) {
+        errors.add('Failed to import budget row $i: $e');
+      }
+    }
+
+    return count;
+  }
+
+  Future<int> _importAssetsFromCsv(String path, List<String> errors) async {
+    int count = 0;
+    final content = await File(path).readAsString();
+    final rows = const CsvToListConverter().convert(content);
+
+    if (rows.isEmpty) return 0;
+
+    final headers = rows.first.map((e) => e.toString()).toList();
+    final hasEncryptedBlob = headers.contains('encrypted_blob') || headers.contains('encryptedBlob');
+
+    for (int i = 1; i < rows.length; i++) {
+      try {
+        final row = rows[i];
+        final Map<String, dynamic> data = {};
+        for (int j = 0; j < headers.length; j++) {
+          data[headers[j]] = row[j];
+        }
+
+        final id = data['id'].toString();
+        final createdAt = int.parse((data['created_at'] ?? data['createdAt']).toString());
+        final sortOrder = int.parse((data['sort_order'] ?? data['sortOrder'] ?? '0').toString());
+        final lastUpdatedAt = int.parse((data['last_updated_at'] ?? data['lastUpdatedAt']).toString());
+        final isDeletedRaw = data['is_deleted'] ?? data['isDeleted'];
+        final isDeleted = isDeletedRaw != null && isDeletedRaw.toString() == '1';
+
+        Uint8List encryptedBlob;
+
+        if (hasEncryptedBlob) {
+          encryptedBlob = base64Decode((data['encrypted_blob'] ?? data['encryptedBlob']).toString());
+        } else {
+          final iconFontFamily = (data['icon_font_family'] ?? data['iconFontFamily'])?.toString() ?? '';
+          final iconFontPackage = (data['icon_font_package'] ?? data['iconFontPackage'])?.toString() ?? '';
+          final noteRaw = data['note']?.toString() ?? '';
+          final createdAtMillisRaw = data['created_at_millis'] ?? data['createdAtMillis'];
+
+          final assetData = AssetData(
+            id: id,
+            name: data['name'].toString(),
+            iconCodePoint: int.parse((data['icon_code_point'] ?? data['iconCodePoint']).toString()),
+            iconFontFamily: iconFontFamily.isEmpty ? null : iconFontFamily,
+            iconFontPackage: iconFontPackage.isEmpty ? null : iconFontPackage,
+            colorIndex: int.parse((data['color_index'] ?? data['colorIndex']).toString()),
+            status: data['status'].toString(),
+            note: (noteRaw.isEmpty || noteRaw == 'null') ? null : noteRaw,
+            sortOrder: sortOrder,
+            createdAtMillis: createdAtMillisRaw != null ? int.parse(createdAtMillisRaw.toString()) : createdAt,
+          );
+          encryptedBlob = await encryptionService.encryptJson(assetData.toJson());
+        }
+
+        await database.into(database.assets).insertOnConflictUpdate(
+          AssetsCompanion(
+            id: Value(id),
+            createdAt: Value(createdAt),
+            sortOrder: Value(sortOrder),
+            lastUpdatedAt: Value(lastUpdatedAt),
+            isDeleted: Value(isDeleted),
+            encryptedBlob: Value(encryptedBlob),
+          ),
+        );
+        count++;
+      } catch (e) {
+        errors.add('Failed to import asset row $i: $e');
+      }
+    }
+
+    return count;
+  }
+
+  Future<int> _importRecurringRulesFromCsv(String path, List<String> errors) async {
+    int count = 0;
+    final content = await File(path).readAsString();
+    final rows = const CsvToListConverter().convert(content);
+
+    if (rows.isEmpty) return 0;
+
+    final headers = rows.first.map((e) => e.toString()).toList();
+    final hasEncryptedBlob = headers.contains('encrypted_blob') || headers.contains('encryptedBlob');
+
+    for (int i = 1; i < rows.length; i++) {
+      try {
+        final row = rows[i];
+        final Map<String, dynamic> data = {};
+        for (int j = 0; j < headers.length; j++) {
+          data[headers[j]] = row[j];
+        }
+
+        final id = data['id'].toString();
+        final createdAt = int.parse((data['created_at'] ?? data['createdAt']).toString());
+        final lastUpdatedAt = int.parse((data['last_updated_at'] ?? data['lastUpdatedAt']).toString());
+        final isDeletedRaw = data['is_deleted'] ?? data['isDeleted'];
+        final isDeleted = isDeletedRaw != null && isDeletedRaw.toString() == '1';
+
+        Uint8List encryptedBlob;
+
+        if (hasEncryptedBlob) {
+          encryptedBlob = base64Decode((data['encrypted_blob'] ?? data['encryptedBlob']).toString());
+        } else {
+          final destAccountIdRaw = (data['destination_account_id'] ?? data['destinationAccountId'])?.toString() ?? '';
+          final merchantRaw = data['merchant']?.toString() ?? '';
+          final noteRaw = data['note']?.toString() ?? '';
+          final endDateMillisRaw = (data['end_date_millis'] ?? data['endDateMillis'])?.toString() ?? '';
+          final isActiveRaw = (data['is_active'] ?? data['isActive'])?.toString() ?? '1';
+          final createdAtMillisRaw = data['created_at_millis'] ?? data['createdAtMillis'];
+
+          final ruleData = RecurringRuleData(
+            id: id,
+            name: data['name'].toString(),
+            amount: double.parse(data['amount'].toString()),
+            type: data['type'].toString(),
+            categoryId: (data['category_id'] ?? data['categoryId']).toString(),
+            accountId: (data['account_id'] ?? data['accountId']).toString(),
+            destinationAccountId: (destAccountIdRaw.isEmpty || destAccountIdRaw == 'null') ? null : destAccountIdRaw,
+            merchant: (merchantRaw.isEmpty || merchantRaw == 'null') ? null : merchantRaw,
+            note: (noteRaw.isEmpty || noteRaw == 'null') ? null : noteRaw,
+            frequency: data['frequency'].toString(),
+            startDateMillis: int.parse((data['start_date_millis'] ?? data['startDateMillis']).toString()),
+            endDateMillis: (endDateMillisRaw.isEmpty || endDateMillisRaw == 'null') ? null : int.parse(endDateMillisRaw),
+            lastGeneratedDateMillis: int.parse((data['last_generated_date_millis'] ?? data['lastGeneratedDateMillis']).toString()),
+            isActive: isActiveRaw != '0',
+            createdAtMillis: createdAtMillisRaw != null ? int.parse(createdAtMillisRaw.toString()) : createdAt,
+          );
+          encryptedBlob = await encryptionService.encryptJson(ruleData.toJson());
+        }
+
+        await database.into(database.recurringRules).insertOnConflictUpdate(
+          RecurringRulesCompanion(
+            id: Value(id),
+            createdAt: Value(createdAt),
+            lastUpdatedAt: Value(lastUpdatedAt),
+            isDeleted: Value(isDeleted),
+            encryptedBlob: Value(encryptedBlob),
+          ),
+        );
+        count++;
+      } catch (e) {
+        errors.add('Failed to import recurring rule row $i: $e');
+      }
+    }
+
+    return count;
+  }
+
+  Future<int> _importSavingsGoalsFromCsv(String path, List<String> errors) async {
+    int count = 0;
+    final content = await File(path).readAsString();
+    final rows = const CsvToListConverter().convert(content);
+
+    if (rows.isEmpty) return 0;
+
+    final headers = rows.first.map((e) => e.toString()).toList();
+    final hasEncryptedBlob = headers.contains('encrypted_blob') || headers.contains('encryptedBlob');
+
+    for (int i = 1; i < rows.length; i++) {
+      try {
+        final row = rows[i];
+        final Map<String, dynamic> data = {};
+        for (int j = 0; j < headers.length; j++) {
+          data[headers[j]] = row[j];
+        }
+
+        final id = data['id'].toString();
+        final createdAt = int.parse((data['created_at'] ?? data['createdAt']).toString());
+        final lastUpdatedAt = int.parse((data['last_updated_at'] ?? data['lastUpdatedAt']).toString());
+        final isDeletedRaw = data['is_deleted'] ?? data['isDeleted'];
+        final isDeleted = isDeletedRaw != null && isDeletedRaw.toString() == '1';
+
+        Uint8List encryptedBlob;
+
+        if (hasEncryptedBlob) {
+          encryptedBlob = base64Decode((data['encrypted_blob'] ?? data['encryptedBlob']).toString());
+        } else {
+          final iconFontFamily = (data['icon_font_family'] ?? data['iconFontFamily'])?.toString() ?? '';
+          final iconFontPackage = (data['icon_font_package'] ?? data['iconFontPackage'])?.toString() ?? '';
+          final linkedAccountIdRaw = (data['linked_account_id'] ?? data['linkedAccountId'])?.toString() ?? '';
+          final targetDateMillisRaw = (data['target_date_millis'] ?? data['targetDateMillis'])?.toString() ?? '';
+          final noteRaw = data['note']?.toString() ?? '';
+          final createdAtMillisRaw = data['created_at_millis'] ?? data['createdAtMillis'];
+
+          final goalData = SavingsGoalData(
+            id: id,
+            name: data['name'].toString(),
+            targetAmount: double.parse((data['target_amount'] ?? data['targetAmount']).toString()),
+            currentAmount: double.parse((data['current_amount'] ?? data['currentAmount'] ?? '0').toString()),
+            colorIndex: int.parse((data['color_index'] ?? data['colorIndex']).toString()),
+            iconCodePoint: int.parse((data['icon_code_point'] ?? data['iconCodePoint']).toString()),
+            iconFontFamily: iconFontFamily.isEmpty ? null : iconFontFamily,
+            iconFontPackage: iconFontPackage.isEmpty ? null : iconFontPackage,
+            linkedAccountId: (linkedAccountIdRaw.isEmpty || linkedAccountIdRaw == 'null') ? null : linkedAccountIdRaw,
+            targetDateMillis: (targetDateMillisRaw.isEmpty || targetDateMillisRaw == 'null') ? null : int.parse(targetDateMillisRaw),
+            note: (noteRaw.isEmpty || noteRaw == 'null') ? null : noteRaw,
+            createdAtMillis: createdAtMillisRaw != null ? int.parse(createdAtMillisRaw.toString()) : createdAt,
+          );
+          encryptedBlob = await encryptionService.encryptJson(goalData.toJson());
+        }
+
+        await database.into(database.savingsGoals).insertOnConflictUpdate(
+          SavingsGoalsCompanion(
+            id: Value(id),
+            createdAt: Value(createdAt),
+            lastUpdatedAt: Value(lastUpdatedAt),
+            isDeleted: Value(isDeleted),
+            encryptedBlob: Value(encryptedBlob),
+          ),
+        );
+        count++;
+      } catch (e) {
+        errors.add('Failed to import savings goal row $i: $e');
+      }
+    }
+
+    return count;
+  }
+
+  Future<int> _importTransactionTemplatesFromCsv(String path, List<String> errors) async {
+    int count = 0;
+    final content = await File(path).readAsString();
+    final rows = const CsvToListConverter().convert(content);
+
+    if (rows.isEmpty) return 0;
+
+    final headers = rows.first.map((e) => e.toString()).toList();
+    final hasEncryptedBlob = headers.contains('encrypted_blob') || headers.contains('encryptedBlob');
+
+    for (int i = 1; i < rows.length; i++) {
+      try {
+        final row = rows[i];
+        final Map<String, dynamic> data = {};
+        for (int j = 0; j < headers.length; j++) {
+          data[headers[j]] = row[j];
+        }
+
+        final id = data['id'].toString();
+        final createdAt = int.parse((data['created_at'] ?? data['createdAt']).toString());
+        final lastUpdatedAt = int.parse((data['last_updated_at'] ?? data['lastUpdatedAt']).toString());
+        final isDeletedRaw = data['is_deleted'] ?? data['isDeleted'];
+        final isDeleted = isDeletedRaw != null && isDeletedRaw.toString() == '1';
+
+        Uint8List encryptedBlob;
+
+        if (hasEncryptedBlob) {
+          encryptedBlob = base64Decode((data['encrypted_blob'] ?? data['encryptedBlob']).toString());
+        } else {
+          final amountRaw = data['amount']?.toString() ?? '';
+          final categoryIdRaw = (data['category_id'] ?? data['categoryId'])?.toString() ?? '';
+          final accountIdRaw = (data['account_id'] ?? data['accountId'])?.toString() ?? '';
+          final destAccountIdRaw = (data['destination_account_id'] ?? data['destinationAccountId'])?.toString() ?? '';
+          final assetIdRaw = (data['asset_id'] ?? data['assetId'])?.toString() ?? '';
+          final merchantRaw = data['merchant']?.toString() ?? '';
+          final noteRaw = data['note']?.toString() ?? '';
+          final createdAtMillisRaw = data['created_at_millis'] ?? data['createdAtMillis'];
+
+          final templateData = TransactionTemplateData(
+            id: id,
+            name: data['name'].toString(),
+            amount: (amountRaw.isEmpty || amountRaw == 'null') ? null : double.parse(amountRaw),
+            type: data['type'].toString(),
+            categoryId: (categoryIdRaw.isEmpty || categoryIdRaw == 'null') ? null : categoryIdRaw,
+            accountId: (accountIdRaw.isEmpty || accountIdRaw == 'null') ? null : accountIdRaw,
+            destinationAccountId: (destAccountIdRaw.isEmpty || destAccountIdRaw == 'null') ? null : destAccountIdRaw,
+            assetId: (assetIdRaw.isEmpty || assetIdRaw == 'null') ? null : assetIdRaw,
+            merchant: (merchantRaw.isEmpty || merchantRaw == 'null') ? null : merchantRaw,
+            note: (noteRaw.isEmpty || noteRaw == 'null') ? null : noteRaw,
+            createdAtMillis: createdAtMillisRaw != null ? int.parse(createdAtMillisRaw.toString()) : createdAt,
+          );
+          encryptedBlob = await encryptionService.encryptJson(templateData.toJson());
+        }
+
+        await database.into(database.transactionTemplates).insertOnConflictUpdate(
+          TransactionTemplatesCompanion(
+            id: Value(id),
+            createdAt: Value(createdAt),
+            lastUpdatedAt: Value(lastUpdatedAt),
+            isDeleted: Value(isDeleted),
+            encryptedBlob: Value(encryptedBlob),
+          ),
+        );
+        count++;
+      } catch (e) {
+        errors.add('Failed to import template row $i: $e');
+      }
+    }
+
+    return count;
+  }
+
   // CSV Preview and Skip Duplicates methods
 
   /// Pick CSV files and return their paths.
@@ -977,7 +1699,9 @@ class DatabaseImportService {
       // Determine file type and validate required columns
       final fileName = path.split('/').last.toLowerCase();
 
-      if (fileName.contains('transaction')) {
+      if (fileName.contains('transaction_template')) {
+        return _validateGenericEncryptedCsv(headers, 'Transaction templates');
+      } else if (fileName.contains('transaction')) {
         return _validateTransactionsCsv(headers);
       } else if (fileName.contains('account')) {
         return _validateAccountsCsv(headers);
@@ -985,6 +1709,14 @@ class DatabaseImportService {
         return _validateCategoriesCsv(headers);
       } else if (fileName.contains('settings')) {
         return _validateSettingsCsv(headers);
+      } else if (fileName.contains('budget')) {
+        return _validateGenericEncryptedCsv(headers, 'Budgets');
+      } else if (fileName.contains('asset')) {
+        return _validateGenericEncryptedCsv(headers, 'Assets');
+      } else if (fileName.contains('recurring')) {
+        return _validateGenericEncryptedCsv(headers, 'Recurring rules');
+      } else if (fileName.contains('savings') || fileName.contains('goal')) {
+        return _validateGenericEncryptedCsv(headers, 'Savings goals');
       }
 
       // If filename doesn't match, try to detect by columns
@@ -993,7 +1725,7 @@ class DatabaseImportService {
       if (_validateCategoriesCsv(headers) == null) return null;
       if (_validateSettingsCsv(headers) == null) return null;
 
-      return 'Not a recognized Cachium export file. File name should contain "transaction", "account", "categor", or "settings"';
+      return 'Not a recognized Cachium export file';
     } on FormatException catch (e) {
       return 'Invalid CSV format: ${e.message}';
     } catch (e) {
@@ -1127,6 +1859,15 @@ class DatabaseImportService {
         .toList();
     if (missing.isNotEmpty) {
       return 'Categories file missing columns: ${missing.join(', ')}';
+    }
+    return null;
+  }
+
+  /// Validates a CSV file for tables that use the standard encrypted schema
+  /// (id, created_at, last_updated_at, is_deleted, encrypted_blob) or plaintext with id column.
+  String? _validateGenericEncryptedCsv(Set<String> headers, String tableName) {
+    if (!headers.contains('id')) {
+      return '$tableName file missing required column: id';
     }
     return null;
   }
