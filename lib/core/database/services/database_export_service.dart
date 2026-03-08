@@ -877,7 +877,7 @@ class DatabaseExportService {
     } else {
       final rows = await database.select(database.transactions).get();
       csvData.add([
-        'id', 'date', 'last_updated_at', 'is_deleted', 'amount', 'category_id', 'account_id', 'destination_account_id', 'destination_amount', 'type', 'note', 'merchant', 'currency', 'conversion_rate', 'main_currency_code', 'main_currency_amount', 'asset_id',
+        'id', 'date', 'last_updated_at', 'is_deleted', 'amount', 'category_id', 'account_id', 'destination_account_id', 'destination_amount', 'type', 'note', 'merchant', 'currency', 'conversion_rate', 'main_currency_code', 'main_currency_amount', 'asset_id', 'date_millis', 'created_at_millis',
       ]);
 
       for (final row in rows) {
@@ -902,6 +902,8 @@ class DatabaseExportService {
           data.mainCurrencyCode,
           data.mainCurrencyAmount ?? '',
           data.assetId ?? '',
+          data.dateMillis,
+          data.createdAtMillis,
         ]);
       }
     }
