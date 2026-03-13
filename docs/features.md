@@ -490,6 +490,14 @@
 - `DatabaseImportService._reconcileAccountBalances()` recalculates each account's balance from `initialBalance + calculateAccountDeltas(transactions)` immediately after every import
 - Corrects any balance mismatches introduced by the imported data and emits warnings for each account that was adjusted
 
+#### 33. Transaction form refactoring
+- Confirmation dialogs for discard-changes and delete actions use the shared `showConfirmationDialog()` helper instead of raw AlertDialog
+- Field-level validation: tapping Save with missing or invalid fields (amount, category, account, same-account transfer) shows inline error messages; Save button is always tappable and triggers validation on press
+- Save logic (~190 lines) extracted from the widget into `TransactionFormNotifier.save()` returning a `SaveResult`
+- Change tracking simplified from 12 separate `original*` fields to a single `Transaction? originalTransaction` in form state
+- Build method decomposed into focused sub-widgets: `_TransactionTypeSelector`, `_AmountSection`, `_CategorySection`, `_AssetSection`, `_AccountSection`, `_SaveBar`
+- `MerchantAutocomplete` extracted to `widgets/merchant_autocomplete.dart`; `CategoryPickerFormScreen` extracted to `widgets/category_picker_form_screen.dart`
+
 #### 31. Corruption visibility
 - `_lastCorruptedCount` tracking added to `AccountRepository`, `CategoryRepository`, `RecurringRuleRepository`, `SavingsGoalRepository`, `AssetRepository`, and `TransactionTemplateRepository`
 - `corruption_status_provider.dart` aggregates counts across all repositories; `NavigationShell` shows a warning notification on startup when corruption is detected; `DatabaseSettingsScreen` displays the corruption count in the maintenance section

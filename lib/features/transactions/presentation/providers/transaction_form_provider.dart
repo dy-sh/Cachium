@@ -2,9 +2,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/exchange_rate_provider.dart';
 import '../../../../core/utils/currency_conversion.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
+import '../../../assets/presentation/providers/assets_provider.dart';
+import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../data/models/transaction.dart';
 import '../../data/models/transaction_template.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
+import 'transactions_provider.dart';
+
+/// Result of a save operation.
+class SaveResult {
+  final bool success;
+  final String message;
+  final bool isEdit;
+
+  const SaveResult({required this.success, required this.message, this.isEdit = false});
+}
 
 class TransactionFormState {
   final TransactionType type;
@@ -23,24 +35,12 @@ class TransactionFormState {
   final String? merchant;
   final String? assetId;
   final String? editingTransactionId;
-  // Original values for change tracking (only set when editing)
-  final TransactionType? originalType;
-  final double? originalAmount;
-  final String? originalCategoryId;
-  final String? originalAccountId;
-  final String? originalDestinationAccountId;
-  final double? originalDestinationAmount;
-  final String? originalAssetId;
-  final DateTime? originalDate;
-  final String? originalNote;
-  final String? originalMerchant;
-  final String? originalCurrencyCode;
-  final double? originalConversionRate;
-  // Historical main currency snapshots (only set when editing)
-  final double? originalMainCurrencyAmount;
-  final String? originalMainCurrencyCode;
+  // Original transaction for change tracking (only set when editing)
+  final Transaction? originalTransaction;
   // Settings-driven validation
   final bool allowZeroAmount;
+  // Validation UI state
+  final bool showValidationErrors;
 
   const TransactionFormState({
     this.type = TransactionType.expense,
@@ -56,21 +56,9 @@ class TransactionFormState {
     this.note,
     this.merchant,
     this.editingTransactionId,
-    this.originalType,
-    this.originalAmount,
-    this.originalCategoryId,
-    this.originalAccountId,
-    this.originalDestinationAccountId,
-    this.originalDestinationAmount,
-    this.originalAssetId,
-    this.originalDate,
-    this.originalNote,
-    this.originalMerchant,
-    this.originalCurrencyCode,
-    this.originalConversionRate,
-    this.originalMainCurrencyAmount,
-    this.originalMainCurrencyCode,
+    this.originalTransaction,
     this.allowZeroAmount = false,
+    this.showValidationErrors = false,
   });
 
   bool get isTransfer => type == TransactionType.transfer;
@@ -88,29 +76,57 @@ class TransactionFormState {
 
   bool get isEditing => editingTransactionId != null;
 
+  // Field-level validation errors
+  String? get amountError {
+    if (!showValidationErrors) return null;
+    if (allowZeroAmount ? amount < 0 : amount <= 0) return 'Enter an amount';
+    return null;
+  }
+
+  String? get categoryError {
+    if (!showValidationErrors || isTransfer) return null;
+    if (categoryId == null) return 'Select a category';
+    return null;
+  }
+
+  String? get accountError {
+    if (!showValidationErrors) return null;
+    if (accountId == null) return 'Select an account';
+    return null;
+  }
+
+  String? get sameAccountError {
+    if (!showValidationErrors || !isTransfer) return null;
+    if (destinationAccountId == null) return 'Select a destination account';
+    if (accountId == destinationAccountId) return 'Source and destination must be different';
+    return null;
+  }
+
   /// Whether currency-relevant fields changed from the original (amount, currencyCode, conversionRate).
   bool get hasCurrencyFieldChanges {
-    if (!isEditing) return true;
-    return amount != originalAmount ||
-        currencyCode != originalCurrencyCode ||
-        conversionRate != originalConversionRate;
+    if (!isEditing || originalTransaction == null) return true;
+    final orig = originalTransaction!;
+    return amount != orig.amount ||
+        currencyCode != orig.currencyCode ||
+        conversionRate != orig.conversionRate;
   }
 
   /// Check if any field has changed from original (for edit mode).
   bool get hasChanges {
-    if (!isEditing) return true; // New transaction always "has changes"
-    return type != originalType ||
-        amount != originalAmount ||
-        categoryId != originalCategoryId ||
-        accountId != originalAccountId ||
-        destinationAccountId != originalDestinationAccountId ||
-        destinationAmount != originalDestinationAmount ||
-        assetId != originalAssetId ||
-        !_isSameDateTime(date, originalDate) ||
-        note != originalNote ||
-        merchant != originalMerchant ||
-        currencyCode != originalCurrencyCode ||
-        conversionRate != originalConversionRate;
+    if (!isEditing || originalTransaction == null) return true; // New transaction always "has changes"
+    final orig = originalTransaction!;
+    return type != orig.type ||
+        amount != orig.amount ||
+        categoryId != orig.categoryId ||
+        accountId != orig.accountId ||
+        destinationAccountId != orig.destinationAccountId ||
+        destinationAmount != orig.destinationAmount ||
+        assetId != orig.assetId ||
+        !_isSameDateTime(date, orig.date) ||
+        note != orig.note ||
+        merchant != orig.merchant ||
+        currencyCode != orig.currencyCode ||
+        conversionRate != orig.conversionRate;
   }
 
   /// Compare dates ignoring seconds/milliseconds (only year, month, day, hour, minute).
@@ -145,21 +161,9 @@ class TransactionFormState {
     String? merchant,
     bool clearMerchant = false,
     String? editingTransactionId,
-    TransactionType? originalType,
-    double? originalAmount,
-    String? originalCategoryId,
-    String? originalAccountId,
-    String? originalDestinationAccountId,
-    double? originalDestinationAmount,
-    String? originalAssetId,
-    DateTime? originalDate,
-    String? originalNote,
-    String? originalMerchant,
-    String? originalCurrencyCode,
-    double? originalConversionRate,
-    double? originalMainCurrencyAmount,
-    String? originalMainCurrencyCode,
+    Transaction? originalTransaction,
     bool? allowZeroAmount,
+    bool? showValidationErrors,
   }) {
     return TransactionFormState(
       type: type ?? this.type,
@@ -179,21 +183,9 @@ class TransactionFormState {
       note: clearNote ? null : (note ?? this.note),
       merchant: clearMerchant ? null : (merchant ?? this.merchant),
       editingTransactionId: editingTransactionId ?? this.editingTransactionId,
-      originalType: originalType ?? this.originalType,
-      originalAmount: originalAmount ?? this.originalAmount,
-      originalCategoryId: originalCategoryId ?? this.originalCategoryId,
-      originalAccountId: originalAccountId ?? this.originalAccountId,
-      originalDestinationAccountId: originalDestinationAccountId ?? this.originalDestinationAccountId,
-      originalDestinationAmount: originalDestinationAmount ?? this.originalDestinationAmount,
-      originalAssetId: originalAssetId ?? this.originalAssetId,
-      originalDate: originalDate ?? this.originalDate,
-      originalNote: originalNote ?? this.originalNote,
-      originalMerchant: originalMerchant ?? this.originalMerchant,
-      originalCurrencyCode: originalCurrencyCode ?? this.originalCurrencyCode,
-      originalConversionRate: originalConversionRate ?? this.originalConversionRate,
-      originalMainCurrencyAmount: originalMainCurrencyAmount ?? this.originalMainCurrencyAmount,
-      originalMainCurrencyCode: originalMainCurrencyCode ?? this.originalMainCurrencyCode,
+      originalTransaction: originalTransaction ?? this.originalTransaction,
       allowZeroAmount: allowZeroAmount ?? this.allowZeroAmount,
+      showValidationErrors: showValidationErrors ?? this.showValidationErrors,
     );
   }
 }
@@ -390,6 +382,13 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
     state = state.copyWith(clearAssetId: true);
   }
 
+  /// Trigger validation errors to be shown.
+  /// Returns true if form is valid.
+  bool validate() {
+    state = state.copyWith(showValidationErrors: true);
+    return state.isValid;
+  }
+
   void reset() {
     final defaultType = ref.read(defaultTransactionTypeProvider);
     final selectLastAccount = ref.read(selectLastAccountProvider);
@@ -447,23 +446,186 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
       note: transaction.note,
       merchant: transaction.merchant,
       editingTransactionId: transaction.id,
-      // Store original values for change tracking
-      originalType: transaction.type,
-      originalAmount: transaction.amount,
-      originalCategoryId: transaction.categoryId,
-      originalAccountId: transaction.accountId,
-      originalDestinationAccountId: transaction.destinationAccountId,
-      originalDestinationAmount: transaction.destinationAmount,
-      originalAssetId: transaction.assetId,
-      originalDate: transaction.date,
-      originalNote: transaction.note,
-      originalMerchant: transaction.merchant,
-      originalCurrencyCode: transaction.currencyCode,
-      originalConversionRate: transaction.conversionRate,
-      originalMainCurrencyAmount: transaction.mainCurrencyAmount,
-      originalMainCurrencyCode: transaction.mainCurrencyCode,
+      originalTransaction: transaction,
       allowZeroAmount: allowZeroAmount,
     );
+  }
+
+  /// Save the transaction (create or update). Returns a SaveResult.
+  Future<SaveResult> save() async {
+    // Validate first
+    if (!validate()) {
+      return const SaveResult(success: false, message: 'Please fill in all required fields');
+    }
+
+    if (!state.hasChanges) {
+      return SaveResult(success: false, message: 'No changes to save', isEdit: state.isEditing);
+    }
+
+    final formState = state;
+    final isEditing = formState.isEditing;
+    final isTransfer = formState.isTransfer;
+    final mainCurrency = ref.read(mainCurrencyCodeProvider);
+
+    // Refresh conversion rate if needed
+    if (isEditing) {
+      final originalTx = ref.read(
+        transactionByIdProvider(formState.editingTransactionId!),
+      );
+      if (originalTx == null) {
+        return const SaveResult(success: false, message: 'Transaction no longer exists');
+      }
+      final amountChanged = formState.amount != originalTx.amount;
+      final currencyChanged = formState.currencyCode != originalTx.currencyCode;
+      final accountChanged = formState.accountId != originalTx.accountId;
+      if ((amountChanged || currencyChanged || accountChanged) &&
+          formState.currencyCode != mainCurrency) {
+        final latestRate = ref.read(exchangeRateProvider((from: formState.currencyCode, to: mainCurrency)));
+        if (latestRate != 1.0) {
+          setConversionRate(latestRate);
+        }
+      }
+    } else {
+      // New transaction: always refresh if foreign currency
+      if (formState.currencyCode != mainCurrency) {
+        final latestRate = ref.read(exchangeRateProvider((from: formState.currencyCode, to: mainCurrency)));
+        if (latestRate != 1.0) {
+          setConversionRate(latestRate);
+        }
+      }
+    }
+    final savedFormState = state;
+
+    // Validate conversion rate
+    if (savedFormState.conversionRate <= 0 || !savedFormState.conversionRate.isFinite) {
+      return const SaveResult(success: false, message: 'Invalid conversion rate');
+    }
+
+    // Validate account still exists
+    final account = ref.read(accountByIdProvider(savedFormState.accountId!));
+    if (account == null) {
+      return const SaveResult(success: false, message: 'Selected account no longer exists');
+    }
+
+    // Validate category still exists (not for transfers)
+    if (!isTransfer && savedFormState.categoryId != null) {
+      final category = ref.read(categoryByIdProvider(savedFormState.categoryId!));
+      if (category == null) {
+        return const SaveResult(success: false, message: 'Selected category no longer exists');
+      }
+    }
+
+    // Block cross-currency transfers without destinationAmount
+    if (isTransfer && savedFormState.destinationAccountId != null) {
+      final srcAcct = ref.read(accountByIdProvider(savedFormState.accountId!));
+      final dstAcct = ref.read(accountByIdProvider(savedFormState.destinationAccountId!));
+      if (dstAcct == null) {
+        return const SaveResult(success: false, message: 'Destination account no longer exists');
+      }
+      if (srcAcct != null &&
+          srcAcct.currencyCode != dstAcct.currencyCode &&
+          savedFormState.destinationAmount == null) {
+        return const SaveResult(
+          success: false,
+          message: 'Destination amount is required for cross-currency transfers',
+        );
+      }
+    }
+
+    // Clear orphaned asset reference silently (asset is optional)
+    if (savedFormState.assetId != null) {
+      final asset = ref.read(assetByIdProvider(savedFormState.assetId!));
+      if (asset == null) {
+        clearAsset();
+      }
+    }
+
+    // Compute main currency snapshot — preserve historical values
+    // when only non-currency fields changed during edit
+    final bool currencyFieldsChanged = !isEditing || savedFormState.hasCurrencyFieldChanges;
+
+    final mainCurrencyAmount = currencyFieldsChanged
+        ? ((savedFormState.currencyCode == mainCurrency)
+            ? savedFormState.amount
+            : roundCurrency(savedFormState.amount * savedFormState.conversionRate))
+        : (savedFormState.originalTransaction?.mainCurrencyAmount ??
+            (savedFormState.currencyCode == mainCurrency
+                ? savedFormState.amount
+                : roundCurrency(savedFormState.amount * savedFormState.conversionRate)));
+
+    final effectiveMainCurrencyCode = currencyFieldsChanged
+        ? mainCurrency
+        : (savedFormState.originalTransaction?.mainCurrencyCode ?? mainCurrency);
+
+    try {
+      if (isEditing) {
+        // Update existing transaction
+        final originalTransaction = ref.read(
+          transactionByIdProvider(savedFormState.editingTransactionId!),
+        );
+        if (originalTransaction == null) {
+          return const SaveResult(success: false, message: 'Transaction no longer exists');
+        }
+        final updatedTransaction = originalTransaction.copyWith(
+          amount: savedFormState.amount,
+          type: savedFormState.type,
+          categoryId: isTransfer ? '' : savedFormState.categoryId,
+          accountId: savedFormState.accountId,
+          destinationAccountId: savedFormState.destinationAccountId,
+          clearDestinationAccountId: !isTransfer,
+          destinationAmount: savedFormState.destinationAmount,
+          clearDestinationAmount: !isTransfer || savedFormState.destinationAmount == null,
+          assetId: savedFormState.assetId,
+          clearAssetId: savedFormState.assetId == null,
+          currencyCode: savedFormState.currencyCode,
+          conversionRate: savedFormState.conversionRate,
+          mainCurrencyCode: effectiveMainCurrencyCode,
+          mainCurrencyAmount: mainCurrencyAmount,
+          date: savedFormState.date,
+          note: savedFormState.note,
+          clearNote: savedFormState.note == null || savedFormState.note!.isEmpty,
+          merchant: savedFormState.merchant,
+          clearMerchant: savedFormState.merchant == null || savedFormState.merchant!.isEmpty,
+        );
+        await ref.read(transactionsProvider.notifier)
+            .updateTransaction(updatedTransaction);
+      } else {
+        // Add new transaction
+        await ref.read(transactionsProvider.notifier).addTransaction(
+              amount: savedFormState.amount,
+              type: savedFormState.type,
+              categoryId: isTransfer ? '' : savedFormState.categoryId!,
+              accountId: savedFormState.accountId!,
+              destinationAccountId: savedFormState.destinationAccountId,
+              assetId: savedFormState.assetId,
+              currencyCode: savedFormState.currencyCode,
+              conversionRate: savedFormState.conversionRate,
+              destinationAmount: savedFormState.destinationAmount,
+              mainCurrencyCode: effectiveMainCurrencyCode,
+              mainCurrencyAmount: mainCurrencyAmount,
+              date: savedFormState.date,
+              note: savedFormState.note,
+              merchant: savedFormState.merchant,
+            );
+      }
+
+      // Save last used account and category after successful save
+      ref.read(settingsProvider.notifier).setLastUsedAccountId(savedFormState.accountId);
+      if (!isTransfer) {
+        ref.read(settingsProvider.notifier).setLastUsedCategoryId(
+          savedFormState.type,
+          savedFormState.categoryId,
+        );
+      }
+
+      return SaveResult(
+        success: true,
+        message: isEditing ? 'Transaction updated' : 'Transaction saved',
+        isEdit: isEditing,
+      );
+    } catch (e) {
+      return const SaveResult(success: false, message: 'Failed to save transaction');
+    }
   }
 }
 

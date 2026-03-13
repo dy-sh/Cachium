@@ -1,5 +1,8 @@
 # New Features Log
 
+## 2026-03-13
+- **Transaction Form Refactoring**: Confirmation dialogs for discard-changes and delete actions now use the shared `showConfirmationDialog()` helper; field-level validation shows inline errors for missing amount, category, or account when tapping Save; ~190 lines of save logic moved from the widget into `TransactionFormNotifier.save()` returning a `SaveResult`; change tracking simplified from 12 `original*` fields to a single `Transaction? originalTransaction`; the build method split into six focused sub-widgets; `MerchantAutocomplete` and `CategoryPickerFormScreen` extracted to their own files under `widgets/`.
+
 ## 2026-03-08
 - **Transaction Data Integrity Fixes**: Preserves historical `mainCurrencyAmount`/`mainCurrencyCode` on edit when only non-currency fields changed; blocks saving a cross-currency transfer without a `destinationAmount`; import paths now preserve null `mainCurrencyAmount` instead of fabricating a value; CSV import wraps each numeric field parse in a field-specific try-catch; `DeletedTransactionsScreen` warns the user when corrupted transactions could not be loaded.
 - **Shared Balance Calculation Helper**: Extracts `calculateAccountDeltas()` into `lib/core/utils/balance_calculation.dart` as a single shared helper that correctly debits source and credits destination for transfer transactions; used by both `RecalculateBalancesNotifier` and `DatabaseConsistencyService` to eliminate duplicated and previously incorrect balance logic.
