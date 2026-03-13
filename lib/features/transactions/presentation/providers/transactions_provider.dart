@@ -32,6 +32,10 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     String? note,
     String? merchant,
   }) async {
+    if (conversionRate <= 0 || !conversionRate.isFinite) {
+      throw ArgumentError('Invalid conversion rate: $conversionRate');
+    }
+
     final repo = ref.read(transactionRepositoryProvider);
     final db = ref.read(databaseProvider);
 

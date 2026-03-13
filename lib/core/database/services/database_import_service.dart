@@ -835,7 +835,10 @@ class DatabaseImportService {
             currency: data['currency']?.toString() ?? 'USD',
             conversionRate: conversionRate,
             mainCurrencyCode: mainCurrencyCodeRaw?.toString() ?? 'USD',
-            mainCurrencyAmount: parsedMainCurrencyAmount,
+            mainCurrencyAmount: parsedMainCurrencyAmount ??
+                (data['currency']?.toString() == (mainCurrencyCodeRaw?.toString() ?? 'USD')
+                    ? amount
+                    : roundCurrency(amount * conversionRate)),
             dateMillis: parsedDateMillis,
             createdAtMillis: parsedCreatedAtMillis,
           );
@@ -2586,15 +2589,22 @@ class DatabaseImportService {
           final hasValidDestAccount = data.destinationAccountId == null ||
               data.destinationAccountId!.isEmpty ||
               validAccountIds.contains(data.destinationAccountId);
+
+          // Treat empty destinationAccountId as null for transfers
+          final isTransfer = data.type == 'transfer';
+          final hasEmptyDestAccount = isTransfer &&
+              data.destinationAccountId != null &&
+              data.destinationAccountId!.isEmpty;
           final hasOrphanedAsset = data.assetId != null &&
               data.assetId!.isNotEmpty &&
               !validAssetIds.contains(data.assetId);
 
-          if (!hasValidAccount || !hasValidCategory || !hasValidDestAccount) {
+          if (!hasValidAccount || !hasValidCategory || !hasValidDestAccount || hasEmptyDestAccount) {
             final reasons = <String>[];
             if (!hasValidAccount) reasons.add('account "${data.accountId}" not found');
             if (!hasValidCategory) reasons.add('category "${data.categoryId}" not found');
             if (!hasValidDestAccount) reasons.add('destination account "${data.destinationAccountId}" not found');
+            if (hasEmptyDestAccount) reasons.add('transfer missing destination account');
 
             errors.add('Skipped transaction ${data.id}: ${reasons.join(', ')}');
 
@@ -2612,8 +2622,8 @@ class DatabaseImportService {
                 .write(TransactionsCompanion(encryptedBlob: Value(encryptedBlob)));
             errors.add('Cleared orphaned asset "${data.assetId}" from transaction ${data.id}');
           }
-        } catch (_) {
-          // Skip corrupted transactions
+        } catch (e) {
+          errors.add('Skipped corrupted transaction ${row.id}: $e');
         }
       }
     } catch (e) {
@@ -2658,8 +2668,8 @@ class DatabaseImportService {
             date: DateTime.fromMillisecondsSinceEpoch(data.dateMillis),
             createdAt: DateTime.fromMillisecondsSinceEpoch(data.createdAtMillis),
           ));
-        } catch (_) {
-          // Skip corrupted transactions
+        } catch (e) {
+          errors.add('Skipped corrupted transaction during reconciliation ${row.id}: $e');
         }
       }
 

@@ -266,6 +266,7 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
       categoryId: categoryId,
       accountId: accountId,
       clearDestinationAccountId: clearDest,
+      clearDestinationAmount: clearDest,
     );
   }
 

@@ -644,8 +644,8 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                                   mainCurrencyCode: effectiveMainCurrencyCode,
                                   mainCurrencyAmount: mainCurrencyAmount,
                                   date: savedFormState.date,
-                                  note: savedFormState.note,
-                                  merchant: savedFormState.merchant,
+                                  note: savedFormState.note?.isEmpty == true ? null : savedFormState.note,
+                                  merchant: savedFormState.merchant?.isEmpty == true ? null : savedFormState.merchant,
                                 );
                                 await ref.read(transactionsProvider.notifier)
                                     .updateTransaction(updatedTransaction);
@@ -664,8 +664,8 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                                       mainCurrencyCode: effectiveMainCurrencyCode,
                                       mainCurrencyAmount: mainCurrencyAmount,
                                       date: savedFormState.date,
-                                      note: savedFormState.note,
-                                      merchant: savedFormState.merchant,
+                                      note: savedFormState.note?.isEmpty == true ? null : savedFormState.note,
+                                      merchant: savedFormState.merchant?.isEmpty == true ? null : savedFormState.merchant,
                                     );
                               }
 
