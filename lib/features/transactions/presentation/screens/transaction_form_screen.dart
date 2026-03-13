@@ -576,13 +576,27 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                               if (isTransfer && savedFormState.destinationAccountId != null) {
                                 final srcAcct = ref.read(accountByIdProvider(savedFormState.accountId!));
                                 final dstAcct = ref.read(accountByIdProvider(savedFormState.destinationAccountId!));
-                                if (srcAcct != null && dstAcct != null &&
+                                if (dstAcct == null) {
+                                  if (context.mounted) {
+                                    context.showErrorNotification('Destination account no longer exists');
+                                  }
+                                  return;
+                                }
+                                if (srcAcct != null &&
                                     srcAcct.currencyCode != dstAcct.currencyCode &&
                                     savedFormState.destinationAmount == null) {
                                   if (context.mounted) {
                                     context.showErrorNotification('Destination amount is required for cross-currency transfers');
                                   }
                                   return;
+                                }
+                              }
+
+                              // Clear orphaned asset reference silently (asset is optional)
+                              if (savedFormState.assetId != null) {
+                                final asset = ref.read(assetByIdProvider(savedFormState.assetId!));
+                                if (asset == null) {
+                                  ref.read(transactionFormProvider.notifier).clearAsset();
                                 }
                               }
 

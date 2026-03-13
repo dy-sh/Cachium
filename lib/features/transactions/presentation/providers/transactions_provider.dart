@@ -207,6 +207,23 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     final repo = ref.read(transactionRepositoryProvider);
     final db = ref.read(databaseProvider);
 
+    // Validate referenced accounts still exist
+    final sourceAccount = ref.read(accountByIdProvider(transaction.accountId));
+    if (sourceAccount == null) {
+      throw StateError(
+        'Cannot restore transaction: source account ${transaction.accountId} no longer exists',
+      );
+    }
+    if (transaction.type == TransactionType.transfer &&
+        transaction.destinationAccountId != null) {
+      final destAccount = ref.read(accountByIdProvider(transaction.destinationAccountId!));
+      if (destAccount == null) {
+        throw StateError(
+          'Cannot restore transaction: destination account ${transaction.destinationAccountId} no longer exists',
+        );
+      }
+    }
+
     await db.transaction(() async {
       // Restore in database
       await repo.restoreTransaction(transaction.id);
@@ -290,6 +307,25 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
   Future<void> restoreTransactions(List<Transaction> transactionsToRestore) async {
     final repo = ref.read(transactionRepositoryProvider);
     final db = ref.read(databaseProvider);
+
+    // Validate all referenced accounts still exist before starting
+    for (final transaction in transactionsToRestore) {
+      final sourceAccount = ref.read(accountByIdProvider(transaction.accountId));
+      if (sourceAccount == null) {
+        throw StateError(
+          'Cannot restore transaction ${transaction.id}: source account ${transaction.accountId} no longer exists',
+        );
+      }
+      if (transaction.type == TransactionType.transfer &&
+          transaction.destinationAccountId != null) {
+        final destAccount = ref.read(accountByIdProvider(transaction.destinationAccountId!));
+        if (destAccount == null) {
+          throw StateError(
+            'Cannot restore transaction ${transaction.id}: destination account ${transaction.destinationAccountId} no longer exists',
+          );
+        }
+      }
+    }
 
     await db.transaction(() async {
       for (final transaction in transactionsToRestore) {
@@ -386,11 +422,9 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
           destEffect += sign * convertedAmount;
         }
 
-        // Recalculate mainCurrencyAmount and conversionRate for cross-currency move
+        // Recalculate conversionRate for cross-currency move, but preserve historical mainCurrency snapshot
         final mainCurrency = ref.read(mainCurrencyCodeProvider);
         final rates = ref.read(exchangeRatesProvider).valueOrNull ?? {};
-        final newMainCurrencyAmount = convertToMainCurrency(
-          convertedAmount, toAccount.currencyCode, mainCurrency, rates);
         final newConversionRate = (toAccount.currencyCode != mainCurrency && rates[toAccount.currencyCode] != null)
             ? 1.0 / rates[toAccount.currencyCode]!
             : tx.conversionRate;
@@ -400,8 +434,8 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
           currencyCode: toAccount.currencyCode,
           conversionRate: newConversionRate,
           destinationAmount: convertedDestAmount,
-          mainCurrencyCode: mainCurrency,
-          mainCurrencyAmount: newMainCurrencyAmount,
+          mainCurrencyCode: tx.mainCurrencyCode,
+          mainCurrencyAmount: tx.mainCurrencyAmount,
         ));
       } else {
         if (tx.type == TransactionType.transfer) {
@@ -467,17 +501,21 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
         }
       }
 
-      // For transfers where this account is the destination, reverse the debit on source
+      // For transfers where this account is the destination, reverse the debit on source and soft-delete
       for (final tx in destTransactions) {
         // Reverse the debit from source account (transfer debits source by tx.amount)
         await ref.read(accountsProvider.notifier).updateBalance(
               tx.accountId, tx.amount);
+        await repo.deleteTransaction(tx.id);
       }
     });
 
-    // Update local state — remove transactions where this account is the source
+    // Update local state — remove transactions where this account is source or destination
+    final destIds = destTransactions.map((t) => t.id).toSet();
     state = state.whenData(
-      (transactions) => transactions.where((t) => t.accountId != accountId).toList(),
+      (transactions) => transactions.where(
+        (t) => t.accountId != accountId && !destIds.contains(t.id),
+      ).toList(),
     );
   }
 

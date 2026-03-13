@@ -2564,6 +2564,15 @@ class DatabaseImportService {
         }
       }
 
+      // Collect valid asset IDs
+      final assetRows = await database.select(database.assets).get();
+      final validAssetIds = <String>{};
+      for (final row in assetRows) {
+        if (!row.isDeleted) {
+          validAssetIds.add(row.id);
+        }
+      }
+
       // Check transactions for orphaned references
       final transactionRows = await database.select(database.transactions).get();
       for (final row in transactionRows) {
@@ -2574,11 +2583,18 @@ class DatabaseImportService {
 
           final hasValidAccount = validAccountIds.contains(data.accountId);
           final hasValidCategory = data.categoryId.isEmpty || validCategoryIds.contains(data.categoryId);
+          final hasValidDestAccount = data.destinationAccountId == null ||
+              data.destinationAccountId!.isEmpty ||
+              validAccountIds.contains(data.destinationAccountId);
+          final hasOrphanedAsset = data.assetId != null &&
+              data.assetId!.isNotEmpty &&
+              !validAssetIds.contains(data.assetId);
 
-          if (!hasValidAccount || !hasValidCategory) {
+          if (!hasValidAccount || !hasValidCategory || !hasValidDestAccount) {
             final reasons = <String>[];
             if (!hasValidAccount) reasons.add('account "${data.accountId}" not found');
             if (!hasValidCategory) reasons.add('category "${data.categoryId}" not found');
+            if (!hasValidDestAccount) reasons.add('destination account "${data.destinationAccountId}" not found');
 
             errors.add('Skipped transaction ${data.id}: ${reasons.join(', ')}');
 
@@ -2587,6 +2603,14 @@ class DatabaseImportService {
                   ..where((t) => t.id.equals(row.id)))
                 .write(const TransactionsCompanion(isDeleted: Value(true)));
             skipped++;
+          } else if (hasOrphanedAsset) {
+            // Asset is optional — clear it instead of deleting the transaction
+            final cleanedData = data.copyWith(assetId: null);
+            final encryptedBlob = await encryptionService.encryptJson(cleanedData.toJson());
+            await (database.update(database.transactions)
+                  ..where((t) => t.id.equals(row.id)))
+                .write(TransactionsCompanion(encryptedBlob: Value(encryptedBlob)));
+            errors.add('Cleared orphaned asset "${data.assetId}" from transaction ${data.id}');
           }
         } catch (_) {
           // Skip corrupted transactions

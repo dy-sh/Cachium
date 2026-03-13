@@ -335,7 +335,13 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
 
       final accountIndex =
           currentState.indexWhere((a) => a.id == accountId);
-      if (accountIndex == -1) return;
+      if (accountIndex == -1) {
+        throw RepositoryException.update(
+          entityType: 'Account',
+          entityId: accountId,
+          cause: StateError('Account $accountId not found — cannot update balance'),
+        );
+      }
 
       final account = currentState[accountIndex];
       final updatedAccount =
