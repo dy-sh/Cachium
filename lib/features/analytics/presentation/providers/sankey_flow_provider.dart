@@ -44,6 +44,7 @@ final sankeyFlowDataProvider = Provider<SankeyData>((ref) {
   final Map<String, Map<String, double>> accountToExpense = {};
 
   for (final tx in transactions) {
+    if (tx.isTransfer) continue;
     // Use parent category if exists
     final cat = catMap[tx.categoryId];
     final catId = cat?.parentId ?? tx.categoryId;

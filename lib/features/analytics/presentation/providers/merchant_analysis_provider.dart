@@ -48,6 +48,7 @@ final merchantAnalysisProvider = Provider<MerchantSummary>((ref) {
     // Find primary category (most used)
     final categoryCount = <String, int>{};
     for (final tx in txs) {
+      if (tx.isTransfer) continue;
       categoryCount[tx.categoryId] = (categoryCount[tx.categoryId] ?? 0) + 1;
     }
     final primaryCategory = categoryCount.entries

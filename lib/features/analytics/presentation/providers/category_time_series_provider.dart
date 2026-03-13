@@ -73,6 +73,7 @@ final categoryTimeSeriesProvider = Provider<List<CategoryTimeSeries>>((ref) {
   }
 
   for (final tx in transactions) {
+    if (tx.isTransfer) continue;
     if (!selectedIds.contains(tx.categoryId)) continue;
     final k = getKey(tx.date);
     catPeriodAmounts[tx.categoryId] ??= {};

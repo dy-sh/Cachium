@@ -50,6 +50,7 @@ class DatabaseConsistencyService {
     // Count transactions with invalid category
     int transactionsWithInvalidCategory = 0;
     for (final tx in transactions) {
+      if (tx.isTransfer || tx.categoryId.isEmpty) continue;
       if (!validCategoryIds.contains(tx.categoryId)) {
         transactionsWithInvalidCategory++;
       }

@@ -25,6 +25,7 @@ final recurringDetectionProvider = Provider<List<FinancialInsight>>((ref) {
   // Group by (rounded amount to nearest integer, categoryId)
   final groups = <String, List<Transaction>>{};
   for (final tx in transactions) {
+    if (tx.isTransfer) continue;
     final key = '${convertedAmount(tx, rates, mainCurrency).round()}_${tx.categoryId}';
     groups.putIfAbsent(key, () => []).add(tx);
   }
