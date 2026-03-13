@@ -141,7 +141,9 @@ class TransactionFormState {
     bool clearAssetId = false,
     DateTime? date,
     String? note,
+    bool clearNote = false,
     String? merchant,
+    bool clearMerchant = false,
     String? editingTransactionId,
     TransactionType? originalType,
     double? originalAmount,
@@ -174,8 +176,8 @@ class TransactionFormState {
           : (destinationAmount ?? this.destinationAmount),
       assetId: clearAssetId ? null : (assetId ?? this.assetId),
       date: date ?? this.date,
-      note: note ?? this.note,
-      merchant: merchant ?? this.merchant,
+      note: clearNote ? null : (note ?? this.note),
+      merchant: clearMerchant ? null : (merchant ?? this.merchant),
       editingTransactionId: editingTransactionId ?? this.editingTransactionId,
       originalType: originalType ?? this.originalType,
       originalAmount: originalAmount ?? this.originalAmount,
@@ -423,7 +425,9 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
       assetId: template.assetId,
       clearAssetId: template.assetId == null,
       merchant: template.merchant,
+      clearMerchant: template.merchant == null,
       note: template.note,
+      clearNote: template.note == null,
     );
   }
 

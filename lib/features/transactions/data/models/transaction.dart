@@ -84,7 +84,9 @@ class Transaction {
     bool clearMainCurrencyAmount = false,
     DateTime? date,
     String? note,
+    bool clearNote = false,
     String? merchant,
+    bool clearMerchant = false,
     DateTime? createdAt,
   }) {
     return Transaction(
@@ -107,8 +109,8 @@ class Transaction {
           ? null
           : (mainCurrencyAmount ?? this.mainCurrencyAmount),
       date: date ?? this.date,
-      note: note ?? this.note,
-      merchant: merchant ?? this.merchant,
+      note: clearNote ? null : (note ?? this.note),
+      merchant: clearMerchant ? null : (merchant ?? this.merchant),
       createdAt: createdAt ?? this.createdAt,
     );
   }

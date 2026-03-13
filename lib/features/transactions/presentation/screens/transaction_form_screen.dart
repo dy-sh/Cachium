@@ -645,7 +645,9 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                                   mainCurrencyAmount: mainCurrencyAmount,
                                   date: savedFormState.date,
                                   note: savedFormState.note?.isEmpty == true ? null : savedFormState.note,
+                                  clearNote: savedFormState.note == null || savedFormState.note!.isEmpty,
                                   merchant: savedFormState.merchant?.isEmpty == true ? null : savedFormState.merchant,
+                                  clearMerchant: savedFormState.merchant == null || savedFormState.merchant!.isEmpty,
                                 );
                                 await ref.read(transactionsProvider.notifier)
                                     .updateTransaction(updatedTransaction);
