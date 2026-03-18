@@ -47,7 +47,7 @@ class ConversionGainLossCard extends ConsumerWidget {
                 height: 32,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: bgOpacity),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: AppRadius.smAll,
                 ),
                 child: Icon(
                   isPositive ? LucideIcons.trendingUp : LucideIcons.trendingDown,

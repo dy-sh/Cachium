@@ -206,7 +206,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       position: position,
       color: AppColors.surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppRadius.mdAll,
         side: const BorderSide(color: AppColors.border),
       ),
       items: [
@@ -417,7 +417,7 @@ class _TransactionsHeader extends ConsumerWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: AppRadius.iconButton,
                     border: Border.all(color: AppColors.border),
                   ),
                   child: const Icon(
@@ -435,7 +435,7 @@ class _TransactionsHeader extends ConsumerWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: AppRadius.iconButton,
                     border: Border.all(color: AppColors.border),
                   ),
                   child: Icon(
@@ -485,7 +485,7 @@ class _SelectionHeader extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppRadius.iconButton,
                 border: Border.all(color: AppColors.border),
               ),
               child: const Icon(
@@ -509,7 +509,7 @@ class _SelectionHeader extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppRadius.iconButton,
                 border: Border.all(color: AppColors.border),
               ),
               child: Icon(
@@ -527,7 +527,7 @@ class _SelectionHeader extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppRadius.iconButton,
                 border: Border.all(color: AppColors.border),
               ),
               child: Icon(
@@ -545,7 +545,7 @@ class _SelectionHeader extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppRadius.iconButton,
                 border: Border.all(color: AppColors.border),
               ),
               child: const Icon(
@@ -565,7 +565,7 @@ class _SelectionHeader extends StatelessWidget {
                 color: hasSelection
                     ? AppColors.red.withValues(alpha: 0.15)
                     : AppColors.surface,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppRadius.iconButton,
                 border: Border.all(
                   color: hasSelection
                       ? AppColors.red.withValues(alpha: 0.3)
@@ -690,7 +690,7 @@ class _TransactionItem extends ConsumerWidget {
             height: 40,
             decoration: BoxDecoration(
               color: categoryColor.withValues(alpha: bgOpacity),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: AppRadius.iconButton,
             ),
             child: Icon(
               isTransfer ? LucideIcons.arrowLeftRight : (category?.icon ?? Icons.circle),
@@ -924,7 +924,7 @@ class _BulkPickerSheet extends StatelessWidget {
           height: 4,
           decoration: BoxDecoration(
             color: AppColors.textTertiary,
-            borderRadius: BorderRadius.circular(2),
+            borderRadius: AppRadius.xxsAll,
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
@@ -954,7 +954,7 @@ class _BulkPickerSheet extends StatelessWidget {
                         height: 32,
                         decoration: BoxDecoration(
                           color: item.color.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: AppRadius.smAll,
                         ),
                         child: Icon(item.icon, color: item.color, size: 16),
                       ),

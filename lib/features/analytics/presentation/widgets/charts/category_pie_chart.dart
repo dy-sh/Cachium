@@ -151,7 +151,7 @@ class _CategoryPieChartState extends ConsumerState<CategoryPieChart>
                                         ),
                                         decoration: BoxDecoration(
                                           color: AppColors.surfaceLight,
-                                          borderRadius: BorderRadius.circular(4),
+                                          borderRadius: AppRadius.xsAll,
                                         ),
                                         child: Text(
                                           '${breakdown.percentage.toStringAsFixed(1)}%',

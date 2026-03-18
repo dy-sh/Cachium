@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
-import '../../../../design_system/components/feedback/notification.dart';
+import '../../../../design_system/design_system.dart';
 import '../../data/models/app_settings.dart';
 import '../providers/app_lock_provider.dart';
 import '../providers/settings_provider.dart';
@@ -33,40 +33,7 @@ class PreferencesSettingsScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Pinned header
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: AppSpacing.md),
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => context.pop(),
-                        child: Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppColors.border),
-                          ),
-                          child: Icon(
-                            LucideIcons.chevronLeft,
-                            size: 20,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Text('Preferences', style: AppTypography.h3),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
-                ],
-              ),
-            ),
+            const SettingsHeader(title: 'Preferences'),
             // Scrollable content
             Expanded(
               child: SingleChildScrollView(
@@ -373,7 +340,7 @@ class _OptionPickerSheet extends StatelessWidget {
                 height: 4,
                 decoration: BoxDecoration(
                   color: AppColors.border,
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: AppRadius.xxsAll,
                 ),
               ),
             ),
@@ -518,7 +485,7 @@ class _PinSetupSheetState extends State<_PinSetupSheet> {
                 height: 4,
                 decoration: BoxDecoration(
                   color: AppColors.border,
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: AppRadius.xxsAll,
                 ),
               ),
             ),
@@ -573,7 +540,7 @@ class _PinSetupSheetState extends State<_PinSetupSheet> {
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                   decoration: BoxDecoration(
                     color: _canSubmit ? AppColors.textPrimary : AppColors.surface,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: AppRadius.mdAll,
                     border: _canSubmit ? null : Border.all(color: AppColors.border),
                   ),
                   child: Center(
@@ -775,7 +742,7 @@ class _PasswordSetupSheetState extends State<_PasswordSetupSheet> {
                 height: 4,
                 decoration: BoxDecoration(
                   color: AppColors.border,
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: AppRadius.xxsAll,
                 ),
               ),
             ),
@@ -813,15 +780,15 @@ class _PasswordSetupSheetState extends State<_PasswordSetupSheet> {
                 filled: true,
                 fillColor: AppColors.background,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: AppRadius.mdAll,
                   borderSide: BorderSide(color: AppColors.border),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: AppRadius.mdAll,
                   borderSide: BorderSide(color: AppColors.border),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: AppRadius.mdAll,
                   borderSide: BorderSide(color: AppColors.textTertiary),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
@@ -839,7 +806,7 @@ class _PasswordSetupSheetState extends State<_PasswordSetupSheet> {
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                 decoration: BoxDecoration(
                   color: AppColors.textPrimary,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: AppRadius.mdAll,
                 ),
                 child: Center(
                   child: Text(

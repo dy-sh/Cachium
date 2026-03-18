@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/constants/currencies.dart';
@@ -94,7 +95,7 @@ class _CurrencyPickerSheetState extends State<_CurrencyPickerSheet> {
                 height: 4,
                 decoration: BoxDecoration(
                   color: AppColors.border,
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: AppRadius.xxsAll,
                 ),
               ),
             ),
@@ -105,7 +106,7 @@ class _CurrencyPickerSheetState extends State<_CurrencyPickerSheet> {
             Container(
               decoration: BoxDecoration(
                 color: AppColors.background,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppRadius.iconButton,
                 border: Border.all(color: AppColors.border),
               ),
               child: TextField(
@@ -224,7 +225,7 @@ class CurrencyCodeChip extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: AppRadius.smAll,
           border: Border.all(color: AppColors.border),
         ),
         child: Row(

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/design_system.dart';
@@ -105,78 +106,33 @@ class ColumnMappingScreen extends ConsumerWidget {
     final accentColor = AppColors.getAccentColor(0, intensity);
     final progressColor = canProceed ? AppColors.income : accentColor;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.screenPadding,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () {
-                  ref
-                      .read(flexibleCsvImportProvider.notifier)
-                      .goBackToTypeSelection();
-                  context.pop();
-                },
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Icon(
-                    LucideIcons.chevronLeft,
-                    size: 20,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Map Columns', style: AppTypography.h3),
-                    if (fileName != null)
-                      Text(
-                        fileName,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textTertiary,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                  ],
-                ),
-              ),
-              // Progress badge
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: progressColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '$mapped/$total',
-                  style: AppTypography.labelSmall.copyWith(
-                    color: progressColor,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
+    return SettingsHeader(
+      title: 'Map Columns',
+      onBack: () {
+        ref
+            .read(flexibleCsvImportProvider.notifier)
+            .goBackToTypeSelection();
+        context.pop();
+      },
+      actions: [
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 10,
+            vertical: 4,
           ),
-          const SizedBox(height: AppSpacing.lg),
-        ],
-      ),
+          decoration: BoxDecoration(
+            color: progressColor.withValues(alpha: 0.15),
+            borderRadius: AppRadius.mdAll,
+          ),
+          child: Text(
+            '$mapped/$total',
+            style: AppTypography.labelSmall.copyWith(
+              color: progressColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -228,7 +184,7 @@ class ColumnMappingScreen extends ConsumerWidget {
       ),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AppRadius.smAll,
         border: Border.all(color: AppColors.border),
       ),
       child: Row(
@@ -279,7 +235,7 @@ class ColumnMappingScreen extends ConsumerWidget {
           color: hasPreset
               ? accentColor.withValues(alpha: 0.15)
               : AppColors.surface,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: AppRadius.smAll,
           border: Border.all(
             color: hasPreset ? accentColor : AppColors.border,
           ),
@@ -309,7 +265,7 @@ class ColumnMappingScreen extends ConsumerWidget {
                 color: hasPreset
                     ? accentColor.withValues(alpha: 0.2)
                     : AppColors.surfaceLight,
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: AppRadius.xsAll,
               ),
               child: Text(
                 hasPreset ? appliedPreset.name : 'None',

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/feedback/confirmation_dialog.dart';
@@ -30,7 +31,7 @@ class DeleteAccountDialog extends ConsumerWidget {
     return AlertDialog(
       backgroundColor: AppColors.surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppRadius.lgAll,
       ),
       title: Text(
         'Delete "${account.name}"?',
@@ -104,7 +105,7 @@ class DeleteAccountDialog extends ConsumerWidget {
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: AppColors.surfaceLight,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppRadius.mdAll,
           border: Border.all(
             color: isDanger
                 ? AppColors.expense.withValues(alpha: 0.3)
@@ -118,7 +119,7 @@ class DeleteAccountDialog extends ConsumerWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: iconColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppRadius.iconButton,
               ),
               child: Icon(
                 icon,
@@ -198,7 +199,7 @@ class MoveTransactionsDialog extends ConsumerWidget {
     return AlertDialog(
       backgroundColor: AppColors.surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppRadius.lgAll,
       ),
       title: Text(
         'Move Transactions',
@@ -267,7 +268,7 @@ class _AccountOption extends ConsumerWidget {
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: AppColors.surfaceLight,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppRadius.mdAll,
           border: Border.all(color: AppColors.border),
         ),
         child: Row(
@@ -277,7 +278,7 @@ class _AccountOption extends ConsumerWidget {
               height: 36,
               decoration: BoxDecoration(
                 color: account.color.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: AppRadius.smAll,
               ),
               child: Icon(
                 account.icon,

@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
+import '../buttons/circular_button.dart';
 
 /// A reusable screen header with title and optional action button.
 ///
@@ -30,22 +31,10 @@ class ScreenHeader extends StatelessWidget {
         children: [
           Text(title, style: AppTypography.h2),
           if (onActionPressed != null)
-            GestureDetector(
-              onTap: onActionPressed,
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Icon(
-                  actionIcon,
-                  color: actionIconColor ?? AppColors.accentPrimary,
-                  size: 20,
-                ),
-              ),
+            CircularButton(
+              onTap: onActionPressed!,
+              icon: actionIcon,
+              iconColor: actionIconColor ?? AppColors.accentPrimary,
             ),
         ],
       ),

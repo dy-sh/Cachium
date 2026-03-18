@@ -73,7 +73,7 @@ class _BudgetProgressItem extends ConsumerWidget {
                 height: 32,
                 decoration: BoxDecoration(
                   color: progress.categoryColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: AppRadius.smAll,
                 ),
                 child: Icon(
                   progress.categoryIcon,

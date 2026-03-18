@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../data/models/database_consistency.dart';
@@ -19,7 +20,7 @@ class ConsistencyDetailsDialog extends StatelessWidget {
     return AlertDialog(
       backgroundColor: AppColors.surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppRadius.lgAll,
       ),
       title: Row(
         children: [
@@ -30,7 +31,7 @@ class ConsistencyDetailsDialog extends StatelessWidget {
               color: consistency.isConsistent
                   ? AppColors.income.withValues(alpha: 0.1)
                   : AppColors.expense.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: AppRadius.iconButton,
             ),
             child: Icon(
               consistency.isConsistent

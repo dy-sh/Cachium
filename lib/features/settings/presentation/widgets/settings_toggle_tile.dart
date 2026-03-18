@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/inputs/toggle.dart';
@@ -42,7 +43,7 @@ class SettingsToggleTile extends StatelessWidget {
                 height: 32,
                 decoration: BoxDecoration(
                   color: (iconColor ?? AppColors.textSecondary).withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: AppRadius.smAll,
                 ),
                 child: Icon(
                   icon,

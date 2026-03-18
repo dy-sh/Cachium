@@ -1,3 +1,4 @@
+import '../../../../core/constants/app_radius.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -76,7 +77,7 @@ class _CategoryDropZoneState extends State<CategoryDropZone> {
           ),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: AppRadius.mdAll,
             border: Border.all(color: color, width: 2),
             boxShadow: [
               BoxShadow(
@@ -218,7 +219,7 @@ class _CategoryItemDropTargetState extends State<CategoryItemDropTarget> {
                   ),
                   decoration: BoxDecoration(
                     color: color.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: AppRadius.mdAll,
                     border: Border.all(color: color, width: 2),
                     boxShadow: [
                       BoxShadow(

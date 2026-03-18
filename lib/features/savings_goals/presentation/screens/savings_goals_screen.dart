@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/utils/formatting_providers.dart';
-import '../../../../design_system/components/feedback/confirmation_dialog.dart';
-import '../../../../design_system/components/feedback/empty_state.dart';
-import '../../../../design_system/components/feedback/notification.dart';
+import '../../../../design_system/design_system.dart';
 import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/savings_goal.dart';
@@ -28,58 +26,15 @@ class SavingsGoalsScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.screenPadding,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: AppSpacing.md),
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => context.pop(),
-                        child: Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppColors.border),
-                          ),
-                          child: Icon(
-                            LucideIcons.chevronLeft,
-                            size: 20,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Text('Savings Goals', style: AppTypography.h3),
-                      const Spacer(),
-                      GestureDetector(
-                        onTap: () => _showAddGoalSheet(context, ref),
-                        child: Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppColors.border),
-                          ),
-                          child: Icon(
-                            LucideIcons.plus,
-                            size: 20,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
-                ],
-              ),
+            SettingsHeader(
+              title: 'Savings Goals',
+              actions: [
+                CircularButton(
+                  onTap: () => _showAddGoalSheet(context, ref),
+                  icon: LucideIcons.plus,
+                  size: AppSpacing.settingsBackButtonSize,
+                ),
+              ],
             ),
             Expanded(
               child: goalsAsync.when(
@@ -163,7 +118,7 @@ class _SavingsGoalCard extends ConsumerWidget {
       padding: const EdgeInsets.all(AppSpacing.cardPadding),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppRadius.mdAll,
         border: Border.all(color: AppColors.border),
       ),
       child: Column(
@@ -176,7 +131,7 @@ class _SavingsGoalCard extends ConsumerWidget {
                 height: 40,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: AppRadius.iconButton,
                 ),
                 child: Icon(
                   goal.icon,
@@ -294,7 +249,7 @@ class _SavingsGoalCard extends ConsumerWidget {
           const SizedBox(height: AppSpacing.md),
           // Progress bar
           ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: AppRadius.xsAll,
             child: LinearProgressIndicator(
               value: goal.progressPercent / 100,
               backgroundColor: AppColors.border,
@@ -361,11 +316,11 @@ class _SavingsGoalCard extends ConsumerWidget {
                   color: AppColors.textSecondary,
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: AppRadius.iconButton,
                   borderSide: BorderSide(color: AppColors.border),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: AppRadius.iconButton,
                   borderSide: BorderSide(color: AppColors.textPrimary),
                 ),
               ),
@@ -378,7 +333,7 @@ class _SavingsGoalCard extends ConsumerWidget {
                   backgroundColor: AppColors.textPrimary,
                   foregroundColor: AppColors.background,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: AppRadius.iconButton,
                   ),
                   padding:
                       const EdgeInsets.symmetric(vertical: AppSpacing.md),
@@ -506,11 +461,11 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
                 color: AppColors.textSecondary,
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppRadius.iconButton,
                 borderSide: BorderSide(color: AppColors.border),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppRadius.iconButton,
                 borderSide: BorderSide(color: AppColors.textPrimary),
               ),
             ),
@@ -527,11 +482,11 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
                 color: AppColors.textSecondary,
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppRadius.iconButton,
                 borderSide: BorderSide(color: AppColors.border),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppRadius.iconButton,
                 borderSide: BorderSide(color: AppColors.textPrimary),
               ),
             ),
@@ -548,11 +503,11 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
                 color: AppColors.textSecondary,
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppRadius.iconButton,
                 borderSide: BorderSide(color: AppColors.border),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppRadius.iconButton,
                 borderSide: BorderSide(color: AppColors.textPrimary),
               ),
             ),
@@ -568,7 +523,7 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
                   color: _isCreating
                       ? AppColors.textTertiary
                       : AppColors.textPrimary,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: AppRadius.iconButton,
                 ),
                 child: Center(
                   child: _isCreating

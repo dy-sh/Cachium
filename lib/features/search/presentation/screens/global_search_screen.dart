@@ -4,9 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
-import '../../../../design_system/components/feedback/empty_state.dart';
+import '../../../../design_system/design_system.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/search_result.dart';
 import '../providers/global_search_provider.dart';
@@ -61,27 +62,15 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                   const SizedBox(height: AppSpacing.md),
                   Row(
                     children: [
-                      GestureDetector(
+                      CircularButton(
                         onTap: () {
                           ref
                               .read(globalSearchQueryProvider.notifier)
                               .state = '';
                           context.pop();
                         },
-                        child: Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppColors.border),
-                          ),
-                          child: Icon(
-                            LucideIcons.chevronLeft,
-                            size: 20,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
+                        icon: LucideIcons.chevronLeft,
+                        size: AppSpacing.settingsBackButtonSize,
                       ),
                       const SizedBox(width: AppSpacing.md),
                       Expanded(
@@ -89,7 +78,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                           height: 40,
                           decoration: BoxDecoration(
                             color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: AppRadius.iconButton,
                             border: Border.all(color: AppColors.border),
                           ),
                           child: TextField(
@@ -290,7 +279,7 @@ class _SearchResultTile extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: AppRadius.iconButton,
           border: Border.all(color: AppColors.border),
         ),
         child: Row(
@@ -300,7 +289,7 @@ class _SearchResultTile extends StatelessWidget {
               height: 36,
               decoration: BoxDecoration(
                 color: result.color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: AppRadius.smAll,
               ),
               child: Icon(
                 result.icon,

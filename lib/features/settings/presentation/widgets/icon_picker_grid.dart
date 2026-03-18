@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_animations.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 
@@ -118,7 +119,7 @@ class _IconPickerGridState extends State<IconPickerGrid> {
           height: 40,
           decoration: BoxDecoration(
             color: AppColors.background,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AppRadius.smAll,
             border: Border.all(color: AppColors.border),
           ),
           child: TextField(
@@ -177,7 +178,7 @@ class _IconPickerGridState extends State<IconPickerGrid> {
                     color: isSelected
                         ? widget.selectedColor.withValues(alpha: 0.15)
                         : AppColors.background,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: AppRadius.smAll,
                     border: Border.all(
                       color: isSelected ? widget.selectedColor : AppColors.border,
                       width: isSelected ? 1.5 : 1,

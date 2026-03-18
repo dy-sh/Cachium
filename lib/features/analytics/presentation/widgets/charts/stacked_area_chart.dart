@@ -165,7 +165,7 @@ class _StackedAreaChartState extends State<StackedAreaChart> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: AppRadius.xsAll,
               border: isHighlighted ? Border.all(color: color, width: 1.5) : null,
             ),
             child: Row(

@@ -43,7 +43,7 @@ class AssetCategoryBreakdown extends ConsumerWidget {
                   height: 32,
                   decoration: BoxDecoration(
                     color: entry.color.withValues(alpha: bgOpacity),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: AppRadius.smAll,
                   ),
                   child: Icon(
                     entry.icon,
@@ -71,7 +71,7 @@ class AssetCategoryBreakdown extends ConsumerWidget {
                       ),
                       const SizedBox(height: AppSpacing.xs),
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(2),
+                        borderRadius: AppRadius.xxsAll,
                         child: LinearProgressIndicator(
                           value: entry.percentage,
                           backgroundColor: AppColors.border,

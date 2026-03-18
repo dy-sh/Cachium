@@ -170,7 +170,7 @@ class _HoldingLiabilityPieChartState
                                             decoration: BoxDecoration(
                                               color: AppColors.surfaceLight,
                                               borderRadius:
-                                                  BorderRadius.circular(4),
+                                                  AppRadius.xsAll,
                                             ),
                                             child: Text(
                                               '${item.percentage.toStringAsFixed(0)}%',
@@ -257,7 +257,7 @@ class _HoldingLiabilityPieChartState
                                             decoration: BoxDecoration(
                                               color: AppColors.surfaceLight,
                                               borderRadius:
-                                                  BorderRadius.circular(4),
+                                                  AppRadius.xsAll,
                                             ),
                                             child: Text(
                                               '${item.percentage.toStringAsFixed(0)}%',

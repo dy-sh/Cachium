@@ -79,7 +79,7 @@ class _TopCategoriesListState extends ConsumerState<TopCategoriesList> {
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceLight,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: AppRadius.mdAll,
                   ),
                   child: Text(
                     _sortMode == _SortMode.byAmount ? 'By amount' : 'By count',
@@ -179,7 +179,7 @@ class _CategoryRow extends StatelessWidget {
           height: 32,
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AppRadius.smAll,
           ),
           child: Icon(
             icon,
@@ -222,7 +222,7 @@ class _CategoryRow extends StatelessWidget {
                       curve: Curves.easeOut,
                       builder: (context, value, _) {
                         return ClipRRect(
-                          borderRadius: BorderRadius.circular(2),
+                          borderRadius: AppRadius.xxsAll,
                           child: LinearProgressIndicator(
                             value: value,
                             backgroundColor: AppColors.border,

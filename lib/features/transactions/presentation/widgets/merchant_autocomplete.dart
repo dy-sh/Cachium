@@ -1,3 +1,4 @@
+import '../../../../core/constants/app_radius.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -73,7 +74,7 @@ class _MerchantAutocompleteState extends ConsumerState<MerchantAutocomplete> {
               duration: const Duration(milliseconds: 200),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: AppRadius.mdAll,
                 border: Border.all(
                   color: _isFocused ? accentColor : AppColors.border,
                   width: _isFocused ? 2 : 1,
@@ -108,7 +109,7 @@ class _MerchantAutocompleteState extends ConsumerState<MerchantAutocomplete> {
                   margin: const EdgeInsets.only(top: AppSpacing.xs),
                   decoration: BoxDecoration(
                     color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: AppRadius.mdAll,
                     border: Border.all(color: AppColors.border),
                   ),
                   child: ListView.builder(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../features/settings/presentation/providers/settings_provider.dart';
 
@@ -13,6 +14,7 @@ class CircularButton extends ConsumerWidget {
   final Color? backgroundColor;
   final double size;
   final bool useAccentColor;
+  final String? semanticLabel;
 
   const CircularButton({
     super.key,
@@ -22,6 +24,7 @@ class CircularButton extends ConsumerWidget {
     this.backgroundColor,
     this.size = AppSpacing.closeButtonSize,
     this.useAccentColor = false,
+    this.semanticLabel,
   });
 
   /// Factory constructor for a close button that navigates back.
@@ -50,20 +53,24 @@ class CircularButton extends ConsumerWidget {
         ? accentColor
         : (iconColor ?? AppColors.textSecondary);
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: backgroundColor ?? AppColors.surface,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Icon(
-          icon,
-          color: effectiveIconColor,
-          size: 20,
+    return Semantics(
+      button: true,
+      label: semanticLabel,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            color: backgroundColor ?? AppColors.surface,
+            borderRadius: AppRadius.iconButton,
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Icon(
+            icon,
+            color: effectiveIconColor,
+            size: 20,
+          ),
         ),
       ),
     );

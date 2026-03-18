@@ -509,6 +509,13 @@
 - Individual `double.parse`/`int.parse` calls in both CSV import methods are wrapped in field-specific try-catch blocks, surfacing granular error messages for amount, conversionRate, destinationAmount, mainCurrencyAmount, dateMillis, createdAtMillis, date, and lastUpdatedAt
 - `DeletedTransactionsScreen` converted to `ConsumerStatefulWidget`; after deleted transactions load it checks `repo.lastCorruptedCount > 0` and shows a warning notification listing how many corrupted transactions could not be loaded
 
+#### 34. UI and design system consistency improvements
+- Extended `AppRadius` with `xxs`, `xxsAll`, and `iconButton` constants, and added `AppSpacing` constants for settings back button, toggle, badge, and notification sizes, replacing all hardcoded `BorderRadius.circular(N)` values across 50+ files
+- New reusable `SettingsHeader` widget (`lib/design_system/components/layout/settings_header.dart`) replaces the duplicated back-button + title pattern across 19 screens; accepts `title`, optional `onBack` callback, and optional `actions` list
+- `Notification` widget now reads `ColorIntensity` from settings and applies intensity-aware colors instead of hardcoded zen-palette values
+- `CircularButton`, `IconBtn`, and `Toggle` widgets accept an optional `semanticLabel` parameter and wrap their content in a `Semantics` widget for accessibility; `textTertiary` color changed from `0xFF5A5A5A` to `0xFF787878` for WCAG AA contrast compliance
+- `ScreenHeader` refactored to use `CircularButton` internally, eliminating a duplicated container pattern
+
 #### 21. Historical main currency value storage
 - `mainCurrencyCode` and `mainCurrencyAmount` fields added to Transaction model and TransactionData DTO to snapshot the main-currency equivalent at the moment a transaction is saved
 - Transaction form computes and persists these fields on save; old records fall back to a calculated value via `conversionRate` for backward compatibility

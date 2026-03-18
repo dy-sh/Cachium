@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_radius.dart';
 import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -207,7 +208,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
                           height: 40,
                           decoration: BoxDecoration(
                             color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: AppRadius.iconButton,
                             border: Border.all(color: AppColors.border),
                           ),
                           child: Icon(
@@ -351,7 +352,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
             color: parentColor.withValues(alpha: bgOpacity),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AppRadius.smAll,
             border: Border.all(color: parentColor.withValues(alpha: 0.3)),
           ),
           child: Row(
@@ -637,7 +638,7 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppRadius.mdAll,
           border: Border.all(
             color: AppColors.border,
             style: BorderStyle.solid,

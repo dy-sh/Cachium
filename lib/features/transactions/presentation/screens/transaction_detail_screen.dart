@@ -82,7 +82,7 @@ class TransactionDetailScreen extends ConsumerWidget {
                       padding: const EdgeInsets.all(AppSpacing.sm),
                       decoration: BoxDecoration(
                         color: AppColors.surfaceLight,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: AppRadius.smAll,
                       ),
                       child: Icon(
                         LucideIcons.pencil,
@@ -98,7 +98,7 @@ class TransactionDetailScreen extends ConsumerWidget {
                       padding: const EdgeInsets.all(AppSpacing.sm),
                       decoration: BoxDecoration(
                         color: AppColors.expense.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: AppRadius.smAll,
                       ),
                       child: Icon(
                         LucideIcons.trash2,
@@ -191,7 +191,7 @@ class TransactionDetailScreen extends ConsumerWidget {
                             ),
                             decoration: BoxDecoration(
                               color: color.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: AppRadius.xlAll,
                             ),
                             child: Text(
                               transaction.type.displayName,

@@ -275,7 +275,7 @@ class _FMDatePickerModalState extends ConsumerState<DatePickerModal> {
       height: 4,
       decoration: BoxDecoration(
         color: AppColors.textTertiary,
-        borderRadius: BorderRadius.circular(2),
+        borderRadius: AppRadius.xxsAll,
       ),
     );
   }

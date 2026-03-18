@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/animations/haptic_helper.dart';
 import '../../../core/constants/app_animations.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../features/settings/presentation/providers/settings_provider.dart';
@@ -212,11 +213,11 @@ class _NavItemState extends ConsumerState<_NavItem> with TickerProviderStateMixi
                         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                         decoration: BoxDecoration(
                           color: AppColors.expense,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: AppRadius.smAll,
                         ),
                         constraints: const BoxConstraints(
-                          minWidth: 16,
-                          minHeight: 16,
+                          minWidth: AppSpacing.badgeMinSize,
+                          minHeight: AppSpacing.badgeMinSize,
                         ),
                         child: Text(
                           widget.item.badgeCount! > 9 ? '9+' : '${widget.item.badgeCount}',
@@ -293,7 +294,7 @@ class _NavItemState extends ConsumerState<_NavItem> with TickerProviderStateMixi
                             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                             decoration: BoxDecoration(
                               color: AppColors.expense,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: AppRadius.smAll,
                             ),
                             constraints: const BoxConstraints(
                               minWidth: 16,

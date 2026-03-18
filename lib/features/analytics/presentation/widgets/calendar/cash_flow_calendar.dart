@@ -119,7 +119,7 @@ class _CashFlowCalendarState extends ConsumerState<CashFlowCalendar> {
                             margin: const EdgeInsets.symmetric(horizontal: 1),
                             decoration: BoxDecoration(
                               color: incomeColor.withValues(alpha: alpha),
-                              borderRadius: BorderRadius.circular(2),
+                              borderRadius: AppRadius.xxsAll,
                             ),
                           ),
                         );

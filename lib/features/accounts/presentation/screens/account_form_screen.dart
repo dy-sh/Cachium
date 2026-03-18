@@ -106,7 +106,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                         padding: const EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
                           color: AppColors.expense.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: AppRadius.smAll,
                         ),
                         child: Icon(
                           LucideIcons.trash2,

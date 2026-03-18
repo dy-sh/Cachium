@@ -1,10 +1,11 @@
+import '../../../../core/constants/app_radius.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../design_system/design_system.dart';
 import '../../data/models/app_settings.dart';
 import '../providers/settings_provider.dart';
 import '../widgets/color_picker_grid.dart';
@@ -31,40 +32,7 @@ class AppearanceSettingsScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Pinned header
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: AppSpacing.md),
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => context.pop(),
-                        child: Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppColors.border),
-                          ),
-                          child: Icon(
-                            LucideIcons.chevronLeft,
-                            size: 20,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Text('Appearance', style: AppTypography.h3),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
-                ],
-              ),
-            ),
+            const SettingsHeader(title: 'Appearance'),
             // Scrollable content
             Expanded(
               child: SingleChildScrollView(
@@ -172,7 +140,7 @@ class AppearanceSettingsScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: isSelected ? AppColors.surface : Colors.transparent,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: AppRadius.mdAll,
               border: Border.all(
                 color: isSelected ? AppColors.textPrimary : AppColors.border,
                 width: isSelected ? 1.5 : 1,
@@ -212,7 +180,7 @@ class AppearanceSettingsScreen extends ConsumerWidget {
                       margin: const EdgeInsets.only(left: 4),
                       decoration: BoxDecoration(
                         color: color,
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: AppRadius.xsAll,
                       ),
                     );
                   }).toList(),
@@ -295,7 +263,7 @@ class AppearanceSettingsScreen extends ConsumerWidget {
                     padding: const EdgeInsets.all(AppSpacing.sm),
                     decoration: BoxDecoration(
                       color: isSelected ? AppColors.surface : Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: AppRadius.mdAll,
                       border: Border.all(
                         color: isSelected ? AppColors.textPrimary : AppColors.border,
                         width: isSelected ? 1.5 : 1,
@@ -337,7 +305,7 @@ class AppearanceSettingsScreen extends ConsumerWidget {
       height: 48,
       clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AppRadius.smAll,
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -398,7 +366,7 @@ class AppearanceSettingsScreen extends ConsumerWidget {
                         width: 30,
                         decoration: BoxDecoration(
                           color: AppColors.textSecondary.withValues(alpha: 0.4),
-                          borderRadius: BorderRadius.circular(2),
+                          borderRadius: AppRadius.xxsAll,
                         ),
                       ),
                     ],

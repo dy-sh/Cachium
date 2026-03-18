@@ -88,7 +88,7 @@ class WhatIfSimulator extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: (result.netChange > 0 ? AppColors.green : AppColors.red).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: AppRadius.mdAll,
                       ),
                       child: Text(
                         '${result.netChange > 0 ? '+' : ''}$currencySymbol${result.netChange.toStringAsFixed(0)}',

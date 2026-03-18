@@ -118,7 +118,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
                       height: 40,
                       decoration: BoxDecoration(
                         color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: AppRadius.iconButton,
                         border: Border.all(color: AppColors.border),
                       ),
                       child: Icon(
@@ -281,7 +281,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppRadius.mdAll,
           border: Border.all(
             color: AppColors.border,
           ),
@@ -355,7 +355,7 @@ class _AssetCard extends ConsumerWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: bgOpacity),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppRadius.iconButton,
               ),
               child: Icon(
                 asset.icon,

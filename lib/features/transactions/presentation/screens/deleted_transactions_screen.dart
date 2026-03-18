@@ -221,7 +221,7 @@ class _DeletedTransactionItem extends ConsumerWidget {
             height: 40,
             decoration: BoxDecoration(
               color: categoryColor.withValues(alpha: bgOpacity),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: AppRadius.iconButton,
             ),
             child: Icon(
               category?.icon ?? Icons.circle,

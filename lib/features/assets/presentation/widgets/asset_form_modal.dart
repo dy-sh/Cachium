@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/buttons/primary_button.dart';
@@ -121,7 +122,7 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
                         padding: const EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
                           color: AppColors.expense.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: AppRadius.smAll,
                         ),
                         child: Icon(
                           LucideIcons.trash2,
@@ -202,7 +203,7 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
                                 color: assetName.isNotEmpty
                                     ? selectedColor.withValues(alpha: 0.15)
                                     : AppColors.surfaceLight,
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: AppRadius.smAll,
                               ),
                               child: Icon(
                                 assetName.isNotEmpty ? LucideIcons.check : LucideIcons.x,

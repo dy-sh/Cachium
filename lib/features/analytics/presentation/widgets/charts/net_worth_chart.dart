@@ -96,7 +96,7 @@ class NetWorthChart extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: (trendIsUp ? AppColors.green : AppColors.red)
                       .withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: AppRadius.mdAll,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,

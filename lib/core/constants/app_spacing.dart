@@ -50,4 +50,19 @@ class AppSpacing {
 
   // Close/Action buttons
   static const double closeButtonSize = 40.0;
+
+  // Settings header
+  static const double settingsBackButtonSize = 36.0;
+
+  // Toggle
+  static const double toggleWidth = 48.0;
+  static const double toggleHeight = 28.0;
+  static const double togglePadding = 2.0;
+
+  // Badge
+  static const double badgeMinSize = 16.0;
+
+  // Notification
+  static const double notificationIconSize = 32.0;
+  static const double notificationCloseSize = 28.0;
 }

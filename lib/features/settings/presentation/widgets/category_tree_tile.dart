@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../categories/data/models/category_tree_node.dart';
@@ -124,7 +125,7 @@ class CategoryTreeTile extends StatelessWidget {
             : isTargetParent
                 ? highlightColor.withValues(alpha: 0.08)
                 : AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppRadius.mdAll,
         border: isTargetParent
             ? null // Use custom painter for dashed border
             : Border.all(
@@ -136,7 +137,7 @@ class CategoryTreeTile extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppRadius.mdAll,
           child: Opacity(
             opacity: isDragging ? 0.0 : 1.0,
             child: Padding(
@@ -170,7 +171,7 @@ class CategoryTreeTile extends StatelessWidget {
                     height: 40,
                     decoration: BoxDecoration(
                       color: categoryColor.withValues(alpha: bgOpacity),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: AppRadius.iconButton,
                     ),
                     child: Icon(
                       category.icon,
@@ -293,7 +294,7 @@ class DraggableCategoryTreeTile extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: categoryColor.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppRadius.mdAll,
         border: Border.all(color: categoryColor, width: 2),
         boxShadow: [
           BoxShadow(
@@ -316,7 +317,7 @@ class DraggableCategoryTreeTile extends StatelessWidget {
       onDraggableCanceled: (_, __) => onDragEnd?.call(),
       feedback: Material(
         elevation: 8,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppRadius.mdAll,
         child: SizedBox(
           width: MediaQuery.of(context).size.width - 48,
           child: CategoryTreeTile(

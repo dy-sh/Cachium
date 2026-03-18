@@ -84,7 +84,7 @@ class _DatabaseConsistencyCardState
                     color: consistency.isConsistent
                         ? AppColors.income.withValues(alpha: 0.1)
                         : AppColors.expense.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: AppRadius.iconButton,
                   ),
                   child: Icon(
                     consistency.isConsistent

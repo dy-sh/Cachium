@@ -46,7 +46,7 @@ class ImportSummaryCard extends ConsumerWidget {
                     color: parseResult.hasErrors
                         ? AppColors.yellow.withValues(alpha: 0.15)
                         : AppColors.income.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: AppRadius.iconButton,
                   ),
                   child: Icon(
                     parseResult.hasErrors
@@ -353,7 +353,7 @@ class ImportResultCard extends ConsumerWidget {
                     color: hasErrors
                         ? AppColors.yellow.withValues(alpha: 0.15)
                         : AppColors.income.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: AppRadius.mdAll,
                   ),
                   child: Icon(
                     hasErrors
@@ -469,7 +469,7 @@ class ImportResultCard extends ConsumerWidget {
                     padding: const EdgeInsets.all(AppSpacing.sm),
                     decoration: BoxDecoration(
                       color: AppColors.expense.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: AppRadius.smAll,
                     ),
                     constraints: const BoxConstraints(maxHeight: 150),
                     child: SingleChildScrollView(

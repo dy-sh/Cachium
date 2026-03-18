@@ -47,7 +47,7 @@ class PredictionAlertCard extends StatelessWidget {
             padding: const EdgeInsets.all(AppSpacing.sm),
             decoration: BoxDecoration(
               color: sentimentColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: AppRadius.smAll,
             ),
             child: Icon(
               sentimentIcon,
@@ -76,7 +76,7 @@ class PredictionAlertCard extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: sentimentColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: AppRadius.xsAll,
                       ),
                       child: Text(
                         alert.type.displayName,

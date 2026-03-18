@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/animations/haptic_helper.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_radius.dart';
 import '../../../../core/providers/exchange_rate_provider.dart';
 import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -161,7 +162,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                         padding: const EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
                           color: AppColors.expense.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: AppRadius.smAll,
                         ),
                         child: Icon(
                           LucideIcons.trash2,
@@ -176,7 +177,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                         padding: const EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
                           color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: AppRadius.smAll,
                           border: Border.all(color: AppColors.border),
                         ),
                         child: Icon(
@@ -682,7 +683,7 @@ class _AssetSection extends ConsumerWidget {
                 ),
                 decoration: BoxDecoration(
                   color: assetColor.withValues(alpha: bgOpacity),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: AppRadius.smAll,
                   border: Border.all(color: assetColor),
                 ),
                 child: Row(

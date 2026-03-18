@@ -1,3 +1,4 @@
+import '../../../../core/constants/app_radius.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -126,7 +127,7 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
                         padding: const EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
                           color: AppColors.expense.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: AppRadius.smAll,
                         ),
                         child: Icon(
                           LucideIcons.trash2,
@@ -208,7 +209,7 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
                                 color: categoryName.isNotEmpty
                                     ? selectedColor.withValues(alpha: 0.15)
                                     : AppColors.surfaceLight,
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: AppRadius.smAll,
                               ),
                               child: Icon(
                                 categoryName.isNotEmpty ? LucideIcons.check : LucideIcons.x,
@@ -310,7 +311,7 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
                             height: AppSpacing.buttonHeight,
                             decoration: BoxDecoration(
                               color: Colors.transparent,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: AppRadius.mdAll,
                               border: Border.all(color: AppColors.border),
                             ),
                             child: Row(
@@ -367,7 +368,7 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: AppColors.surfaceLight,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppRadius.mdAll,
           border: Border.all(color: AppColors.border),
         ),
         child: Row(
@@ -441,7 +442,7 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: AppColors.surfaceLight,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: AppRadius.mdAll,
               border: Border.all(color: AppColors.border),
             ),
             child: Row(
@@ -452,7 +453,7 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
                     height: 32,
                     decoration: BoxDecoration(
                       color: parentColor!.withValues(alpha: bgOpacity),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: AppRadius.smAll,
                     ),
                     child: Icon(
                       parentCategory.icon,
@@ -473,7 +474,7 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
                     height: 32,
                     decoration: BoxDecoration(
                       color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: AppRadius.smAll,
                     ),
                     child: Icon(
                       LucideIcons.folderRoot,

@@ -152,7 +152,7 @@ class AccountDetailScreen extends ConsumerWidget {
                           height: 48,
                           decoration: BoxDecoration(
                             color: accountColor.withValues(alpha: 0.9),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: AppRadius.mdAll,
                           ),
                           child: Icon(
                             account.icon,
@@ -418,7 +418,7 @@ class _AccountTransactionItem extends ConsumerWidget {
               height: 36,
               decoration: BoxDecoration(
                 color: categoryColor.withValues(alpha: bgOpacity),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppRadius.iconButton,
               ),
               child: Icon(
                 isTransfer ? LucideIcons.arrowLeftRight : (category?.icon ?? Icons.circle),

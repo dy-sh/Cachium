@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/constants/app_animations.dart';
@@ -8,6 +9,8 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../features/settings/data/models/app_settings.dart';
+import '../../../features/settings/presentation/providers/settings_provider.dart';
 
 /// Notification type determines the color scheme and icon.
 enum FMNotificationType {
@@ -18,16 +21,26 @@ enum FMNotificationType {
 }
 
 extension FMNotificationTypeExtension on FMNotificationType {
-  Color get color {
+  Color get color => colorForIntensity(ColorIntensity.zen);
+
+  Color colorForIntensity(ColorIntensity intensity) {
     switch (this) {
       case FMNotificationType.success:
-        return AppColors.green;
+        return AppColors.getTransactionColor('income', intensity);
       case FMNotificationType.error:
-        return AppColors.red;
+        return AppColors.getTransactionColor('expense', intensity);
       case FMNotificationType.warning:
-        return AppColors.yellow;
+        switch (intensity) {
+          case ColorIntensity.zen: return AppColors.yellow;
+          case ColorIntensity.prism: return AppColors.yellowPrism;
+          case ColorIntensity.neon: return AppColors.yellowNeon;
+        }
       case FMNotificationType.info:
-        return AppColors.cyan;
+        switch (intensity) {
+          case ColorIntensity.zen: return AppColors.cyan;
+          case ColorIntensity.prism: return AppColors.cyanPrism;
+          case ColorIntensity.neon: return AppColors.cyanNeon;
+        }
     }
   }
 
@@ -47,7 +60,7 @@ extension FMNotificationTypeExtension on FMNotificationType {
 
 /// A notification widget matching the Cachium design system.
 /// Appears from the top with slide + fade animation.
-class Notification extends StatefulWidget {
+class Notification extends ConsumerStatefulWidget {
   final String message;
   final FMNotificationType type;
   final Duration duration;
@@ -68,10 +81,10 @@ class Notification extends StatefulWidget {
   });
 
   @override
-  State<Notification> createState() => _FMNotificationState();
+  ConsumerState<Notification> createState() => _FMNotificationState();
 }
 
-class _FMNotificationState extends State<Notification>
+class _FMNotificationState extends ConsumerState<Notification>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _slideAnimation;
@@ -131,7 +144,8 @@ class _FMNotificationState extends State<Notification>
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.type.color;
+    final intensity = ref.watch(colorIntensityProvider);
+    final color = widget.type.colorForIntensity(intensity);
 
     return AnimatedBuilder(
       animation: _controller,
@@ -174,8 +188,8 @@ class _FMNotificationState extends State<Notification>
             children: [
               // Icon indicator
               Container(
-                width: 32,
-                height: 32,
+                width: AppSpacing.notificationIconSize,
+                height: AppSpacing.notificationIconSize,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.15),
                   borderRadius: AppRadius.smAll,
@@ -228,8 +242,8 @@ class _FMNotificationState extends State<Notification>
                 GestureDetector(
                   onTap: _dismiss,
                   child: Container(
-                    width: 28,
-                    height: 28,
+                    width: AppSpacing.notificationCloseSize,
+                    height: AppSpacing.notificationCloseSize,
                     decoration: BoxDecoration(
                       color: AppColors.border,
                       borderRadius: AppRadius.smAll,

@@ -1,3 +1,4 @@
+import '../../../../core/constants/app_radius.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -118,7 +119,7 @@ class _RecurringRuleFormScreenState
                         padding: const EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
                           color: AppColors.expense.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: AppRadius.smAll,
                         ),
                         child: Icon(
                           LucideIcons.trash2,
@@ -317,7 +318,7 @@ class _RecurringRuleFormScreenState
                           padding: const EdgeInsets.all(AppSpacing.cardPadding),
                           decoration: BoxDecoration(
                             color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: AppRadius.mdAll,
                             border: Border.all(color: AppColors.border),
                           ),
                           child: Row(

@@ -1,5 +1,8 @@
 # New Features Log
 
+## 2026-03-19
+- **UI and Design System Consistency Improvements**: Extended `AppRadius` and `AppSpacing` with new named constants, replacing all hardcoded `BorderRadius.circular(N)` values across 50+ files. Extracted a reusable `SettingsHeader` widget that replaces a duplicated 30-line back-button + title pattern across 19 screens. The `Notification` widget now applies intensity-aware colors based on the user's `ColorIntensity` setting. `CircularButton`, `IconBtn`, and `Toggle` gain an optional `semanticLabel` parameter with `Semantics` wrappers; `textTertiary` color updated to `0xFF787878` for WCAG AA compliance. `ScreenHeader` refactored to use `CircularButton` internally.
+
 ## 2026-03-13
 - **Transaction Form Refactoring**: Confirmation dialogs for discard-changes and delete actions now use the shared `showConfirmationDialog()` helper; field-level validation shows inline errors for missing amount, category, or account when tapping Save; ~190 lines of save logic moved from the widget into `TransactionFormNotifier.save()` returning a `SaveResult`; change tracking simplified from 12 `original*` fields to a single `Transaction? originalTransaction`; the build method split into six focused sub-widgets; `MerchantAutocomplete` and `CategoryPickerFormScreen` extracted to their own files under `widgets/`.
 

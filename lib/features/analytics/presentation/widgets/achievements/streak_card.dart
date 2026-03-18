@@ -58,7 +58,7 @@ class StreakCard extends StatelessWidget {
                 padding: const EdgeInsets.all(AppSpacing.sm),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: AppRadius.smAll,
                 ),
                 child: Icon(
                   icon,
@@ -161,7 +161,7 @@ class StreakCard extends StatelessWidget {
           if (isActive && streak.bestCount > 0) ...[
             const SizedBox(height: AppSpacing.sm),
             ClipRRect(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: AppRadius.xsAll,
               child: LinearProgressIndicator(
                 value: streak.progress.clamp(0, 1),
                 backgroundColor: AppColors.surfaceLight,

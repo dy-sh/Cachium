@@ -62,7 +62,7 @@ class _WelcomeOptionCardState extends ConsumerState<WelcomeOptionCard>
                 height: 48,
                 decoration: BoxDecoration(
                   color: widget.iconColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: AppRadius.mdAll,
                 ),
                 child: widget.isLoading
                     ? const Padding(

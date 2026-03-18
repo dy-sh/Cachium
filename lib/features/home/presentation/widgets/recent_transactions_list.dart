@@ -31,7 +31,7 @@ class RecentTransactionsList extends ConsumerWidget {
           padding: const EdgeInsets.all(AppSpacing.xxl),
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: AppRadius.mdAll,
             border: Border.all(color: AppColors.border),
           ),
           child: const Center(
@@ -45,7 +45,7 @@ class RecentTransactionsList extends ConsumerWidget {
           padding: const EdgeInsets.all(AppSpacing.xxl),
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: AppRadius.mdAll,
             border: Border.all(color: AppColors.border),
           ),
           child: Center(
@@ -135,7 +135,7 @@ class _TransactionItem extends ConsumerWidget {
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: AppRadius.mdAll,
             border: Border.all(color: AppColors.border),
           ),
           child: Row(
@@ -145,7 +145,7 @@ class _TransactionItem extends ConsumerWidget {
                 height: 40,
                 decoration: BoxDecoration(
                   color: categoryColor.withValues(alpha: bgOpacity),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: AppRadius.iconButton,
                 ),
                 child: Icon(
                   isTransfer ? LucideIcons.arrowLeftRight : (category?.icon ?? Icons.circle),

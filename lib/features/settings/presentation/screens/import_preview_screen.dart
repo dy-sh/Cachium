@@ -45,62 +45,15 @@ class ImportPreviewScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.screenPadding,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: AppSpacing.md),
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: state.isLoading
-                            ? null
-                            : () {
-                                ref.read(flexibleCsvImportProvider.notifier)
-                                    .goBackToMapping();
-                                context.pop();
-                              },
-                        child: Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppColors.border),
-                          ),
-                          child: Icon(
-                            LucideIcons.chevronLeft,
-                            size: 20,
-                            color: state.isLoading
-                                ? AppColors.textTertiary
-                                : AppColors.textPrimary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Import Preview', style: AppTypography.h3),
-                            Text(
-                              state.config?.entityType.displayName ?? '',
-                              style: AppTypography.bodySmall.copyWith(
-                                color: AppColors.textTertiary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                ],
-              ),
+            SettingsHeader(
+              title: 'Import Preview',
+              onBack: state.isLoading
+                  ? () {}
+                  : () {
+                      ref.read(flexibleCsvImportProvider.notifier)
+                          .goBackToMapping();
+                      context.pop();
+                    },
             ),
 
             // Content
@@ -195,7 +148,7 @@ class ImportPreviewScreen extends ConsumerWidget {
                     ),
                     decoration: BoxDecoration(
                       color: AppColors.expense.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: AppRadius.xsAll,
                     ),
                     child: Text(
                       'Row ${row.rowIndex}',
@@ -265,7 +218,7 @@ class ImportPreviewScreen extends ConsumerWidget {
                     ),
                     decoration: BoxDecoration(
                       color: AppColors.income.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: AppRadius.xsAll,
                     ),
                     child: Text(
                       'Row ${row.rowIndex}',

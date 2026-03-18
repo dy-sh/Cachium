@@ -59,7 +59,7 @@ class AnomalyAlertCard extends ConsumerWidget {
             padding: const EdgeInsets.all(AppSpacing.sm),
             decoration: BoxDecoration(
               color: severityColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: AppRadius.smAll,
             ),
             child: Icon(
               severityIcon,
@@ -90,7 +90,7 @@ class AnomalyAlertCard extends ConsumerWidget {
                         ),
                         decoration: BoxDecoration(
                           color: AppColors.surfaceLight,
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: AppRadius.xsAll,
                         ),
                         child: Text(
                           category.name,

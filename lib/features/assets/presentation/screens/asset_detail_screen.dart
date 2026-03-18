@@ -117,7 +117,7 @@ class AssetDetailScreen extends ConsumerWidget {
                   padding: const EdgeInsets.all(AppSpacing.sm),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceLight,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: AppRadius.smAll,
                   ),
                   child: Icon(
                     LucideIcons.pencil,
@@ -155,7 +155,7 @@ class AssetDetailScreen extends ConsumerWidget {
                           height: 48,
                           decoration: BoxDecoration(
                             color: assetColor.withValues(alpha: 0.9),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: AppRadius.mdAll,
                           ),
                           child: Icon(
                             asset.icon,
@@ -426,7 +426,7 @@ class _AssetTransactionItem extends ConsumerWidget {
               height: 36,
               decoration: BoxDecoration(
                 color: categoryColor.withValues(alpha: bgOpacity),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppRadius.iconButton,
               ),
               child: Icon(
                 category?.icon ?? Icons.circle,

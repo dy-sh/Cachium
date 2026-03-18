@@ -12,6 +12,7 @@ class IconBtn extends StatefulWidget {
   final Color? backgroundColor;
   final double size;
   final bool showBorder;
+  final String? semanticLabel;
 
   const IconBtn({
     super.key,
@@ -21,6 +22,7 @@ class IconBtn extends StatefulWidget {
     this.backgroundColor,
     this.size = AppSpacing.iconButtonSize,
     this.showBorder = false,
+    this.semanticLabel,
   });
 
   @override
@@ -37,27 +39,31 @@ class _FMIconButtonState extends State<IconBtn>
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: widget.onPressed,
-      onTapDown: handleTapDown,
-      onTapUp: handleTapUp,
-      onTapCancel: handleTapCancel,
-      child: buildScaleTransition(
-        child: Container(
-          width: widget.size,
-          height: widget.size,
-          decoration: BoxDecoration(
-            color: widget.backgroundColor ?? AppColors.surface,
-            borderRadius: AppRadius.mdAll,
-            border: widget.showBorder
-                ? Border.all(color: AppColors.border)
-                : null,
-          ),
-          child: Center(
-            child: Icon(
-              widget.icon,
-              color: widget.iconColor ?? AppColors.textPrimary,
-              size: widget.size * 0.5,
+    return Semantics(
+      button: true,
+      label: widget.semanticLabel,
+      child: GestureDetector(
+        onTap: widget.onPressed,
+        onTapDown: handleTapDown,
+        onTapUp: handleTapUp,
+        onTapCancel: handleTapCancel,
+        child: buildScaleTransition(
+          child: Container(
+            width: widget.size,
+            height: widget.size,
+            decoration: BoxDecoration(
+              color: widget.backgroundColor ?? AppColors.surface,
+              borderRadius: AppRadius.mdAll,
+              border: widget.showBorder
+                  ? Border.all(color: AppColors.border)
+                  : null,
+            ),
+            child: Center(
+              child: Icon(
+                widget.icon,
+                color: widget.iconColor ?? AppColors.textPrimary,
+                size: widget.size * 0.5,
+              ),
             ),
           ),
         ),

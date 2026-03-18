@@ -60,7 +60,7 @@ class RecurringTimeline extends ConsumerWidget {
                       height: 36,
                       decoration: BoxDecoration(
                         color: AppColors.cyan,
-                        borderRadius: BorderRadius.circular(2),
+                        borderRadius: AppRadius.xxsAll,
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),

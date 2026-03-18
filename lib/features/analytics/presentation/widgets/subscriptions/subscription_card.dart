@@ -45,7 +45,7 @@ class SubscriptionCard extends ConsumerWidget {
             height: 40,
             decoration: BoxDecoration(
               color: categoryColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: AppRadius.iconButton,
             ),
             child: Icon(
               category.icon,
@@ -144,7 +144,7 @@ class _ConfidenceBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: AppRadius.xsAll,
       ),
       child: Text(
         confidence.displayName,

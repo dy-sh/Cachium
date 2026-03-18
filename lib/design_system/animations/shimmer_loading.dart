@@ -111,7 +111,7 @@ class ShimmerTransactionItem extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppRadius.iconButton,
               ),
             ),
             const SizedBox(width: AppSpacing.md),
@@ -181,7 +181,7 @@ class ShimmerAccountCard extends StatelessWidget {
                   height: 32,
                   decoration: BoxDecoration(
                     color: AppColors.surfaceLight,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: AppRadius.smAll,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),

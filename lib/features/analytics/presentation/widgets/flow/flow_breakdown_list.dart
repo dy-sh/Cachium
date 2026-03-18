@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
 import '../../../data/models/account_flow.dart';
@@ -44,7 +45,7 @@ class FlowBreakdownList extends StatelessWidget {
             height: 10,
             decoration: BoxDecoration(
               color: node.color,
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: AppRadius.xxsAll,
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
@@ -60,7 +61,7 @@ class FlowBreakdownList extends StatelessWidget {
           SizedBox(
             width: 80,
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: AppRadius.xxsAll,
               child: LinearProgressIndicator(
                 value: total > 0 ? node.amount / total : 0,
                 backgroundColor: AppColors.surfaceLight,

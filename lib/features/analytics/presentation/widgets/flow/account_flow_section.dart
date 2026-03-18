@@ -92,7 +92,7 @@ class _ViewModeToggle extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
           color: selected ? AppColors.accentPrimary.withValues(alpha: 0.2) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppRadius.mdAll,
           border: Border.all(
             color: selected ? AppColors.accentPrimary : AppColors.border,
           ),

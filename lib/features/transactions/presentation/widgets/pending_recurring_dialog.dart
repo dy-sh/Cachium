@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/utils/formatting_providers.dart';
@@ -98,7 +99,7 @@ class _PendingRecurringDialogState
       child: Dialog(
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AppRadius.lgAll,
           side: BorderSide(color: AppColors.border),
         ),
         child: Padding(
@@ -115,7 +116,7 @@ class _PendingRecurringDialogState
                     decoration: BoxDecoration(
                       color: AppColors.getAccentColor(7, intensity)
                           .withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: AppRadius.iconButton,
                     ),
                     child: Icon(
                       LucideIcons.repeat,
@@ -168,7 +169,7 @@ class _PendingRecurringDialogState
                           color: info.isSelected
                               ? typeColor.withValues(alpha: 0.08)
                               : Colors.transparent,
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: AppRadius.iconButton,
                           border: Border.all(
                             color: info.isSelected
                                 ? typeColor.withValues(alpha: 0.3)
@@ -190,7 +191,7 @@ class _PendingRecurringDialogState
                                 activeColor: typeColor,
                                 side: BorderSide(color: AppColors.textTertiary),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4),
+                                  borderRadius: AppRadius.xsAll,
                                 ),
                                 materialTapTargetSize:
                                     MaterialTapTargetSize.shrinkWrap,

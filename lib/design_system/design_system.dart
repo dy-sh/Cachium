@@ -41,6 +41,7 @@ export 'components/layout/bottom_nav_bar.dart';
 export 'components/layout/form_header.dart';
 export 'components/layout/page_layout.dart';
 export 'components/layout/screen_header.dart';
+export 'components/layout/settings_header.dart';
 
 // Selection
 export 'components/selection/inline_selector.dart';

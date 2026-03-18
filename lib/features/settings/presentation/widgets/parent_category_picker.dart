@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_radius.dart';
 import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -102,7 +103,7 @@ class _ParentCategoryPickerState extends ConsumerState<ParentCategoryPicker> {
                     height: 4,
                     decoration: BoxDecoration(
                       color: AppColors.border,
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: AppRadius.xxsAll,
                     ),
                   ),
                 ),
@@ -201,7 +202,7 @@ class _ParentCategoryPickerState extends ConsumerState<ParentCategoryPicker> {
           color: isSelected
               ? AppColors.accentPrimary.withValues(alpha: 0.1)
               : AppColors.surfaceLight,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppRadius.mdAll,
           border: Border.all(
             color: isSelected ? AppColors.accentPrimary : AppColors.border,
             width: isSelected ? 1.5 : 1,
@@ -216,7 +217,7 @@ class _ParentCategoryPickerState extends ConsumerState<ParentCategoryPicker> {
               height: 40,
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppRadius.iconButton,
               ),
               child: Icon(
                 LucideIcons.folderRoot,
@@ -267,7 +268,7 @@ class _ParentCategoryPickerState extends ConsumerState<ParentCategoryPicker> {
           color: isSelected
               ? categoryColor.withValues(alpha: 0.1)
               : AppColors.surfaceLight,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppRadius.mdAll,
           border: Border.all(
             color: isSelected ? categoryColor : AppColors.border,
             width: isSelected ? 1.5 : 1,
@@ -300,7 +301,7 @@ class _ParentCategoryPickerState extends ConsumerState<ParentCategoryPicker> {
               height: 40,
               decoration: BoxDecoration(
                 color: categoryColor.withValues(alpha: bgOpacity),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppRadius.iconButton,
               ),
               child: Icon(
                 category.icon,

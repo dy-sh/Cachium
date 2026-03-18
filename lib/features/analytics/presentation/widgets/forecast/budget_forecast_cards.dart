@@ -68,7 +68,7 @@ class BudgetForecastCards extends ConsumerWidget {
                       const SizedBox(height: AppSpacing.xs),
                       // Progress bar
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(2),
+                        borderRadius: AppRadius.xxsAll,
                         child: LinearProgressIndicator(
                           value: f.budgetAmount > 0
                               ? (f.currentSpending / f.budgetAmount).clamp(0.0, 1.0)

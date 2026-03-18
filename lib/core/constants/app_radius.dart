@@ -4,6 +4,7 @@ class AppRadius {
   AppRadius._();
 
   // Radius values
+  static const double xxs = 2.0;
   static const double xs = 4.0;
   static const double sm = 8.0;
   static const double md = 12.0;
@@ -13,6 +14,7 @@ class AppRadius {
   static const double full = 100.0;
 
   // BorderRadius shortcuts
+  static BorderRadius get xxsAll => BorderRadius.circular(xxs);
   static BorderRadius get xsAll => BorderRadius.circular(xs);
   static BorderRadius get smAll => BorderRadius.circular(sm);
   static BorderRadius get mdAll => BorderRadius.circular(md);
@@ -22,6 +24,7 @@ class AppRadius {
   static BorderRadius get fullAll => BorderRadius.circular(full);
 
   // Component-specific
+  static BorderRadius get iconButton => BorderRadius.circular(10.0);
   static BorderRadius get card => BorderRadius.circular(md);
   static BorderRadius get button => BorderRadius.circular(md);
   static BorderRadius get input => BorderRadius.circular(md);
