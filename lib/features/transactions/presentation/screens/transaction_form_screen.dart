@@ -343,7 +343,14 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     // Capture notifier before popping (ref won't be valid after dispose)
     final notifier = ref.read(transactionsProvider.notifier);
 
-    await notifier.deleteTransaction(tx.id);
+    try {
+      await notifier.deleteTransaction(tx.id);
+    } catch (e) {
+      if (mounted && context.mounted) {
+        context.showErrorNotification('Failed to delete transaction: ${e.toString()}');
+      }
+      return;
+    }
 
     if (mounted && context.mounted) {
       context.pop();

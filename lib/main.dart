@@ -33,6 +33,9 @@ void main() async {
   final newKeyProvider = SecureKeyProvider();
   await migrationService.migrateIfNeeded(db, oldKeyProvider, newKeyProvider);
 
+  // Clean up soft-deleted records older than 30 days
+  db.cleanupDeletedRecords();
+
   runApp(
     UncontrolledProviderScope(
       container: container,

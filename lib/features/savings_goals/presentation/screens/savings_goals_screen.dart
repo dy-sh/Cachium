@@ -208,9 +208,9 @@ class _SavingsGoalCard extends ConsumerWidget {
                           context
                               .showSuccessNotification('Savings goal deleted');
                         }
-                      } catch (_) {
+                      } catch (e) {
                         if (context.mounted) {
-                          context.showErrorNotification('Failed to delete goal');
+                          context.showErrorNotification('Failed to delete goal: ${e.toString()}');
                         }
                       }
                     }
@@ -360,9 +360,9 @@ class _SavingsGoalCard extends ConsumerWidget {
                       Navigator.pop(sheetContext);
                       context.showSuccessNotification('Added to savings goal');
                     }
-                  } catch (_) {
+                  } catch (e) {
                     if (context.mounted) {
-                      context.showErrorNotification('Failed to add savings');
+                      context.showErrorNotification('Failed to add savings: ${e.toString()}');
                     }
                   }
                 },

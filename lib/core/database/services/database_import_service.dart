@@ -506,9 +506,9 @@ class DatabaseImportService {
     for (final path in paths) {
       final fileName = path.split('/').last.toLowerCase();
 
-      if (fileName.contains('transaction_template')) {
+      if (fileName.startsWith('transaction_template') || fileName.contains('_transaction_template')) {
         templatesImported += await _importTransactionTemplatesFromCsv(path, errors);
-      } else if (fileName.contains('transaction')) {
+      } else if (fileName.startsWith('transaction') || fileName.contains('_transaction')) {
         transactionsImported += await _importTransactionsFromCsv(path, errors);
       } else if (fileName.contains('account')) {
         accountsImported += await _importAccountsFromCsv(path, errors);

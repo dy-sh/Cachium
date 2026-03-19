@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -22,12 +24,22 @@ class LockScreen extends ConsumerStatefulWidget {
 }
 
 class _LockScreenState extends ConsumerState<LockScreen> {
+  static const _maxPinLength = 8;
+  static const _lockoutThreshold1 = 5;
+  static const _lockoutThreshold2 = 10;
+  static const _lockoutDuration1 = Duration(seconds: 30);
+  static const _lockoutDuration2 = Duration(minutes: 5);
+
   bool _isAuthenticating = false;
   String _enteredPin = '';
   String? _errorMessage;
   late _UnlockMode _mode;
   final _passwordController = TextEditingController();
   final _passwordFocusNode = FocusNode();
+
+  int _failedAttempts = 0;
+  DateTime? _lockedUntil;
+  Timer? _lockoutTimer;
 
   @override
   void initState() {
@@ -39,9 +51,55 @@ class _LockScreenState extends ConsumerState<LockScreen> {
 
   @override
   void dispose() {
+    _enteredPin = '';
+    _passwordController.clear();
     _passwordController.dispose();
     _passwordFocusNode.dispose();
+    _lockoutTimer?.cancel();
     super.dispose();
+  }
+
+  bool get _isLockedOut {
+    if (_lockedUntil == null) return false;
+    return DateTime.now().isBefore(_lockedUntil!);
+  }
+
+  Duration get _remainingLockout {
+    if (_lockedUntil == null) return Duration.zero;
+    final remaining = _lockedUntil!.difference(DateTime.now());
+    return remaining.isNegative ? Duration.zero : remaining;
+  }
+
+  void _startLockout() {
+    final duration = _failedAttempts >= _lockoutThreshold2
+        ? _lockoutDuration2
+        : _lockoutDuration1;
+    _lockedUntil = DateTime.now().add(duration);
+    _lockoutTimer?.cancel();
+    _lockoutTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!_isLockedOut) {
+        _lockoutTimer?.cancel();
+        _lockoutTimer = null;
+      }
+      if (mounted) setState(() {});
+    });
+  }
+
+  void _recordFailedAttempt(String errorMessage) {
+    _failedAttempts++;
+    if (_failedAttempts >= _lockoutThreshold1) {
+      _startLockout();
+      final remaining = _remainingLockout;
+      setState(() {
+        _errorMessage = 'Too many attempts. Try again in ${remaining.inSeconds}s';
+        _enteredPin = '';
+        _passwordController.clear();
+      });
+    } else {
+      setState(() {
+        _errorMessage = errorMessage;
+      });
+    }
   }
 
   void _initMode() {
@@ -92,16 +150,21 @@ class _LockScreenState extends ConsumerState<LockScreen> {
   }
 
   void _unlock() {
+    _enteredPin = '';
+    _passwordController.clear();
+    _failedAttempts = 0;
+    _lockedUntil = null;
+    _lockoutTimer?.cancel();
     ref.read(appLockStateProvider.notifier).unlock();
     widget.onUnlocked();
   }
 
   void _onPinDigit(String digit) {
+    if (_isLockedOut) return;
+
     final storedPin = ref.read(appPinCodeProvider);
     if (storedPin == null) return;
-    // For hashed PINs, we don't know exact length — use max 8
-    final maxLen = CredentialHasher.isHashed(storedPin) ? 8 : storedPin.length;
-    if (_enteredPin.length >= maxLen) return;
+    if (_enteredPin.length >= _maxPinLength) return;
 
     setState(() {
       _enteredPin += digit;
@@ -115,6 +178,8 @@ class _LockScreenState extends ConsumerState<LockScreen> {
   }
 
   Future<void> _verifyPin() async {
+    if (_isLockedOut) return;
+
     final storedPin = ref.read(appPinCodeProvider);
     if (storedPin == null) return;
 
@@ -123,10 +188,10 @@ class _LockScreenState extends ConsumerState<LockScreen> {
 
     if (matched) {
       _unlock();
-    } else if (_enteredPin.length >= 8) {
+    } else if (_enteredPin.length >= _maxPinLength) {
       // Max length reached, definitely wrong
+      _recordFailedAttempt('Wrong PIN');
       setState(() {
-        _errorMessage = 'Wrong PIN';
         _enteredPin = '';
       });
     }
@@ -142,6 +207,8 @@ class _LockScreenState extends ConsumerState<LockScreen> {
   }
 
   Future<void> _submitPassword() async {
+    if (_isLockedOut) return;
+
     final storedPassword = ref.read(appPasswordProvider);
     if (storedPassword == null) return;
 
@@ -154,10 +221,8 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     if (matched) {
       _unlock();
     } else {
-      setState(() {
-        _errorMessage = 'Wrong password';
-        _passwordController.clear();
-      });
+      _recordFailedAttempt('Wrong password');
+      _passwordController.clear();
     }
   }
 
@@ -238,7 +303,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                 // PIN mode
                 if (_mode == _UnlockMode.pin && hasPin) ...[
                   const SizedBox(height: AppSpacing.xxl),
-                  _buildPinDots(8), // Max PIN length
+                  _buildPinDots(_maxPinLength),
                   const SizedBox(height: AppSpacing.xxl),
                   _buildNumberPad(),
                 ],
@@ -309,6 +374,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
             controller: _passwordController,
             focusNode: _passwordFocusNode,
             obscureText: true,
+            enabled: !_isLockedOut,
             style: AppTypography.bodyMedium.copyWith(
               color: AppColors.textPrimary,
             ),
@@ -340,12 +406,14 @@ class _LockScreenState extends ConsumerState<LockScreen> {
           ),
           const SizedBox(height: AppSpacing.lg),
           GestureDetector(
-            onTap: _submitPassword,
+            onTap: _isLockedOut ? null : _submitPassword,
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
               decoration: BoxDecoration(
-                color: AppColors.textPrimary,
+                color: _isLockedOut
+                    ? AppColors.textTertiary
+                    : AppColors.textPrimary,
                 borderRadius: AppRadius.mdAll,
               ),
               child: Center(
@@ -498,7 +566,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
           );
         }
         return GestureDetector(
-          onTap: () => _onPinDigit(key),
+          onTap: _isLockedOut ? null : () => _onPinDigit(key),
           child: Container(
             width: 72,
             height: 56,

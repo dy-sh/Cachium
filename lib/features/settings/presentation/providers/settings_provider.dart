@@ -306,7 +306,8 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     }
   }
 
-  /// Migrate plaintext credentials to hashed format.
+  /// Migrate credentials to current hashing format (PBKDF2).
+  /// Handles: plaintext → PBKDF2, sha256 → PBKDF2.
   /// Called once on app startup if needed.
   Future<void> migrateCredentialsIfNeeded() async {
     final current = state.valueOrNull;
@@ -315,16 +316,27 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     var needsSave = false;
     var updated = current;
 
-    if (current.appPinCode != null && !CredentialHasher.isHashed(current.appPinCode!)) {
-      final hashed = await CredentialHasher.hash(current.appPinCode!);
-      updated = updated.copyWith(appPinCode: hashed);
-      needsSave = true;
+    if (current.appPinCode != null && !CredentialHasher.isPbkdf2(current.appPinCode!)) {
+      if (CredentialHasher.isHashed(current.appPinCode!)) {
+        // sha256 format — we can't reverse the hash, so credential must be
+        // re-entered by the user. Skip migration for sha256 (it still verifies).
+      } else {
+        // Plaintext — migrate to PBKDF2
+        final hashed = await CredentialHasher.hash(current.appPinCode!);
+        updated = updated.copyWith(appPinCode: hashed);
+        needsSave = true;
+      }
     }
 
-    if (current.appPassword != null && !CredentialHasher.isHashed(current.appPassword!)) {
-      final hashed = await CredentialHasher.hash(current.appPassword!);
-      updated = updated.copyWith(appPassword: hashed);
-      needsSave = true;
+    if (current.appPassword != null && !CredentialHasher.isPbkdf2(current.appPassword!)) {
+      if (CredentialHasher.isHashed(current.appPassword!)) {
+        // sha256 format — can't reverse, skip (still verifies correctly)
+      } else {
+        // Plaintext — migrate to PBKDF2
+        final hashed = await CredentialHasher.hash(current.appPassword!);
+        updated = updated.copyWith(appPassword: hashed);
+        needsSave = true;
+      }
     }
 
     if (needsSave) {

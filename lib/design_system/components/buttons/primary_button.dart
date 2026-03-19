@@ -20,6 +20,7 @@ class PrimaryButton extends ConsumerStatefulWidget {
   final Color? textColor;
   final IconData? icon;
   final bool useAccentColor;
+  final String? semanticLabel;
 
   const PrimaryButton({
     super.key,
@@ -31,6 +32,7 @@ class PrimaryButton extends ConsumerStatefulWidget {
     this.textColor,
     this.icon,
     this.useAccentColor = true,
+    this.semanticLabel,
   });
 
   @override
@@ -59,7 +61,11 @@ class _FMPrimaryButtonState extends ConsumerState<PrimaryButton>
     final bgColor = widget.backgroundColor ?? (widget.useAccentColor ? accentColor : AppColors.textPrimary);
     final txtColor = widget.textColor ?? AppColors.background;
 
-    return GestureDetector(
+    return Semantics(
+      button: true,
+      enabled: !isDisabled,
+      label: widget.semanticLabel ?? widget.label,
+      child: GestureDetector(
       onTap: isDisabled ? null : widget.onPressed,
       onTapDown: _handleTapDown,
       onTapUp: handleTapUp,
@@ -100,6 +106,7 @@ class _FMPrimaryButtonState extends ConsumerState<PrimaryButton>
             ),
           ),
         ),
+      ),
       ),
     );
   }

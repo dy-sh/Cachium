@@ -18,6 +18,7 @@ class SecondaryButton extends ConsumerStatefulWidget {
   final bool isExpanded;
   final IconData? icon;
   final bool useAccentColor;
+  final String? semanticLabel;
 
   const SecondaryButton({
     super.key,
@@ -27,6 +28,7 @@ class SecondaryButton extends ConsumerStatefulWidget {
     this.isExpanded = true,
     this.icon,
     this.useAccentColor = false,
+    this.semanticLabel,
   });
 
   @override
@@ -55,7 +57,11 @@ class _SecondaryButtonState extends ConsumerState<SecondaryButton>
     final borderColor = widget.useAccentColor ? accentColor : AppColors.border;
     final txtColor = widget.useAccentColor ? accentColor : AppColors.textPrimary;
 
-    return GestureDetector(
+    return Semantics(
+      button: true,
+      enabled: !isDisabled,
+      label: widget.semanticLabel ?? widget.label,
+      child: GestureDetector(
       onTap: isDisabled ? null : widget.onPressed,
       onTapDown: _handleTapDown,
       onTapUp: handleTapUp,
@@ -97,6 +103,7 @@ class _SecondaryButtonState extends ConsumerState<SecondaryButton>
             ),
           ),
         ),
+      ),
       ),
     );
   }

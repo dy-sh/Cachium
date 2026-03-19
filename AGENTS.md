@@ -62,7 +62,7 @@ lib/
 - **Enum extensions:** All enums have `displayName`, `color`, `icon` extensions
 - **Categories:** Support `parentId` for hierarchy; `DefaultCategories` provides presets
 - **Accounts:** Support `customColor`/`customIcon` overrides via `getColorWithIntensity()`
-- **Credential hashing:** PIN/password stored as `sha256:<base64>` via `CredentialHasher`. Never store plaintext. Use `CredentialHasher.verify()` for comparisons (handles legacy plaintext fallback).
+- **Credential hashing:** PIN/password stored as `pbkdf2:<iterations>:<base64-salt>:<base64-hash>` via `CredentialHasher`. Never store plaintext. Use `CredentialHasher.verify()` for comparisons (handles legacy `sha256:` and plaintext fallback). New credentials always use PBKDF2 with 100k iterations.
 - **PopScope for forms:** All form screens must wrap their Scaffold in `PopScope` with unsaved-work detection and confirmation dialog.
 - **Provider lookups:** Use `accountMapProvider`/`categoryMapProvider` for O(1) lookups by ID. Prefer `accountByIdProvider`/`categoryByIdProvider` which use these maps.
 - **Error handling:** Wrap all async operations in try-catch with `context.showErrorNotification()` in screens. Settings provider uses optimistic updates with rollback on error.

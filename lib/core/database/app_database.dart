@@ -674,6 +674,47 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> deleteAllSettings() => settingsDao.deleteAll();
 
+  /// Permanently deletes soft-deleted records older than the given threshold.
+  Future<void> cleanupDeletedRecords({
+    Duration olderThan = const Duration(days: 30),
+  }) async {
+    final cutoff = DateTime.now().subtract(olderThan).millisecondsSinceEpoch;
+    await transaction(() async {
+      await customStatement(
+        'DELETE FROM transactions WHERE is_deleted = 1 AND last_updated_at < ?',
+        [cutoff],
+      );
+      await customStatement(
+        'DELETE FROM accounts WHERE is_deleted = 1 AND last_updated_at < ?',
+        [cutoff],
+      );
+      await customStatement(
+        'DELETE FROM categories WHERE is_deleted = 1 AND last_updated_at < ?',
+        [cutoff],
+      );
+      await customStatement(
+        'DELETE FROM budgets WHERE is_deleted = 1 AND last_updated_at < ?',
+        [cutoff],
+      );
+      await customStatement(
+        'DELETE FROM assets WHERE is_deleted = 1 AND last_updated_at < ?',
+        [cutoff],
+      );
+      await customStatement(
+        'DELETE FROM recurring_rules WHERE is_deleted = 1 AND last_updated_at < ?',
+        [cutoff],
+      );
+      await customStatement(
+        'DELETE FROM savings_goals WHERE is_deleted = 1 AND last_updated_at < ?',
+        [cutoff],
+      );
+      await customStatement(
+        'DELETE FROM transaction_templates WHERE is_deleted = 1 AND last_updated_at < ?',
+        [cutoff],
+      );
+    });
+  }
+
   Future<void> deleteAllData({bool includeSettings = false}) async {
     await transaction(() async {
       await deleteAllTransactions();

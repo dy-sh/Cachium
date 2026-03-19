@@ -14,6 +14,7 @@ import '../../../settings/presentation/providers/database_management_providers.d
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../settings/presentation/widgets/color_picker_grid.dart';
 import '../../../settings/presentation/widgets/recalculate_preview_dialog.dart';
+import '../../../transactions/data/models/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../data/models/account.dart';
 import '../providers/account_form_provider.dart';
@@ -406,9 +407,9 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                           if (context.mounted) {
                             context.pop();
                           }
-                        } catch (_) {
+                        } catch (e) {
                           if (context.mounted) {
-                            context.showErrorNotification('Failed to save account');
+                            context.showErrorNotification('Failed to save account: ${e.toString()}');
                           }
                         }
                       }
@@ -511,15 +512,27 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
     final account = ref.read(accountByIdProvider(formState.editingAccountId!));
     if (account == null) return;
 
-    // Get all transactions for this account
+    // Get all transactions for this account (source or destination)
     final transactionsAsync = ref.read(transactionsProvider);
     final transactions = transactionsAsync.valueOrEmpty;
-    final accountTransactions = transactions.where((t) => t.accountId == account.id);
+    final accountTransactions = transactions.where(
+      (t) => t.accountId == account.id || t.destinationAccountId == account.id,
+    );
 
     // Calculate transaction delta
     double transactionDelta = 0;
     for (final tx in accountTransactions) {
-      transactionDelta += tx.type.name == 'income' ? tx.amount : -tx.amount;
+      if (tx.type == TransactionType.transfer) {
+        // Transfers: subtract from source, add to destination
+        if (tx.accountId == account.id) {
+          transactionDelta -= tx.amount;
+        }
+        if (tx.destinationAccountId == account.id) {
+          transactionDelta += tx.destinationAmount ?? tx.amount;
+        }
+      } else if (tx.accountId == account.id) {
+        transactionDelta += tx.type == TransactionType.income ? tx.amount : -tx.amount;
+      }
     }
 
     // Calculate what the balance should be

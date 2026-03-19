@@ -16,6 +16,7 @@ class DestructiveButton extends StatefulWidget {
   final bool isExpanded;
   final bool isOutlined;
   final IconData? icon;
+  final String? semanticLabel;
 
   const DestructiveButton({
     super.key,
@@ -25,6 +26,7 @@ class DestructiveButton extends StatefulWidget {
     this.isExpanded = true,
     this.isOutlined = false,
     this.icon,
+    this.semanticLabel,
   });
 
   @override
@@ -52,7 +54,11 @@ class _DestructiveButtonState extends State<DestructiveButton>
     final bgColor = widget.isOutlined ? Colors.transparent : AppColors.expense;
     final txtColor = widget.isOutlined ? AppColors.expense : Colors.white;
 
-    return GestureDetector(
+    return Semantics(
+      button: true,
+      enabled: !isDisabled,
+      label: widget.semanticLabel ?? widget.label,
+      child: GestureDetector(
       onTap: isDisabled ? null : widget.onPressed,
       onTapDown: _handleTapDown,
       onTapUp: handleTapUp,
@@ -96,6 +102,7 @@ class _DestructiveButtonState extends State<DestructiveButton>
             ),
           ),
         ),
+      ),
       ),
     );
   }

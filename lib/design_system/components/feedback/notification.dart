@@ -311,12 +311,19 @@ class NotificationOverlay {
     }
   }
 
+  bool _isProcessingQueue = false;
+
   void _showNext() {
     if (_queue.isEmpty) {
       _isShowing = false;
       _currentMessage = null;
+      _isProcessingQueue = false;
       return;
     }
+
+    // Guard against re-entrant calls
+    if (_isProcessingQueue) return;
+    _isProcessingQueue = true;
 
     _isShowing = true;
     final item = _queue.removeAt(0);
@@ -350,6 +357,7 @@ class NotificationOverlay {
     );
 
     overlay.insert(_currentEntry!);
+    _isProcessingQueue = false;
   }
 
   /// Shows a success notification.

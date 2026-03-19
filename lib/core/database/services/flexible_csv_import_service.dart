@@ -290,8 +290,10 @@ class FlexibleCsvImportService {
         if (amountConfig?.mode == AmountResolutionMode.signedAmount) {
           final amount = parsedValues['amount'];
           if (amount is num) {
-            // Derive type from sign and store absolute value
-            if (amount < 0) {
+            if (amount == 0) {
+              // Zero amounts are ambiguous in signed-amount mode
+              errors.add('Zero amount — cannot determine transaction type from sign');
+            } else if (amount < 0) {
               parsedValues['type'] = TransactionType.expense;
               parsedValues['amount'] = amount.abs();
             } else {
