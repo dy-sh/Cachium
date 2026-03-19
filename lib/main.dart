@@ -6,6 +6,7 @@ import 'core/constants/app_colors.dart';
 import 'core/database/services/key_migration_service.dart';
 import 'core/database/services/secure_key_provider.dart';
 import 'core/providers/database_providers.dart';
+import 'core/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,6 +43,9 @@ void main() async {
     // Continue startup — data remains readable with the legacy key
     // until migration succeeds on a future launch.
   }
+
+  // Initialize notification service
+  await NotificationService().init();
 
   // Clean up soft-deleted records older than 30 days
   db.cleanupDeletedRecords();

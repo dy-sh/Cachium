@@ -19,6 +19,7 @@ import '../features/settings/presentation/screens/database_settings_screen.dart'
 import '../features/settings/presentation/screens/export_screen.dart';
 import '../features/settings/presentation/screens/formats_settings_screen.dart';
 import '../features/settings/presentation/screens/manual_rates_screen.dart';
+import '../features/settings/presentation/screens/notification_settings_screen.dart';
 import '../features/settings/presentation/screens/home_settings_screen.dart';
 import '../features/settings/presentation/screens/import_preview_screen.dart';
 import '../features/settings/presentation/screens/preferences_settings_screen.dart';
@@ -30,6 +31,10 @@ import '../features/savings_goals/presentation/screens/savings_goals_screen.dart
 import '../features/search/presentation/screens/global_search_screen.dart';
 import '../features/transactions/presentation/screens/recurring_rule_form_screen.dart';
 import '../features/transactions/presentation/screens/recurring_rules_screen.dart';
+import '../features/attachments/presentation/screens/attachment_storage_screen.dart';
+import '../features/attachments/presentation/screens/attachment_viewer_screen.dart';
+import '../features/tags/presentation/screens/tag_form_screen.dart';
+import '../features/tags/presentation/screens/tag_management_screen.dart';
 import '../features/transactions/presentation/screens/transaction_detail_screen.dart';
 import '../features/transactions/presentation/screens/transaction_form_screen.dart';
 import '../features/transactions/presentation/screens/transaction_template_form_screen.dart';
@@ -65,6 +70,12 @@ class AppRoutes {
   static const transactionTemplates = '/settings/templates';
   static const transactionTemplateForm = '/settings/templates/new';
   static const transactionTemplateEdit = '/settings/templates/:id/edit';
+  static const tagManagement = '/settings/tags';
+  static const tagForm = '/settings/tags/new';
+  static const tagEdit = '/settings/tags/:id/edit';
+  static const notificationSettings = '/settings/notifications';
+  static const attachmentViewer = '/transaction/:id/attachments';
+  static const attachmentStorage = '/settings/storage';
   static const manualRates = '/settings/formats/manual-rates';
   static const deletedTransactions = '/transactions/deleted';
   static const transactionForm = '/transaction/new';
@@ -210,6 +221,65 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
           state,
           const CategoryManagementScreen(),
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.tagManagement,
+        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
+          state,
+          const TagManagementScreen(),
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.tagForm,
+        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
+          state,
+          const TagFormScreen(),
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.tagEdit,
+        pageBuilder: (context, state) {
+          final tagId = state.pathParameters['id']!;
+          return PageTransitions.buildSlideLeftTransition(
+            state,
+            TagFormScreen(tagId: tagId),
+            animationsEnabled: ref.read(formAnimationsEnabledProvider),
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.attachmentViewer,
+        pageBuilder: (context, state) {
+          final transactionId = state.pathParameters['id']!;
+          final indexStr = state.uri.queryParameters['index'];
+          final initialIndex = indexStr != null ? int.tryParse(indexStr) ?? 0 : 0;
+          return PageTransitions.buildSlideLeftTransition(
+            state,
+            AttachmentViewerScreen(
+              transactionId: transactionId,
+              initialIndex: initialIndex,
+            ),
+            animationsEnabled: ref.read(formAnimationsEnabledProvider),
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.attachmentStorage,
+        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
+          state,
+          const AttachmentStorageScreen(),
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.notificationSettings,
+        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
+          state,
+          const NotificationSettingsScreen(),
           animationsEnabled: ref.read(formAnimationsEnabledProvider),
         ),
       ),

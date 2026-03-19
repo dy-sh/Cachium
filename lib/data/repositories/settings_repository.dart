@@ -53,6 +53,13 @@ class SettingsRepository {
       appLockEnabled: settings.appLockEnabled,
       appPinCode: settings.appPinCode,
       appPassword: settings.appPassword,
+      notificationsEnabled: settings.notificationsEnabled,
+      budgetAlertThresholds: settings.budgetAlertThresholds,
+      recurringRemindersEnabled: settings.recurringRemindersEnabled,
+      recurringReminderAdvanceDays: settings.recurringReminderAdvanceDays,
+      weeklySpendingSummaryEnabled: settings.weeklySpendingSummaryEnabled,
+      weeklySpendingSummaryDay: settings.weeklySpendingSummaryDay,
+      encryptAttachments: settings.encryptAttachments,
     );
   }
 
@@ -112,6 +119,13 @@ class SettingsRepository {
       appLockEnabled: data.appLockEnabled,
       appPinCode: data.appPinCode,
       appPassword: data.appPassword,
+      notificationsEnabled: data.notificationsEnabled,
+      budgetAlertThresholds: data.budgetAlertThresholds,
+      recurringRemindersEnabled: data.recurringRemindersEnabled,
+      recurringReminderAdvanceDays: data.recurringReminderAdvanceDays,
+      weeklySpendingSummaryEnabled: data.weeklySpendingSummaryEnabled,
+      weeklySpendingSummaryDay: data.weeklySpendingSummaryDay,
+      encryptAttachments: data.encryptAttachments,
     );
   }
 

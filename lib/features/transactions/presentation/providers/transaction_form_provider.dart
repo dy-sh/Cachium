@@ -1,4 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:uuid/uuid.dart';
+import '../../../../core/providers/database_providers.dart';
+import '../../../../core/services/attachment_file_service.dart';
+import '../../../attachments/data/models/attachment.dart';
 import '../../../../core/providers/exchange_rate_provider.dart';
 import '../../../../core/utils/currency_conversion.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
@@ -34,9 +40,13 @@ class TransactionFormState {
   final String? note;
   final String? merchant;
   final String? assetId;
+  final List<String> tagIds;
+  final List<XFile> pendingAttachments;
   final String? editingTransactionId;
   // Original transaction for change tracking (only set when editing)
   final Transaction? originalTransaction;
+  // Original tag IDs for change tracking (only set when editing)
+  final List<String> originalTagIds;
   // Settings-driven validation
   final bool allowZeroAmount;
   // Validation UI state
@@ -52,11 +62,14 @@ class TransactionFormState {
     this.conversionRate = 1.0,
     this.destinationAmount,
     this.assetId,
+    this.tagIds = const [],
+    this.pendingAttachments = const [],
     required this.date,
     this.note,
     this.merchant,
     this.editingTransactionId,
     this.originalTransaction,
+    this.originalTagIds = const [],
     this.allowZeroAmount = false,
     this.showValidationErrors = false,
   });
@@ -126,7 +139,8 @@ class TransactionFormState {
         note != orig.note ||
         merchant != orig.merchant ||
         currencyCode != orig.currencyCode ||
-        conversionRate != orig.conversionRate;
+        conversionRate != orig.conversionRate ||
+        !_sameTagIds(tagIds, originalTagIds);
   }
 
   /// Compare dates ignoring seconds/milliseconds (only year, month, day, hour, minute).
@@ -137,6 +151,16 @@ class TransactionFormState {
         a.day == b.day &&
         a.hour == b.hour &&
         a.minute == b.minute;
+  }
+
+  bool _sameTagIds(List<String> a, List<String> b) {
+    if (a.length != b.length) return false;
+    final sortedA = List<String>.from(a)..sort();
+    final sortedB = List<String>.from(b)..sort();
+    for (int i = 0; i < sortedA.length; i++) {
+      if (sortedA[i] != sortedB[i]) return false;
+    }
+    return true;
   }
 
   /// Valid and has changes (for Save button).
@@ -155,6 +179,8 @@ class TransactionFormState {
     bool clearDestinationAmount = false,
     String? assetId,
     bool clearAssetId = false,
+    List<String>? tagIds,
+    List<XFile>? pendingAttachments,
     DateTime? date,
     String? note,
     bool clearNote = false,
@@ -162,6 +188,7 @@ class TransactionFormState {
     bool clearMerchant = false,
     String? editingTransactionId,
     Transaction? originalTransaction,
+    List<String>? originalTagIds,
     bool? allowZeroAmount,
     bool? showValidationErrors,
   }) {
@@ -179,11 +206,14 @@ class TransactionFormState {
           ? null
           : (destinationAmount ?? this.destinationAmount),
       assetId: clearAssetId ? null : (assetId ?? this.assetId),
+      tagIds: tagIds ?? this.tagIds,
+      pendingAttachments: pendingAttachments ?? this.pendingAttachments,
       date: date ?? this.date,
       note: clearNote ? null : (note ?? this.note),
       merchant: clearMerchant ? null : (merchant ?? this.merchant),
       editingTransactionId: editingTransactionId ?? this.editingTransactionId,
       originalTransaction: originalTransaction ?? this.originalTransaction,
+      originalTagIds: originalTagIds ?? this.originalTagIds,
       allowZeroAmount: allowZeroAmount ?? this.allowZeroAmount,
       showValidationErrors: showValidationErrors ?? this.showValidationErrors,
     );
@@ -374,6 +404,14 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
     }
   }
 
+  void setTagIds(List<String> tagIds) {
+    state = state.copyWith(tagIds: tagIds);
+  }
+
+  void setPendingAttachments(List<XFile> files) {
+    state = state.copyWith(pendingAttachments: files);
+  }
+
   void setAsset(String? assetId) {
     state = state.copyWith(assetId: assetId, clearAssetId: assetId == null);
   }
@@ -449,6 +487,19 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
       originalTransaction: transaction,
       allowZeroAmount: allowZeroAmount,
     );
+
+    // Load tag IDs asynchronously
+    _loadTagIds(transaction.id);
+  }
+
+  Future<void> _loadTagIds(String transactionId) async {
+    try {
+      final repo = ref.read(tagRepositoryProvider);
+      final tagIds = await repo.getTagIdsForTransaction(transactionId);
+      state = state.copyWith(tagIds: tagIds, originalTagIds: tagIds);
+    } catch (_) {
+      // Silently fail — tags are optional
+    }
   }
 
   /// Save the transaction (create or update). Returns a SaveResult.
@@ -607,6 +658,40 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
               note: savedFormState.note,
               merchant: savedFormState.merchant,
             );
+      }
+
+      // Determine saved transaction ID
+      final savedTxId = isEditing
+          ? savedFormState.editingTransactionId!
+          : ref.read(transactionsProvider).valueOrNull?.first.id;
+
+      // Save tag associations
+      if (savedTxId != null &&
+          (savedFormState.tagIds.isNotEmpty || savedFormState.originalTagIds.isNotEmpty)) {
+        final tagRepo = ref.read(tagRepositoryProvider);
+        await tagRepo.setTagsForTransaction(savedTxId, savedFormState.tagIds);
+      }
+
+      // Process pending attachments
+      if (savedTxId != null && savedFormState.pendingAttachments.isNotEmpty) {
+        final attachRepo = ref.read(attachmentRepositoryProvider);
+        final fileService = AttachmentFileService();
+        const uuid = Uuid();
+
+        for (final xfile in savedFormState.pendingAttachments) {
+          final result = await fileService.saveImage(File(xfile.path));
+          final attachment = Attachment(
+            id: uuid.v4(),
+            transactionId: savedTxId,
+            fileName: xfile.name,
+            mimeType: xfile.mimeType ?? 'image/jpeg',
+            fileSize: result.fileSize,
+            filePath: result.filePath,
+            thumbnailPath: result.thumbnailPath,
+            createdAt: DateTime.now(),
+          );
+          await attachRepo.createAttachment(attachment);
+        }
       }
 
       // Save last used account and category after successful save

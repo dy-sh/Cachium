@@ -554,6 +554,30 @@
 #### 44. Import amount validation
 - Transaction amounts are validated as non-negative during import; negative values are rejected with a descriptive error rather than silently imported
 
+#### 45. Tags / Labels
+- Cross-cutting transaction classification system independent of categories
+- Create tags with custom name, color, and icon; manage from Settings > Tags
+- Assign multiple tags to a transaction via a multi-select chip selector in the transaction form
+- Tags displayed on the transaction details screen
+- Full CRUD with drag-and-drop reorder support
+- Tag metadata stored in encrypted blob storage; transaction-tag relationships stored in a plaintext junction table
+
+#### 46. Notifications & Reminders
+- Local notification system using flutter_local_notifications and timezone packages
+- Budget threshold alerts: fires when spending reaches a user-configured percentage of a budget
+- Recurring transaction reminders: notifies a configurable number of days before a recurring transaction is due
+- Optional weekly spending summary notification
+- Configurable from Settings > Notifications
+- NotificationLog table tracks sent notifications to prevent duplicate alerts
+
+#### 47. Receipt / Photo Attachments
+- Attach receipt photos to transactions via camera or gallery picker
+- Images saved to the app documents directory; auto-generated thumbnails (~200 px JPEG) for list display
+- Full-screen InteractiveViewer for viewing attachments, with swipe-between-images support
+- Storage usage viewable from Settings > Storage
+- Attachment metadata stored in encrypted blob; image files stored on disk
+- Optional per-file encryption setting available
+
 #### 21. Historical main currency value storage
 - `mainCurrencyCode` and `mainCurrencyAmount` fields added to Transaction model and TransactionData DTO to snapshot the main-currency equivalent at the moment a transaction is saved
 - Transaction form computes and persists these fields on save; old records fall back to a calculated value via `conversionRate` for backward compatibility

@@ -6,7 +6,9 @@ import '../../data/repositories/budget_repository.dart';
 import '../../data/repositories/category_repository.dart';
 import '../../data/repositories/recurring_rule_repository.dart';
 import '../../data/repositories/savings_goal_repository.dart';
+import '../../data/repositories/attachment_repository.dart';
 import '../../data/repositories/settings_repository.dart';
+import '../../data/repositories/tag_repository.dart';
 import '../../data/repositories/transaction_repository.dart';
 import '../../data/repositories/transaction_template_repository.dart';
 import '../database/app_database.dart';
@@ -109,6 +111,22 @@ final savingsGoalRepositoryProvider = Provider<SavingsGoalRepository>((ref) {
 /// Provider for the transaction template repository.
 final transactionTemplateRepositoryProvider = Provider<TransactionTemplateRepository>((ref) {
   return TransactionTemplateRepository(
+    database: ref.watch(databaseProvider),
+    encryptionService: ref.watch(encryptionServiceProvider),
+  );
+});
+
+/// Provider for the attachment repository.
+final attachmentRepositoryProvider = Provider<AttachmentRepository>((ref) {
+  return AttachmentRepository(
+    database: ref.watch(databaseProvider),
+    encryptionService: ref.watch(encryptionServiceProvider),
+  );
+});
+
+/// Provider for the tag repository.
+final tagRepositoryProvider = Provider<TagRepository>((ref) {
+  return TagRepository(
     database: ref.watch(databaseProvider),
     encryptionService: ref.watch(encryptionServiceProvider),
   );

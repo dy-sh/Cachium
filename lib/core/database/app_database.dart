@@ -3,12 +3,16 @@ import 'package:drift_flutter/drift_flutter.dart';
 
 import 'daos/account_dao.dart';
 import 'daos/asset_dao.dart';
+import 'daos/attachment_dao.dart';
 import 'daos/budget_dao.dart';
 import 'daos/category_dao.dart';
+import 'daos/notification_log_dao.dart';
 import 'daos/recurring_rule_dao.dart';
 import 'daos/savings_goal_dao.dart';
 import 'daos/settings_dao.dart';
+import 'daos/tag_dao.dart';
 import 'daos/transaction_dao.dart';
+import 'daos/transaction_tag_dao.dart';
 import 'daos/transaction_template_dao.dart';
 
 part 'app_database.g.dart';
@@ -158,6 +162,60 @@ class TransactionTemplates extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Table for storing encrypted tags.
+///
+/// Only `id`, `sortOrder`, `lastUpdatedAt`, and `isDeleted` are stored in plaintext.
+/// All other tag data is encrypted in `encryptedBlob`.
+@DataClassName('TagRow')
+class Tags extends Table {
+  TextColumn get id => text()();
+  IntColumn get sortOrder => integer()();
+  IntColumn get lastUpdatedAt => integer()();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BlobColumn get encryptedBlob => blob()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Junction table for transaction-tag relationships.
+///
+/// Plaintext — only stores opaque UUIDs.
+class TransactionTags extends Table {
+  TextColumn get transactionId => text()();
+  TextColumn get tagId => text()();
+
+  @override
+  Set<Column> get primaryKey => {transactionId, tagId};
+}
+
+/// Table for storing encrypted attachment metadata.
+@DataClassName('AttachmentRow')
+class Attachments extends Table {
+  TextColumn get id => text()();
+  TextColumn get transactionId => text()();
+  IntColumn get createdAt => integer()();
+  IntColumn get lastUpdatedAt => integer()();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BlobColumn get encryptedBlob => blob()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Table for logging sent notifications (plaintext, non-sensitive metadata).
+@DataClassName('NotificationLogRow')
+class NotificationLog extends Table {
+  TextColumn get id => text()();
+  TextColumn get type => text()();
+  TextColumn get referenceId => text().nullable()();
+  IntColumn get sentAt => integer()();
+  IntColumn get scheduledFor => integer().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Table for storing app settings.
 ///
 /// Settings are stored as unencrypted JSON since they don't contain sensitive data.
@@ -182,15 +240,15 @@ class AppSettings extends Table {
 /// is stored unencrypted on disk, but all sensitive transaction data is
 /// encrypted at the application layer before being stored.
 @DriftDatabase(
-  tables: [Transactions, Accounts, Categories, Budgets, Assets, RecurringRules, SavingsGoals, TransactionTemplates, AppSettings],
-  daos: [TransactionDao, AccountDao, CategoryDao, BudgetDao, AssetDao, RecurringRuleDao, SavingsGoalDao, TransactionTemplateDao, SettingsDao],
+  tables: [Transactions, Accounts, Categories, Budgets, Assets, RecurringRules, SavingsGoals, TransactionTemplates, Tags, TransactionTags, Attachments, NotificationLog, AppSettings],
+  daos: [TransactionDao, AccountDao, CategoryDao, BudgetDao, AssetDao, RecurringRuleDao, SavingsGoalDao, TransactionTemplateDao, TagDao, TransactionTagDao, AttachmentDao, NotificationLogDao, SettingsDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
 
   @override
-  int get schemaVersion => 18;
+  int get schemaVersion => 21;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -222,6 +280,24 @@ class AppDatabase extends _$AppDatabase {
 
           if (from < 18) {
             // Add composite and additional table indexes
+            await _createIndexes(m);
+          }
+
+          if (from < 19) {
+            // Add Tags and TransactionTags tables
+            await m.createTable(tags);
+            await m.createTable(transactionTags);
+            await _createIndexes(m);
+          }
+
+          if (from < 20) {
+            // Add NotificationLog table
+            await m.createTable(notificationLog);
+          }
+
+          if (from < 21) {
+            // Add Attachments table
+            await m.createTable(attachments);
             await _createIndexes(m);
           }
         },
@@ -261,6 +337,24 @@ class AppDatabase extends _$AppDatabase {
     );
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_transaction_templates_is_deleted ON transaction_templates(is_deleted)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_tags_is_deleted ON tags(is_deleted)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_tags_sort_order ON tags(sort_order)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_transaction_tags_transaction ON transaction_tags(transaction_id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_transaction_tags_tag ON transaction_tags(tag_id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_attachments_transaction ON attachments(transaction_id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_attachments_is_deleted ON attachments(is_deleted)',
     );
   }
 
@@ -643,6 +737,169 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> deleteAllSavingsGoals() => savingsGoalDao.deleteAll();
 
+  // CRUD operations for tags (delegates to TagDao)
+
+  Future<void> insertTag({
+    required String id,
+    required int sortOrder,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+  }) =>
+      tagDao.insert(
+        id: id,
+        sortOrder: sortOrder,
+        lastUpdatedAt: lastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+      );
+
+  Future<void> upsertTag({
+    required String id,
+    required int sortOrder,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+    bool isDeleted = false,
+  }) =>
+      tagDao.upsert(
+        id: id,
+        sortOrder: sortOrder,
+        lastUpdatedAt: lastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+        isDeleted: isDeleted,
+      );
+
+  Future<void> updateTag({
+    required String id,
+    required int sortOrder,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+  }) =>
+      tagDao.updateRow(
+        id: id,
+        sortOrder: sortOrder,
+        lastUpdatedAt: lastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+      );
+
+  Future<void> softDeleteTag(String id, int lastUpdatedAt) =>
+      tagDao.softDelete(id, lastUpdatedAt);
+
+  Future<TagRow?> getTag(String id) => tagDao.getById(id);
+
+  Future<List<TagRow>> getAllTags() => tagDao.getAll();
+
+  Stream<List<TagRow>> watchAllTags() => tagDao.watchAll();
+
+  Future<bool> hasTags() => tagDao.hasAny();
+
+  Future<void> deleteAllTags() => tagDao.deleteAll();
+
+  // TransactionTag operations (delegates to TransactionTagDao)
+
+  Future<void> addTransactionTag({
+    required String transactionId,
+    required String tagId,
+  }) =>
+      transactionTagDao.addTag(transactionId: transactionId, tagId: tagId);
+
+  Future<void> removeTransactionTag({
+    required String transactionId,
+    required String tagId,
+  }) =>
+      transactionTagDao.removeTag(transactionId: transactionId, tagId: tagId);
+
+  Future<List<String>> getTagIdsForTransaction(String transactionId) =>
+      transactionTagDao.getTagIdsForTransaction(transactionId);
+
+  Future<List<String>> getTransactionIdsForTag(String tagId) =>
+      transactionTagDao.getTransactionIdsForTag(tagId);
+
+  Future<void> setTagsForTransaction(String transactionId, List<String> tagIds) =>
+      transactionTagDao.setTagsForTransaction(transactionId, tagIds);
+
+  Future<void> removeAllTagsForTag(String tagId) =>
+      transactionTagDao.removeAllForTag(tagId);
+
+  Future<void> deleteAllTransactionTags() => transactionTagDao.deleteAll();
+
+  // CRUD operations for attachments (delegates to AttachmentDao)
+
+  Future<void> insertAttachment({
+    required String id,
+    required String transactionId,
+    required int createdAt,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+  }) =>
+      attachmentDao.insert(
+        id: id,
+        transactionId: transactionId,
+        createdAt: createdAt,
+        lastUpdatedAt: lastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+      );
+
+  Future<void> updateAttachment({
+    required String id,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+  }) =>
+      attachmentDao.updateRow(
+        id: id,
+        lastUpdatedAt: lastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+      );
+
+  Future<void> softDeleteAttachment(String id, int lastUpdatedAt) =>
+      attachmentDao.softDelete(id, lastUpdatedAt);
+
+  Future<AttachmentRow?> getAttachment(String id) => attachmentDao.getById(id);
+
+  Future<List<AttachmentRow>> getAttachmentsByTransactionId(String transactionId) =>
+      attachmentDao.getByTransactionId(transactionId);
+
+  Stream<List<AttachmentRow>> watchAttachmentsByTransactionId(String transactionId) =>
+      attachmentDao.watchByTransactionId(transactionId);
+
+  Future<List<AttachmentRow>> getAllAttachments() => attachmentDao.getAll();
+
+  Future<void> deleteAllAttachments() => attachmentDao.deleteAll();
+
+  // NotificationLog operations (delegates to NotificationLogDao)
+
+  Future<void> insertNotificationLog({
+    required String id,
+    required String type,
+    String? referenceId,
+    required int sentAt,
+    int? scheduledFor,
+  }) =>
+      notificationLogDao.insert(
+        id: id,
+        type: type,
+        referenceId: referenceId,
+        sentAt: sentAt,
+        scheduledFor: scheduledFor,
+      );
+
+  Future<List<NotificationLogRow>> getAllNotificationLogs() =>
+      notificationLogDao.getAll();
+
+  Future<bool> wasNotificationSentRecently({
+    required String type,
+    required String referenceId,
+    required Duration within,
+  }) =>
+      notificationLogDao.wasSentRecently(
+        type: type,
+        referenceId: referenceId,
+        within: within,
+      );
+
+  Future<void> deleteAllNotificationLogs() => notificationLogDao.deleteAll();
+
+  Future<void> cleanupOldNotificationLogs(Duration olderThan) =>
+      notificationLogDao.cleanupOlderThan(olderThan);
+
   // CRUD operations for app settings (delegates to SettingsDao)
 
   Future<void> upsertSettings({
@@ -712,6 +969,14 @@ class AppDatabase extends _$AppDatabase {
         'DELETE FROM transaction_templates WHERE is_deleted = 1 AND last_updated_at < ?',
         [cutoff],
       );
+      await customStatement(
+        'DELETE FROM tags WHERE is_deleted = 1 AND last_updated_at < ?',
+        [cutoff],
+      );
+      await customStatement(
+        'DELETE FROM attachments WHERE is_deleted = 1 AND last_updated_at < ?',
+        [cutoff],
+      );
     });
   }
 
@@ -725,6 +990,9 @@ class AppDatabase extends _$AppDatabase {
       await deleteAllRecurringRules();
       await deleteAllSavingsGoals();
       await deleteAllTransactionTemplates();
+      await deleteAllTags();
+      await deleteAllTransactionTags();
+      await deleteAllAttachments();
       if (includeSettings) {
         await deleteAllSettings();
       }

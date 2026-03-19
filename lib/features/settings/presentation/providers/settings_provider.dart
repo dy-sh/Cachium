@@ -109,6 +109,14 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
   Future<void> setHomeTotalBalanceTextSize(AmountDisplaySize v) => _update((s) => s.copyWith(homeTotalBalanceTextSize: v));
   Future<void> setHomeBalancesHiddenByDefault(bool v) => _update((s) => s.copyWith(homeBalancesHiddenByDefault: v));
 
+  // Notifications
+  Future<void> setNotificationsEnabled(bool v) => _update((s) => s.copyWith(notificationsEnabled: v));
+  Future<void> setBudgetAlertThresholds(List<int> v) => _update((s) => s.copyWith(budgetAlertThresholds: v));
+  Future<void> setRecurringRemindersEnabled(bool v) => _update((s) => s.copyWith(recurringRemindersEnabled: v));
+  Future<void> setRecurringReminderAdvanceDays(int v) => _update((s) => s.copyWith(recurringReminderAdvanceDays: v));
+  Future<void> setWeeklySpendingSummaryEnabled(bool v) => _update((s) => s.copyWith(weeklySpendingSummaryEnabled: v));
+  Future<void> setWeeklySpendingSummaryDay(int v) => _update((s) => s.copyWith(weeklySpendingSummaryDay: v));
+
   // Security
   Future<void> setAppLockEnabled(bool v) => _update((s) => s.copyWith(appLockEnabled: v));
 

@@ -166,6 +166,17 @@ class AppSettings {
   final String? appPinCode;
   final String? appPassword;
 
+  // Notifications
+  final bool notificationsEnabled;
+  final List<int> budgetAlertThresholds;
+  final bool recurringRemindersEnabled;
+  final int recurringReminderAdvanceDays;
+  final bool weeklySpendingSummaryEnabled;
+  final int weeklySpendingSummaryDay; // 1=Monday, 7=Sunday
+
+  // Attachments
+  final bool encryptAttachments;
+
   // Onboarding
   final bool onboardingCompleted;
 
@@ -212,6 +223,13 @@ class AppSettings {
     this.appLockEnabled = false,
     this.appPinCode,
     this.appPassword,
+    this.notificationsEnabled = false,
+    this.budgetAlertThresholds = const [75, 90, 100],
+    this.recurringRemindersEnabled = true,
+    this.recurringReminderAdvanceDays = 1,
+    this.weeklySpendingSummaryEnabled = false,
+    this.weeklySpendingSummaryDay = 1,
+    this.encryptAttachments = false,
     this.onboardingCompleted = false,
   });
 
@@ -265,6 +283,13 @@ class AppSettings {
     bool clearAppPinCode = false,
     String? appPassword,
     bool clearAppPassword = false,
+    bool? notificationsEnabled,
+    List<int>? budgetAlertThresholds,
+    bool? recurringRemindersEnabled,
+    int? recurringReminderAdvanceDays,
+    bool? weeklySpendingSummaryEnabled,
+    int? weeklySpendingSummaryDay,
+    bool? encryptAttachments,
     bool? onboardingCompleted,
   }) {
     return AppSettings(
@@ -310,6 +335,13 @@ class AppSettings {
       appLockEnabled: appLockEnabled ?? this.appLockEnabled,
       appPinCode: clearAppPinCode ? null : (appPinCode ?? this.appPinCode),
       appPassword: clearAppPassword ? null : (appPassword ?? this.appPassword),
+      notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
+      budgetAlertThresholds: budgetAlertThresholds ?? this.budgetAlertThresholds,
+      recurringRemindersEnabled: recurringRemindersEnabled ?? this.recurringRemindersEnabled,
+      recurringReminderAdvanceDays: recurringReminderAdvanceDays ?? this.recurringReminderAdvanceDays,
+      weeklySpendingSummaryEnabled: weeklySpendingSummaryEnabled ?? this.weeklySpendingSummaryEnabled,
+      weeklySpendingSummaryDay: weeklySpendingSummaryDay ?? this.weeklySpendingSummaryDay,
+      encryptAttachments: encryptAttachments ?? this.encryptAttachments,
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
     );
   }

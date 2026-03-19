@@ -17,6 +17,11 @@ import '../../../assets/presentation/providers/assets_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/transaction.dart';
+import '../../../attachments/presentation/providers/attachments_provider.dart';
+import '../../../attachments/presentation/widgets/attachment_thumbnail.dart';
+import '../../../tags/presentation/providers/tags_provider.dart';
+import '../../../tags/presentation/providers/transaction_tags_provider.dart';
+import '../../../tags/presentation/widgets/tag_chip.dart';
 import '../providers/transactions_provider.dart';
 
 class TransactionDetailScreen extends ConsumerWidget {
@@ -298,11 +303,99 @@ class TransactionDetailScreen extends ConsumerWidget {
                               icon: LucideIcons.stickyNote,
                               label: 'Note',
                               value: transaction.note!,
-                              isLast: true,
                             ),
+                          // Tags
+                          Builder(builder: (context) {
+                            final tagIdsAsync = ref.watch(
+                                tagsForTransactionProvider(transaction.id));
+                            final tagIds =
+                                tagIdsAsync.valueOrNull ?? <String>[];
+                            if (tagIds.isEmpty) return const SizedBox.shrink();
+                            final tagMap = ref.watch(tagMapProvider);
+                            final tags = tagIds
+                                .map((id) => tagMap[id])
+                                .whereType<
+                                    dynamic>() // Tag type from tagMapProvider
+                                .toList();
+                            if (tags.isEmpty) return const SizedBox.shrink();
+                            return Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.lg,
+                                vertical: AppSpacing.md + 2,
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 2),
+                                    child: Icon(
+                                      LucideIcons.tags,
+                                      size: 16,
+                                      color: AppColors.textTertiary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.md),
+                                  Expanded(
+                                    child: Wrap(
+                                      spacing: AppSpacing.xs,
+                                      runSpacing: AppSpacing.xs,
+                                      children: tags
+                                          .map((tag) => TagChip(tag: tag))
+                                          .toList(),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
                         ],
                       ),
                     ),
+
+                    // Attachments
+                    Builder(builder: (context) {
+                      final attachmentsAsync = ref.watch(
+                          attachmentsForTransactionProvider(transaction.id));
+                      final attachments = attachmentsAsync.valueOrNull ?? [];
+                      if (attachments.isEmpty) return const SizedBox.shrink();
+                      return Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.lg),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  left: AppSpacing.xs,
+                                  bottom: AppSpacing.sm),
+                              child: Text(
+                                'Attachments',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: AppColors.textTertiary,
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 72,
+                              child: ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: attachments.length,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(width: AppSpacing.sm),
+                                itemBuilder: (context, index) {
+                                  return AttachmentThumbnail(
+                                    attachment: attachments[index],
+                                    onTap: () => context.push(
+                                      '/transaction/${transaction.id}/attachments?index=$index',
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
 
                     const SizedBox(height: AppSpacing.xxxl),
                   ],

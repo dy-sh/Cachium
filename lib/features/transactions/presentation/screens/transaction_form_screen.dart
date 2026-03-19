@@ -26,6 +26,8 @@ import '../widgets/category_picker_form_screen.dart';
 import '../widgets/date_selector.dart';
 import '../widgets/merchant_autocomplete.dart';
 import '../widgets/template_picker_sheet.dart';
+import '../../../attachments/presentation/widgets/attachment_picker.dart';
+import '../../../tags/presentation/widgets/tag_selector.dart';
 import 'amount_section.dart';
 import 'category_account_section.dart';
 import 'transfer_section.dart';
@@ -254,6 +256,20 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                       controller: _merchantController,
                       onChanged: (value) {
                         ref.read(transactionFormProvider.notifier).setMerchant(value);
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    AttachmentPicker(
+                      pendingFiles: formState.pendingAttachments,
+                      onChanged: (files) {
+                        ref.read(transactionFormProvider.notifier).setPendingAttachments(files);
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    TagSelector(
+                      selectedTagIds: formState.tagIds,
+                      onChanged: (tagIds) {
+                        ref.read(transactionFormProvider.notifier).setTagIds(tagIds);
                       },
                     ),
                     const SizedBox(height: AppSpacing.lg),

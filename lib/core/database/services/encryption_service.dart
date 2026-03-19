@@ -5,10 +5,12 @@ import 'package:cryptography/cryptography.dart';
 
 import '../../../data/encryption/account_data.dart';
 import '../../../data/encryption/asset_data.dart';
+import '../../../data/encryption/attachment_data.dart';
 import '../../../data/encryption/budget_data.dart';
 import '../../../data/encryption/category_data.dart';
 import '../../../data/encryption/recurring_rule_data.dart';
 import '../../../data/encryption/savings_goal_data.dart';
+import '../../../data/encryption/tag_data.dart';
 import '../../../data/encryption/transaction_data.dart';
 import '../../../data/encryption/transaction_template_data.dart';
 import '../../exceptions/security_exception.dart';
@@ -378,6 +380,66 @@ class EncryptionService {
         fieldName: 'createdAtMillis',
         expectedValue: expectedCreatedAtMillis.toString(),
         actualValue: data.createdAtMillis.toString(),
+      );
+    }
+
+    return data;
+  }
+
+  /// Encrypts attachment metadata into a binary blob.
+  Future<Uint8List> encryptAttachment(AttachmentData data) async {
+    return encryptJson(data.toJson());
+  }
+
+  /// Decrypts an encrypted blob back to attachment data.
+  Future<AttachmentData> decryptAttachment(
+    Uint8List encryptedBlob, {
+    required String expectedId,
+  }) async {
+    final json = await decryptJson(encryptedBlob);
+    final data = AttachmentData.fromJson(json);
+
+    if (data.id != expectedId) {
+      throw SecurityException(
+        rowId: expectedId,
+        fieldName: 'id',
+        expectedValue: expectedId,
+        actualValue: data.id,
+      );
+    }
+
+    return data;
+  }
+
+  /// Encrypts tag data into a binary blob.
+  Future<Uint8List> encryptTag(TagData data) async {
+    return encryptJson(data.toJson());
+  }
+
+  /// Decrypts an encrypted blob back to tag data.
+  Future<TagData> decryptTag(
+    Uint8List encryptedBlob, {
+    required String expectedId,
+    required int expectedSortOrder,
+  }) async {
+    final json = await decryptJson(encryptedBlob);
+    final data = TagData.fromJson(json);
+
+    if (data.id != expectedId) {
+      throw SecurityException(
+        rowId: expectedId,
+        fieldName: 'id',
+        expectedValue: expectedId,
+        actualValue: data.id,
+      );
+    }
+
+    if (data.sortOrder != expectedSortOrder) {
+      throw SecurityException(
+        rowId: expectedId,
+        fieldName: 'sortOrder',
+        expectedValue: expectedSortOrder.toString(),
+        actualValue: data.sortOrder.toString(),
       );
     }
 

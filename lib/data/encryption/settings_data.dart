@@ -100,6 +100,27 @@ class SettingsData with _$SettingsData {
 
     /// App password (stored as plaintext string)
     String? appPassword,
+
+    /// Whether notifications are enabled
+    @Default(false) bool notificationsEnabled,
+
+    /// Budget alert thresholds (percentages)
+    @Default([75, 90, 100]) List<int> budgetAlertThresholds,
+
+    /// Whether recurring transaction reminders are enabled
+    @Default(true) bool recurringRemindersEnabled,
+
+    /// Days in advance for recurring reminders
+    @Default(1) int recurringReminderAdvanceDays,
+
+    /// Whether weekly spending summary is enabled
+    @Default(false) bool weeklySpendingSummaryEnabled,
+
+    /// Day of week for weekly summary (1=Monday, 7=Sunday)
+    @Default(1) int weeklySpendingSummaryDay,
+
+    /// Whether attachment files on disk are encrypted
+    @Default(false) bool encryptAttachments,
   }) = _SettingsData;
 
   factory SettingsData.fromJson(Map<String, dynamic> json) =>

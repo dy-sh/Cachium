@@ -111,6 +111,27 @@ mixin _$SettingsData {
   /// App password (stored as plaintext string)
   String? get appPassword => throw _privateConstructorUsedError;
 
+  /// Whether notifications are enabled
+  bool get notificationsEnabled => throw _privateConstructorUsedError;
+
+  /// Budget alert thresholds (percentages)
+  List<int> get budgetAlertThresholds => throw _privateConstructorUsedError;
+
+  /// Whether recurring transaction reminders are enabled
+  bool get recurringRemindersEnabled => throw _privateConstructorUsedError;
+
+  /// Days in advance for recurring reminders
+  int get recurringReminderAdvanceDays => throw _privateConstructorUsedError;
+
+  /// Whether weekly spending summary is enabled
+  bool get weeklySpendingSummaryEnabled => throw _privateConstructorUsedError;
+
+  /// Day of week for weekly summary (1=Monday, 7=Sunday)
+  int get weeklySpendingSummaryDay => throw _privateConstructorUsedError;
+
+  /// Whether attachment files on disk are encrypted
+  bool get encryptAttachments => throw _privateConstructorUsedError;
+
   /// Serializes this SettingsData to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
@@ -159,6 +180,13 @@ abstract class $SettingsDataCopyWith<$Res> {
     bool appLockEnabled,
     String? appPinCode,
     String? appPassword,
+    bool notificationsEnabled,
+    List<int> budgetAlertThresholds,
+    bool recurringRemindersEnabled,
+    int recurringReminderAdvanceDays,
+    bool weeklySpendingSummaryEnabled,
+    int weeklySpendingSummaryDay,
+    bool encryptAttachments,
   });
 }
 
@@ -207,6 +235,13 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
     Object? appLockEnabled = null,
     Object? appPinCode = freezed,
     Object? appPassword = freezed,
+    Object? notificationsEnabled = null,
+    Object? budgetAlertThresholds = null,
+    Object? recurringRemindersEnabled = null,
+    Object? recurringReminderAdvanceDays = null,
+    Object? weeklySpendingSummaryEnabled = null,
+    Object? weeklySpendingSummaryDay = null,
+    Object? encryptAttachments = null,
   }) {
     return _then(
       _value.copyWith(
@@ -330,6 +365,34 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
                 ? _value.appPassword
                 : appPassword // ignore: cast_nullable_to_non_nullable
                       as String?,
+            notificationsEnabled: null == notificationsEnabled
+                ? _value.notificationsEnabled
+                : notificationsEnabled // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            budgetAlertThresholds: null == budgetAlertThresholds
+                ? _value.budgetAlertThresholds
+                : budgetAlertThresholds // ignore: cast_nullable_to_non_nullable
+                      as List<int>,
+            recurringRemindersEnabled: null == recurringRemindersEnabled
+                ? _value.recurringRemindersEnabled
+                : recurringRemindersEnabled // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            recurringReminderAdvanceDays: null == recurringReminderAdvanceDays
+                ? _value.recurringReminderAdvanceDays
+                : recurringReminderAdvanceDays // ignore: cast_nullable_to_non_nullable
+                      as int,
+            weeklySpendingSummaryEnabled: null == weeklySpendingSummaryEnabled
+                ? _value.weeklySpendingSummaryEnabled
+                : weeklySpendingSummaryEnabled // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            weeklySpendingSummaryDay: null == weeklySpendingSummaryDay
+                ? _value.weeklySpendingSummaryDay
+                : weeklySpendingSummaryDay // ignore: cast_nullable_to_non_nullable
+                      as int,
+            encryptAttachments: null == encryptAttachments
+                ? _value.encryptAttachments
+                : encryptAttachments // ignore: cast_nullable_to_non_nullable
+                      as bool,
           )
           as $Val,
     );
@@ -376,6 +439,13 @@ abstract class _$$SettingsDataImplCopyWith<$Res>
     bool appLockEnabled,
     String? appPinCode,
     String? appPassword,
+    bool notificationsEnabled,
+    List<int> budgetAlertThresholds,
+    bool recurringRemindersEnabled,
+    int recurringReminderAdvanceDays,
+    bool weeklySpendingSummaryEnabled,
+    int weeklySpendingSummaryDay,
+    bool encryptAttachments,
   });
 }
 
@@ -423,6 +493,13 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
     Object? appLockEnabled = null,
     Object? appPinCode = freezed,
     Object? appPassword = freezed,
+    Object? notificationsEnabled = null,
+    Object? budgetAlertThresholds = null,
+    Object? recurringRemindersEnabled = null,
+    Object? recurringReminderAdvanceDays = null,
+    Object? weeklySpendingSummaryEnabled = null,
+    Object? weeklySpendingSummaryDay = null,
+    Object? encryptAttachments = null,
   }) {
     return _then(
       _$SettingsDataImpl(
@@ -546,6 +623,34 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
             ? _value.appPassword
             : appPassword // ignore: cast_nullable_to_non_nullable
                   as String?,
+        notificationsEnabled: null == notificationsEnabled
+            ? _value.notificationsEnabled
+            : notificationsEnabled // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        budgetAlertThresholds: null == budgetAlertThresholds
+            ? _value._budgetAlertThresholds
+            : budgetAlertThresholds // ignore: cast_nullable_to_non_nullable
+                  as List<int>,
+        recurringRemindersEnabled: null == recurringRemindersEnabled
+            ? _value.recurringRemindersEnabled
+            : recurringRemindersEnabled // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        recurringReminderAdvanceDays: null == recurringReminderAdvanceDays
+            ? _value.recurringReminderAdvanceDays
+            : recurringReminderAdvanceDays // ignore: cast_nullable_to_non_nullable
+                  as int,
+        weeklySpendingSummaryEnabled: null == weeklySpendingSummaryEnabled
+            ? _value.weeklySpendingSummaryEnabled
+            : weeklySpendingSummaryEnabled // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        weeklySpendingSummaryDay: null == weeklySpendingSummaryDay
+            ? _value.weeklySpendingSummaryDay
+            : weeklySpendingSummaryDay // ignore: cast_nullable_to_non_nullable
+                  as int,
+        encryptAttachments: null == encryptAttachments
+            ? _value.encryptAttachments
+            : encryptAttachments // ignore: cast_nullable_to_non_nullable
+                  as bool,
       ),
     );
   }
@@ -585,7 +690,14 @@ class _$SettingsDataImpl implements _SettingsData {
     this.appLockEnabled = false,
     this.appPinCode,
     this.appPassword,
-  });
+    this.notificationsEnabled = false,
+    final List<int> budgetAlertThresholds = const [75, 90, 100],
+    this.recurringRemindersEnabled = true,
+    this.recurringReminderAdvanceDays = 1,
+    this.weeklySpendingSummaryEnabled = false,
+    this.weeklySpendingSummaryDay = 1,
+    this.encryptAttachments = false,
+  }) : _budgetAlertThresholds = budgetAlertThresholds;
 
   factory _$SettingsDataImpl.fromJson(Map<String, dynamic> json) =>
       _$$SettingsDataImplFromJson(json);
@@ -733,9 +845,52 @@ class _$SettingsDataImpl implements _SettingsData {
   @override
   final String? appPassword;
 
+  /// Whether notifications are enabled
+  @override
+  @JsonKey()
+  final bool notificationsEnabled;
+
+  /// Budget alert thresholds (percentages)
+  final List<int> _budgetAlertThresholds;
+
+  /// Budget alert thresholds (percentages)
+  @override
+  @JsonKey()
+  List<int> get budgetAlertThresholds {
+    if (_budgetAlertThresholds is EqualUnmodifiableListView)
+      return _budgetAlertThresholds;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_budgetAlertThresholds);
+  }
+
+  /// Whether recurring transaction reminders are enabled
+  @override
+  @JsonKey()
+  final bool recurringRemindersEnabled;
+
+  /// Days in advance for recurring reminders
+  @override
+  @JsonKey()
+  final int recurringReminderAdvanceDays;
+
+  /// Whether weekly spending summary is enabled
+  @override
+  @JsonKey()
+  final bool weeklySpendingSummaryEnabled;
+
+  /// Day of week for weekly summary (1=Monday, 7=Sunday)
+  @override
+  @JsonKey()
+  final int weeklySpendingSummaryDay;
+
+  /// Whether attachment files on disk are encrypted
+  @override
+  @JsonKey()
+  final bool encryptAttachments;
+
   @override
   String toString() {
-    return 'SettingsData(id: $id, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, mainCurrencyCode: $mainCurrencyCode, exchangeRateApiOption: $exchangeRateApiOption, cachedExchangeRates: $cachedExchangeRates, lastRateFetchTimestamp: $lastRateFetchTimestamp, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, categoriesFoldedCount: $categoriesFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, categorySortOption: $categorySortOption, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId, appLockEnabled: $appLockEnabled, appPinCode: $appPinCode, appPassword: $appPassword)';
+    return 'SettingsData(id: $id, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, mainCurrencyCode: $mainCurrencyCode, exchangeRateApiOption: $exchangeRateApiOption, cachedExchangeRates: $cachedExchangeRates, lastRateFetchTimestamp: $lastRateFetchTimestamp, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, categoriesFoldedCount: $categoriesFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, categorySortOption: $categorySortOption, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId, appLockEnabled: $appLockEnabled, appPinCode: $appPinCode, appPassword: $appPassword, notificationsEnabled: $notificationsEnabled, budgetAlertThresholds: $budgetAlertThresholds, recurringRemindersEnabled: $recurringRemindersEnabled, recurringReminderAdvanceDays: $recurringReminderAdvanceDays, weeklySpendingSummaryEnabled: $weeklySpendingSummaryEnabled, weeklySpendingSummaryDay: $weeklySpendingSummaryDay, encryptAttachments: $encryptAttachments)';
   }
 
   @override
@@ -807,7 +962,37 @@ class _$SettingsDataImpl implements _SettingsData {
             (identical(other.appPinCode, appPinCode) ||
                 other.appPinCode == appPinCode) &&
             (identical(other.appPassword, appPassword) ||
-                other.appPassword == appPassword));
+                other.appPassword == appPassword) &&
+            (identical(other.notificationsEnabled, notificationsEnabled) ||
+                other.notificationsEnabled == notificationsEnabled) &&
+            const DeepCollectionEquality().equals(
+              other._budgetAlertThresholds,
+              _budgetAlertThresholds,
+            ) &&
+            (identical(
+                  other.recurringRemindersEnabled,
+                  recurringRemindersEnabled,
+                ) ||
+                other.recurringRemindersEnabled == recurringRemindersEnabled) &&
+            (identical(
+                  other.recurringReminderAdvanceDays,
+                  recurringReminderAdvanceDays,
+                ) ||
+                other.recurringReminderAdvanceDays ==
+                    recurringReminderAdvanceDays) &&
+            (identical(
+                  other.weeklySpendingSummaryEnabled,
+                  weeklySpendingSummaryEnabled,
+                ) ||
+                other.weeklySpendingSummaryEnabled ==
+                    weeklySpendingSummaryEnabled) &&
+            (identical(
+                  other.weeklySpendingSummaryDay,
+                  weeklySpendingSummaryDay,
+                ) ||
+                other.weeklySpendingSummaryDay == weeklySpendingSummaryDay) &&
+            (identical(other.encryptAttachments, encryptAttachments) ||
+                other.encryptAttachments == encryptAttachments));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -844,6 +1029,13 @@ class _$SettingsDataImpl implements _SettingsData {
     appLockEnabled,
     appPinCode,
     appPassword,
+    notificationsEnabled,
+    const DeepCollectionEquality().hash(_budgetAlertThresholds),
+    recurringRemindersEnabled,
+    recurringReminderAdvanceDays,
+    weeklySpendingSummaryEnabled,
+    weeklySpendingSummaryDay,
+    encryptAttachments,
   ]);
 
   /// Create a copy of SettingsData
@@ -892,6 +1084,13 @@ abstract class _SettingsData implements SettingsData {
     final bool appLockEnabled,
     final String? appPinCode,
     final String? appPassword,
+    final bool notificationsEnabled,
+    final List<int> budgetAlertThresholds,
+    final bool recurringRemindersEnabled,
+    final int recurringReminderAdvanceDays,
+    final bool weeklySpendingSummaryEnabled,
+    final int weeklySpendingSummaryDay,
+    final bool encryptAttachments,
   }) = _$SettingsDataImpl;
 
   factory _SettingsData.fromJson(Map<String, dynamic> json) =
@@ -1016,6 +1215,34 @@ abstract class _SettingsData implements SettingsData {
   /// App password (stored as plaintext string)
   @override
   String? get appPassword;
+
+  /// Whether notifications are enabled
+  @override
+  bool get notificationsEnabled;
+
+  /// Budget alert thresholds (percentages)
+  @override
+  List<int> get budgetAlertThresholds;
+
+  /// Whether recurring transaction reminders are enabled
+  @override
+  bool get recurringRemindersEnabled;
+
+  /// Days in advance for recurring reminders
+  @override
+  int get recurringReminderAdvanceDays;
+
+  /// Whether weekly spending summary is enabled
+  @override
+  bool get weeklySpendingSummaryEnabled;
+
+  /// Day of week for weekly summary (1=Monday, 7=Sunday)
+  @override
+  int get weeklySpendingSummaryDay;
+
+  /// Whether attachment files on disk are encrypted
+  @override
+  bool get encryptAttachments;
 
   /// Create a copy of SettingsData
   /// with the given fields replaced by the non-null parameter values.

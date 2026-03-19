@@ -69,6 +69,13 @@ class SettingsScreen extends ConsumerWidget {
                         onTap: () => context.push('/settings/categories'),
                       ),
                       SettingsTile(
+                        title: 'Tags',
+                        description: 'Label transactions for quick filtering',
+                        icon: LucideIcons.tag,
+                        iconColor: AppColors.getAccentColor(15, intensity),
+                        onTap: () => context.push('/settings/tags'),
+                      ),
+                      SettingsTile(
                         title: 'Assets',
                         description: 'Track physical assets & costs',
                         icon: LucideIcons.box,
@@ -110,6 +117,13 @@ class SettingsScreen extends ConsumerWidget {
                         iconColor: AppColors.getAccentColor(3, intensity), // Blue
                         onTap: () => context.push('/settings/database'),
                       ),
+                      SettingsTile(
+                        title: 'Storage',
+                        description: 'Attachment files & space',
+                        icon: LucideIcons.hardDrive,
+                        iconColor: AppColors.getAccentColor(19, intensity),
+                        onTap: () => context.push('/settings/storage'),
+                      ),
                     ],
                   ),
                 ),
@@ -121,6 +135,13 @@ class SettingsScreen extends ConsumerWidget {
                   child: SettingsSection(
                     title: 'Settings',
                     children: [
+                      SettingsTile(
+                        title: 'Notifications',
+                        description: 'Budget alerts, reminders, summaries',
+                        icon: LucideIcons.bell,
+                        iconColor: AppColors.getAccentColor(17, intensity),
+                        onTap: () => context.push('/settings/notifications'),
+                      ),
                       SettingsTile(
                         title: 'Appearance',
                         description: 'Colors, intensity, animations',
