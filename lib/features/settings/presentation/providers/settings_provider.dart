@@ -35,61 +35,26 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     }
   }
 
+  Future<void> _update(AppSettings Function(AppSettings s) updater) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    await _saveAndUpdate(updater(current));
+  }
+
   // Appearance
-  Future<void> setColorIntensity(ColorIntensity intensity) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(colorIntensity: intensity));
-  }
-
-  Future<void> setAccentColorIndex(int index) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(accentColorIndex: index));
-  }
-
-  Future<void> setAccountCardStyle(AccountCardStyle style) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(accountCardStyle: style));
-  }
-
-  Future<void> setTabTransitionsEnabled(bool enabled) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(tabTransitionsEnabled: enabled));
-  }
-
-  Future<void> setFormAnimationsEnabled(bool enabled) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(formAnimationsEnabled: enabled));
-  }
-
-  Future<void> setBalanceCountersEnabled(bool enabled) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(balanceCountersEnabled: enabled));
-  }
+  Future<void> setColorIntensity(ColorIntensity v) => _update((s) => s.copyWith(colorIntensity: v));
+  Future<void> setAccentColorIndex(int v) => _update((s) => s.copyWith(accentColorIndex: v));
+  Future<void> setAccountCardStyle(AccountCardStyle v) => _update((s) => s.copyWith(accountCardStyle: v));
+  Future<void> setTabTransitionsEnabled(bool v) => _update((s) => s.copyWith(tabTransitionsEnabled: v));
+  Future<void> setFormAnimationsEnabled(bool v) => _update((s) => s.copyWith(formAnimationsEnabled: v));
+  Future<void> setBalanceCountersEnabled(bool v) => _update((s) => s.copyWith(balanceCountersEnabled: v));
 
   // Formats
-  Future<void> setDateFormat(DateFormatOption format) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(dateFormat: format));
-  }
-
-  Future<void> setMainCurrencyCode(String code) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(mainCurrencyCode: code));
-  }
-
-  Future<void> setExchangeRateApiOption(ExchangeRateApiOption option) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(exchangeRateApiOption: option));
-  }
+  Future<void> setDateFormat(DateFormatOption v) => _update((s) => s.copyWith(dateFormat: v));
+  Future<void> setMainCurrencyCode(String v) => _update((s) => s.copyWith(mainCurrencyCode: v));
+  Future<void> setExchangeRateApiOption(ExchangeRateApiOption v) => _update((s) => s.copyWith(exchangeRateApiOption: v));
+  Future<void> setLastRateFetchTimestamp(int v) => _update((s) => s.copyWith(lastRateFetchTimestamp: v));
+  Future<void> setFirstDayOfWeek(FirstDayOfWeek v) => _update((s) => s.copyWith(firstDayOfWeek: v));
 
   Future<void> setCachedExchangeRates(String? json) async {
     final current = state.valueOrNull;
@@ -101,91 +66,23 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     }
   }
 
-  Future<void> setLastRateFetchTimestamp(int timestamp) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(lastRateFetchTimestamp: timestamp));
-  }
-
-  Future<void> setFirstDayOfWeek(FirstDayOfWeek day) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(firstDayOfWeek: day));
-  }
-
   // Preferences
-  Future<void> setHapticFeedbackEnabled(bool enabled) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(hapticFeedbackEnabled: enabled));
-  }
-
-  Future<void> setStartScreen(StartScreen screen) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(startScreen: screen));
-  }
-
-  Future<void> setLastUsedAccountId(String? accountId) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(lastUsedAccountId: accountId));
-  }
+  Future<void> setHapticFeedbackEnabled(bool v) => _update((s) => s.copyWith(hapticFeedbackEnabled: v));
+  Future<void> setStartScreen(StartScreen v) => _update((s) => s.copyWith(startScreen: v));
+  Future<void> setLastUsedAccountId(String? v) => _update((s) => s.copyWith(lastUsedAccountId: v));
 
   // Transactions
-  Future<void> setSelectLastCategory(bool enabled) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(selectLastCategory: enabled));
-  }
-
-  Future<void> setSelectLastAccount(bool enabled) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(selectLastAccount: enabled));
-  }
-
-  Future<void> setAccountsFoldedCount(int count) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(accountsFoldedCount: count));
-  }
-
-  Future<void> setCategoriesFoldedCount(int count) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(categoriesFoldedCount: count));
-  }
-
-  Future<void> setCategorySortOption(CategorySortOption option) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(categorySortOption: option));
-  }
-
-  Future<void> setShowAddAccountButton(bool enabled) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(showAddAccountButton: enabled));
-  }
-
-  Future<void> setShowAddCategoryButton(bool enabled) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(showAddCategoryButton: enabled));
-  }
-
-  Future<void> setDefaultTransactionType(TransactionType type) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(defaultTransactionType: type));
-  }
-
-  Future<void> setAllowZeroAmount(bool allowed) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(allowZeroAmount: allowed));
-  }
+  Future<void> setSelectLastCategory(bool v) => _update((s) => s.copyWith(selectLastCategory: v));
+  Future<void> setSelectLastAccount(bool v) => _update((s) => s.copyWith(selectLastAccount: v));
+  Future<void> setAccountsFoldedCount(int v) => _update((s) => s.copyWith(accountsFoldedCount: v));
+  Future<void> setCategoriesFoldedCount(int v) => _update((s) => s.copyWith(categoriesFoldedCount: v));
+  Future<void> setCategorySortOption(CategorySortOption v) => _update((s) => s.copyWith(categorySortOption: v));
+  Future<void> setShowAddAccountButton(bool v) => _update((s) => s.copyWith(showAddAccountButton: v));
+  Future<void> setShowAddCategoryButton(bool v) => _update((s) => s.copyWith(showAddCategoryButton: v));
+  Future<void> setDefaultTransactionType(TransactionType v) => _update((s) => s.copyWith(defaultTransactionType: v));
+  Future<void> setAllowZeroAmount(bool v) => _update((s) => s.copyWith(allowZeroAmount: v));
+  Future<void> setTransactionAmountSize(AmountDisplaySize v) => _update((s) => s.copyWith(transactionAmountSize: v));
+  Future<void> setAllowSelectParentCategory(bool v) => _update((s) => s.copyWith(allowSelectParentCategory: v));
 
   Future<void> setLastUsedCategoryId(TransactionType type, String? categoryId) async {
     final current = state.valueOrNull;
@@ -197,92 +94,23 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     }
   }
 
-  Future<void> setTransactionAmountSize(AmountDisplaySize size) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(transactionAmountSize: size));
-  }
-
-  Future<void> setAllowSelectParentCategory(bool allowed) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(allowSelectParentCategory: allowed));
-  }
-
   // Assets
-  Future<void> setAssetsFoldedCount(int count) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(assetsFoldedCount: count));
-  }
-
-  Future<void> setShowAddAssetButton(bool enabled) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(showAddAssetButton: enabled));
-  }
-
-  Future<void> setAssetSortOption(AssetSortOption option) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(assetSortOption: option));
-  }
-
-  Future<void> setShowAssetSelector(bool enabled) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(showAssetSelector: enabled));
-  }
+  Future<void> setAssetsFoldedCount(int v) => _update((s) => s.copyWith(assetsFoldedCount: v));
+  Future<void> setShowAddAssetButton(bool v) => _update((s) => s.copyWith(showAddAssetButton: v));
+  Future<void> setAssetSortOption(AssetSortOption v) => _update((s) => s.copyWith(assetSortOption: v));
+  Future<void> setShowAssetSelector(bool v) => _update((s) => s.copyWith(showAssetSelector: v));
 
   // Home Page
-  Future<void> setHomeShowAccountsList(bool enabled) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(homeShowAccountsList: enabled));
-  }
-
-  Future<void> setHomeShowTotalBalance(bool enabled) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(homeShowTotalBalance: enabled));
-  }
-
-  Future<void> setHomeShowQuickActions(bool enabled) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(homeShowQuickActions: enabled));
-  }
-
-  Future<void> setHomeShowRecentTransactions(bool enabled) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(homeShowRecentTransactions: enabled));
-  }
-
-  Future<void> setHomeAccountsTextSize(AmountDisplaySize size) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(homeAccountsTextSize: size));
-  }
-
-  Future<void> setHomeTotalBalanceTextSize(AmountDisplaySize size) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(homeTotalBalanceTextSize: size));
-  }
-
-  Future<void> setHomeBalancesHiddenByDefault(bool hidden) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(homeBalancesHiddenByDefault: hidden));
-  }
+  Future<void> setHomeShowAccountsList(bool v) => _update((s) => s.copyWith(homeShowAccountsList: v));
+  Future<void> setHomeShowTotalBalance(bool v) => _update((s) => s.copyWith(homeShowTotalBalance: v));
+  Future<void> setHomeShowQuickActions(bool v) => _update((s) => s.copyWith(homeShowQuickActions: v));
+  Future<void> setHomeShowRecentTransactions(bool v) => _update((s) => s.copyWith(homeShowRecentTransactions: v));
+  Future<void> setHomeAccountsTextSize(AmountDisplaySize v) => _update((s) => s.copyWith(homeAccountsTextSize: v));
+  Future<void> setHomeTotalBalanceTextSize(AmountDisplaySize v) => _update((s) => s.copyWith(homeTotalBalanceTextSize: v));
+  Future<void> setHomeBalancesHiddenByDefault(bool v) => _update((s) => s.copyWith(homeBalancesHiddenByDefault: v));
 
   // Security
-  Future<void> setAppLockEnabled(bool enabled) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    await _saveAndUpdate(current.copyWith(appLockEnabled: enabled));
-  }
+  Future<void> setAppLockEnabled(bool v) => _update((s) => s.copyWith(appLockEnabled: v));
 
   Future<void> setAppPinCode(String? pin) async {
     final current = state.valueOrNull;

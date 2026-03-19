@@ -276,7 +276,7 @@ class _PendingRecurringDialogState
           .read(recurringRulesProvider.notifier)
           .generatePendingTransactions(ruleIds: selectedIds);
 
-      if (mounted && context.mounted) {
+      if (context.mounted) {
         Navigator.of(context).pop(true);
         context.showSuccessNotification(
           '$count transaction${count == 1 ? '' : 's'} added',

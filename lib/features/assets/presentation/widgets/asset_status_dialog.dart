@@ -87,12 +87,12 @@ class _MarkAsSoldDialogState extends ConsumerState<_MarkAsSoldDialog> {
         date: DateTime.now(),
         note: 'Sale of $assetName',
       );
-      if (mounted && context.mounted) {
+      if (context.mounted) {
         context.showSuccessNotification('Asset sold & transaction created');
       }
     } else if (createTransaction) {
       // Navigate to transaction form pre-filled
-      if (mounted && context.mounted) {
+      if (context.mounted) {
         context.push('/transaction/new?type=income');
         // Set asset after navigation
         Future.microtask(() {
@@ -101,7 +101,7 @@ class _MarkAsSoldDialogState extends ConsumerState<_MarkAsSoldDialog> {
         context.showSuccessNotification('Asset marked as sold');
       }
     } else {
-      if (mounted && context.mounted) {
+      if (context.mounted) {
         context.showSuccessNotification('Asset marked as sold');
       }
     }
@@ -235,7 +235,7 @@ class _ReactivateDialogState extends ConsumerState<_ReactivateDialog> {
     final updatedAsset = widget.asset.copyWith(status: AssetStatus.active);
     await ref.read(assetsProvider.notifier).updateAsset(updatedAsset);
 
-    if (mounted && context.mounted) {
+    if (context.mounted) {
       Navigator.of(context).pop();
       context.showSuccessNotification('Asset reactivated');
     }

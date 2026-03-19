@@ -388,7 +388,7 @@ class _TransactionTemplateFormScreenState
       isDestructive: true,
     );
 
-    if (confirmed && mounted && context.mounted) {
+    if (confirmed && context.mounted) {
       await ref
           .read(transactionTemplatesProvider.notifier)
           .deleteTemplate(formState.editingTemplateId!);

@@ -220,7 +220,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         ),
       ],
     ).then((value) {
-      if (value == 'deleted' && mounted && context.mounted) {
+      if (value == 'deleted' && context.mounted) {
         context.push(AppRoutes.deletedTransactions);
       }
     });

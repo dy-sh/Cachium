@@ -4,10 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_radius.dart';
 import '../../../../core/providers/exchange_rate_provider.dart';
 import '../../../../core/constants/app_spacing.dart';
-import '../../../../core/constants/app_typography.dart';
+import '../../../../design_system/components/buttons/icon_btn.dart';
 import '../../../../design_system/components/buttons/primary_button.dart';
 import '../../../../design_system/components/feedback/confirmation_dialog.dart';
 import '../../../../design_system/components/feedback/notification.dart';
@@ -20,13 +19,13 @@ import '../../../categories/data/models/category.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/transaction.dart';
 import '../providers/transaction_form_provider.dart';
-import '../providers/transaction_templates_provider.dart';
 import '../providers/transactions_provider.dart';
 import '../../../assets/presentation/providers/assets_provider.dart';
 import '../../../assets/presentation/widgets/asset_form_modal.dart';
 import '../widgets/category_picker_form_screen.dart';
 import '../widgets/date_selector.dart';
 import '../widgets/merchant_autocomplete.dart';
+import '../widgets/template_picker_sheet.dart';
 import 'amount_section.dart';
 import 'category_account_section.dart';
 import 'transfer_section.dart';
@@ -153,36 +152,25 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
               title: isEditing ? 'Edit Transaction' : 'New Transaction',
               onClose: () => context.pop(),
               trailing: isEditing
-                  ? GestureDetector(
-                      onTap: () => _deleteAndShowUndo(context),
-                      child: Container(
-                        padding: const EdgeInsets.all(AppSpacing.sm),
-                        decoration: BoxDecoration(
-                          color: AppColors.expense.withValues(alpha: 0.1),
-                          borderRadius: AppRadius.smAll,
-                        ),
-                        child: Icon(
-                          LucideIcons.trash2,
-                          size: 18,
-                          color: AppColors.expense,
-                        ),
-                      ),
+                  ? IconBtn(
+                      icon: LucideIcons.trash2,
+                      onPressed: () => _deleteAndShowUndo(context),
+                      iconColor: AppColors.expense,
+                      backgroundColor: AppColors.expense.withValues(alpha: 0.1),
+                      size: 36,
                     )
-                  : GestureDetector(
-                      onTap: () => _showTemplatePicker(context),
-                      child: Container(
-                        padding: const EdgeInsets.all(AppSpacing.sm),
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: AppRadius.smAll,
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: Icon(
-                          LucideIcons.fileText,
-                          size: 18,
-                          color: AppColors.textSecondary,
-                        ),
+                  : IconBtn(
+                      icon: LucideIcons.fileText,
+                      onPressed: () => showTemplatePicker(
+                        context: context,
+                        ref: ref,
+                        merchantController: _merchantController,
+                        noteController: _noteController,
+                        onApplied: () => setState(() {}),
                       ),
+                      iconColor: AppColors.textSecondary,
+                      showBorder: true,
+                      size: 36,
                     ),
             ),
 
@@ -347,13 +335,13 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     try {
       await notifier.deleteTransaction(tx.id);
     } catch (e) {
-      if (mounted && context.mounted) {
+      if (context.mounted) {
         context.showErrorNotification('Failed to delete transaction: ${e.toString()}');
       }
       return;
     }
 
-    if (mounted && context.mounted) {
+    if (context.mounted) {
       context.pop();
       context.showUndoNotification(
         'Transaction deleted',
@@ -423,97 +411,6 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     }
   }
 
-  void _showTemplatePicker(BuildContext context) {
-    final templates =
-        ref.read(transactionTemplatesProvider).valueOrNull ?? [];
-    if (templates.isEmpty) {
-      context.showInfoNotification('No templates yet. Create one in Settings.');
-      return;
-    }
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.screenPadding,
-                  AppSpacing.lg,
-                  AppSpacing.screenPadding,
-                  AppSpacing.md,
-                ),
-                child: Text('Apply Template', style: AppTypography.h4),
-              ),
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.4,
-                ),
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: templates.length,
-                  itemBuilder: (_, index) {
-                    final template = templates[index];
-                    final typeColor = AppColors.getTransactionColor(
-                      template.type.name,
-                      ref.read(colorIntensityProvider),
-                    );
-                    final subtitleParts = <String>[template.type.displayName];
-                    if (template.amount != null) {
-                      subtitleParts.add(template.amount!.toStringAsFixed(2));
-                    }
-                    if (template.merchant != null) {
-                      subtitleParts.add(template.merchant!);
-                    }
-                    return ListTile(
-                      leading: Icon(
-                        LucideIcons.fileText,
-                        color: typeColor,
-                        size: 20,
-                      ),
-                      title: Text(
-                        template.name,
-                        style: AppTypography.bodyMedium,
-                      ),
-                      subtitle: Text(
-                        subtitleParts.join(' \u00b7 '),
-                        style: AppTypography.labelSmall.copyWith(
-                          color: AppColors.textTertiary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      onTap: () {
-                        Navigator.of(sheetContext).pop();
-                        ref.read(transactionFormProvider.notifier)
-                            .applyTemplate(template);
-                        // Update text controllers
-                        if (template.merchant != null) {
-                          _merchantController.text = template.merchant!;
-                        }
-                        if (template.note != null) {
-                          _noteController.text = template.note!;
-                        }
-                        setState(() {});
-                      },
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-            ],
-          ),
-        );
-      },
-    );
-  }
 }
 
 // --- Extracted sub-section widgets ---
