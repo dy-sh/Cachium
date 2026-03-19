@@ -72,12 +72,14 @@ class SavingsGoalsScreen extends ConsumerWidget {
                   );
                 },
                 loading: () => const Center(
-                  child: CircularProgressIndicator(
-                    color: AppColors.textSecondary,
-                  ),
+                  child: LoadingIndicator(),
                 ),
-                error: (_, __) => const Center(
-                  child: Text('Failed to load savings goals'),
+                error: (_, __) => EmptyState.centered(
+                  icon: LucideIcons.alertCircle,
+                  title: 'Failed to load savings goals',
+                  subtitle: 'Tap to try again',
+                  actionLabel: 'Retry',
+                  onTap: () => ref.invalidate(savingsGoalsProvider),
                 ),
               ),
             ),

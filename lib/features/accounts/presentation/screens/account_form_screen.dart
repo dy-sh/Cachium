@@ -133,17 +133,8 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                       onChanged: (value) {
                         ref.read(accountFormProvider.notifier).setName(value);
                       },
+                      errorText: isDuplicateName ? 'Account with this name already exists' : null,
                     ),
-                    if (isDuplicateName)
-                      Padding(
-                        padding: const EdgeInsets.only(top: AppSpacing.sm),
-                        child: Text(
-                          'Account with this name already exists',
-                          style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.expense,
-                          ),
-                        ),
-                      ),
                     const SizedBox(height: AppSpacing.xxl),
 
                     Text('Account Type', style: AppTypography.labelMedium),

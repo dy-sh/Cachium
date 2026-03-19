@@ -287,6 +287,16 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                         color: AppColors.textSecondary,
                       ),
                     ),
+                    const SizedBox(height: AppSpacing.lg),
+                    GestureDetector(
+                      onTap: () => ref.invalidate(transactionsProvider),
+                      child: Text(
+                        'Try Again',
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: ref.watch(accentColorProvider),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -326,40 +336,20 @@ class _TransactionsHeader extends ConsumerWidget {
           Text('Transactions', style: AppTypography.h2),
           Row(
             children: [
-              GestureDetector(
-                onTap: onMore,
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: AppRadius.iconButton,
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: const Icon(
-                    LucideIcons.moreHorizontal,
-                    color: AppColors.textSecondary,
-                    size: 20,
-                  ),
-                ),
+              IconBtn(
+                icon: LucideIcons.moreHorizontal,
+                onPressed: onMore,
+                iconColor: AppColors.textSecondary,
+                showBorder: true,
+                semanticLabel: 'More options',
               ),
               const SizedBox(width: AppSpacing.sm),
-              GestureDetector(
-                onTap: onAdd,
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: AppRadius.iconButton,
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Icon(
-                    LucideIcons.plus,
-                    color: accentColor,
-                    size: 20,
-                  ),
-                ),
+              IconBtn(
+                icon: LucideIcons.plus,
+                onPressed: onAdd,
+                iconColor: accentColor,
+                showBorder: true,
+                semanticLabel: 'Add transaction',
               ),
             ],
           ),

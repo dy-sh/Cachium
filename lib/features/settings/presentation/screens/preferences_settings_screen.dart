@@ -18,7 +18,7 @@ class PreferencesSettingsScreen extends ConsumerWidget {
     if (settings == null) {
       return Scaffold(
         backgroundColor: AppColors.background,
-        body: const Center(child: CircularProgressIndicator()),
+        body: const Center(child: LoadingIndicator()),
       );
     }
 
