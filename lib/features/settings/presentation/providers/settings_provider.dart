@@ -105,6 +105,8 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
   Future<void> setHomeShowTotalBalance(bool v) => _update((s) => s.copyWith(homeShowTotalBalance: v));
   Future<void> setHomeShowQuickActions(bool v) => _update((s) => s.copyWith(homeShowQuickActions: v));
   Future<void> setHomeShowRecentTransactions(bool v) => _update((s) => s.copyWith(homeShowRecentTransactions: v));
+  Future<void> setHomeShowBudgetProgress(bool v) => _update((s) => s.copyWith(homeShowBudgetProgress: v));
+  Future<void> setHomeSectionOrder(List<String> v) => _update((s) => s.copyWith(homeSectionOrder: v));
   Future<void> setHomeAccountsTextSize(AmountDisplaySize v) => _update((s) => s.copyWith(homeAccountsTextSize: v));
   Future<void> setHomeTotalBalanceTextSize(AmountDisplaySize v) => _update((s) => s.copyWith(homeTotalBalanceTextSize: v));
   Future<void> setHomeBalancesHiddenByDefault(bool v) => _update((s) => s.copyWith(homeBalancesHiddenByDefault: v));
@@ -287,6 +289,8 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
       homeShowTotalBalance: defaults.homeShowTotalBalance,
       homeShowQuickActions: defaults.homeShowQuickActions,
       homeShowRecentTransactions: defaults.homeShowRecentTransactions,
+      homeShowBudgetProgress: defaults.homeShowBudgetProgress,
+      homeSectionOrder: defaults.homeSectionOrder,
       homeAccountsTextSize: defaults.homeAccountsTextSize,
       homeTotalBalanceTextSize: defaults.homeTotalBalanceTextSize,
       homeBalancesHiddenByDefault: defaults.homeBalancesHiddenByDefault,
@@ -513,4 +517,15 @@ final appPinCodeProvider = Provider<String?>((ref) {
 final appPasswordProvider = Provider<String?>((ref) {
   final settingsAsync = ref.watch(settingsProvider);
   return settingsAsync.valueOrNull?.appPassword;
+});
+
+final homeShowBudgetProgressProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.homeShowBudgetProgress ?? true;
+});
+
+final homeSectionOrderProvider = Provider<List<String>>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.homeSectionOrder ??
+      const ['accounts', 'totalBalance', 'quickActions', 'budgetProgress', 'recentTransactions'];
 });

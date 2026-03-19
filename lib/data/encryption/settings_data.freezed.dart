@@ -132,6 +132,12 @@ mixin _$SettingsData {
   /// Whether attachment files on disk are encrypted
   bool get encryptAttachments => throw _privateConstructorUsedError;
 
+  /// Whether budget progress is shown on home
+  bool get homeShowBudgetProgress => throw _privateConstructorUsedError;
+
+  /// Home section ordering
+  List<String> get homeSectionOrder => throw _privateConstructorUsedError;
+
   /// Serializes this SettingsData to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
@@ -187,6 +193,8 @@ abstract class $SettingsDataCopyWith<$Res> {
     bool weeklySpendingSummaryEnabled,
     int weeklySpendingSummaryDay,
     bool encryptAttachments,
+    bool homeShowBudgetProgress,
+    List<String> homeSectionOrder,
   });
 }
 
@@ -242,6 +250,8 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
     Object? weeklySpendingSummaryEnabled = null,
     Object? weeklySpendingSummaryDay = null,
     Object? encryptAttachments = null,
+    Object? homeShowBudgetProgress = null,
+    Object? homeSectionOrder = null,
   }) {
     return _then(
       _value.copyWith(
@@ -393,6 +403,14 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
                 ? _value.encryptAttachments
                 : encryptAttachments // ignore: cast_nullable_to_non_nullable
                       as bool,
+            homeShowBudgetProgress: null == homeShowBudgetProgress
+                ? _value.homeShowBudgetProgress
+                : homeShowBudgetProgress // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            homeSectionOrder: null == homeSectionOrder
+                ? _value.homeSectionOrder
+                : homeSectionOrder // ignore: cast_nullable_to_non_nullable
+                      as List<String>,
           )
           as $Val,
     );
@@ -446,6 +464,8 @@ abstract class _$$SettingsDataImplCopyWith<$Res>
     bool weeklySpendingSummaryEnabled,
     int weeklySpendingSummaryDay,
     bool encryptAttachments,
+    bool homeShowBudgetProgress,
+    List<String> homeSectionOrder,
   });
 }
 
@@ -500,6 +520,8 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
     Object? weeklySpendingSummaryEnabled = null,
     Object? weeklySpendingSummaryDay = null,
     Object? encryptAttachments = null,
+    Object? homeShowBudgetProgress = null,
+    Object? homeSectionOrder = null,
   }) {
     return _then(
       _$SettingsDataImpl(
@@ -651,6 +673,14 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
             ? _value.encryptAttachments
             : encryptAttachments // ignore: cast_nullable_to_non_nullable
                   as bool,
+        homeShowBudgetProgress: null == homeShowBudgetProgress
+            ? _value.homeShowBudgetProgress
+            : homeShowBudgetProgress // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        homeSectionOrder: null == homeSectionOrder
+            ? _value._homeSectionOrder
+            : homeSectionOrder // ignore: cast_nullable_to_non_nullable
+                  as List<String>,
       ),
     );
   }
@@ -697,7 +727,16 @@ class _$SettingsDataImpl implements _SettingsData {
     this.weeklySpendingSummaryEnabled = false,
     this.weeklySpendingSummaryDay = 1,
     this.encryptAttachments = false,
-  }) : _budgetAlertThresholds = budgetAlertThresholds;
+    this.homeShowBudgetProgress = true,
+    final List<String> homeSectionOrder = const [
+      'accounts',
+      'totalBalance',
+      'quickActions',
+      'budgetProgress',
+      'recentTransactions',
+    ],
+  }) : _budgetAlertThresholds = budgetAlertThresholds,
+       _homeSectionOrder = homeSectionOrder;
 
   factory _$SettingsDataImpl.fromJson(Map<String, dynamic> json) =>
       _$$SettingsDataImplFromJson(json);
@@ -888,9 +927,27 @@ class _$SettingsDataImpl implements _SettingsData {
   @JsonKey()
   final bool encryptAttachments;
 
+  /// Whether budget progress is shown on home
+  @override
+  @JsonKey()
+  final bool homeShowBudgetProgress;
+
+  /// Home section ordering
+  final List<String> _homeSectionOrder;
+
+  /// Home section ordering
+  @override
+  @JsonKey()
+  List<String> get homeSectionOrder {
+    if (_homeSectionOrder is EqualUnmodifiableListView)
+      return _homeSectionOrder;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_homeSectionOrder);
+  }
+
   @override
   String toString() {
-    return 'SettingsData(id: $id, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, mainCurrencyCode: $mainCurrencyCode, exchangeRateApiOption: $exchangeRateApiOption, cachedExchangeRates: $cachedExchangeRates, lastRateFetchTimestamp: $lastRateFetchTimestamp, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, categoriesFoldedCount: $categoriesFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, categorySortOption: $categorySortOption, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId, appLockEnabled: $appLockEnabled, appPinCode: $appPinCode, appPassword: $appPassword, notificationsEnabled: $notificationsEnabled, budgetAlertThresholds: $budgetAlertThresholds, recurringRemindersEnabled: $recurringRemindersEnabled, recurringReminderAdvanceDays: $recurringReminderAdvanceDays, weeklySpendingSummaryEnabled: $weeklySpendingSummaryEnabled, weeklySpendingSummaryDay: $weeklySpendingSummaryDay, encryptAttachments: $encryptAttachments)';
+    return 'SettingsData(id: $id, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, mainCurrencyCode: $mainCurrencyCode, exchangeRateApiOption: $exchangeRateApiOption, cachedExchangeRates: $cachedExchangeRates, lastRateFetchTimestamp: $lastRateFetchTimestamp, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, categoriesFoldedCount: $categoriesFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, categorySortOption: $categorySortOption, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId, appLockEnabled: $appLockEnabled, appPinCode: $appPinCode, appPassword: $appPassword, notificationsEnabled: $notificationsEnabled, budgetAlertThresholds: $budgetAlertThresholds, recurringRemindersEnabled: $recurringRemindersEnabled, recurringReminderAdvanceDays: $recurringReminderAdvanceDays, weeklySpendingSummaryEnabled: $weeklySpendingSummaryEnabled, weeklySpendingSummaryDay: $weeklySpendingSummaryDay, encryptAttachments: $encryptAttachments, homeShowBudgetProgress: $homeShowBudgetProgress, homeSectionOrder: $homeSectionOrder)';
   }
 
   @override
@@ -992,7 +1049,13 @@ class _$SettingsDataImpl implements _SettingsData {
                 ) ||
                 other.weeklySpendingSummaryDay == weeklySpendingSummaryDay) &&
             (identical(other.encryptAttachments, encryptAttachments) ||
-                other.encryptAttachments == encryptAttachments));
+                other.encryptAttachments == encryptAttachments) &&
+            (identical(other.homeShowBudgetProgress, homeShowBudgetProgress) ||
+                other.homeShowBudgetProgress == homeShowBudgetProgress) &&
+            const DeepCollectionEquality().equals(
+              other._homeSectionOrder,
+              _homeSectionOrder,
+            ));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1036,6 +1099,8 @@ class _$SettingsDataImpl implements _SettingsData {
     weeklySpendingSummaryEnabled,
     weeklySpendingSummaryDay,
     encryptAttachments,
+    homeShowBudgetProgress,
+    const DeepCollectionEquality().hash(_homeSectionOrder),
   ]);
 
   /// Create a copy of SettingsData
@@ -1091,6 +1156,8 @@ abstract class _SettingsData implements SettingsData {
     final bool weeklySpendingSummaryEnabled,
     final int weeklySpendingSummaryDay,
     final bool encryptAttachments,
+    final bool homeShowBudgetProgress,
+    final List<String> homeSectionOrder,
   }) = _$SettingsDataImpl;
 
   factory _SettingsData.fromJson(Map<String, dynamic> json) =
@@ -1243,6 +1310,14 @@ abstract class _SettingsData implements SettingsData {
   /// Whether attachment files on disk are encrypted
   @override
   bool get encryptAttachments;
+
+  /// Whether budget progress is shown on home
+  @override
+  bool get homeShowBudgetProgress;
+
+  /// Home section ordering
+  @override
+  List<String> get homeSectionOrder;
 
   /// Create a copy of SettingsData
   /// with the given fields replaced by the non-null parameter values.

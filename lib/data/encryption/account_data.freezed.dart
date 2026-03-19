@@ -51,6 +51,9 @@ mixin _$AccountData {
   /// Currency code (ISO 4217)
   String get currencyCode => throw _privateConstructorUsedError;
 
+  /// Sort order for display ordering
+  int get sortOrder => throw _privateConstructorUsedError;
+
   /// Matches the database createdAt field for integrity verification during import.
   /// Not exported as a separate CSV column to avoid duplication.
   int get createdAtMillis => throw _privateConstructorUsedError;
@@ -83,6 +86,7 @@ abstract class $AccountDataCopyWith<$Res> {
     String? customIconFontFamily,
     String? customIconFontPackage,
     String currencyCode,
+    int sortOrder,
     int createdAtMillis,
   });
 }
@@ -112,6 +116,7 @@ class _$AccountDataCopyWithImpl<$Res, $Val extends AccountData>
     Object? customIconFontFamily = freezed,
     Object? customIconFontPackage = freezed,
     Object? currencyCode = null,
+    Object? sortOrder = null,
     Object? createdAtMillis = null,
   }) {
     return _then(
@@ -156,6 +161,10 @@ class _$AccountDataCopyWithImpl<$Res, $Val extends AccountData>
                 ? _value.currencyCode
                 : currencyCode // ignore: cast_nullable_to_non_nullable
                       as String,
+            sortOrder: null == sortOrder
+                ? _value.sortOrder
+                : sortOrder // ignore: cast_nullable_to_non_nullable
+                      as int,
             createdAtMillis: null == createdAtMillis
                 ? _value.createdAtMillis
                 : createdAtMillis // ignore: cast_nullable_to_non_nullable
@@ -186,6 +195,7 @@ abstract class _$$AccountDataImplCopyWith<$Res>
     String? customIconFontFamily,
     String? customIconFontPackage,
     String currencyCode,
+    int sortOrder,
     int createdAtMillis,
   });
 }
@@ -214,6 +224,7 @@ class __$$AccountDataImplCopyWithImpl<$Res>
     Object? customIconFontFamily = freezed,
     Object? customIconFontPackage = freezed,
     Object? currencyCode = null,
+    Object? sortOrder = null,
     Object? createdAtMillis = null,
   }) {
     return _then(
@@ -258,6 +269,10 @@ class __$$AccountDataImplCopyWithImpl<$Res>
             ? _value.currencyCode
             : currencyCode // ignore: cast_nullable_to_non_nullable
                   as String,
+        sortOrder: null == sortOrder
+            ? _value.sortOrder
+            : sortOrder // ignore: cast_nullable_to_non_nullable
+                  as int,
         createdAtMillis: null == createdAtMillis
             ? _value.createdAtMillis
             : createdAtMillis // ignore: cast_nullable_to_non_nullable
@@ -281,6 +296,7 @@ class _$AccountDataImpl implements _AccountData {
     this.customIconFontFamily,
     this.customIconFontPackage,
     this.currencyCode = 'USD',
+    this.sortOrder = 0,
     required this.createdAtMillis,
   });
 
@@ -329,6 +345,11 @@ class _$AccountDataImpl implements _AccountData {
   @JsonKey()
   final String currencyCode;
 
+  /// Sort order for display ordering
+  @override
+  @JsonKey()
+  final int sortOrder;
+
   /// Matches the database createdAt field for integrity verification during import.
   /// Not exported as a separate CSV column to avoid duplication.
   @override
@@ -336,7 +357,7 @@ class _$AccountDataImpl implements _AccountData {
 
   @override
   String toString() {
-    return 'AccountData(id: $id, name: $name, type: $type, balance: $balance, initialBalance: $initialBalance, customColorValue: $customColorValue, customIconCodePoint: $customIconCodePoint, customIconFontFamily: $customIconFontFamily, customIconFontPackage: $customIconFontPackage, currencyCode: $currencyCode, createdAtMillis: $createdAtMillis)';
+    return 'AccountData(id: $id, name: $name, type: $type, balance: $balance, initialBalance: $initialBalance, customColorValue: $customColorValue, customIconCodePoint: $customIconCodePoint, customIconFontFamily: $customIconFontFamily, customIconFontPackage: $customIconFontPackage, currencyCode: $currencyCode, sortOrder: $sortOrder, createdAtMillis: $createdAtMillis)';
   }
 
   @override
@@ -360,6 +381,8 @@ class _$AccountDataImpl implements _AccountData {
                 other.customIconFontPackage == customIconFontPackage) &&
             (identical(other.currencyCode, currencyCode) ||
                 other.currencyCode == currencyCode) &&
+            (identical(other.sortOrder, sortOrder) ||
+                other.sortOrder == sortOrder) &&
             (identical(other.createdAtMillis, createdAtMillis) ||
                 other.createdAtMillis == createdAtMillis));
   }
@@ -378,6 +401,7 @@ class _$AccountDataImpl implements _AccountData {
     customIconFontFamily,
     customIconFontPackage,
     currencyCode,
+    sortOrder,
     createdAtMillis,
   );
 
@@ -407,6 +431,7 @@ abstract class _AccountData implements AccountData {
     final String? customIconFontFamily,
     final String? customIconFontPackage,
     final String currencyCode,
+    final int sortOrder,
     required final int createdAtMillis,
   }) = _$AccountDataImpl;
 
@@ -452,6 +477,10 @@ abstract class _AccountData implements AccountData {
   /// Currency code (ISO 4217)
   @override
   String get currencyCode;
+
+  /// Sort order for display ordering
+  @override
+  int get sortOrder;
 
   /// Matches the database createdAt field for integrity verification during import.
   /// Not exported as a separate CSV column to avoid duplication.

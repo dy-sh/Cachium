@@ -60,6 +60,8 @@ class SettingsRepository {
       weeklySpendingSummaryEnabled: settings.weeklySpendingSummaryEnabled,
       weeklySpendingSummaryDay: settings.weeklySpendingSummaryDay,
       encryptAttachments: settings.encryptAttachments,
+      homeShowBudgetProgress: settings.homeShowBudgetProgress,
+      homeSectionOrder: settings.homeSectionOrder,
     );
   }
 
@@ -126,6 +128,8 @@ class SettingsRepository {
       weeklySpendingSummaryEnabled: data.weeklySpendingSummaryEnabled,
       weeklySpendingSummaryDay: data.weeklySpendingSummaryDay,
       encryptAttachments: data.encryptAttachments,
+      homeShowBudgetProgress: data.homeShowBudgetProgress,
+      homeSectionOrder: data.homeSectionOrder,
     );
   }
 

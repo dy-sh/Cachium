@@ -578,6 +578,34 @@
 - Attachment metadata stored in encrypted blob; image files stored on disk
 - Optional per-file encryption setting available
 
+#### 48. Account Reordering
+- Drag-and-drop reordering of accounts within each type group on the Accounts screen
+- `sortOrder` field added to Account model; DB migration v22 adds `sort_order` column
+- Reorder mode toggled via a button on the Accounts screen; drag handles shown in reorder mode
+- `reorderAccount()` method on `AccountsNotifier` persists the new order
+
+#### 49. Customizable Home Dashboard
+- Home screen sections can be individually reordered and toggled on/off
+- `homeSectionOrder` (List<String>) and `homeShowBudgetProgress` (bool) added to AppSettings
+- HomeSettingsScreen redesigned with ReorderableListView showing drag handles and visibility toggles
+- HomeScreen dynamically renders sections based on saved order and visibility settings
+
+#### 50. Undo for Bulk Actions
+- Bulk category change and bulk account change on the Transactions screen now show undo notifications
+- Before applying the change, original category/account IDs are captured
+- The undo callback restores all affected transactions to their previous category or account, including balance adjustments for account changes
+
+#### 51. Category Merge
+- Categories can be merged into another category of the same type
+- `mergeCategory(sourceId, targetId)` on `CategoriesNotifier` reassigns transactions, moves subcategories under the target, and soft-deletes the source in a single DB transaction
+- "Merge into..." button added to `CategoryFormModal` in edit mode
+- Merge picker uses `BulkPickerSheet` with a confirmation dialog showing affected transaction and subcategory counts
+
+#### 52. Quick-add from Notification
+- Notification action buttons ("Add Expense" / "Add Income") attached to weekly summary and recurring reminder notifications
+- `NotificationService` configured with Android action buttons and iOS notification categories
+- An action stream broadcasts tapped notification actions; the main app listens and navigates to the transaction form with the transaction type pre-selected
+
 #### 21. Historical main currency value storage
 - `mainCurrencyCode` and `mainCurrencyAmount` fields added to Transaction model and TransactionData DTO to snapshot the main-currency equivalent at the moment a transaction is saved
 - Transaction form computes and persists these fields on save; old records fall back to a calculated value via `conversionRate` for backward compatibility

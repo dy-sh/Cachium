@@ -157,6 +157,8 @@ class AppSettings {
   final bool homeShowTotalBalance;
   final bool homeShowQuickActions;
   final bool homeShowRecentTransactions;
+  final bool homeShowBudgetProgress;
+  final List<String> homeSectionOrder;
   final AmountDisplaySize homeAccountsTextSize;
   final AmountDisplaySize homeTotalBalanceTextSize;
   final bool homeBalancesHiddenByDefault;
@@ -217,6 +219,8 @@ class AppSettings {
     this.homeShowTotalBalance = true,
     this.homeShowQuickActions = true,
     this.homeShowRecentTransactions = true,
+    this.homeShowBudgetProgress = true,
+    this.homeSectionOrder = const ['accounts', 'totalBalance', 'quickActions', 'budgetProgress', 'recentTransactions'],
     this.homeAccountsTextSize = AmountDisplaySize.large,
     this.homeTotalBalanceTextSize = AmountDisplaySize.large,
     this.homeBalancesHiddenByDefault = false,
@@ -275,6 +279,8 @@ class AppSettings {
     bool? homeShowTotalBalance,
     bool? homeShowQuickActions,
     bool? homeShowRecentTransactions,
+    bool? homeShowBudgetProgress,
+    List<String>? homeSectionOrder,
     AmountDisplaySize? homeAccountsTextSize,
     AmountDisplaySize? homeTotalBalanceTextSize,
     bool? homeBalancesHiddenByDefault,
@@ -329,6 +335,8 @@ class AppSettings {
       homeShowTotalBalance: homeShowTotalBalance ?? this.homeShowTotalBalance,
       homeShowQuickActions: homeShowQuickActions ?? this.homeShowQuickActions,
       homeShowRecentTransactions: homeShowRecentTransactions ?? this.homeShowRecentTransactions,
+      homeShowBudgetProgress: homeShowBudgetProgress ?? this.homeShowBudgetProgress,
+      homeSectionOrder: homeSectionOrder ?? this.homeSectionOrder,
       homeAccountsTextSize: homeAccountsTextSize ?? this.homeAccountsTextSize,
       homeTotalBalanceTextSize: homeTotalBalanceTextSize ?? this.homeTotalBalanceTextSize,
       homeBalancesHiddenByDefault: homeBalancesHiddenByDefault ?? this.homeBalancesHiddenByDefault,

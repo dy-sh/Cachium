@@ -121,6 +121,13 @@ class SettingsData with _$SettingsData {
 
     /// Whether attachment files on disk are encrypted
     @Default(false) bool encryptAttachments,
+
+    /// Whether budget progress is shown on home
+    @Default(true) bool homeShowBudgetProgress,
+
+    /// Home section ordering
+    @Default(['accounts', 'totalBalance', 'quickActions', 'budgetProgress', 'recentTransactions'])
+    List<String> homeSectionOrder,
   }) = _SettingsData;
 
   factory SettingsData.fromJson(Map<String, dynamic> json) =>

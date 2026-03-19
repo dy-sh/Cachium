@@ -42,6 +42,7 @@ class AccountRepository {
       customIconFontFamily: account.customIcon?.fontFamily,
       customIconFontPackage: account.customIcon?.fontPackage,
       currencyCode: account.currencyCode,
+      sortOrder: account.sortOrder,
       createdAtMillis: account.createdAt.millisecondsSinceEpoch,
     );
   }
@@ -69,6 +70,7 @@ class AccountRepository {
             )
           : null,
       createdAt: DateTime.fromMillisecondsSinceEpoch(data.createdAtMillis),
+      sortOrder: data.sortOrder,
     );
   }
 
@@ -83,6 +85,7 @@ class AccountRepository {
       await database.insertAccount(
         id: account.id,
         createdAt: account.createdAt.millisecondsSinceEpoch,
+        sortOrder: account.sortOrder,
         lastUpdatedAt: account.createdAt.millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
@@ -102,6 +105,7 @@ class AccountRepository {
       await database.upsertAccount(
         id: account.id,
         createdAt: account.createdAt.millisecondsSinceEpoch,
+        sortOrder: account.sortOrder,
         lastUpdatedAt: account.createdAt.millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
@@ -130,6 +134,7 @@ class AccountRepository {
       await database.upsertAccount(
         id: account.id,
         createdAt: account.createdAt.millisecondsSinceEpoch,
+        sortOrder: account.sortOrder,
         lastUpdatedAt: effectiveLastUpdatedAt,
         encryptedBlob: encryptedBlob,
         isDeleted: isDeleted,
@@ -209,6 +214,7 @@ class AccountRepository {
 
       await database.updateAccount(
         id: account.id,
+        sortOrder: account.sortOrder,
         lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );

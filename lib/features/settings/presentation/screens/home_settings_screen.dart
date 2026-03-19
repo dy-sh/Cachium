@@ -15,6 +15,54 @@ import '../widgets/settings_toggle_tile.dart';
 class HomeSettingsScreen extends ConsumerWidget {
   const HomeSettingsScreen({super.key});
 
+  static const _sectionLabels = {
+    'accounts': 'Accounts List',
+    'totalBalance': 'Total Balance',
+    'quickActions': 'Quick Actions',
+    'budgetProgress': 'Budget Progress',
+    'recentTransactions': 'Recent Transactions',
+  };
+
+  static const _sectionIcons = {
+    'accounts': LucideIcons.creditCard,
+    'totalBalance': LucideIcons.wallet,
+    'quickActions': LucideIcons.zap,
+    'budgetProgress': LucideIcons.pieChart,
+    'recentTransactions': LucideIcons.list,
+  };
+
+  bool _isSectionVisible(AppSettings settings, String sectionId) {
+    switch (sectionId) {
+      case 'accounts':
+        return settings.homeShowAccountsList;
+      case 'totalBalance':
+        return settings.homeShowTotalBalance;
+      case 'quickActions':
+        return settings.homeShowQuickActions;
+      case 'budgetProgress':
+        return settings.homeShowBudgetProgress;
+      case 'recentTransactions':
+        return settings.homeShowRecentTransactions;
+      default:
+        return true;
+    }
+  }
+
+  void _toggleSectionVisibility(WidgetRef ref, String sectionId, bool value) {
+    switch (sectionId) {
+      case 'accounts':
+        ref.read(settingsProvider.notifier).setHomeShowAccountsList(value);
+      case 'totalBalance':
+        ref.read(settingsProvider.notifier).setHomeShowTotalBalance(value);
+      case 'quickActions':
+        ref.read(settingsProvider.notifier).setHomeShowQuickActions(value);
+      case 'budgetProgress':
+        ref.read(settingsProvider.notifier).setHomeShowBudgetProgress(value);
+      case 'recentTransactions':
+        ref.read(settingsProvider.notifier).setHomeShowRecentTransactions(value);
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settingsAsync = ref.watch(settingsProvider);
@@ -26,6 +74,8 @@ class HomeSettingsScreen extends ConsumerWidget {
         body: const Center(child: LoadingIndicator()),
       );
     }
+
+    final sectionOrder = settings.homeSectionOrder;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -40,37 +90,89 @@ class HomeSettingsScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Visibility section
+                    // Section order & visibility
                     SettingsSection(
-                      title: 'Visibility',
+                      title: 'Sections',
                       children: [
-                        SettingsToggleTile(
-                          title: 'Show Accounts List',
-                          description: 'Display account cards on home',
-                          value: settings.homeShowAccountsList,
-                          onChanged: (value) =>
-                              ref.read(settingsProvider.notifier).setHomeShowAccountsList(value),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                          child: Text(
+                            'Drag to reorder, toggle to show/hide',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textTertiary,
+                            ),
+                          ),
                         ),
-                        SettingsToggleTile(
-                          title: 'Show Total Balance',
-                          description: 'Display total balance card',
-                          value: settings.homeShowTotalBalance,
-                          onChanged: (value) =>
-                              ref.read(settingsProvider.notifier).setHomeShowTotalBalance(value),
-                        ),
-                        SettingsToggleTile(
-                          title: 'Show Quick Actions',
-                          description: 'Display income/expense buttons',
-                          value: settings.homeShowQuickActions,
-                          onChanged: (value) =>
-                              ref.read(settingsProvider.notifier).setHomeShowQuickActions(value),
-                        ),
-                        SettingsToggleTile(
-                          title: 'Show Recent Transactions',
-                          description: 'Display recent transactions list',
-                          value: settings.homeShowRecentTransactions,
-                          onChanged: (value) =>
-                              ref.read(settingsProvider.notifier).setHomeShowRecentTransactions(value),
+                        ReorderableListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          proxyDecorator: (child, index, animation) {
+                            return Material(
+                              color: Colors.transparent,
+                              elevation: 2,
+                              shadowColor: Colors.black26,
+                              borderRadius: AppRadius.mdAll,
+                              child: child,
+                            );
+                          },
+                          itemCount: sectionOrder.length,
+                          onReorder: (oldIndex, newIndex) {
+                            if (newIndex > oldIndex) newIndex--;
+                            final newOrder = List<String>.from(sectionOrder);
+                            final item = newOrder.removeAt(oldIndex);
+                            newOrder.insert(newIndex, item);
+                            ref.read(settingsProvider.notifier).setHomeSectionOrder(newOrder);
+                          },
+                          itemBuilder: (context, index) {
+                            final sectionId = sectionOrder[index];
+                            final isVisible = _isSectionVisible(settings, sectionId);
+                            return Container(
+                              key: ValueKey(sectionId),
+                              margin: const EdgeInsets.only(bottom: AppSpacing.xs),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.sm,
+                                vertical: AppSpacing.sm,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceLight,
+                                borderRadius: AppRadius.mdAll,
+                                border: Border.all(color: AppColors.border),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    LucideIcons.gripVertical,
+                                    size: 18,
+                                    color: AppColors.textTertiary,
+                                  ),
+                                  const SizedBox(width: AppSpacing.sm),
+                                  Icon(
+                                    _sectionIcons[sectionId] ?? LucideIcons.layoutGrid,
+                                    size: 18,
+                                    color: isVisible ? AppColors.textPrimary : AppColors.textTertiary,
+                                  ),
+                                  const SizedBox(width: AppSpacing.sm),
+                                  Expanded(
+                                    child: Text(
+                                      _sectionLabels[sectionId] ?? sectionId,
+                                      style: AppTypography.bodyMedium.copyWith(
+                                        color: isVisible ? AppColors.textPrimary : AppColors.textTertiary,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: 24,
+                                    width: 44,
+                                    child: Switch.adaptive(
+                                      value: isVisible,
+                                      onChanged: (value) => _toggleSectionVisibility(ref, sectionId, value),
+                                      activeTrackColor: ref.watch(accentColorProvider),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),

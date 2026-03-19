@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/constants/app_colors.dart';
+import 'core/services/notification_service.dart';
 import 'features/settings/presentation/providers/app_lock_provider.dart';
 import 'features/settings/presentation/providers/database_management_providers.dart';
 import 'features/settings/presentation/providers/settings_provider.dart';
@@ -119,11 +122,38 @@ class _LockGate extends ConsumerWidget {
   }
 }
 
-class _MainApp extends ConsumerWidget {
+class _MainApp extends ConsumerStatefulWidget {
   const _MainApp();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_MainApp> createState() => _MainAppState();
+}
+
+class _MainAppState extends ConsumerState<_MainApp> {
+  late final StreamSubscription<String> _notificationSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _notificationSubscription = NotificationService.actionStream.stream.listen((action) {
+      final router = ref.read(appRouterProvider);
+      switch (action) {
+        case 'add_expense':
+          router.push('${AppRoutes.transactionForm}?type=expense');
+        case 'add_income':
+          router.push('${AppRoutes.transactionForm}?type=income');
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _notificationSubscription.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(appRouterProvider);
 
     return MaterialApp.router(

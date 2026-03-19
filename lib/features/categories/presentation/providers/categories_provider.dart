@@ -321,6 +321,57 @@ class CategoriesNotifier extends AsyncNotifier<List<Category>> {
     }
   }
 
+  /// Merge source category into target category.
+  /// Reassigns all transactions, moves subcategories, and soft-deletes source.
+  Future<void> mergeCategory(String sourceId, String targetId) async {
+    final previousState = state;
+    final categories = state.valueOrNull;
+    if (categories == null) return;
+
+    try {
+      final db = ref.read(databaseProvider);
+      final repo = ref.read(categoryRepositoryProvider);
+
+      await db.transaction(() async {
+        // 1. Reassign all transactions from source to target
+        await ref.read(transactionsProvider.notifier)
+            .moveTransactionsToCategory(sourceId, targetId);
+
+        // 2. Move source's subcategories under target
+        final children = categories.where((c) => c.parentId == sourceId).toList();
+        final targetChildren = categories
+            .where((c) => c.parentId == targetId)
+            .toList();
+        var nextSortOrder = targetChildren.isEmpty
+            ? 0
+            : targetChildren.map((c) => c.sortOrder).reduce((a, b) => a > b ? a : b) + 1;
+
+        for (final child in children) {
+          final updated = child.copyWith(
+            parentId: targetId,
+            sortOrder: nextSortOrder++,
+          );
+          await repo.updateCategory(updated);
+        }
+
+        // 3. Soft-delete the source category
+        await repo.deleteCategory(sourceId);
+      });
+
+      // Clean up references
+      await _cleanupReferencesForCategories({sourceId});
+
+      // Refresh state from database
+      await refresh();
+    } catch (e, st) {
+      state = previousState;
+      Error.throwWithStackTrace(
+        e is AppException ? e : RepositoryException.update(entityType: 'Category', entityId: sourceId, cause: e),
+        st,
+      );
+    }
+  }
+
   /// Throws [ValidationException] if any active transactions reference the given category IDs.
   void _assertNoCategoryTransactions(Set<String> categoryIds) {
     final transactions = ref.read(transactionsProvider).valueOrNull ?? [];

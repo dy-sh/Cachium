@@ -426,6 +426,18 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _isDeletedMeta = const VerificationMeta(
     'isDeleted',
   );
@@ -458,6 +470,7 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
     id,
     createdAt,
     lastUpdatedAt,
+    sortOrder,
     isDeleted,
     encryptedBlob,
   ];
@@ -497,6 +510,12 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
     } else if (isInserting) {
       context.missing(_lastUpdatedAtMeta);
     }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
     if (data.containsKey('is_deleted')) {
       context.handle(
         _isDeletedMeta,
@@ -535,6 +554,10 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
         DriftSqlType.int,
         data['${effectivePrefix}last_updated_at'],
       )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
       isDeleted: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_deleted'],
@@ -562,6 +585,9 @@ class Account extends DataClass implements Insertable<Account> {
   /// Last updated timestamp for LWW (Last-Write-Wins) sync resolution
   final int lastUpdatedAt;
 
+  /// Sort order for display ordering (plaintext for sorting)
+  final int sortOrder;
+
   /// Soft delete flag - allows sync to propagate deletions
   final bool isDeleted;
 
@@ -571,6 +597,7 @@ class Account extends DataClass implements Insertable<Account> {
     required this.id,
     required this.createdAt,
     required this.lastUpdatedAt,
+    required this.sortOrder,
     required this.isDeleted,
     required this.encryptedBlob,
   });
@@ -580,6 +607,7 @@ class Account extends DataClass implements Insertable<Account> {
     map['id'] = Variable<String>(id);
     map['created_at'] = Variable<int>(createdAt);
     map['last_updated_at'] = Variable<int>(lastUpdatedAt);
+    map['sort_order'] = Variable<int>(sortOrder);
     map['is_deleted'] = Variable<bool>(isDeleted);
     map['encrypted_blob'] = Variable<Uint8List>(encryptedBlob);
     return map;
@@ -590,6 +618,7 @@ class Account extends DataClass implements Insertable<Account> {
       id: Value(id),
       createdAt: Value(createdAt),
       lastUpdatedAt: Value(lastUpdatedAt),
+      sortOrder: Value(sortOrder),
       isDeleted: Value(isDeleted),
       encryptedBlob: Value(encryptedBlob),
     );
@@ -604,6 +633,7 @@ class Account extends DataClass implements Insertable<Account> {
       id: serializer.fromJson<String>(json['id']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       lastUpdatedAt: serializer.fromJson<int>(json['lastUpdatedAt']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
       encryptedBlob: serializer.fromJson<Uint8List>(json['encryptedBlob']),
     );
@@ -615,6 +645,7 @@ class Account extends DataClass implements Insertable<Account> {
       'id': serializer.toJson<String>(id),
       'createdAt': serializer.toJson<int>(createdAt),
       'lastUpdatedAt': serializer.toJson<int>(lastUpdatedAt),
+      'sortOrder': serializer.toJson<int>(sortOrder),
       'isDeleted': serializer.toJson<bool>(isDeleted),
       'encryptedBlob': serializer.toJson<Uint8List>(encryptedBlob),
     };
@@ -624,12 +655,14 @@ class Account extends DataClass implements Insertable<Account> {
     String? id,
     int? createdAt,
     int? lastUpdatedAt,
+    int? sortOrder,
     bool? isDeleted,
     Uint8List? encryptedBlob,
   }) => Account(
     id: id ?? this.id,
     createdAt: createdAt ?? this.createdAt,
     lastUpdatedAt: lastUpdatedAt ?? this.lastUpdatedAt,
+    sortOrder: sortOrder ?? this.sortOrder,
     isDeleted: isDeleted ?? this.isDeleted,
     encryptedBlob: encryptedBlob ?? this.encryptedBlob,
   );
@@ -640,6 +673,7 @@ class Account extends DataClass implements Insertable<Account> {
       lastUpdatedAt: data.lastUpdatedAt.present
           ? data.lastUpdatedAt.value
           : this.lastUpdatedAt,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
       encryptedBlob: data.encryptedBlob.present
           ? data.encryptedBlob.value
@@ -653,6 +687,7 @@ class Account extends DataClass implements Insertable<Account> {
           ..write('id: $id, ')
           ..write('createdAt: $createdAt, ')
           ..write('lastUpdatedAt: $lastUpdatedAt, ')
+          ..write('sortOrder: $sortOrder, ')
           ..write('isDeleted: $isDeleted, ')
           ..write('encryptedBlob: $encryptedBlob')
           ..write(')'))
@@ -664,6 +699,7 @@ class Account extends DataClass implements Insertable<Account> {
     id,
     createdAt,
     lastUpdatedAt,
+    sortOrder,
     isDeleted,
     $driftBlobEquality.hash(encryptedBlob),
   );
@@ -674,6 +710,7 @@ class Account extends DataClass implements Insertable<Account> {
           other.id == this.id &&
           other.createdAt == this.createdAt &&
           other.lastUpdatedAt == this.lastUpdatedAt &&
+          other.sortOrder == this.sortOrder &&
           other.isDeleted == this.isDeleted &&
           $driftBlobEquality.equals(other.encryptedBlob, this.encryptedBlob));
 }
@@ -682,6 +719,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
   final Value<String> id;
   final Value<int> createdAt;
   final Value<int> lastUpdatedAt;
+  final Value<int> sortOrder;
   final Value<bool> isDeleted;
   final Value<Uint8List> encryptedBlob;
   final Value<int> rowid;
@@ -689,6 +727,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     this.id = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.lastUpdatedAt = const Value.absent(),
+    this.sortOrder = const Value.absent(),
     this.isDeleted = const Value.absent(),
     this.encryptedBlob = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -697,6 +736,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     required String id,
     required int createdAt,
     required int lastUpdatedAt,
+    this.sortOrder = const Value.absent(),
     this.isDeleted = const Value.absent(),
     required Uint8List encryptedBlob,
     this.rowid = const Value.absent(),
@@ -708,6 +748,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     Expression<String>? id,
     Expression<int>? createdAt,
     Expression<int>? lastUpdatedAt,
+    Expression<int>? sortOrder,
     Expression<bool>? isDeleted,
     Expression<Uint8List>? encryptedBlob,
     Expression<int>? rowid,
@@ -716,6 +757,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       if (id != null) 'id': id,
       if (createdAt != null) 'created_at': createdAt,
       if (lastUpdatedAt != null) 'last_updated_at': lastUpdatedAt,
+      if (sortOrder != null) 'sort_order': sortOrder,
       if (isDeleted != null) 'is_deleted': isDeleted,
       if (encryptedBlob != null) 'encrypted_blob': encryptedBlob,
       if (rowid != null) 'rowid': rowid,
@@ -726,6 +768,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     Value<String>? id,
     Value<int>? createdAt,
     Value<int>? lastUpdatedAt,
+    Value<int>? sortOrder,
     Value<bool>? isDeleted,
     Value<Uint8List>? encryptedBlob,
     Value<int>? rowid,
@@ -734,6 +777,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       id: id ?? this.id,
       createdAt: createdAt ?? this.createdAt,
       lastUpdatedAt: lastUpdatedAt ?? this.lastUpdatedAt,
+      sortOrder: sortOrder ?? this.sortOrder,
       isDeleted: isDeleted ?? this.isDeleted,
       encryptedBlob: encryptedBlob ?? this.encryptedBlob,
       rowid: rowid ?? this.rowid,
@@ -751,6 +795,9 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     }
     if (lastUpdatedAt.present) {
       map['last_updated_at'] = Variable<int>(lastUpdatedAt.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
     }
     if (isDeleted.present) {
       map['is_deleted'] = Variable<bool>(isDeleted.value);
@@ -770,6 +817,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
           ..write('id: $id, ')
           ..write('createdAt: $createdAt, ')
           ..write('lastUpdatedAt: $lastUpdatedAt, ')
+          ..write('sortOrder: $sortOrder, ')
           ..write('isDeleted: $isDeleted, ')
           ..write('encryptedBlob: $encryptedBlob, ')
           ..write('rowid: $rowid')
@@ -5064,6 +5112,7 @@ typedef $$AccountsTableCreateCompanionBuilder =
       required String id,
       required int createdAt,
       required int lastUpdatedAt,
+      Value<int> sortOrder,
       Value<bool> isDeleted,
       required Uint8List encryptedBlob,
       Value<int> rowid,
@@ -5073,6 +5122,7 @@ typedef $$AccountsTableUpdateCompanionBuilder =
       Value<String> id,
       Value<int> createdAt,
       Value<int> lastUpdatedAt,
+      Value<int> sortOrder,
       Value<bool> isDeleted,
       Value<Uint8List> encryptedBlob,
       Value<int> rowid,
@@ -5099,6 +5149,11 @@ class $$AccountsTableFilterComposer
 
   ColumnFilters<int> get lastUpdatedAt => $composableBuilder(
     column: $table.lastUpdatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5137,6 +5192,11 @@ class $$AccountsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isDeleted => $composableBuilder(
     column: $table.isDeleted,
     builder: (column) => ColumnOrderings(column),
@@ -5167,6 +5227,9 @@ class $$AccountsTableAnnotationComposer
     column: $table.lastUpdatedAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
 
   GeneratedColumn<bool> get isDeleted =>
       $composableBuilder(column: $table.isDeleted, builder: (column) => column);
@@ -5208,6 +5271,7 @@ class $$AccountsTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> lastUpdatedAt = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
                 Value<bool> isDeleted = const Value.absent(),
                 Value<Uint8List> encryptedBlob = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -5215,6 +5279,7 @@ class $$AccountsTableTableManager
                 id: id,
                 createdAt: createdAt,
                 lastUpdatedAt: lastUpdatedAt,
+                sortOrder: sortOrder,
                 isDeleted: isDeleted,
                 encryptedBlob: encryptedBlob,
                 rowid: rowid,
@@ -5224,6 +5289,7 @@ class $$AccountsTableTableManager
                 required String id,
                 required int createdAt,
                 required int lastUpdatedAt,
+                Value<int> sortOrder = const Value.absent(),
                 Value<bool> isDeleted = const Value.absent(),
                 required Uint8List encryptedBlob,
                 Value<int> rowid = const Value.absent(),
@@ -5231,6 +5297,7 @@ class $$AccountsTableTableManager
                 id: id,
                 createdAt: createdAt,
                 lastUpdatedAt: lastUpdatedAt,
+                sortOrder: sortOrder,
                 isDeleted: isDeleted,
                 encryptedBlob: encryptedBlob,
                 rowid: rowid,

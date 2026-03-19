@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
@@ -13,6 +15,10 @@ class NotificationService {
 
   bool _initialized = false;
 
+  /// Stream of notification action IDs (e.g. 'add_expense', 'add_income')
+  static final StreamController<String> actionStream =
+      StreamController<String>.broadcast();
+
   /// Initialize the notification plugin and timezone data.
   Future<void> init() async {
     if (_initialized) return;
@@ -21,19 +27,57 @@ class NotificationService {
 
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
-    const iosSettings = DarwinInitializationSettings(
+    final iosSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
       requestSoundPermission: false,
+      notificationCategories: [
+        DarwinNotificationCategory(
+          'quick_add',
+          actions: [
+            DarwinNotificationAction.plain(
+              'add_expense',
+              'Add Expense',
+              options: {DarwinNotificationActionOption.foreground},
+            ),
+            DarwinNotificationAction.plain(
+              'add_income',
+              'Add Income',
+              options: {DarwinNotificationActionOption.foreground},
+            ),
+          ],
+        ),
+      ],
     );
 
-    const settings = InitializationSettings(
+    final settings = InitializationSettings(
       android: androidSettings,
       iOS: iosSettings,
     );
 
-    await _plugin.initialize(settings);
+    await _plugin.initialize(
+      settings,
+      onDidReceiveNotificationResponse: _onNotificationResponse,
+    );
+
+    // Check if app was launched from a notification
+    final launchDetails = await _plugin.getNotificationAppLaunchDetails();
+    if (launchDetails?.didNotificationLaunchApp == true &&
+        launchDetails?.notificationResponse != null) {
+      _onNotificationResponse(launchDetails!.notificationResponse!);
+    }
+
     _initialized = true;
+  }
+
+  static void _onNotificationResponse(NotificationResponse response) {
+    final actionId = response.actionId;
+    if (actionId != null && actionId.isNotEmpty) {
+      actionStream.add(actionId);
+    } else if (response.payload != null && response.payload!.isNotEmpty) {
+      // Tapped on notification body - emit payload as action
+      actionStream.add(response.payload!);
+    }
   }
 
   /// Request notification permissions (iOS).
@@ -59,24 +103,42 @@ class NotificationService {
     return true;
   }
 
+  /// Android notification details with quick-add action buttons.
+  static const _androidDetailsWithActions = AndroidNotificationDetails(
+    'cachium_scheduled',
+    'Cachium Reminders',
+    channelDescription: 'Scheduled reminders',
+    importance: Importance.high,
+    priority: Priority.high,
+    actions: [
+      AndroidNotificationAction('add_expense', 'Add Expense'),
+      AndroidNotificationAction('add_income', 'Add Income'),
+    ],
+  );
+
   /// Show an immediate notification.
   Future<void> show({
     required int id,
     required String title,
     required String body,
     String? payload,
+    bool includeQuickAdd = false,
   }) async {
-    const androidDetails = AndroidNotificationDetails(
-      'cachium_general',
-      'Cachium',
-      channelDescription: 'Cachium notifications',
-      importance: Importance.defaultImportance,
-      priority: Priority.defaultPriority,
-    );
+    final androidDetails = includeQuickAdd
+        ? _androidDetailsWithActions
+        : const AndroidNotificationDetails(
+            'cachium_general',
+            'Cachium',
+            channelDescription: 'Cachium notifications',
+            importance: Importance.defaultImportance,
+            priority: Priority.defaultPriority,
+          );
 
-    const iosDetails = DarwinNotificationDetails();
+    final iosDetails = includeQuickAdd
+        ? const DarwinNotificationDetails(categoryIdentifier: 'quick_add')
+        : const DarwinNotificationDetails();
 
-    const details = NotificationDetails(
+    final details = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );
@@ -91,18 +153,23 @@ class NotificationService {
     required String body,
     required DateTime scheduledDate,
     String? payload,
+    bool includeQuickAdd = false,
   }) async {
-    const androidDetails = AndroidNotificationDetails(
-      'cachium_scheduled',
-      'Cachium Reminders',
-      channelDescription: 'Scheduled reminders',
-      importance: Importance.high,
-      priority: Priority.high,
-    );
+    final androidDetails = includeQuickAdd
+        ? _androidDetailsWithActions
+        : const AndroidNotificationDetails(
+            'cachium_scheduled',
+            'Cachium Reminders',
+            channelDescription: 'Scheduled reminders',
+            importance: Importance.high,
+            priority: Priority.high,
+          );
 
-    const iosDetails = DarwinNotificationDetails();
+    final iosDetails = includeQuickAdd
+        ? const DarwinNotificationDetails(categoryIdentifier: 'quick_add')
+        : const DarwinNotificationDetails();
 
-    const details = NotificationDetails(
+    final details = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );

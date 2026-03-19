@@ -804,6 +804,7 @@ class CsvImporter {
         final id = data['id'].toString();
         // Handle both snake_case and camelCase
         final createdAt = int.parse((data['created_at'] ?? data['createdAt']).toString());
+        final sortOrder = int.parse((data['sort_order'] ?? data['sortOrder'] ?? '0').toString());
         final lastUpdatedAt = int.parse((data['last_updated_at'] ?? data['lastUpdatedAt']).toString());
         // is_deleted is optional - defaults to false (plaintext CSV exports skip deleted records)
         final isDeletedRaw = data['is_deleted'] ?? data['isDeleted'];
@@ -842,6 +843,7 @@ class CsvImporter {
           AccountsCompanion(
             id: Value(id),
             createdAt: Value(createdAt),
+            sortOrder: Value(sortOrder),
             lastUpdatedAt: Value(lastUpdatedAt),
             isDeleted: Value(isDeleted),
             encryptedBlob: Value(encryptedBlob),
@@ -1517,6 +1519,7 @@ class CsvImporter {
         }
 
         final createdAt = int.parse((data['created_at'] ?? data['createdAt']).toString());
+        final sortOrder = int.parse((data['sort_order'] ?? data['sortOrder'] ?? '0').toString());
         final lastUpdatedAt = int.parse((data['last_updated_at'] ?? data['lastUpdatedAt']).toString());
         // is_deleted is optional - defaults to false (plaintext CSV exports skip deleted records)
         final isDeletedRaw = data['is_deleted'] ?? data['isDeleted'];
@@ -1549,6 +1552,7 @@ class CsvImporter {
           AccountsCompanion(
             id: Value(id),
             createdAt: Value(createdAt),
+            sortOrder: Value(sortOrder),
             lastUpdatedAt: Value(lastUpdatedAt),
             isDeleted: Value(isDeleted),
             encryptedBlob: Value(encryptedBlob),
@@ -1810,6 +1814,7 @@ class CsvImporter {
               AccountsCompanion(
                 id: Value(row.id),
                 createdAt: Value(row.createdAt),
+                sortOrder: Value(row.sortOrder),
                 lastUpdatedAt: Value(DateTime.now().millisecondsSinceEpoch),
                 isDeleted: Value(row.isDeleted),
                 encryptedBlob: Value(encryptedBlob),

@@ -55,6 +55,18 @@ _$SettingsDataImpl _$$SettingsDataImplFromJson(
   weeklySpendingSummaryDay:
       (json['weeklySpendingSummaryDay'] as num?)?.toInt() ?? 1,
   encryptAttachments: json['encryptAttachments'] as bool? ?? false,
+  homeShowBudgetProgress: json['homeShowBudgetProgress'] as bool? ?? true,
+  homeSectionOrder:
+      (json['homeSectionOrder'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const [
+        'accounts',
+        'totalBalance',
+        'quickActions',
+        'budgetProgress',
+        'recentTransactions',
+      ],
 );
 
 Map<String, dynamic> _$$SettingsDataImplToJson(_$SettingsDataImpl instance) =>
@@ -96,4 +108,6 @@ Map<String, dynamic> _$$SettingsDataImplToJson(_$SettingsDataImpl instance) =>
       'weeklySpendingSummaryEnabled': instance.weeklySpendingSummaryEnabled,
       'weeklySpendingSummaryDay': instance.weeklySpendingSummaryDay,
       'encryptAttachments': instance.encryptAttachments,
+      'homeShowBudgetProgress': instance.homeShowBudgetProgress,
+      'homeSectionOrder': instance.homeSectionOrder,
     };

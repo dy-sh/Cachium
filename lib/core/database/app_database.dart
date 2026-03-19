@@ -55,6 +55,9 @@ class Accounts extends Table {
   /// Last updated timestamp for LWW (Last-Write-Wins) sync resolution
   IntColumn get lastUpdatedAt => integer()();
 
+  /// Sort order for display ordering (plaintext for sorting)
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+
   /// Soft delete flag - allows sync to propagate deletions
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
 
@@ -248,7 +251,7 @@ class AppDatabase extends _$AppDatabase {
 
 
   @override
-  int get schemaVersion => 21;
+  int get schemaVersion => 22;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -300,6 +303,12 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(attachments);
             await _createIndexes(m);
           }
+
+          if (from < 22) {
+            // Add sortOrder column to accounts table
+            await m.addColumn(accounts, accounts.sortOrder);
+            await _createIndexes(m);
+          }
         },
       );
 
@@ -316,6 +325,9 @@ class AppDatabase extends _$AppDatabase {
     );
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_accounts_is_deleted ON accounts(is_deleted)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_accounts_sort_order ON accounts(sort_order)',
     );
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_categories_is_deleted ON categories(is_deleted)',
@@ -436,12 +448,14 @@ class AppDatabase extends _$AppDatabase {
   Future<void> insertAccount({
     required String id,
     required int createdAt,
+    int sortOrder = 0,
     required int lastUpdatedAt,
     required Uint8List encryptedBlob,
   }) =>
       accountDao.insert(
         id: id,
         createdAt: createdAt,
+        sortOrder: sortOrder,
         lastUpdatedAt: lastUpdatedAt,
         encryptedBlob: encryptedBlob,
       );
@@ -449,6 +463,7 @@ class AppDatabase extends _$AppDatabase {
   Future<void> upsertAccount({
     required String id,
     required int createdAt,
+    int sortOrder = 0,
     required int lastUpdatedAt,
     required Uint8List encryptedBlob,
     bool isDeleted = false,
@@ -456,6 +471,7 @@ class AppDatabase extends _$AppDatabase {
       accountDao.upsert(
         id: id,
         createdAt: createdAt,
+        sortOrder: sortOrder,
         lastUpdatedAt: lastUpdatedAt,
         encryptedBlob: encryptedBlob,
         isDeleted: isDeleted,
@@ -463,14 +479,19 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> updateAccount({
     required String id,
+    int sortOrder = 0,
     required int lastUpdatedAt,
     required Uint8List encryptedBlob,
   }) =>
       accountDao.updateRow(
         id: id,
+        sortOrder: sortOrder,
         lastUpdatedAt: lastUpdatedAt,
         encryptedBlob: encryptedBlob,
       );
+
+  Future<void> updateAccountSortOrder(String id, int sortOrder) =>
+      accountDao.updateSortOrder(id, sortOrder);
 
   Future<void> softDeleteAccount(String id, int lastUpdatedAt) =>
       accountDao.softDelete(id, lastUpdatedAt);

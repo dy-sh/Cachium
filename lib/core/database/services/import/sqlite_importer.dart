@@ -475,6 +475,7 @@ class SqliteImporter {
         final id = safeString(row['id'], 'id');
         // Handle both snake_case and camelCase
         final createdAt = safeInt(row['created_at'] ?? row['createdAt'], 'created_at', id);
+        final sortOrder = safeInt(row['sort_order'] ?? row['sortOrder'] ?? 0, 'sort_order', id);
         final lastUpdatedAt = safeInt(row['last_updated_at'] ?? row['lastUpdatedAt'], 'last_updated_at', id);
         final isDeleted = (safeInt(row['is_deleted'] ?? row['isDeleted'] ?? 0, 'is_deleted', id)) == 1;
 
@@ -504,6 +505,7 @@ class SqliteImporter {
           AccountsCompanion(
             id: Value(id),
             createdAt: Value(createdAt),
+            sortOrder: Value(sortOrder),
             lastUpdatedAt: Value(lastUpdatedAt),
             isDeleted: Value(isDeleted),
             encryptedBlob: Value(encryptedBlob),
@@ -1048,6 +1050,7 @@ class SqliteImporter {
               AccountsCompanion(
                 id: Value(row.id),
                 createdAt: Value(row.createdAt),
+                sortOrder: Value(row.sortOrder),
                 lastUpdatedAt: Value(DateTime.now().millisecondsSinceEpoch),
                 isDeleted: Value(row.isDeleted),
                 encryptedBlob: Value(encryptedBlob),

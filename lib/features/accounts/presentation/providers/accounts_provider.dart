@@ -378,6 +378,57 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
     }
   }
 
+  /// Reorder an account to a new position within its type group.
+  Future<void> reorderAccount(int oldIndex, int newIndex, AccountType type) async {
+    final previousState = state;
+    final accounts = state.valueOrNull;
+    if (accounts == null) return;
+
+    try {
+      // Get accounts of the same type, sorted by sortOrder
+      final typeAccounts = accounts
+          .where((a) => a.type == type)
+          .toList()
+        ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
+      if (oldIndex < 0 || oldIndex >= typeAccounts.length) return;
+      if (newIndex < 0 || newIndex >= typeAccounts.length) return;
+
+      final item = typeAccounts.removeAt(oldIndex);
+      typeAccounts.insert(newIndex, item);
+
+      // Assign new sort orders
+      final db = ref.read(databaseProvider);
+      final repo = ref.read(accountRepositoryProvider);
+
+      // Optimistically update local state
+      final updatedAccounts = <Account>[];
+      for (int i = 0; i < typeAccounts.length; i++) {
+        updatedAccounts.add(typeAccounts[i].copyWith(sortOrder: i));
+      }
+
+      state = state.whenData((all) {
+        return all.map((a) {
+          if (a.type != type) return a;
+          final updated = updatedAccounts.firstWhere((u) => u.id == a.id, orElse: () => a);
+          return updated;
+        }).toList();
+      });
+
+      await db.transaction(() async {
+        for (int i = 0; i < updatedAccounts.length; i++) {
+          await repo.updateAccount(updatedAccounts[i]);
+        }
+      });
+    } catch (e, st) {
+      state = previousState;
+      Error.throwWithStackTrace(
+        e is AppException ? e : RepositoryException.update(entityType: 'Account', entityId: '', cause: e),
+        st,
+      );
+    }
+  }
+
   /// Refresh accounts from database
   ///
   /// Sets state to AsyncValue.error() on failure.
@@ -428,6 +479,11 @@ final accountsByTypeProvider =
 
   for (final account in accounts) {
     grouped.putIfAbsent(account.type, () => []).add(account);
+  }
+
+  // Sort each group by sortOrder
+  for (final type in grouped.keys) {
+    grouped[type]!.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
   }
 
   return grouped;

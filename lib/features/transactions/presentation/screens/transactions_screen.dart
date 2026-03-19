@@ -107,6 +107,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final allTransactions = ref.read(transactionsProvider).valueOrNull ?? [];
     final toUpdate = allTransactions.where((t) => selectedIds.contains(t.id)).toList();
 
+    // Capture old category IDs for undo
+    final oldCategoryIds = {for (final tx in toUpdate) tx.id: tx.categoryId};
+
     await db.transaction(() async {
       for (final tx in toUpdate) {
         final updated = tx.copyWith(categoryId: selectedCategoryId);
@@ -118,8 +121,22 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     _exitSelectionMode();
 
     if (mounted) {
-      context.showSuccessNotification(
+      context.showUndoNotification(
         '${toUpdate.length} transaction${toUpdate.length == 1 ? '' : 's'} updated',
+        () async {
+          final undoRepo = ref.read(transactionRepositoryProvider);
+          final undoDb = ref.read(databaseProvider);
+          final currentTransactions = ref.read(transactionsProvider).valueOrNull ?? [];
+          await undoDb.transaction(() async {
+            for (final tx in currentTransactions) {
+              final oldCategoryId = oldCategoryIds[tx.id];
+              if (oldCategoryId != null && tx.categoryId != oldCategoryId) {
+                await undoRepo.updateTransaction(tx.copyWith(categoryId: oldCategoryId));
+              }
+            }
+          });
+          await ref.read(transactionsProvider.notifier).refresh();
+        },
       );
     }
   }
@@ -157,6 +174,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final allTransactions = ref.read(transactionsProvider).valueOrNull ?? [];
     final toUpdate = allTransactions.where((t) => selectedIds.contains(t.id)).toList();
 
+    // Capture old account IDs for undo
+    final oldAccountIds = {for (final tx in toUpdate) tx.id: tx.accountId};
+
     // Calculate balance adjustments
     await db.transaction(() async {
       for (final tx in toUpdate) {
@@ -182,8 +202,34 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     _exitSelectionMode();
 
     if (mounted) {
-      context.showSuccessNotification(
+      context.showUndoNotification(
         '${toUpdate.length} transaction${toUpdate.length == 1 ? '' : 's'} updated',
+        () async {
+          final undoRepo = ref.read(transactionRepositoryProvider);
+          final undoDb = ref.read(databaseProvider);
+          final currentTransactions = ref.read(transactionsProvider).valueOrNull ?? [];
+
+          await undoDb.transaction(() async {
+            for (final tx in currentTransactions) {
+              final oldAccountId = oldAccountIds[tx.id];
+              if (oldAccountId != null && tx.accountId != oldAccountId) {
+                // Reverse balance adjustments
+                if (tx.type == TransactionType.transfer) {
+                  await ref.read(accountsProvider.notifier).updateBalance(tx.accountId, tx.amount);
+                  await ref.read(accountsProvider.notifier).updateBalance(oldAccountId, -tx.amount);
+                } else {
+                  final reverseChange = tx.type == TransactionType.income ? -tx.amount : tx.amount;
+                  await ref.read(accountsProvider.notifier).updateBalance(tx.accountId, reverseChange);
+                  final applyChange = tx.type == TransactionType.income ? tx.amount : -tx.amount;
+                  await ref.read(accountsProvider.notifier).updateBalance(oldAccountId, applyChange);
+                }
+
+                await undoRepo.updateTransaction(tx.copyWith(accountId: oldAccountId));
+              }
+            }
+          });
+          await ref.read(transactionsProvider.notifier).refresh();
+        },
       );
     }
   }

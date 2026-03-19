@@ -18,6 +18,7 @@ _$AccountDataImpl _$$AccountDataImplFromJson(Map<String, dynamic> json) =>
       customIconFontFamily: json['customIconFontFamily'] as String?,
       customIconFontPackage: json['customIconFontPackage'] as String?,
       currencyCode: json['currencyCode'] as String? ?? 'USD',
+      sortOrder: (json['sortOrder'] as num?)?.toInt() ?? 0,
       createdAtMillis: (json['createdAtMillis'] as num).toInt(),
     );
 
@@ -33,5 +34,6 @@ Map<String, dynamic> _$$AccountDataImplToJson(_$AccountDataImpl instance) =>
       'customIconFontFamily': instance.customIconFontFamily,
       'customIconFontPackage': instance.customIconFontPackage,
       'currencyCode': instance.currencyCode,
+      'sortOrder': instance.sortOrder,
       'createdAtMillis': instance.createdAtMillis,
     };

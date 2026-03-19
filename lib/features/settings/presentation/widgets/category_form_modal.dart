@@ -23,6 +23,7 @@ class CategoryFormModal extends ConsumerStatefulWidget {
   final void Function(String name, IconData icon, int colorIndex, String? parentId, bool showAssets) onSave;
   final VoidCallback? onDelete;
   final VoidCallback? onAddChild;
+  final VoidCallback? onMerge;
 
   const CategoryFormModal({
     super.key,
@@ -32,6 +33,7 @@ class CategoryFormModal extends ConsumerStatefulWidget {
     required this.onSave,
     this.onDelete,
     this.onAddChild,
+    this.onMerge,
   });
 
   @override
@@ -304,34 +306,71 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
                     top: AppSpacing.md,
                     bottom: MediaQuery.of(context).padding.bottom + AppSpacing.md,
                   ),
-                  child: isEditing && !_hasChanges && widget.onAddChild != null
-                      ? GestureDetector(
-                          onTap: widget.onAddChild,
-                          child: Container(
-                            height: AppSpacing.buttonHeight,
-                            decoration: BoxDecoration(
-                              color: Colors.transparent,
-                              borderRadius: AppRadius.mdAll,
-                              border: Border.all(color: AppColors.border),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  LucideIcons.plus,
-                                  size: 18,
-                                  color: AppColors.textSecondary,
-                                ),
-                                const SizedBox(width: AppSpacing.sm),
-                                Text(
-                                  'Add Subcategory',
-                                  style: AppTypography.bodyMedium.copyWith(
-                                    color: AppColors.textSecondary,
+                  child: isEditing && !_hasChanges && (widget.onAddChild != null || widget.onMerge != null)
+                      ? Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (widget.onMerge != null)
+                              GestureDetector(
+                                onTap: widget.onMerge,
+                                child: Container(
+                                  height: AppSpacing.buttonHeight,
+                                  decoration: BoxDecoration(
+                                    color: Colors.transparent,
+                                    borderRadius: AppRadius.mdAll,
+                                    border: Border.all(color: AppColors.border),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        LucideIcons.merge,
+                                        size: 18,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                      const SizedBox(width: AppSpacing.sm),
+                                      Text(
+                                        'Merge into...',
+                                        style: AppTypography.bodyMedium.copyWith(
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
+                              ),
+                            if (widget.onMerge != null && widget.onAddChild != null)
+                              const SizedBox(height: AppSpacing.sm),
+                            if (widget.onAddChild != null)
+                              GestureDetector(
+                                onTap: widget.onAddChild,
+                                child: Container(
+                                  height: AppSpacing.buttonHeight,
+                                  decoration: BoxDecoration(
+                                    color: Colors.transparent,
+                                    borderRadius: AppRadius.mdAll,
+                                    border: Border.all(color: AppColors.border),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        LucideIcons.plus,
+                                        size: 18,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                      const SizedBox(width: AppSpacing.sm),
+                                      Text(
+                                        'Add Subcategory',
+                                        style: AppTypography.bodyMedium.copyWith(
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                          ],
                         )
                       : PrimaryButton(
                           label: isEditing ? 'Save Changes' : 'Create Category',

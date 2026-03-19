@@ -91,6 +91,7 @@ class Account {
   final Color? customColor;
   final IconData? customIcon;
   final DateTime createdAt;
+  final int sortOrder;
 
   Account({
     required this.id,
@@ -102,8 +103,10 @@ class Account {
     this.customColor,
     this.customIcon,
     required this.createdAt,
+    this.sortOrder = 0,
   })  : assert(name.isNotEmpty, 'Account name must not be empty'),
-        assert(currencyCode.length == 3, 'Currency code must be 3 characters');
+        assert(currencyCode.length == 3, 'Currency code must be 3 characters'),
+        assert(sortOrder >= 0, 'Sort order must be non-negative');
 
   Color get color => customColor ?? type.color;
   IconData get icon => customIcon ?? type.icon;
@@ -124,6 +127,7 @@ class Account {
     Color? customColor,
     IconData? customIcon,
     DateTime? createdAt,
+    int? sortOrder,
   }) {
     return Account(
       id: id ?? this.id,
@@ -135,6 +139,7 @@ class Account {
       customColor: customColor ?? this.customColor,
       customIcon: customIcon ?? this.customIcon,
       createdAt: createdAt ?? this.createdAt,
+      sortOrder: sortOrder ?? this.sortOrder,
     );
   }
 

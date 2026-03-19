@@ -12,9 +12,12 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/buttons/icon_btn.dart';
 import '../../../../design_system/components/chips/toggle_chip.dart';
+import '../../../../design_system/design_system.dart';
 import '../../../categories/data/models/category.dart';
+import '../../../transactions/presentation/screens/transaction_bulk_actions.dart';
 import '../../../categories/data/models/category_tree_node.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
+import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../providers/settings_provider.dart';
 import '../widgets/category_form_modal.dart';
 import 'category_list_section.dart';
@@ -560,9 +563,96 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
             Navigator.pop(context);
             _showAddChildModal(category);
           },
+          onMerge: () {
+            Navigator.pop(context);
+            _showMergePicker(category);
+          },
         ),
       ),
     );
+  }
+
+  Future<void> _showMergePicker(Category source) async {
+    final categories = ref.read(categoriesProvider).valueOrEmpty;
+    final intensity = ref.read(colorIntensityProvider);
+
+    // Get same-type categories excluding source and its descendants
+    final descendantIds = CategoryTreeBuilder.getDescendantIds(categories, source.id);
+    final excludeIds = {source.id, ...descendantIds};
+    final eligibleCategories = categories
+        .where((c) => c.type == source.type && !excludeIds.contains(c.id))
+        .toList();
+
+    if (eligibleCategories.isEmpty) {
+      if (mounted) {
+        context.showWarningNotification('No eligible categories to merge into');
+      }
+      return;
+    }
+
+    final targetId = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => BulkPickerSheet(
+        title: 'Merge "${source.name}" into...',
+        items: eligibleCategories
+            .map((c) => BulkPickerItem(
+                  id: c.id,
+                  name: c.name,
+                  icon: c.icon,
+                  color: c.getColor(intensity),
+                ))
+            .toList(),
+      ),
+    );
+
+    if (targetId == null || !mounted) return;
+
+    final target = categories.firstWhere((c) => c.id == targetId);
+    final txCount = ref.read(transactionCountByCategoryProvider(source.id));
+    final childCount = categories.where((c) => c.parentId == source.id).length;
+
+    // Show confirmation
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text('Merge Category', style: AppTypography.h4),
+        content: Text(
+          'Merge "${source.name}" into "${target.name}"?\n\n'
+          '${txCount > 0 ? "$txCount transaction${txCount == 1 ? "" : "s"} will be moved.\n" : ""}'
+          '${childCount > 0 ? "$childCount subcategor${childCount == 1 ? "y" : "ies"} will be moved.\n" : ""}'
+          '"${source.name}" will be deleted.',
+          style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel', style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('Merge', style: AppTypography.bodyMedium.copyWith(color: AppColors.expense)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    try {
+      await ref.read(categoriesProvider.notifier).mergeCategory(source.id, targetId);
+      if (mounted) {
+        context.showSuccessNotification('Merged "${source.name}" into "${target.name}"');
+      }
+    } catch (e) {
+      if (mounted) {
+        context.showErrorNotification('Failed to merge category');
+      }
+    }
   }
 
   void _showAddChildModal(Category parentCategory) {

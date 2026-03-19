@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -16,11 +17,18 @@ import '../../../transactions/presentation/providers/transactions_provider.dart'
 import '../../data/models/account.dart';
 import '../providers/accounts_provider.dart';
 
-class AccountsScreen extends ConsumerWidget {
+class AccountsScreen extends ConsumerStatefulWidget {
   const AccountsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AccountsScreen> createState() => _AccountsScreenState();
+}
+
+class _AccountsScreenState extends ConsumerState<AccountsScreen> {
+  bool _isReorderMode = false;
+
+  @override
+  Widget build(BuildContext context) {
     final accountsAsync = ref.watch(accountsProvider);
     final totalBalance = ref.watch(totalBalanceProvider);
     final mainCurrency = ref.watch(mainCurrencyCodeProvider);
@@ -33,10 +41,33 @@ class AccountsScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: AppSpacing.lg),
-          ScreenHeader(
-            title: 'Accounts',
-            onActionPressed: () => context.push(AppRoutes.accountForm),
-            actionIconColor: ref.watch(accentColorProvider),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Accounts', style: AppTypography.h2),
+                Row(
+                  children: [
+                    IconBtn(
+                      icon: _isReorderMode ? LucideIcons.check : LucideIcons.arrowUpDown,
+                      onPressed: () => setState(() => _isReorderMode = !_isReorderMode),
+                      iconColor: _isReorderMode ? ref.watch(accentColorProvider) : AppColors.textSecondary,
+                      showBorder: true,
+                      semanticLabel: _isReorderMode ? 'Done reordering' : 'Reorder accounts',
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    IconBtn(
+                      icon: LucideIcons.plus,
+                      onPressed: () => context.push(AppRoutes.accountForm),
+                      iconColor: ref.watch(accentColorProvider),
+                      showBorder: true,
+                      semanticLabel: 'Add account',
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: AppSpacing.lg),
 
@@ -151,11 +182,17 @@ class AccountsScreen extends ConsumerWidget {
                           sectionIndex++;
                           return StaggeredListItem(
                             index: currentIndex,
-                            child: _AccountTypeSection(
-                              type: type,
-                              accounts: accounts,
-                              intensity: intensity,
-                            ),
+                            child: _isReorderMode
+                                ? _ReorderableAccountTypeSection(
+                                    type: type,
+                                    accounts: accounts,
+                                    intensity: intensity,
+                                  )
+                                : _AccountTypeSection(
+                                    type: type,
+                                    accounts: accounts,
+                                    intensity: intensity,
+                                  ),
                           );
                         }).toList();
                       }(),
@@ -197,6 +234,107 @@ class _AccountTypeSection extends StatelessWidget {
           spacing: AppSpacing.sm,
           runSpacing: AppSpacing.sm,
           children: accounts.map((account) => _AccountCard(account: account, intensity: intensity)).toList(),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+      ],
+    );
+  }
+}
+
+class _ReorderableAccountTypeSection extends ConsumerWidget {
+  final AccountType type;
+  final List<Account> accounts;
+  final ColorIntensity intensity;
+
+  const _ReorderableAccountTypeSection({
+    required this.type,
+    required this.accounts,
+    required this.intensity,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+          child: Text(
+            type.displayName,
+            style: AppTypography.labelMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+        ReorderableListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          proxyDecorator: (child, index, animation) {
+            return Material(
+              color: Colors.transparent,
+              child: child,
+            );
+          },
+          itemCount: accounts.length,
+          onReorder: (oldIndex, newIndex) {
+            if (newIndex > oldIndex) newIndex--;
+            ref.read(accountsProvider.notifier).reorderAccount(oldIndex, newIndex, type);
+          },
+          itemBuilder: (context, index) {
+            final account = accounts[index];
+            final accountColor = account.getColorWithIntensity(intensity);
+            final bgOpacity = AppColors.getBgOpacity(intensity);
+            return Container(
+              key: ValueKey(account.id),
+              margin: const EdgeInsets.only(bottom: AppSpacing.xs),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: accountColor.withValues(alpha: bgOpacity * 0.3),
+                borderRadius: AppRadius.mdAll,
+                border: Border.all(color: accountColor.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    LucideIcons.gripVertical,
+                    size: 18,
+                    color: AppColors.textTertiary,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: accountColor.withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(7),
+                    ),
+                    child: Icon(
+                      account.icon,
+                      color: AppColors.background,
+                      size: 14,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      account.name,
+                      style: AppTypography.bodyMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Text(
+                    CurrencyFormatter.format(account.balance, currencyCode: account.currencyCode),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
         const SizedBox(height: AppSpacing.lg),
       ],

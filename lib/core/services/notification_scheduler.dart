@@ -105,6 +105,7 @@ class NotificationScheduler {
             0,
           ),
           payload: 'recurring:${rule.id}',
+          includeQuickAdd: true,
         );
         scheduled++;
       }
@@ -144,6 +145,7 @@ class NotificationScheduler {
         0,
       ),
       payload: 'weekly_summary',
+      includeQuickAdd: true,
     );
   }
 

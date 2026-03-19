@@ -180,6 +180,7 @@ class DatabaseExportService {
       CREATE TABLE accounts (
         id TEXT PRIMARY KEY,
         created_at INTEGER NOT NULL,
+        sort_order INTEGER NOT NULL DEFAULT 0,
         last_updated_at INTEGER NOT NULL,
         is_deleted INTEGER NOT NULL DEFAULT 0,
         encrypted_blob BLOB NOT NULL
@@ -285,6 +286,7 @@ class DatabaseExportService {
       CREATE TABLE accounts (
         id TEXT PRIMARY KEY,
         created_at INTEGER NOT NULL,
+        sort_order INTEGER NOT NULL DEFAULT 0,
         last_updated_at INTEGER NOT NULL,
         is_deleted INTEGER NOT NULL DEFAULT 0,
         name TEXT NOT NULL,
@@ -449,13 +451,14 @@ class DatabaseExportService {
     final rows = await database.select(database.accounts).get();
 
     final stmt = exportDb.prepare(
-      'INSERT INTO accounts (id, created_at, last_updated_at, is_deleted, encrypted_blob) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO accounts (id, created_at, sort_order, last_updated_at, is_deleted, encrypted_blob) VALUES (?, ?, ?, ?, ?, ?)',
     );
 
     for (final row in rows) {
       stmt.execute([
         row.id,
         row.createdAt,
+        row.sortOrder,
         row.lastUpdatedAt,
         row.isDeleted ? 1 : 0,
         row.encryptedBlob,
@@ -632,8 +635,8 @@ class DatabaseExportService {
 
     final stmt = exportDb.prepare(
       '''INSERT INTO accounts
-         (id, created_at, last_updated_at, is_deleted, name, type, balance, initial_balance, currency_code, custom_color_value, custom_icon_code_point, custom_icon_font_family, custom_icon_font_package, created_at_millis)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+         (id, created_at, sort_order, last_updated_at, is_deleted, name, type, balance, initial_balance, currency_code, custom_color_value, custom_icon_code_point, custom_icon_font_family, custom_icon_font_package, created_at_millis)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
     );
 
     for (final row in rows) {
@@ -643,6 +646,7 @@ class DatabaseExportService {
       stmt.execute([
         row.id,
         row.createdAt,
+        row.sortOrder,
         row.lastUpdatedAt,
         row.isDeleted ? 1 : 0,
         data.name,
@@ -951,12 +955,13 @@ class DatabaseExportService {
 
     if (options.encryptionEnabled) {
       final rows = await database.select(database.accounts).get();
-      csvData.add(['id', 'created_at', 'last_updated_at', 'is_deleted', 'encrypted_blob']);
+      csvData.add(['id', 'created_at', 'sort_order', 'last_updated_at', 'is_deleted', 'encrypted_blob']);
 
       for (final row in rows) {
         csvData.add([
           row.id,
           row.createdAt,
+          row.sortOrder,
           row.lastUpdatedAt,
           row.isDeleted ? 1 : 0,
           base64Encode(row.encryptedBlob),
@@ -965,7 +970,7 @@ class DatabaseExportService {
     } else {
       final rows = await database.select(database.accounts).get();
       csvData.add([
-        'id', 'created_at', 'last_updated_at', 'is_deleted', 'name', 'type', 'balance', 'initial_balance', 'currency_code', 'custom_color_value', 'custom_icon_code_point', 'custom_icon_font_family', 'custom_icon_font_package',
+        'id', 'created_at', 'sort_order', 'last_updated_at', 'is_deleted', 'name', 'type', 'balance', 'initial_balance', 'currency_code', 'custom_color_value', 'custom_icon_code_point', 'custom_icon_font_family', 'custom_icon_font_package',
       ]);
 
       for (final row in rows) {
@@ -975,6 +980,7 @@ class DatabaseExportService {
         csvData.add([
           row.id,
           row.createdAt,
+          row.sortOrder,
           row.lastUpdatedAt,
           row.isDeleted ? 1 : 0,
           data.name,

@@ -41,6 +41,9 @@ class AccountData with _$AccountData {
     /// Currency code (ISO 4217)
     @Default('USD') String currencyCode,
 
+    /// Sort order for display ordering
+    @Default(0) int sortOrder,
+
     /// Matches the database createdAt field for integrity verification during import.
     /// Not exported as a separate CSV column to avoid duplication.
     required int createdAtMillis,
