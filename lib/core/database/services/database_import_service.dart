@@ -382,90 +382,93 @@ class DatabaseImportService {
       // Detect format by checking for encryptedBlob column
       final isEncrypted = _hasEncryptedBlob(importDb, 'transactions');
 
-      // Import transactions
-      if (_tableExists(importDb, 'transactions')) {
-        transactionsImported = await _importTransactionsFromSqlite(
-          importDb,
-          isEncrypted,
-          errors,
-        );
-      }
+      // Wrap all imports in a database transaction for atomicity —
+      // if any table import fails critically, all changes are rolled back.
+      await database.transaction(() async {
+        // Import accounts and categories first (referenced by transactions)
+        if (_tableExists(importDb, 'accounts')) {
+          accountsImported = await _importAccountsFromSqlite(
+            importDb,
+            isEncrypted,
+            errors,
+          );
+        }
 
-      // Import accounts
-      if (_tableExists(importDb, 'accounts')) {
-        accountsImported = await _importAccountsFromSqlite(
-          importDb,
-          isEncrypted,
-          errors,
-        );
-      }
+        if (_tableExists(importDb, 'categories')) {
+          categoriesImported = await _importCategoriesFromSqlite(
+            importDb,
+            isEncrypted,
+            errors,
+          );
+        }
 
-      // Import categories
-      if (_tableExists(importDb, 'categories')) {
-        categoriesImported = await _importCategoriesFromSqlite(
-          importDb,
-          isEncrypted,
-          errors,
-        );
-      }
+        // Import transactions (depends on accounts and categories)
+        if (_tableExists(importDb, 'transactions')) {
+          transactionsImported = await _importTransactionsFromSqlite(
+            importDb,
+            isEncrypted,
+            errors,
+          );
+        }
 
-      // Import settings
-      if (_tableExists(importDb, 'app_settings')) {
-        settingsImported = await _importSettingsFromSqlite(
-          importDb,
-          errors,
-        );
-      }
+        // Import settings
+        if (_tableExists(importDb, 'app_settings')) {
+          settingsImported = await _importSettingsFromSqlite(
+            importDb,
+            errors,
+          );
+        }
 
-      // Import budgets
-      if (_tableExists(importDb, 'budgets')) {
-        final isEncryptedBudgets = _hasEncryptedBlob(importDb, 'budgets');
-        budgetsImported = await _importBudgetsFromSqlite(
-          importDb,
-          isEncryptedBudgets,
-          errors,
-        );
-      }
+        // Import budgets
+        if (_tableExists(importDb, 'budgets')) {
+          final isEncryptedBudgets = _hasEncryptedBlob(importDb, 'budgets');
+          budgetsImported = await _importBudgetsFromSqlite(
+            importDb,
+            isEncryptedBudgets,
+            errors,
+          );
+        }
 
-      // Import assets
-      if (_tableExists(importDb, 'assets')) {
-        final isEncryptedAssets = _hasEncryptedBlob(importDb, 'assets');
-        assetsImported = await _importAssetsFromSqlite(
-          importDb,
-          isEncryptedAssets,
-          errors,
-        );
-      }
+        // Import assets
+        if (_tableExists(importDb, 'assets')) {
+          final isEncryptedAssets = _hasEncryptedBlob(importDb, 'assets');
+          assetsImported = await _importAssetsFromSqlite(
+            importDb,
+            isEncryptedAssets,
+            errors,
+          );
+        }
 
-      // Import recurring rules
-      if (_tableExists(importDb, 'recurring_rules')) {
-        final isEncryptedRules = _hasEncryptedBlob(importDb, 'recurring_rules');
-        recurringRulesImported = await _importRecurringRulesFromSqlite(
-          importDb,
-          isEncryptedRules,
-          errors,
-        );
-      }
+        // Import recurring rules
+        if (_tableExists(importDb, 'recurring_rules')) {
+          final isEncryptedRules = _hasEncryptedBlob(importDb, 'recurring_rules');
+          recurringRulesImported = await _importRecurringRulesFromSqlite(
+            importDb,
+            isEncryptedRules,
+            errors,
+          );
+        }
 
-      // Import savings goals
-      if (_tableExists(importDb, 'savings_goals')) {
-        final isEncryptedGoals = _hasEncryptedBlob(importDb, 'savings_goals');
-        savingsGoalsImported = await _importSavingsGoalsFromSqlite(
-          importDb,
-          isEncryptedGoals,
-          errors,
-        );
-      }
+        // Import savings goals
+        if (_tableExists(importDb, 'savings_goals')) {
+          final isEncryptedGoals = _hasEncryptedBlob(importDb, 'savings_goals');
+          savingsGoalsImported = await _importSavingsGoalsFromSqlite(
+            importDb,
+            isEncryptedGoals,
+            errors,
+          );
+        }
 
-      // Import transaction templates
-      if (_tableExists(importDb, 'transaction_templates')) {
-        final isEncryptedTemplates = _hasEncryptedBlob(importDb, 'transaction_templates');
-        templatesImported = await _importTransactionTemplatesFromSqlite(
-          importDb,
-          isEncryptedTemplates,
-          errors,
-        );
-      }
+        // Import transaction templates
+        if (_tableExists(importDb, 'transaction_templates')) {
+          final isEncryptedTemplates = _hasEncryptedBlob(importDb, 'transaction_templates');
+          templatesImported = await _importTransactionTemplatesFromSqlite(
+            importDb,
+            isEncryptedTemplates,
+            errors,
+          );
+        }
+      });
     } finally {
       importDb.dispose();
     }

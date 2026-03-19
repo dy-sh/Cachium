@@ -59,6 +59,7 @@ lib/
 - **Design system naming:** Semantic names without prefixes (`PrimaryButton`, `SecondaryButton`, `DestructiveButton`, `Surface`, `InputField`, `PageLayout`)
 - **Button variants:** `PrimaryButton` (filled accent), `SecondaryButton` (outlined), `DestructiveButton` (red, filled or outlined)
 - **Model equality:** `==` and `hashCode` based on `id` only; all models use `copyWith()`
+- **Model validation:** Models use `assert()` for invariants (non-negative amounts, valid currency codes, valid month/year ranges). These fire in debug mode to catch bad data early.
 - **Enum extensions:** All enums have `displayName`, `color`, `icon` extensions
 - **Categories:** Support `parentId` for hierarchy; `DefaultCategories` provides presets
 - **Accounts:** Support `customColor`/`customIcon` overrides via `getColorWithIntensity()`
@@ -84,7 +85,7 @@ Located in `lib/design_system/components/feedback/notification.dart`.
 - `conversionRate` multiplier: `amount * conversionRate ~ mainCurrencyAmount`
 - `destinationAmount` for cross-currency transfers
 - `mainCurrencyCode` / `mainCurrencyAmount` — historical snapshots persisted at save time; never leave null on new records
-- Use `roundCurrency()` from `currency_conversion.dart` for all rounding (not inline `toStringAsFixed`)
+- Use `roundCurrency()` from `currency_conversion.dart` for all rounding (not inline `toStringAsFixed`). Pass `currencyCode` for currency-aware decimal places (e.g., JPY=0, KWD=3). Use `currencyDecimalPlaces()` to get the correct decimals for a currency.
 - Use `conversionGainLoss()` for all gain/loss calculations (returns `double?`, handle null)
 - Aggregated totals always in main currency; foreign items show "~ $X,XXX" subtitle
 - Exchange rates: Open ER-API (free) or Manual rates at `/settings/formats/manual-rates`
@@ -103,7 +104,7 @@ Key `AppColors` methods: `getAccountColor()`, `getTransactionColor()`, `getCateg
 - `lib/core/constants/app_colors.dart` — Color system
 - `lib/core/database/app_database.dart` — Database schema (version 18, incremental migrations)
 - `lib/core/utils/currency_conversion.dart` — `conversionGainLoss()`, `roundCurrency()`
-- `lib/core/utils/credential_hasher.dart` — SHA-256 credential hashing
+- `lib/core/utils/credential_hasher.dart` — PBKDF2 credential hashing (with legacy SHA-256 and plaintext migration)
 - `lib/features/settings/data/models/app_settings.dart` — Settings model + ColorIntensity
 - `lib/design_system/components/feedback/notification.dart` — Custom notifications
 - `lib/core/services/exchange_rate_service.dart` — Exchange rate fetching

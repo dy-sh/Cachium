@@ -37,6 +37,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
   final _passwordController = TextEditingController();
   final _passwordFocusNode = FocusNode();
 
+  bool _obscurePassword = true;
   int _failedAttempts = 0;
   DateTime? _lockedUntil;
   Timer? _lockoutTimer;
@@ -77,11 +78,16 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     _lockedUntil = DateTime.now().add(duration);
     _lockoutTimer?.cancel();
     _lockoutTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) {
+        _lockoutTimer?.cancel();
+        _lockoutTimer = null;
+        return;
+      }
       if (!_isLockedOut) {
         _lockoutTimer?.cancel();
         _lockoutTimer = null;
       }
-      if (mounted) setState(() {});
+      setState(() {});
     });
   }
 
@@ -373,7 +379,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
           TextField(
             controller: _passwordController,
             focusNode: _passwordFocusNode,
-            obscureText: true,
+            obscureText: _obscurePassword,
             enabled: !_isLockedOut,
             style: AppTypography.bodyMedium.copyWith(
               color: AppColors.textPrimary,
@@ -400,6 +406,21 @@ class _LockScreenState extends ConsumerState<LockScreen> {
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.lg,
                 vertical: AppSpacing.md,
+              ),
+              suffixIcon: GestureDetector(
+                onTap: () => setState(() => _obscurePassword = !_obscurePassword),
+                child: Padding(
+                  padding: const EdgeInsets.only(right: AppSpacing.sm),
+                  child: Icon(
+                    _obscurePassword ? LucideIcons.eyeOff : LucideIcons.eye,
+                    size: 20,
+                    color: AppColors.textTertiary,
+                  ),
+                ),
+              ),
+              suffixIconConstraints: const BoxConstraints(
+                minWidth: 48,
+                minHeight: 48,
               ),
             ),
             onSubmitted: (_) => _submitPassword(),
@@ -432,7 +453,10 @@ class _LockScreenState extends ConsumerState<LockScreen> {
   }
 
   Widget _buildBiometricButton() {
-    return GestureDetector(
+    return Semantics(
+      label: 'Authenticate with biometrics',
+      button: true,
+      child: GestureDetector(
       onTap: _isAuthenticating ? null : _tryBiometric,
       child: Container(
         width: 64,
@@ -458,6 +482,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                 color: AppColors.accentPrimary,
               ),
       ),
+    ),
     );
   }
 

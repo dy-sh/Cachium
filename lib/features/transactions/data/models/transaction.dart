@@ -44,7 +44,7 @@ class Transaction {
   final String? merchant;
   final DateTime createdAt;
 
-  const Transaction({
+  Transaction({
     required this.id,
     required this.amount,
     required this.type,
@@ -61,7 +61,14 @@ class Transaction {
     this.note,
     this.merchant,
     required this.createdAt,
-  });
+  })  : assert(amount >= 0, 'Transaction amount must be non-negative'),
+        assert(conversionRate > 0 && conversionRate.isFinite,
+            'Conversion rate must be positive and finite'),
+        assert(destinationAmount == null || destinationAmount >= 0,
+            'Destination amount must be non-negative'),
+        assert(currencyCode.length == 3, 'Currency code must be 3 characters'),
+        assert(mainCurrencyCode.length == 3,
+            'Main currency code must be 3 characters');
 
   bool get isTransfer => type == TransactionType.transfer;
 

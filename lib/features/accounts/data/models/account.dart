@@ -92,7 +92,7 @@ class Account {
   final IconData? customIcon;
   final DateTime createdAt;
 
-  const Account({
+  Account({
     required this.id,
     required this.name,
     required this.type,
@@ -102,7 +102,8 @@ class Account {
     this.customColor,
     this.customIcon,
     required this.createdAt,
-  });
+  })  : assert(name.isNotEmpty, 'Account name must not be empty'),
+        assert(currencyCode.length == 3, 'Currency code must be 3 characters');
 
   Color get color => customColor ?? type.color;
   IconData get icon => customIcon ?? type.icon;

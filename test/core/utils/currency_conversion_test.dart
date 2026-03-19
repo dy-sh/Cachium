@@ -75,6 +75,43 @@ void main() {
       expect(roundCurrency(0.001), 0.0);
       expect(roundCurrency(0.005), 0.01);
     });
+
+    test('rounds JPY to 0 decimal places via currencyCode', () {
+      expect(roundCurrency(1234.5, currencyCode: 'JPY'), 1235.0);
+      expect(roundCurrency(1234.4, currencyCode: 'JPY'), 1234.0);
+    });
+
+    test('rounds KWD to 3 decimal places via currencyCode', () {
+      expect(roundCurrency(1.2345, currencyCode: 'KWD'), 1.235);
+      expect(roundCurrency(1.2344, currencyCode: 'KWD'), 1.234);
+    });
+
+    test('rounds USD to 2 decimal places via currencyCode', () {
+      expect(roundCurrency(1.235, currencyCode: 'USD'), 1.24);
+    });
+
+    test('currencyCode overrides decimals parameter', () {
+      // Even if decimals=2 is default, currencyCode for JPY should give 0
+      expect(roundCurrency(100.5, currencyCode: 'JPY'), 101.0);
+    });
+  });
+
+  group('currencyDecimalPlaces', () {
+    test('returns 0 for JPY', () {
+      expect(currencyDecimalPlaces('JPY'), 0);
+    });
+
+    test('returns 3 for KWD', () {
+      expect(currencyDecimalPlaces('KWD'), 3);
+    });
+
+    test('returns 2 for USD (default)', () {
+      expect(currencyDecimalPlaces('USD'), 2);
+    });
+
+    test('returns 2 for EUR (default)', () {
+      expect(currencyDecimalPlaces('EUR'), 2);
+    });
   });
 
   // ── convertedAmount ────────────────────────────────────────────────

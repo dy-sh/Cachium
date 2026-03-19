@@ -239,19 +239,30 @@ class _FMNotificationState extends ConsumerState<Notification>
               // Close button
               if (widget.showCloseButton) ...[
                 const SizedBox(width: AppSpacing.sm),
-                GestureDetector(
-                  onTap: _dismiss,
-                  child: Container(
-                    width: AppSpacing.notificationCloseSize,
-                    height: AppSpacing.notificationCloseSize,
-                    decoration: BoxDecoration(
-                      color: AppColors.border,
-                      borderRadius: AppRadius.smAll,
-                    ),
-                    child: const Icon(
-                      LucideIcons.x,
-                      color: AppColors.textSecondary,
-                      size: 14,
+                Semantics(
+                  label: 'Dismiss notification',
+                  button: true,
+                  child: GestureDetector(
+                    onTap: _dismiss,
+                    behavior: HitTestBehavior.opaque,
+                    child: SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: Center(
+                        child: Container(
+                          width: AppSpacing.notificationCloseSize,
+                          height: AppSpacing.notificationCloseSize,
+                          decoration: BoxDecoration(
+                            color: AppColors.border,
+                            borderRadius: AppRadius.smAll,
+                          ),
+                          child: const Icon(
+                            LucideIcons.x,
+                            color: AppColors.textSecondary,
+                            size: 14,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -273,6 +284,7 @@ class NotificationOverlay {
 
   OverlayEntry? _currentEntry;
   String? _currentMessage;
+  FMNotificationType? _currentType;
   final GlobalKey<_FMNotificationState> _notificationKey = GlobalKey();
   final List<_NotificationItem> _queue = [];
   bool _isShowing = false;
@@ -286,16 +298,16 @@ class NotificationOverlay {
     String? actionLabel,
     VoidCallback? onAction,
   }) {
-    // If the same message is already showing, just reset the timer
-    if (_isShowing && _currentMessage == message) {
+    // If the same message+type is already showing, just reset the timer
+    if (_isShowing && _currentMessage == message && _currentType == type) {
       _notificationKey.currentState?.resetTimer();
-      // Also drop any queued duplicates of this message
-      _queue.removeWhere((item) => item.message == message);
+      // Also drop any queued duplicates of this message+type
+      _queue.removeWhere((item) => item.message == message && item.type == type);
       return;
     }
 
-    // Also deduplicate from the queue
-    _queue.removeWhere((item) => item.message == message);
+    // Also deduplicate from the queue (same message+type only)
+    _queue.removeWhere((item) => item.message == message && item.type == type);
 
     _queue.add(_NotificationItem(
       context: context,
@@ -317,6 +329,7 @@ class NotificationOverlay {
     if (_queue.isEmpty) {
       _isShowing = false;
       _currentMessage = null;
+      _currentType = null;
       _isProcessingQueue = false;
       return;
     }
@@ -328,6 +341,7 @@ class NotificationOverlay {
     _isShowing = true;
     final item = _queue.removeAt(0);
     _currentMessage = item.message;
+    _currentType = item.type;
 
     final overlay = Overlay.of(item.context);
 
@@ -405,6 +419,7 @@ class NotificationOverlay {
     _currentEntry?.remove();
     _currentEntry = null;
     _currentMessage = null;
+    _currentType = null;
     _showNext();
   }
 }

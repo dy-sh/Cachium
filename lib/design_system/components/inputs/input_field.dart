@@ -112,6 +112,9 @@ class _FMTextFieldState extends ConsumerState<InputField>
   }
 
   void _triggerShake() {
+    // Skip shake animation if user prefers reduced motion
+    final reduceMotion = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    if (reduceMotion) return;
     _shakeController.forward(from: 0).then((_) => _shakeController.reverse());
   }
 

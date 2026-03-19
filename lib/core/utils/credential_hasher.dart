@@ -102,6 +102,12 @@ class CredentialHasher {
     final saltedInput = utf8.encode('cachium_app_lock_$credential');
     final digest = await _sha256.hash(saltedInput);
     final candidateHash = '$_sha256Prefix${base64Encode(digest.bytes)}';
-    return candidateHash == storedValue;
+    // Constant-time comparison to prevent timing attacks
+    if (candidateHash.length != storedValue.length) return false;
+    var result = 0;
+    for (var i = 0; i < candidateHash.length; i++) {
+      result |= candidateHash.codeUnitAt(i) ^ storedValue.codeUnitAt(i);
+    }
+    return result == 0;
   }
 }

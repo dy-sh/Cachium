@@ -28,10 +28,16 @@ void main() async {
   final db = container.read(databaseProvider);
 
   // Migrate encryption keys from legacy mock key to secure storage
-  final migrationService = KeyMigrationService();
-  final oldKeyProvider = LegacyKeyProvider();
-  final newKeyProvider = SecureKeyProvider();
-  await migrationService.migrateIfNeeded(db, oldKeyProvider, newKeyProvider);
+  try {
+    final migrationService = KeyMigrationService();
+    final oldKeyProvider = LegacyKeyProvider();
+    final newKeyProvider = SecureKeyProvider();
+    await migrationService.migrateIfNeeded(db, oldKeyProvider, newKeyProvider);
+  } catch (e) {
+    debugPrint('Key migration failed: $e');
+    // Continue startup — data remains readable with the legacy key
+    // until migration succeeds on a future launch.
+  }
 
   // Clean up soft-deleted records older than 30 days
   db.cleanupDeletedRecords();

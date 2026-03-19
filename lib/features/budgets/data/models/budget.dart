@@ -6,14 +6,17 @@ class Budget {
   final int month;
   final DateTime createdAt;
 
-  const Budget({
+  Budget({
     required this.id,
     required this.categoryId,
     required this.amount,
     required this.year,
     required this.month,
     required this.createdAt,
-  });
+  })  : assert(amount >= 0, 'Budget amount must be non-negative'),
+        assert(month >= 1 && month <= 12, 'Month must be between 1 and 12'),
+        assert(year >= 2000 && year <= 2100,
+            'Year must be between 2000 and 2100');
 
   Budget copyWith({
     String? id,

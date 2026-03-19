@@ -624,7 +624,12 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
         isEdit: isEditing,
       );
     } catch (e) {
-      return const SaveResult(success: false, message: 'Failed to save transaction');
+      return SaveResult(
+        success: false,
+        message: isEditing
+            ? 'Failed to update transaction: ${e.toString()}'
+            : 'Failed to save transaction: ${e.toString()}',
+      );
     }
   }
 }
