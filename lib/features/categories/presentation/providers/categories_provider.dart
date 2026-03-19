@@ -388,15 +388,16 @@ final expenseCategoriesProvider = Provider<List<Category>>((ref) {
   return categories.where((c) => c.type == CategoryType.expense).toList();
 });
 
-final categoryByIdProvider = Provider.family<Category?, String>((ref, id) {
+/// Computed map for O(1) category lookups. Rebuilt only when the category list changes.
+final categoryMapProvider = Provider<Map<String, Category>>((ref) {
   final categoriesAsync = ref.watch(categoriesProvider);
   final categories = categoriesAsync.valueOrNull;
-  if (categories == null) return null;
-  try {
-    return categories.firstWhere((c) => c.id == id);
-  } catch (_) {
-    return null;
-  }
+  if (categories == null) return {};
+  return {for (final c in categories) c.id: c};
+});
+
+final categoryByIdProvider = Provider.family<Category?, String>((ref, id) {
+  return ref.watch(categoryMapProvider)[id];
 });
 
 final rootIncomeCategoriesProvider = Provider<List<Category>>((ref) {

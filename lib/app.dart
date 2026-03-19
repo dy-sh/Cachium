@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/constants/app_colors.dart';
 import 'features/settings/presentation/providers/app_lock_provider.dart';
@@ -12,61 +11,63 @@ import 'navigation/app_router.dart';
 class CachiumApp extends ConsumerWidget {
   const CachiumApp({super.key});
 
+  static final _theme = ThemeData(
+    brightness: Brightness.dark,
+    scaffoldBackgroundColor: AppColors.background,
+    colorScheme: const ColorScheme.dark(
+      surface: AppColors.surface,
+      primary: AppColors.textPrimary,
+    ),
+    splashColor: Colors.transparent,
+    highlightColor: Colors.transparent,
+  );
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Set system UI overlay style for dark theme
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-        systemNavigationBarColor: AppColors.background,
-        systemNavigationBarIconBrightness: Brightness.light,
-      ),
-    );
-
-    return MaterialApp(
-      title: 'Cachium',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: AppColors.background,
-        colorScheme: const ColorScheme.dark(
-          surface: AppColors.surface,
-          primary: AppColors.textPrimary,
-        ),
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-      ),
-      home: const _AppGate(),
-    );
+    return const _AppGate();
   }
 }
 
-class _AppGate extends ConsumerWidget {
+class _AppGate extends ConsumerStatefulWidget {
   const _AppGate();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_AppGate> createState() => _AppGateState();
+}
+
+class _AppGateState extends ConsumerState<_AppGate> {
+  @override
+  void initState() {
+    super.initState();
+    // Migrate plaintext credentials to hashed on first load
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await ref.read(settingsProvider.notifier).migrateCredentialsIfNeeded();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ref = this.ref;
     final shouldShowWelcomeAsync = ref.watch(shouldShowWelcomeProvider);
     final isResetting = ref.watch(isResettingDatabaseProvider);
 
     // During reset, directly show welcome screen
-    // The welcome screen will handle the setup options and reset the flag
     if (isResetting) {
-      return const WelcomeScreen();
+      return _wrapInApp(const WelcomeScreen());
     }
 
     // On initial load (no cached value), wait for provider to resolve
-    // This ensures first launch shows welcome screen if needed
     if (!shouldShowWelcomeAsync.hasValue) {
       return shouldShowWelcomeAsync.when(
-        data: (showWelcome) => showWelcome ? const WelcomeScreen() : const _LockGate(),
-        loading: () => const Scaffold(
-          backgroundColor: AppColors.background,
-          body: Center(
-            child: CircularProgressIndicator(
-              color: AppColors.textSecondary,
+        data: (showWelcome) =>
+            showWelcome ? _wrapInApp(const WelcomeScreen()) : const _LockGate(),
+        loading: () => _wrapInApp(
+          const Scaffold(
+            backgroundColor: AppColors.background,
+            body: Center(
+              child: CircularProgressIndicator(
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
         ),
@@ -76,9 +77,19 @@ class _AppGate extends ConsumerWidget {
 
     // Has cached value - use it to prevent flickering during navigation
     if (shouldShowWelcomeAsync.value == true) {
-      return const WelcomeScreen();
+      return _wrapInApp(const WelcomeScreen());
     }
     return const _LockGate();
+  }
+
+  /// Wraps a pre-router screen in a simple MaterialApp.
+  Widget _wrapInApp(Widget home) {
+    return MaterialApp(
+      title: 'Cachium',
+      debugShowCheckedModeBanner: false,
+      theme: CachiumApp._theme,
+      home: home,
+    );
   }
 }
 
@@ -92,10 +103,15 @@ class _LockGate extends ConsumerWidget {
     final isLocked = ref.watch(appLockStateProvider);
 
     if (appLockEnabled && isLocked) {
-      return LockScreen(
-        onUnlocked: () {
-          // State already updated by the lock screen
-        },
+      return MaterialApp(
+        title: 'Cachium',
+        debugShowCheckedModeBanner: false,
+        theme: CachiumApp._theme,
+        home: LockScreen(
+          onUnlocked: () {
+            // State already updated by the lock screen
+          },
+        ),
       );
     }
 
@@ -114,16 +130,7 @@ class _MainApp extends ConsumerWidget {
       title: 'Cachium',
       debugShowCheckedModeBanner: false,
       routerConfig: router,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: AppColors.background,
-        colorScheme: const ColorScheme.dark(
-          surface: AppColors.surface,
-          primary: AppColors.textPrimary,
-        ),
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-      ),
+      theme: CachiumApp._theme,
     );
   }
 }

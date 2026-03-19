@@ -12,8 +12,10 @@ export 'animations/staggered_list.dart';
 
 // Buttons
 export 'components/buttons/circular_button.dart';
+export 'components/buttons/destructive_button.dart';
 export 'components/buttons/icon_btn.dart';
 export 'components/buttons/primary_button.dart';
+export 'components/buttons/secondary_button.dart';
 
 // Cards
 export 'components/cards/surface.dart';

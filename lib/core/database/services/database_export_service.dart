@@ -29,9 +29,34 @@ class DatabaseExportService {
     required this.encryptionService,
   });
 
+  /// Clean up previous export files from the temp directory.
+  Future<void> cleanupPreviousExports() async {
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final entries = tempDir.listSync();
+      for (final entry in entries) {
+        final name = entry.uri.pathSegments.last;
+        if (name.startsWith('cachium_export_') || name.startsWith('cachium_csv_')) {
+          try {
+            if (entry is File) {
+              await entry.delete();
+            } else if (entry is Directory) {
+              await entry.delete(recursive: true);
+            }
+          } catch (_) {
+            // Ignore cleanup errors for individual files
+          }
+        }
+      }
+    } catch (_) {
+      // Don't fail the export if cleanup fails
+    }
+  }
+
   /// Export database to SQLite format.
   /// Returns the path to the exported file.
   Future<String> exportToSqlite(ExportOptions options) async {
+    await cleanupPreviousExports();
     final tempDir = await getTemporaryDirectory();
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final dbPath = '${tempDir.path}/cachium_export_$timestamp.db';
@@ -73,6 +98,7 @@ class DatabaseExportService {
   /// Export database to CSV format.
   /// Returns a list of paths to the exported files.
   Future<List<String>> exportToCsv(ExportOptions options) async {
+    await cleanupPreviousExports();
     final tempDir = await getTemporaryDirectory();
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final exportDir = Directory('${tempDir.path}/cachium_csv_$timestamp');

@@ -2,6 +2,16 @@
 
 ## 2026-03-19
 - **UI and Design System Consistency Improvements**: Extended `AppRadius` and `AppSpacing` with new named constants, replacing all hardcoded `BorderRadius.circular(N)` values across 50+ files. Extracted a reusable `SettingsHeader` widget that replaces a duplicated 30-line back-button + title pattern across 19 screens. The `Notification` widget now applies intensity-aware colors based on the user's `ColorIntensity` setting. `CircularButton`, `IconBtn`, and `Toggle` gain an optional `semanticLabel` parameter with `Semantics` wrappers; `textTertiary` color updated to `0xFF787878` for WCAG AA compliance. `ScreenHeader` refactored to use `CircularButton` internally.
+- **Credential Hashing**: PIN codes and passwords are now stored as SHA-256 hashes instead of plaintext via `CredentialHasher` (`lib/core/utils/credential_hasher.dart`). Legacy plaintext credentials are auto-migrated on app startup. Includes 11 unit tests covering hashing, verification, legacy fallback, and edge cases.
+- **New Button Variants**: `SecondaryButton` (outlined) and `DestructiveButton` (red, filled or outlined) added to the design system at `lib/design_system/components/buttons/`.
+- **Map-Based Provider Lookups**: `accountByIdProvider` and `categoryByIdProvider` now use `accountMapProvider` and `categoryMapProvider` for O(1) lookups instead of O(n) list scans.
+- **Single MaterialApp Architecture**: Eliminated dual `MaterialApp` pattern; shared theme via `CachiumApp._theme` and `SystemChrome` configuration moved to `main()`.
+- **Additional Database Indexes**: Schema bumped to version 18; composite `(is_deleted, date)` indexes added on transactions and `is_deleted` indexes on all other entity tables to speed up the common filtered-by-deletion-status queries.
+- **Settings Optimistic Updates with Rollback**: Settings provider now applies changes optimistically and rolls back on failure. Account form and savings goals screens surface errors via error notifications on try-catch.
+- **PopScope Discard Confirmation on Account Form**: Navigating back from the account form with unsaved changes now shows a "Discard changes?" confirmation dialog.
+- **Atomic Category Reassignment**: Deleting a category with transaction reassignment is now executed inside a single database transaction, preventing partial state on failure.
+- **Export Temp File Cleanup**: Previous export temp files are removed before a new export is created, preventing stale files from accumulating.
+- **Import Amount Validation**: Transaction amounts are now validated as non-negative during import; negative values are rejected with a descriptive error message.
 
 ## 2026-03-13
 - **Transaction Form Refactoring**: Confirmation dialogs for discard-changes and delete actions now use the shared `showConfirmationDialog()` helper; field-level validation shows inline errors for missing amount, category, or account when tapping Save; ~190 lines of save logic moved from the widget into `TransactionFormNotifier.save()` returning a `SaveResult`; change tracking simplified from 12 `original*` fields to a single `Transaction? originalTransaction`; the build method split into six focused sub-widgets; `MerchantAutocomplete` and `CategoryPickerFormScreen` extracted to their own files under `widgets/`.

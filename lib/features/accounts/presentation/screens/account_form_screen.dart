@@ -91,7 +91,23 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
       accountNameExistsProvider((name: accountName, excludeId: formState.editingAccountId)),
     );
 
-    return Scaffold(
+    return PopScope(
+      canPop: !_hasUnsavedWork(formState),
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final shouldDiscard = await showConfirmationDialog(
+          context: context,
+          title: 'Discard changes?',
+          message: 'You have unsaved changes. Are you sure you want to go back?',
+          confirmLabel: 'Discard',
+          cancelLabel: 'Keep Editing',
+          isDestructive: true,
+        );
+        if (shouldDiscard && context.mounted) {
+          context.pop();
+        }
+      },
+      child: Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
@@ -337,57 +353,63 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                 label: isEditing ? 'Save Changes' : 'Create Account',
                 onPressed: formState.isValid && !isDuplicateName
                     ? () async {
-                        // Get custom color if set
-                        final intensity = ref.read(colorIntensityProvider);
-                        final accentColors = AppColors.getAccentOptions(intensity);
-                        final customColor = formState.customColorIndex != null
-                            ? accentColors[formState.customColorIndex!.clamp(0, accentColors.length - 1)]
-                            : null;
+                        try {
+                          // Get custom color if set
+                          final intensity = ref.read(colorIntensityProvider);
+                          final accentColors = AppColors.getAccentOptions(intensity);
+                          final customColor = formState.customColorIndex != null
+                              ? accentColors[formState.customColorIndex!.clamp(0, accentColors.length - 1)]
+                              : null;
 
-                        if (isEditing) {
-                          // Update existing account
-                          final originalAccount = ref.read(
-                            accountByIdProvider(formState.editingAccountId!),
-                          );
-                          if (originalAccount != null) {
-                            // Calculate new balance based on initial balance change
-                            final initialBalanceDiff = formState.initialBalance - originalAccount.initialBalance;
-                            final newBalance = originalAccount.balance + initialBalanceDiff;
-
-                            final updatedAccount = originalAccount.copyWith(
-                              name: formState.name,
-                              type: formState.type,
-                              initialBalance: formState.initialBalance,
-                              balance: newBalance,
-                              currencyCode: formState.currencyCode,
-                              customColor: customColor,
+                          if (isEditing) {
+                            // Update existing account
+                            final originalAccount = ref.read(
+                              accountByIdProvider(formState.editingAccountId!),
                             );
-                            await ref.read(accountsProvider.notifier)
-                                .updateAccount(updatedAccount);
-                          }
-                        } else {
-                          // Add new account
-                          final newAccountId = await ref.read(accountsProvider.notifier).addAccount(
+                            if (originalAccount != null) {
+                              // Calculate new balance based on initial balance change
+                              final initialBalanceDiff = formState.initialBalance - originalAccount.initialBalance;
+                              final newBalance = originalAccount.balance + initialBalanceDiff;
+
+                              final updatedAccount = originalAccount.copyWith(
                                 name: formState.name,
-                                type: formState.type!,
+                                type: formState.type,
                                 initialBalance: formState.initialBalance,
+                                balance: newBalance,
                                 currencyCode: formState.currencyCode,
                                 customColor: customColor,
                               );
+                              await ref.read(accountsProvider.notifier)
+                                  .updateAccount(updatedAccount);
+                            }
+                          } else {
+                            // Add new account
+                            final newAccountId = await ref.read(accountsProvider.notifier).addAccount(
+                                  name: formState.name,
+                                  type: formState.type!,
+                                  initialBalance: formState.initialBalance,
+                                  currencyCode: formState.currencyCode,
+                                  customColor: customColor,
+                                );
+                            ref.read(accountFormProvider.notifier).reset();
+                            if (context.mounted) {
+                              // In picker mode, return the new account ID
+                              if (widget.pickerMode) {
+                                context.pop(newAccountId);
+                              } else {
+                                context.pop();
+                              }
+                            }
+                            return;
+                          }
                           ref.read(accountFormProvider.notifier).reset();
                           if (context.mounted) {
-                            // In picker mode, return the new account ID
-                            if (widget.pickerMode) {
-                              context.pop(newAccountId);
-                            } else {
-                              context.pop();
-                            }
+                            context.pop();
                           }
-                          return;
-                        }
-                        ref.read(accountFormProvider.notifier).reset();
-                        if (context.mounted) {
-                          context.pop();
+                        } catch (_) {
+                          if (context.mounted) {
+                            context.showErrorNotification('Failed to save account');
+                          }
                         }
                       }
                     : null,
@@ -396,7 +418,13 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
           ],
         ),
       ),
+    ),
     );
+  }
+
+  bool _hasUnsavedWork(AccountFormState formState) {
+    if (formState.isEditing) return true; // edits always count
+    return formState.name.isNotEmpty || formState.type != null;
   }
 
   Future<void> _showDeleteConfirmation(BuildContext context) async {

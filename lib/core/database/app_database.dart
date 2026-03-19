@@ -190,7 +190,7 @@ class AppDatabase extends _$AppDatabase {
 
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 18;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -219,6 +219,11 @@ class AppDatabase extends _$AppDatabase {
           if (from < 17) {
             await _createIndexes(m);
           }
+
+          if (from < 18) {
+            // Add composite and additional table indexes
+            await _createIndexes(m);
+          }
         },
       );
 
@@ -231,10 +236,31 @@ class AppDatabase extends _$AppDatabase {
       'CREATE INDEX IF NOT EXISTS idx_transactions_is_deleted ON transactions(is_deleted)',
     );
     await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_transactions_is_deleted_date ON transactions(is_deleted, date)',
+    );
+    await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_accounts_is_deleted ON accounts(is_deleted)',
     );
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_categories_is_deleted ON categories(is_deleted)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_categories_sort_order ON categories(sort_order)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_budgets_is_deleted ON budgets(is_deleted)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_assets_is_deleted ON assets(is_deleted)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_recurring_rules_is_deleted ON recurring_rules(is_deleted)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_savings_goals_is_deleted ON savings_goals(is_deleted)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_transaction_templates_is_deleted ON transaction_templates(is_deleted)',
     );
   }
 

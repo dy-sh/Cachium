@@ -433,15 +433,16 @@ final accountsByTypeProvider =
   return grouped;
 });
 
-final accountByIdProvider = Provider.family<Account?, String>((ref, id) {
+/// Computed map for O(1) account lookups. Rebuilt only when the account list changes.
+final accountMapProvider = Provider<Map<String, Account>>((ref) {
   final accountsAsync = ref.watch(accountsProvider);
   final accounts = accountsAsync.valueOrNull;
-  if (accounts == null) return null;
-  try {
-    return accounts.firstWhere((a) => a.id == id);
-  } catch (_) {
-    return null;
-  }
+  if (accounts == null) return {};
+  return {for (final a in accounts) a.id: a};
+});
+
+final accountByIdProvider = Provider.family<Account?, String>((ref, id) {
+  return ref.watch(accountMapProvider)[id];
 });
 
 /// Returns account IDs sorted by most recent transaction usage.

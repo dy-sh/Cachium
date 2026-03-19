@@ -4,6 +4,7 @@ import '../../../categories/data/models/category.dart';
 import '../../../categories/data/models/category_tree_node.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../../core/providers/async_value_extensions.dart';
+import '../../../../core/providers/database_providers.dart';
 import '../widgets/delete_category_dialog.dart';
 import '../widgets/category_transactions_reassign_dialog.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
@@ -83,25 +84,29 @@ Future<void> handleCategoryDelete({
   if (!context.mounted) return;
   if (confirmed != true) return;
 
-  // Step 5: Execute transaction decisions if any
-  if (decisions != null) {
-    for (final decision in decisions) {
-      if (decision.targetCategoryId != null && decision.targetCategoryId!.isNotEmpty) {
-        await ref.read(transactionsProvider.notifier)
-            .moveTransactionsToCategory(decision.categoryId, decision.targetCategoryId!);
-      } else {
-        await ref.read(transactionsProvider.notifier)
-            .deleteTransactionsForCategory(decision.categoryId);
+  // Steps 5+6: Execute reassignment and deletion atomically
+  final db = ref.read(databaseProvider);
+  await db.transaction(() async {
+    // Step 5: Execute transaction decisions if any
+    if (decisions != null) {
+      for (final decision in decisions) {
+        if (decision.targetCategoryId != null && decision.targetCategoryId!.isNotEmpty) {
+          await ref.read(transactionsProvider.notifier)
+              .moveTransactionsToCategory(decision.categoryId, decision.targetCategoryId!);
+        } else {
+          await ref.read(transactionsProvider.notifier)
+              .deleteTransactionsForCategory(decision.categoryId);
+        }
       }
     }
-  }
 
-  // Step 6: Delete categories
-  if (promoteChildren) {
-    ref.read(categoriesProvider.notifier).deleteCategoryPromotingChildren(category.id);
-  } else if (categoryIdsToDelete.length > 1) {
-    ref.read(categoriesProvider.notifier).deleteWithChildren(category.id);
-  } else {
-    ref.read(categoriesProvider.notifier).deleteCategory(category.id);
-  }
+    // Step 6: Delete categories
+    if (promoteChildren) {
+      await ref.read(categoriesProvider.notifier).deleteCategoryPromotingChildren(category.id);
+    } else if (categoryIdsToDelete.length > 1) {
+      await ref.read(categoriesProvider.notifier).deleteWithChildren(category.id);
+    } else {
+      await ref.read(categoriesProvider.notifier).deleteCategory(category.id);
+    }
+  });
 }

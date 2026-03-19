@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/database_providers.dart';
+import '../../../../core/utils/credential_hasher.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../data/models/app_settings.dart';
 
@@ -23,9 +24,15 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
   }
 
   Future<void> _saveAndUpdate(AppSettings newSettings) async {
-    final repo = ref.read(settingsRepositoryProvider);
-    await repo.saveSettings(newSettings);
-    state = AsyncData(newSettings);
+    final previousState = state;
+    try {
+      final repo = ref.read(settingsRepositoryProvider);
+      state = AsyncData(newSettings);
+      await repo.saveSettings(newSettings);
+    } catch (e, st) {
+      state = previousState;
+      Error.throwWithStackTrace(e, st);
+    }
   }
 
   // Appearance
@@ -283,7 +290,8 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     if (pin == null) {
       await _saveAndUpdate(current.copyWith(clearAppPinCode: true));
     } else {
-      await _saveAndUpdate(current.copyWith(appPinCode: pin));
+      final hashed = await CredentialHasher.hash(pin);
+      await _saveAndUpdate(current.copyWith(appPinCode: hashed));
     }
   }
 
@@ -293,7 +301,34 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     if (password == null) {
       await _saveAndUpdate(current.copyWith(clearAppPassword: true));
     } else {
-      await _saveAndUpdate(current.copyWith(appPassword: password));
+      final hashed = await CredentialHasher.hash(password);
+      await _saveAndUpdate(current.copyWith(appPassword: hashed));
+    }
+  }
+
+  /// Migrate plaintext credentials to hashed format.
+  /// Called once on app startup if needed.
+  Future<void> migrateCredentialsIfNeeded() async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+
+    var needsSave = false;
+    var updated = current;
+
+    if (current.appPinCode != null && !CredentialHasher.isHashed(current.appPinCode!)) {
+      final hashed = await CredentialHasher.hash(current.appPinCode!);
+      updated = updated.copyWith(appPinCode: hashed);
+      needsSave = true;
+    }
+
+    if (current.appPassword != null && !CredentialHasher.isHashed(current.appPassword!)) {
+      final hashed = await CredentialHasher.hash(current.appPassword!);
+      updated = updated.copyWith(appPassword: hashed);
+      needsSave = true;
+    }
+
+    if (needsSave) {
+      await _saveAndUpdate(updated);
     }
   }
 

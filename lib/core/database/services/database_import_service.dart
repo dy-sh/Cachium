@@ -849,7 +849,7 @@ class DatabaseImportService {
           }
           double amount;
           try {
-            amount = double.parse(data['amount'].toString());
+            amount = double.parse(data['amount'].toString()).abs();
           } catch (e) {
             errors.add('Row $i: invalid amount "${data['amount']}"');
             continue;

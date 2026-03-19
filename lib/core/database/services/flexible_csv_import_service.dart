@@ -759,9 +759,13 @@ class FlexibleCsvImportService {
       accountId = newAccounts[name] ?? accountsByName[name]?.id ?? accountId;
     }
 
+    final rawAmount = (values['amount'] as num).toDouble();
+    // Ensure amount is non-negative (take absolute value for safety)
+    final amount = rawAmount.abs();
+
     final transaction = Transaction(
       id: values['id'] as String,
-      amount: (values['amount'] as num).toDouble(),
+      amount: amount,
       type: values['type'] as TransactionType? ?? TransactionType.expense,
       categoryId: categoryId,
       accountId: accountId,

@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/utils/credential_hasher.dart';
 import '../providers/app_lock_provider.dart';
 import '../providers/settings_provider.dart';
 
@@ -98,23 +99,38 @@ class _LockScreenState extends ConsumerState<LockScreen> {
   void _onPinDigit(String digit) {
     final storedPin = ref.read(appPinCodeProvider);
     if (storedPin == null) return;
-    if (_enteredPin.length >= storedPin.length) return;
+    // For hashed PINs, we don't know exact length — use max 8
+    final maxLen = CredentialHasher.isHashed(storedPin) ? 8 : storedPin.length;
+    if (_enteredPin.length >= maxLen) return;
 
     setState(() {
       _enteredPin += digit;
       _errorMessage = null;
     });
 
-    if (_enteredPin.length == storedPin.length) {
-      if (_enteredPin == storedPin) {
-        _unlock();
-      } else {
-        setState(() {
-          _errorMessage = 'Wrong PIN';
-          _enteredPin = '';
-        });
-      }
+    // For hashed PINs, user must press submit or we auto-check at common lengths
+    if (_enteredPin.length >= 4) {
+      _verifyPin();
     }
+  }
+
+  Future<void> _verifyPin() async {
+    final storedPin = ref.read(appPinCodeProvider);
+    if (storedPin == null) return;
+
+    final matched = await CredentialHasher.verify(_enteredPin, storedPin);
+    if (!mounted) return;
+
+    if (matched) {
+      _unlock();
+    } else if (_enteredPin.length >= 8) {
+      // Max length reached, definitely wrong
+      setState(() {
+        _errorMessage = 'Wrong PIN';
+        _enteredPin = '';
+      });
+    }
+    // Otherwise wait for more digits or backspace
   }
 
   void _onBackspace() {
@@ -125,11 +141,17 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     });
   }
 
-  void _submitPassword() {
+  Future<void> _submitPassword() async {
     final storedPassword = ref.read(appPasswordProvider);
     if (storedPassword == null) return;
 
-    if (_passwordController.text == storedPassword) {
+    final matched = await CredentialHasher.verify(
+      _passwordController.text,
+      storedPassword,
+    );
+    if (!mounted) return;
+
+    if (matched) {
       _unlock();
     } else {
       setState(() {
@@ -216,7 +238,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                 // PIN mode
                 if (_mode == _UnlockMode.pin && hasPin) ...[
                   const SizedBox(height: AppSpacing.xxl),
-                  _buildPinDots(storedPin.length),
+                  _buildPinDots(8), // Max PIN length
                   const SizedBox(height: AppSpacing.xxl),
                   _buildNumberPad(),
                 ],

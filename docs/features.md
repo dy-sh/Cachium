@@ -516,6 +516,44 @@
 - `CircularButton`, `IconBtn`, and `Toggle` widgets accept an optional `semanticLabel` parameter and wrap their content in a `Semantics` widget for accessibility; `textTertiary` color changed from `0xFF5A5A5A` to `0xFF787878` for WCAG AA contrast compliance
 - `ScreenHeader` refactored to use `CircularButton` internally, eliminating a duplicated container pattern
 
+#### 35. Credential hashing
+- PIN codes and passwords are stored as SHA-256 hashes instead of plaintext
+- `CredentialHasher` utility (`lib/core/utils/credential_hasher.dart`) handles hashing and verification
+- Legacy plaintext credentials are auto-migrated to hashed form on app startup
+- 11 unit tests cover hashing, verification, legacy fallback, and edge cases
+
+#### 36. New button variants
+- `SecondaryButton` (outlined style) added to the design system at `lib/design_system/components/buttons/`
+- `DestructiveButton` (red, available in filled or outlined style) added for destructive actions
+
+#### 37. Map-based provider lookups
+- `accountByIdProvider` and `categoryByIdProvider` now derive from computed `accountMapProvider` and `categoryMapProvider` (`Map<String, T>`)
+- Lookup cost reduced from O(n) list scan to O(1) map access
+
+#### 38. Single MaterialApp architecture
+- Eliminated dual `MaterialApp` pattern; shared theme via `CachiumApp._theme`
+- `SystemChrome` configuration moved from `build()` to `main()` for correct single-time initialization
+
+#### 39. Additional database indexes
+- Schema version bumped to 18 with composite indexes on `(is_deleted, date)` for the transactions table and `is_deleted` indexes for all other entity tables
+- Reduces query cost for the common filtered-by-deletion-status access pattern
+
+#### 40. Settings optimistic updates with rollback
+- Settings provider applies changes optimistically and rolls back to the previous state if the persistence call fails
+- Account form and savings goals screens wrapped in try-catch blocks that show error notifications on failure
+
+#### 41. PopScope discard confirmation on account form
+- Navigating back from the account form with unsaved changes shows a "Discard changes?" confirmation dialog, preventing accidental data loss
+
+#### 42. Atomic category reassignment
+- Deleting a category with transaction reassignment is now wrapped in a single database transaction, ensuring no partial state if the operation fails mid-way
+
+#### 43. Export temp file cleanup
+- Previous export temp files are deleted before a new export is created, preventing stale files from accumulating in the temp directory
+
+#### 44. Import amount validation
+- Transaction amounts are validated as non-negative during import; negative values are rejected with a descriptive error rather than silently imported
+
 #### 21. Historical main currency value storage
 - `mainCurrencyCode` and `mainCurrencyAmount` fields added to Transaction model and TransactionData DTO to snapshot the main-currency equivalent at the moment a transaction is saved
 - Transaction form computes and persists these fields on save; old records fall back to a calculated value via `conversionRate` for backward compatibility

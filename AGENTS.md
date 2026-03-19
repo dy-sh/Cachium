@@ -56,11 +56,16 @@ lib/
 
 ## Key Conventions
 
-- **Design system naming:** Semantic names without prefixes (`PrimaryButton`, `Surface`, `InputField`, `PageLayout`)
+- **Design system naming:** Semantic names without prefixes (`PrimaryButton`, `SecondaryButton`, `DestructiveButton`, `Surface`, `InputField`, `PageLayout`)
+- **Button variants:** `PrimaryButton` (filled accent), `SecondaryButton` (outlined), `DestructiveButton` (red, filled or outlined)
 - **Model equality:** `==` and `hashCode` based on `id` only; all models use `copyWith()`
 - **Enum extensions:** All enums have `displayName`, `color`, `icon` extensions
 - **Categories:** Support `parentId` for hierarchy; `DefaultCategories` provides presets
 - **Accounts:** Support `customColor`/`customIcon` overrides via `getColorWithIntensity()`
+- **Credential hashing:** PIN/password stored as `sha256:<base64>` via `CredentialHasher`. Never store plaintext. Use `CredentialHasher.verify()` for comparisons (handles legacy plaintext fallback).
+- **PopScope for forms:** All form screens must wrap their Scaffold in `PopScope` with unsaved-work detection and confirmation dialog.
+- **Provider lookups:** Use `accountMapProvider`/`categoryMapProvider` for O(1) lookups by ID. Prefer `accountByIdProvider`/`categoryByIdProvider` which use these maps.
+- **Error handling:** Wrap all async operations in try-catch with `context.showErrorNotification()` in screens. Settings provider uses optimistic updates with rollback on error.
 
 ## Notifications
 
@@ -92,11 +97,13 @@ Key `AppColors` methods: `getAccountColor()`, `getTransactionColor()`, `getCateg
 
 ## Key Files
 
-- `lib/app.dart` — Theme and routing
+- `lib/app.dart` — Theme and routing (single shared ThemeData, gated by welcome/lock/main screens)
+- `lib/main.dart` — Entry point (SystemChrome setup, key migration, provider container)
 - `lib/navigation/app_router.dart` — Routes (`AppRoutes` constants)
 - `lib/core/constants/app_colors.dart` — Color system
-- `lib/core/database/app_database.dart` — Database schema
+- `lib/core/database/app_database.dart` — Database schema (version 18, incremental migrations)
 - `lib/core/utils/currency_conversion.dart` — `conversionGainLoss()`, `roundCurrency()`
+- `lib/core/utils/credential_hasher.dart` — SHA-256 credential hashing
 - `lib/features/settings/data/models/app_settings.dart` — Settings model + ColorIntensity
 - `lib/design_system/components/feedback/notification.dart` — Custom notifications
 - `lib/core/services/exchange_rate_service.dart` — Exchange rate fetching

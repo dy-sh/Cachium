@@ -200,12 +200,18 @@ class _SavingsGoalCard extends ConsumerWidget {
                       isDestructive: true,
                     );
                     if (confirmed && context.mounted) {
-                      await ref
-                          .read(savingsGoalsProvider.notifier)
-                          .deleteGoal(goal.id);
-                      if (context.mounted) {
-                        context
-                            .showSuccessNotification('Savings goal deleted');
+                      try {
+                        await ref
+                            .read(savingsGoalsProvider.notifier)
+                            .deleteGoal(goal.id);
+                        if (context.mounted) {
+                          context
+                              .showSuccessNotification('Savings goal deleted');
+                        }
+                      } catch (_) {
+                        if (context.mounted) {
+                          context.showErrorNotification('Failed to delete goal');
+                        }
                       }
                     }
                   }
@@ -345,13 +351,19 @@ class _SavingsGoalCard extends ConsumerWidget {
                       double.tryParse(controller.text.trim());
                   if (amount == null || amount <= 0) return;
 
-                  await ref
-                      .read(savingsGoalsProvider.notifier)
-                      .contribute(goal.id, amount);
+                  try {
+                    await ref
+                        .read(savingsGoalsProvider.notifier)
+                        .contribute(goal.id, amount);
 
-                  if (context.mounted) {
-                    Navigator.pop(sheetContext);
-                    context.showSuccessNotification('Added to savings goal');
+                    if (context.mounted) {
+                      Navigator.pop(sheetContext);
+                      context.showSuccessNotification('Added to savings goal');
+                    }
+                  } catch (_) {
+                    if (context.mounted) {
+                      context.showErrorNotification('Failed to add savings');
+                    }
                   }
                 },
                 child: Text('Add Savings', style: AppTypography.labelMedium),
