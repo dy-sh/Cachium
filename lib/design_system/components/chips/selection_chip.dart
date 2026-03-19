@@ -8,6 +8,7 @@ import '../../../core/constants/app_typography.dart';
 import '../../../features/settings/presentation/providers/settings_provider.dart';
 import '../../mixins/tap_scale_mixin.dart';
 
+/// A tappable chip with selected/unselected states and optional icon.
 class SelectionChip extends ConsumerStatefulWidget {
   final String label;
   final bool isSelected;

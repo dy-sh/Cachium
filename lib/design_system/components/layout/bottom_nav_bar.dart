@@ -9,6 +9,7 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../features/settings/presentation/providers/settings_provider.dart';
 
+/// Data model for a single bottom navigation bar item.
 class BottomNavItem {
   final IconData icon;
   final IconData activeIcon;
@@ -23,6 +24,7 @@ class BottomNavItem {
   });
 }
 
+/// A custom bottom navigation bar with animated tab items and badge support.
 class BottomNavBar extends ConsumerStatefulWidget {
   final int currentIndex;
   final ValueChanged<int>? onTap;

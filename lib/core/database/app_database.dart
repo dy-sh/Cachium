@@ -190,28 +190,53 @@ class AppDatabase extends _$AppDatabase {
 
 
   @override
-  int get schemaVersion => 16;
+  int get schemaVersion => 17;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (Migrator m) async {
           await m.createAll();
+          await _createIndexes(m);
         },
         onUpgrade: (Migrator m, int from, int to) async {
-          // Recreate database on upgrade - no migration needed
-          // Delete and recreate all tables
-          await m.deleteTable('transactions');
-          await m.deleteTable('accounts');
-          await m.deleteTable('categories');
-          await m.deleteTable('budgets');
-          await m.deleteTable('assets');
-          await m.deleteTable('recurring_rules');
-          await m.deleteTable('savings_goals');
-          await m.deleteTable('transaction_templates');
-          await m.deleteTable('app_settings');
-          await m.createAll();
+          if (from < 16) {
+            // Legacy users: destructive recreate
+            await m.deleteTable('transactions');
+            await m.deleteTable('accounts');
+            await m.deleteTable('categories');
+            await m.deleteTable('budgets');
+            await m.deleteTable('assets');
+            await m.deleteTable('recurring_rules');
+            await m.deleteTable('savings_goals');
+            await m.deleteTable('transaction_templates');
+            await m.deleteTable('app_settings');
+            await m.createAll();
+            await _createIndexes(m);
+            return;
+          }
+
+          // Incremental migrations
+          if (from < 17) {
+            await _createIndexes(m);
+          }
         },
       );
+
+  /// Create performance indexes on commonly queried columns.
+  Future<void> _createIndexes(Migrator m) async {
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_transactions_is_deleted ON transactions(is_deleted)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_accounts_is_deleted ON accounts(is_deleted)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_categories_is_deleted ON categories(is_deleted)',
+    );
+  }
 
   static QueryExecutor _openConnection() {
     return driftDatabase(

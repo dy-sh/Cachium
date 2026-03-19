@@ -17,6 +17,7 @@ import '../../../data/encryption/transaction_template_data.dart';
 import '../../../features/transactions/data/models/transaction.dart' as tx;
 import '../../../features/settings/data/models/csv_import_preview.dart';
 import '../../../features/settings/data/models/database_metrics.dart';
+import '../../exceptions/app_exception.dart';
 import '../../utils/balance_calculation.dart';
 import '../../utils/currency_conversion.dart';
 import '../app_database.dart';
@@ -76,6 +77,65 @@ class DatabaseImportService {
     required this.database,
     required this.encryptionService,
   });
+
+  /// Valid table names that may appear in imported databases.
+  static const _validTableNames = {
+    'transactions',
+    'accounts',
+    'categories',
+    'budgets',
+    'assets',
+    'recurring_rules',
+    'savings_goals',
+    'transaction_templates',
+    'app_settings',
+  };
+
+  /// Valid column names that may be interpolated into SQL queries.
+  static const _validColumnNames = {
+    'is_deleted',
+    'isDeleted',
+    'last_updated_at',
+    'lastUpdatedAt',
+    'created_at',
+    'createdAt',
+    'encrypted_blob',
+    'encryptedBlob',
+    'sort_order',
+    'sortOrder',
+    'date',
+    'id',
+    'name',
+    'count',
+    'oldest',
+    'newest',
+    'json_data',
+    'jsonData',
+  };
+
+  /// Validates that an identifier is in the allowed whitelist.
+  /// Throws [ImportException] if the identifier is not valid.
+  static String _validateTableName(String name) {
+    if (!_validTableNames.contains(name)) {
+      throw ImportException(
+        message: 'Invalid table name: $name',
+        code: 'INVALID_IDENTIFIER',
+        format: 'sqlite',
+      );
+    }
+    return name;
+  }
+
+  static String _validateColumnName(String name) {
+    if (!_validColumnNames.contains(name)) {
+      throw ImportException(
+        message: 'Invalid column name: $name',
+        code: 'INVALID_IDENTIFIER',
+        format: 'sqlite',
+      );
+    }
+    return name;
+  }
 
   /// Pick a SQLite database file and return its path.
   /// Returns FilePickResult with path, error, or cancelled state.
@@ -195,8 +255,9 @@ class DatabaseImportService {
 
   /// Check if a table uses snake_case column naming (vs camelCase).
   bool _usesSnakeCase(sql.Database db, String tableName) {
+    _validateTableName(tableName);
     if (!_tableExists(db, tableName)) return true;
-    final result = db.select("PRAGMA table_info($tableName)");
+    final result = db.select("PRAGMA table_info('${tableName.replaceAll("'", "''")}')");
     for (final row in result) {
       final colName = row['name'] as String;
       if (colName == 'is_deleted') return true;
@@ -219,11 +280,11 @@ class DatabaseImportService {
       // Count transactions
       if (_tableExists(importDb, 'transactions')) {
         final snakeCase = _usesSnakeCase(importDb, 'transactions');
-        final isDeletedCol = snakeCase ? 'is_deleted' : 'isDeleted';
-        final lastUpdatedCol = snakeCase ? 'last_updated_at' : 'lastUpdatedAt';
+        final isDeletedCol = _validateColumnName(snakeCase ? 'is_deleted' : 'isDeleted');
+        final lastUpdatedCol = _validateColumnName(snakeCase ? 'last_updated_at' : 'lastUpdatedAt');
 
         final result = importDb.select(
-          'SELECT COUNT(*) as count FROM transactions WHERE $isDeletedCol = 0',
+          'SELECT COUNT(*) as count FROM transactions WHERE "$isDeletedCol" = 0',
         );
         if (result.isNotEmpty) {
           transactionCount = result.first['count'] as int? ?? 0;
@@ -231,7 +292,7 @@ class DatabaseImportService {
 
         // Get oldest transaction date
         final oldestResult = importDb.select(
-          'SELECT MIN(date) as oldest FROM transactions WHERE $isDeletedCol = 0',
+          'SELECT MIN(date) as oldest FROM transactions WHERE "$isDeletedCol" = 0',
         );
         if (oldestResult.isNotEmpty && oldestResult.first['oldest'] != null) {
           oldestRecord = DateTime.fromMillisecondsSinceEpoch(
@@ -241,7 +302,7 @@ class DatabaseImportService {
 
         // Get newest lastUpdatedAt
         final newestResult = importDb.select(
-          'SELECT MAX($lastUpdatedCol) as newest FROM transactions',
+          'SELECT MAX("$lastUpdatedCol") as newest FROM transactions',
         );
         if (newestResult.isNotEmpty && newestResult.first['newest'] != null) {
           newestRecord = DateTime.fromMillisecondsSinceEpoch(
@@ -253,10 +314,10 @@ class DatabaseImportService {
       // Count categories
       if (_tableExists(importDb, 'categories')) {
         final snakeCase = _usesSnakeCase(importDb, 'categories');
-        final isDeletedCol = snakeCase ? 'is_deleted' : 'isDeleted';
+        final isDeletedCol = _validateColumnName(snakeCase ? 'is_deleted' : 'isDeleted');
 
         final result = importDb.select(
-          'SELECT COUNT(*) as count FROM categories WHERE $isDeletedCol = 0',
+          'SELECT COUNT(*) as count FROM categories WHERE "$isDeletedCol" = 0',
         );
         if (result.isNotEmpty) {
           categoryCount = result.first['count'] as int? ?? 0;
@@ -266,11 +327,11 @@ class DatabaseImportService {
       // Count accounts
       if (_tableExists(importDb, 'accounts')) {
         final snakeCase = _usesSnakeCase(importDb, 'accounts');
-        final isDeletedCol = snakeCase ? 'is_deleted' : 'isDeleted';
-        final createdAtCol = snakeCase ? 'created_at' : 'createdAt';
+        final isDeletedCol = _validateColumnName(snakeCase ? 'is_deleted' : 'isDeleted');
+        final createdAtCol = _validateColumnName(snakeCase ? 'created_at' : 'createdAt');
 
         final result = importDb.select(
-          'SELECT COUNT(*) as count FROM accounts WHERE $isDeletedCol = 0',
+          'SELECT COUNT(*) as count FROM accounts WHERE "$isDeletedCol" = 0',
         );
         if (result.isNotEmpty) {
           accountCount = result.first['count'] as int? ?? 0;
@@ -278,7 +339,7 @@ class DatabaseImportService {
 
         // Check for older account creation dates
         final accountOldestResult = importDb.select(
-          'SELECT MIN($createdAtCol) as oldest FROM accounts WHERE $isDeletedCol = 0',
+          'SELECT MIN("$createdAtCol") as oldest FROM accounts WHERE "$isDeletedCol" = 0',
         );
         if (accountOldestResult.isNotEmpty && accountOldestResult.first['oldest'] != null) {
           final accountOldest = DateTime.fromMillisecondsSinceEpoch(
@@ -496,11 +557,12 @@ class DatabaseImportService {
   }
 
   bool _hasEncryptedBlob(sql.Database db, String tableName) {
+    _validateTableName(tableName);
     if (!_tableExists(db, tableName)) {
       return false;
     }
 
-    final result = db.select("PRAGMA table_info($tableName)");
+    final result = db.select("PRAGMA table_info('${tableName.replaceAll("'", "''")}')");
     for (final row in result) {
       // Check for both snake_case (actual DB) and camelCase (old exports)
       if (row['name'] == 'encrypted_blob' || row['name'] == 'encryptedBlob') {

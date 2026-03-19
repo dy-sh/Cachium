@@ -6,7 +6,7 @@ Instructions for AI agents (Claude Code, Codex, etc.) working on this repository
 
 1. **No git commits.** Never run `git commit`, `git add`, or use `--commit` flags. The user handles all git operations.
 2. **No SnackBar/ScaffoldMessenger.** Use the custom notification system instead (see Notifications below).
-3. **No database migrations.** Increment `schemaVersion` in `app_database.dart` — tables are recreated automatically (dev/testing phase).
+3. **Incremental database migrations.** Add a new migration case in `app_database.dart` `onUpgrade` for each schema change. Bump `schemaVersion` and add the migration under `if (from < N)`. Destructive recreate is only used for `from < 16` (legacy users).
 4. **Keep AGENTS.md in sync.** When you add or change rules, conventions, or architectural patterns in this file, ensure changes are reflected here. If you notice AGENTS.md is outdated relative to the codebase, update it proactively.
 5. **Run `feature-docs-updater` agent** after completing a new feature to update `docs/features.md` and `docs/features_new.md`.
 

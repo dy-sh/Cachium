@@ -5,6 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../features/settings/presentation/providers/settings_provider.dart';
 
+/// A custom animated toggle switch styled to match the design system.
 class Toggle extends ConsumerWidget {
   final bool value;
   final ValueChanged<bool>? onChanged;

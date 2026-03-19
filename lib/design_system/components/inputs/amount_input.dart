@@ -9,6 +9,7 @@ import '../../../core/constants/currencies.dart';
 import '../../../features/settings/data/models/app_settings.dart';
 import '../../../features/settings/presentation/providers/settings_provider.dart';
 
+/// A currency amount input field with inline math expression evaluation.
 class AmountInput extends ConsumerStatefulWidget {
   final double? initialValue;
   final ValueChanged<double>? onChanged;

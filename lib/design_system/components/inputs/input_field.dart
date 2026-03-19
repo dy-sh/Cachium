@@ -8,6 +8,7 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../features/settings/presentation/providers/settings_provider.dart';
 
+/// A styled text input field with label, clear button, error shake animation, and focus highlight.
 class InputField extends ConsumerStatefulWidget {
   final String? label;
   final String? hint;

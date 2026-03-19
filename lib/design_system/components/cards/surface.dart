@@ -7,6 +7,7 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../features/settings/presentation/providers/settings_provider.dart';
 import '../../mixins/tap_scale_mixin.dart';
 
+/// A bordered card container with optional selection state and tap scale animation.
 class Surface extends ConsumerStatefulWidget {
   final Widget child;
   final bool isSelected;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
 
+/// A scaffold wrapper providing consistent page structure with optional app bar and padding.
 class PageLayout extends StatelessWidget {
   final Widget body;
   final Widget? floatingActionButton;

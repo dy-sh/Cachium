@@ -3,11 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../../../../core/animations/haptic_helper.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/providers/exchange_rate_provider.dart';
-import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/buttons/primary_button.dart';
@@ -15,12 +13,10 @@ import '../../../../design_system/components/feedback/confirmation_dialog.dart';
 import '../../../../design_system/components/feedback/notification.dart';
 import '../../../../design_system/components/layout/form_header.dart';
 import '../../../../design_system/components/chips/toggle_chip.dart';
-import '../../../../design_system/components/inputs/amount_input.dart';
 import '../../../../design_system/components/inputs/input_field.dart';
 import '../../../accounts/presentation/screens/account_form_screen.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/data/models/category.dart';
-import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/transaction.dart';
 import '../providers/transaction_form_provider.dart';
@@ -28,12 +24,12 @@ import '../providers/transaction_templates_provider.dart';
 import '../providers/transactions_provider.dart';
 import '../../../assets/presentation/providers/assets_provider.dart';
 import '../../../assets/presentation/widgets/asset_form_modal.dart';
-import '../../../assets/presentation/widgets/asset_selector.dart';
-import '../widgets/account_selector.dart';
 import '../widgets/category_picker_form_screen.dart';
-import '../widgets/category_selector.dart';
 import '../widgets/date_selector.dart';
 import '../widgets/merchant_autocomplete.dart';
+import 'amount_section.dart';
+import 'category_account_section.dart';
+import 'transfer_section.dart';
 
 class TransactionFormScreen extends ConsumerStatefulWidget {
   final String? transactionId;
@@ -198,14 +194,64 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                   children: [
                     _TransactionTypeSelector(formState: formState),
                     const SizedBox(height: AppSpacing.xxl),
-                    _AmountSection(formState: formState, isEditing: isEditing),
+                    AmountSection(
+                      formState: formState,
+                      isEditing: isEditing,
+                      onAmountChanged: (amount) {
+                        ref.read(transactionFormProvider.notifier).setAmount(amount);
+                      },
+                    ),
                     const SizedBox(height: AppSpacing.xxl),
                     if (!formState.isTransfer) ...[
-                      _CategorySection(formState: formState),
+                      CategorySection(
+                        formState: formState,
+                        onCategoryChanged: (id) {
+                          if (id != null) {
+                            ref.read(transactionFormProvider.notifier).setCategory(id);
+                          }
+                        },
+                        onCreateCategory: (parentId) {
+                          _createNewCategory(context, ref, formState.type, parentId);
+                        },
+                      ),
                       const SizedBox(height: AppSpacing.xxl),
-                      _AssetSection(formState: formState),
+                      AssetSection(
+                        formState: formState,
+                        onAssetChanged: (id) {
+                          ref.read(transactionFormProvider.notifier).setAsset(id);
+                        },
+                        onCreateAsset: () {
+                          _createNewAsset(context, ref);
+                        },
+                        onClearAsset: () {
+                          ref.read(transactionFormProvider.notifier).clearAsset();
+                        },
+                      ),
                     ],
-                    _AccountSection(formState: formState),
+                    AccountSection(
+                      formState: formState,
+                      onAccountChanged: (id) {
+                        if (id != null) {
+                          ref.read(transactionFormProvider.notifier).setAccount(id);
+                        }
+                      },
+                      onCreateAccount: () {
+                        _createNewAccount(context, ref);
+                      },
+                    ),
+                    if (formState.isTransfer)
+                      TransferSection(
+                        formState: formState,
+                        onDestinationAccountChanged: (id) {
+                          ref.read(transactionFormProvider.notifier).setDestinationAccount(id);
+                        },
+                        onDestinationAmountChanged: (amount) {
+                          ref.read(transactionFormProvider.notifier).setDestinationAmount(amount);
+                        },
+                        onCreateAccount: () {
+                          _createNewAccount(context, ref);
+                        },
+                      ),
                     const SizedBox(height: AppSpacing.xxl),
                     DateSelector(
                       date: formState.date,
@@ -493,349 +539,6 @@ class _TransactionTypeSelector extends ConsumerWidget {
           ref.read(transactionFormProvider.notifier).setType(type);
         },
       ),
-    );
-  }
-}
-
-class _AmountSection extends ConsumerWidget {
-  final TransactionFormState formState;
-  final bool isEditing;
-
-  const _AmountSection({required this.formState, required this.isEditing});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final mainCurrency = ref.watch(mainCurrencyCodeProvider);
-    final isStale = ref.watch(exchangeRatesStaleProvider);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AmountInput(
-          key: ValueKey('amount_${formState.editingTransactionId}_${formState.currencyCode}'),
-          initialValue: formState.amount > 0 ? formState.amount : null,
-          transactionType: formState.type.name,
-          currencyCode: formState.currencyCode,
-          autofocus: !isEditing,
-          onChanged: (amount) {
-            ref.read(transactionFormProvider.notifier).setAmount(amount);
-          },
-        ),
-        if (formState.amountError != null)
-          Padding(
-            padding: const EdgeInsets.only(top: AppSpacing.xs),
-            child: Text(
-              formState.amountError!,
-              style: AppTypography.bodySmall.copyWith(color: AppColors.expense),
-            ),
-          ),
-        if (formState.currencyCode != mainCurrency && isStale)
-          Padding(
-            padding: const EdgeInsets.only(top: AppSpacing.xs),
-            child: Row(
-              children: [
-                Icon(LucideIcons.alertTriangle, size: 14, color: AppColors.yellow),
-                const SizedBox(width: AppSpacing.xs),
-                Text(
-                  'Exchange rates may be outdated',
-                  style: AppTypography.bodySmall.copyWith(color: AppColors.yellow),
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _CategorySection extends ConsumerWidget {
-  final TransactionFormState formState;
-
-  const _CategorySection({required this.formState});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final incomeCategories = ref.watch(incomeCategoriesProvider);
-    final expenseCategories = ref.watch(expenseCategoriesProvider);
-    final categoriesFoldedCount = ref.watch(categoriesFoldedCountProvider);
-    final showAddCategoryButton = ref.watch(showAddCategoryButtonProvider);
-    final categorySortOption = ref.watch(categorySortOptionProvider);
-    final allowSelectParentCategory = ref.watch(allowSelectParentCategoryProvider);
-
-    final categories = formState.type == TransactionType.income
-        ? incomeCategories
-        : expenseCategories;
-
-    final categoryType = formState.type == TransactionType.income
-        ? CategoryType.income
-        : CategoryType.expense;
-    final recentCategoryIds = ref.watch(recentlyUsedCategoryIdsProvider(categoryType));
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Category', style: AppTypography.labelMedium),
-        if (formState.categoryError != null)
-          Padding(
-            padding: const EdgeInsets.only(top: AppSpacing.xs),
-            child: Text(
-              formState.categoryError!,
-              style: AppTypography.bodySmall.copyWith(color: AppColors.expense),
-            ),
-          ),
-        const SizedBox(height: AppSpacing.sm),
-        CategorySelector(
-          categories: categories,
-          selectedId: formState.categoryId,
-          initialVisibleCount: categoriesFoldedCount,
-          sortOption: categorySortOption,
-          recentCategoryIds: recentCategoryIds,
-          allowSelectParentCategory: allowSelectParentCategory,
-          onChanged: (id) {
-            ref.read(transactionFormProvider.notifier).setCategory(id);
-          },
-          onCreatePressed: showAddCategoryButton
-              ? (parentId) {
-                  final state = context.findAncestorStateOfType<_TransactionFormScreenState>();
-                  state?._createNewCategory(context, ref, formState.type, parentId);
-                }
-              : null,
-        ),
-      ],
-    );
-  }
-}
-
-class _AssetSection extends ConsumerWidget {
-  final TransactionFormState formState;
-
-  const _AssetSection({required this.formState});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final intensity = ref.watch(colorIntensityProvider);
-    final globalShowAssets = ref.watch(showAssetSelectorProvider);
-    final categoryShowsAssets = ref.watch(categoryShowsAssetsProvider(formState.categoryId));
-    final isTransfer = formState.isTransfer;
-    final showAssets = !isTransfer && globalShowAssets && categoryShowsAssets;
-
-    // Auto-clear asset when category changes to one that doesn't show assets
-    // (skip for editing mode to preserve the linked asset for read-only display)
-    if (!showAssets && formState.assetId != null && !formState.isEditing && !isTransfer) {
-      Future.microtask(() {
-        ref.read(transactionFormProvider.notifier).clearAsset();
-      });
-    }
-
-    if (showAssets) {
-      final activeAssets = ref.watch(activeAssetsProvider);
-      final categoryAssets = ref.watch(assetsForCategoryProvider(formState.categoryId));
-      final assetsFoldedCount = ref.watch(assetsFoldedCountProvider);
-      final showAddAssetButton = ref.watch(showAddAssetButtonProvider);
-      final assetSortOption = ref.watch(assetSortOptionProvider);
-      final recentAssetIds = ref.watch(recentlyUsedAssetIdsProvider);
-
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Asset (optional)', style: AppTypography.labelMedium),
-          const SizedBox(height: AppSpacing.sm),
-          AssetSelector(
-            assets: activeAssets,
-            categoryAssets: categoryAssets,
-            selectedId: formState.assetId,
-            recentAssetIds: recentAssetIds,
-            initialVisibleCount: assetsFoldedCount,
-            sortOption: assetSortOption,
-            onChanged: (id) {
-              ref.read(transactionFormProvider.notifier).setAsset(id);
-            },
-            onCreatePressed: showAddAssetButton
-                ? () {
-                    final state = context.findAncestorStateOfType<_TransactionFormScreenState>();
-                    state?._createNewAsset(context, ref);
-                  }
-                : null,
-          ),
-          const SizedBox(height: AppSpacing.xxl),
-        ],
-      );
-    }
-
-    // Show linked asset read-only when editing a tx that has an asset
-    // but the category now has showAssets=false
-    if (!isTransfer && globalShowAssets && formState.assetId != null && formState.isEditing) {
-      final asset = ref.watch(assetByIdProvider(formState.assetId!));
-      if (asset == null) return const SizedBox.shrink();
-      final assetColor = asset.getColor(intensity);
-      final bgOpacity = AppColors.getBgOpacity(intensity);
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Asset', style: AppTypography.labelMedium),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                  vertical: AppSpacing.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: assetColor.withValues(alpha: bgOpacity),
-                  borderRadius: AppRadius.smAll,
-                  border: Border.all(color: assetColor),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(asset.icon, size: 14, color: assetColor),
-                    const SizedBox(width: 4),
-                    Text(
-                      asset.name,
-                      style: AppTypography.labelSmall.copyWith(color: assetColor),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              GestureDetector(
-                onTap: () {
-                  HapticHelper.lightImpact();
-                  ref.read(transactionFormProvider.notifier).setAsset(null);
-                },
-                child: Icon(
-                  LucideIcons.x,
-                  size: 16,
-                  color: AppColors.textTertiary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xxl),
-        ],
-      );
-    }
-
-    return const SizedBox.shrink();
-  }
-}
-
-class _AccountSection extends ConsumerWidget {
-  final TransactionFormState formState;
-
-  const _AccountSection({required this.formState});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final accountsAsync = ref.watch(accountsProvider);
-    final accounts = accountsAsync.valueOrEmpty;
-    final recentAccountIds = ref.watch(recentlyUsedAccountIdsProvider);
-    final accountsFoldedCount = ref.watch(accountsFoldedCountProvider);
-    final showAddAccountButton = ref.watch(showAddAccountButtonProvider);
-    final isTransfer = formState.isTransfer;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(isTransfer ? 'From Account' : 'Account', style: AppTypography.labelMedium),
-        if (formState.accountError != null)
-          Padding(
-            padding: const EdgeInsets.only(top: AppSpacing.xs),
-            child: Text(
-              formState.accountError!,
-              style: AppTypography.bodySmall.copyWith(color: AppColors.expense),
-            ),
-          ),
-        const SizedBox(height: AppSpacing.sm),
-        AccountSelector(
-          accounts: accounts,
-          selectedId: formState.accountId,
-          recentAccountIds: recentAccountIds,
-          initialVisibleCount: accountsFoldedCount,
-          excludeAccountId: isTransfer ? formState.destinationAccountId : null,
-          onChanged: (id) {
-            ref.read(transactionFormProvider.notifier).setAccount(id);
-          },
-          onCreatePressed: showAddAccountButton
-              ? () {
-                  final state = context.findAncestorStateOfType<_TransactionFormScreenState>();
-                  state?._createNewAccount(context, ref);
-                }
-              : null,
-        ),
-        if (isTransfer) ...[
-          const SizedBox(height: AppSpacing.xxl),
-          Text('To Account', style: AppTypography.labelMedium),
-          if (formState.sameAccountError != null)
-            Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.xs),
-              child: Text(
-                formState.sameAccountError!,
-                style: AppTypography.bodySmall.copyWith(color: AppColors.expense),
-              ),
-            ),
-          const SizedBox(height: AppSpacing.sm),
-          AccountSelector(
-            accounts: accounts,
-            selectedId: formState.destinationAccountId,
-            recentAccountIds: recentAccountIds,
-            initialVisibleCount: accountsFoldedCount,
-            excludeAccountId: formState.accountId,
-            onChanged: (id) {
-              ref.read(transactionFormProvider.notifier).setDestinationAccount(id);
-            },
-            onCreatePressed: showAddAccountButton
-                ? () {
-                    final state = context.findAncestorStateOfType<_TransactionFormScreenState>();
-                    state?._createNewAccount(context, ref);
-                  }
-                : null,
-          ),
-          // Cross-currency destination amount
-          if (formState.destinationAmount != null) _DestinationAmountInput(formState: formState),
-        ],
-      ],
-    );
-  }
-}
-
-class _DestinationAmountInput extends ConsumerWidget {
-  final TransactionFormState formState;
-
-  const _DestinationAmountInput({required this.formState});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final dstAccount = formState.destinationAccountId != null
-        ? ref.watch(accountByIdProvider(formState.destinationAccountId!))
-        : null;
-    final dstCurrency = dstAccount?.currencyCode ?? '';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: AppSpacing.xxl),
-        Text('Destination Amount ($dstCurrency)', style: AppTypography.labelMedium),
-        const SizedBox(height: AppSpacing.sm),
-        AmountInput(
-          key: ValueKey('dest_amount_${formState.destinationAccountId}_$dstCurrency'),
-          initialValue: formState.destinationAmount,
-          transactionType: 'transfer',
-          currencyCode: dstCurrency,
-          autofocus: false,
-          onChanged: (amount) {
-            ref.read(transactionFormProvider.notifier).setDestinationAmount(amount);
-          },
-        ),
-        Padding(
-          padding: const EdgeInsets.only(top: AppSpacing.xs),
-          child: Text(
-            'Auto-calculated from exchange rate. Adjust if needed.',
-            style: AppTypography.bodySmall.copyWith(color: AppColors.textTertiary),
-          ),
-        ),
-      ],
     );
   }
 }

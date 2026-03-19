@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 
+/// An animated pulsing dots loading indicator.
 class LoadingIndicator extends StatefulWidget {
   final Color? color;
   final double dotSize;
@@ -93,6 +94,7 @@ class _FMLoadingIndicatorState extends State<LoadingIndicator>
   }
 }
 
+/// A compact staggered-fade loading dots animation used inside buttons.
 class LoadingDots extends StatefulWidget {
   final Color? color;
   final double size;

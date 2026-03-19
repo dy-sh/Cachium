@@ -15,14 +15,10 @@ import '../../../../design_system/components/chips/toggle_chip.dart';
 import '../../../categories/data/models/category.dart';
 import '../../../categories/data/models/category_tree_node.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
-import '../../data/models/app_settings.dart';
 import '../providers/settings_provider.dart';
 import '../widgets/category_form_modal.dart';
-import '../widgets/category_tree_tile.dart';
-import '../widgets/category_drop_zone.dart';
-import '../widgets/delete_category_dialog.dart';
-import '../widgets/category_transactions_reassign_dialog.dart';
-import '../../../transactions/presentation/providers/transactions_provider.dart';
+import 'category_list_section.dart';
+import 'category_reassign_dialog.dart';
 
 class CategoryManagementScreen extends ConsumerStatefulWidget {
   const CategoryManagementScreen({super.key});
@@ -249,21 +245,97 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
                 itemCount: treeNodes.length + 2, // +1 for root drop zone, +1 for add button
                 itemBuilder: (context, index) {
                   if (index == 0) {
-                    return _buildRootDropZone(intensity);
+                    return CategoryRootDropZone(
+                      intensity: intensity,
+                      onHoverChanged: (isHovering) {
+                        setState(() {
+                          _hoverTargetNodeId = isHovering ? '_root_drop_zone_' : null;
+                        });
+                        _updateDragPlaceholderVisibility();
+                      },
+                      onAccept: (node) {
+                        final categories = ref.read(categoriesProvider).valueOrEmpty;
+                        final rootItems = categories
+                            .where((c) => c.parentId == null && c.type == node.category.type && c.id != node.category.id)
+                            .toList()
+                          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
+                        final insertBeforeId = rootItems.isNotEmpty ? rootItems.first.id : null;
+
+                        ref.read(categoriesProvider.notifier).moveCategoryToPosition(
+                          node.category.id,
+                          null,
+                          insertBeforeId,
+                        );
+                      },
+                    );
                   }
                   if (index == treeNodes.length + 1) {
-                    return _buildAddCategoryTile();
+                    return AddCategoryTile(onTap: () => _showAddModal());
                   }
                   final nodeIndex = index - 1;
                   final node = treeNodes[nodeIndex];
-                  final prevNode = nodeIndex > 0 ? treeNodes[nodeIndex - 1] : null;
-                  return _buildTreeItem(node, prevNode, intensity);
+                  final shouldShow = _shouldShowNode(node);
+
+                  if (!shouldShow) {
+                    return const SizedBox.shrink();
+                  }
+
+                  return CategoryTreeItem(
+                    node: node,
+                    draggedNode: _draggedNode,
+                    intensity: intensity,
+                    isExpanded: _expandedIds.contains(node.category.id),
+                    currentTargetParentId: _currentTargetParentId,
+                    showDragPlaceholderNotifier: _showDragPlaceholderNotifier,
+                    previewDepthNotifier: _previewDepthNotifier,
+                    onTap: () => _showEditModal(node.category),
+                    onExpandToggle: node.hasChildren
+                        ? () {
+                            setState(() {
+                              if (_expandedIds.contains(node.category.id)) {
+                                _expandedIds.remove(node.category.id);
+                              } else {
+                                _expandedIds.add(node.category.id);
+                              }
+                            });
+                          }
+                        : null,
+                    onDragStarted: () => _startDrag(node),
+                    onDragEnd: _endDrag,
+                    onDragUpdate: _updateDragPosition,
+                    onHoverChanged: _handleHoverChanged,
+                    canAccept: (dragged, target, depth) {
+                      // Allow dropping on same item (to cancel move or change parent)
+                      if (dragged.category.id == target.category.id) {
+                        if (depth == target.depth + 1) {
+                          return false;
+                        }
+                        return true;
+                      }
+                      if (depth == target.depth + 1) {
+                        if (dragged.category.parentId == target.category.id) return false;
+                        final descendants = CategoryTreeBuilder.getDescendantIds(
+                          ref.read(categoriesProvider).valueOrEmpty,
+                          dragged.category.id,
+                        );
+                        if (descendants.contains(target.category.id)) return false;
+                      }
+                      return true;
+                    },
+                    onAccept: (dragged, target, depth) {
+                      _handleTreeItemAccept(dragged, target, depth);
+                    },
+                  );
                 },
               ),
             ),
 
             // Reorder hint
-            _buildReorderHint(),
+            CategoryReorderHint(
+              draggedNode: _draggedNode,
+              currentTargetParentId: _currentTargetParentId,
+            ),
           ],
         ),
         ),
@@ -271,142 +343,111 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
     );
   }
 
-  Widget _buildReorderHint() {
-    final intensity = ref.watch(colorIntensityProvider);
-    final isDragging = _draggedNode != null;
-    final parentCategory = _currentTargetParentId != null
-        ? ref.watch(categoryByIdProvider(_currentTargetParentId!))
-        : null;
+  void _handleTreeItemAccept(CategoryTreeNode dragged, CategoryTreeNode target, int depth) {
+    final categories = ref.read(categoriesProvider).valueOrEmpty;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      padding: EdgeInsets.only(
-        top: AppSpacing.xs,
-        bottom: MediaQuery.of(context).padding.bottom + AppSpacing.sm,
-        left: AppSpacing.md,
-        right: AppSpacing.md,
-      ),
-      child: isDragging && parentCategory != null
-          ? _buildParentIndicator(parentCategory, intensity)
-          : isDragging
-              ? _buildRootLevelIndicator()
-              : _buildDefaultHint(),
-    );
-  }
+    // Handle dropping on same item (changing parent only, or cancel move)
+    if (dragged.category.id == target.category.id) {
+      String? newParentId;
+      if (depth == target.depth) {
+        newParentId = target.category.parentId;
+      } else {
+        newParentId = _getParentForInsertionDepth(target, depth);
+      }
+      // Only update if parent would actually change
+      if (newParentId != dragged.category.parentId) {
+        final currentParentId = dragged.category.parentId;
+        String? insertBeforeId;
 
-  Widget _buildDefaultHint() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          LucideIcons.gripVertical,
-          size: 12,
-          color: AppColors.textTertiary,
-        ),
-        const SizedBox(width: 4),
-        Text(
-          'Hold to reorder',
-          style: AppTypography.labelSmall.copyWith(
-            color: AppColors.textTertiary,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRootLevelIndicator() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          LucideIcons.home,
-          size: 14,
-          color: AppColors.textSecondary,
-        ),
-        const SizedBox(width: 6),
-        Text(
-          'Root level',
-          style: AppTypography.labelSmall.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildParentIndicator(Category parent, ColorIntensity intensity) {
-    final parentColor = parent.getColor(intensity);
-    final bgOpacity = AppColors.getBgOpacity(intensity);
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          'Inside',
-          style: AppTypography.labelSmall.copyWith(
-            color: AppColors.textTertiary,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: parentColor.withValues(alpha: bgOpacity),
-            borderRadius: AppRadius.smAll,
-            border: Border.all(color: parentColor.withValues(alpha: 0.3)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                parent.icon,
-                size: 14,
-                color: parentColor,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                parent.name,
-                style: AppTypography.labelSmall.copyWith(
-                  color: parentColor,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRootDropZone(ColorIntensity intensity) {
-    return CategoryDropZone(
-      label: 'Move to start',
-      intensity: intensity,
-      canAccept: (node) => true, // Accept any item
-      onHoverChanged: (isHovering) {
-        // Use a special marker to indicate hovering over root zone
-        setState(() {
-          _hoverTargetNodeId = isHovering ? '_root_drop_zone_' : null;
-        });
-        _updateDragPlaceholderVisibility();
-      },
-      onAccept: (node) {
-        final categories = ref.read(categoriesProvider).valueOrEmpty;
-        // Find the first root item to insert before
-        final rootItems = categories
-            .where((c) => c.parentId == null && c.type == node.category.type && c.id != node.category.id)
-            .toList()
-          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-
-        final insertBeforeId = rootItems.isNotEmpty ? rootItems.first.id : null;
+        if (currentParentId != null && newParentId == null) {
+          final siblings = categories
+              .where((c) => c.parentId == null && c.type == dragged.category.type && c.id != dragged.category.id)
+              .toList()
+            ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+          final parentIndex = siblings.indexWhere((c) => c.id == currentParentId);
+          if (parentIndex >= 0 && parentIndex < siblings.length - 1) {
+            insertBeforeId = siblings[parentIndex + 1].id;
+          }
+        } else if (newParentId != null) {
+          final newSiblings = categories
+              .where((c) => c.parentId == newParentId && c.type == dragged.category.type && c.id != dragged.category.id)
+              .toList()
+            ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+          if (newSiblings.isNotEmpty) {
+            insertBeforeId = newSiblings.first.id;
+          }
+        }
 
         ref.read(categoriesProvider.notifier).moveCategoryToPosition(
-          node.category.id,
-          null, // Root level
+          dragged.category.id,
+          newParentId,
           insertBeforeId,
         );
-      },
-    );
+      }
+      return;
+    }
+
+    if (depth == target.depth + 1) {
+      final existingChildren = categories
+          .where((c) => c.parentId == target.category.id && c.type == dragged.category.type)
+          .toList()
+        ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
+      final insertBeforeId = existingChildren.isNotEmpty ? existingChildren.first.id : null;
+
+      ref.read(categoriesProvider.notifier).moveCategoryToPosition(
+        dragged.category.id,
+        target.category.id,
+        insertBeforeId,
+      );
+      setState(() {
+        _expandedIds.add(target.category.id);
+      });
+    } else {
+      String? insertAfterCategoryId;
+      String? parentId;
+
+      if (depth == target.depth) {
+        insertAfterCategoryId = target.category.id;
+        parentId = target.category.parentId;
+      } else {
+        final ancestors = ref.read(categoryAncestorsProvider(target.category.id));
+        if (depth == 0) {
+          if (ancestors.isNotEmpty) {
+            insertAfterCategoryId = ancestors.last.id;
+          } else {
+            insertAfterCategoryId = target.category.id;
+          }
+          parentId = null;
+        } else {
+          final ancestorIndex = target.depth - depth - 1;
+          if (ancestorIndex >= 0 && ancestorIndex < ancestors.length) {
+            insertAfterCategoryId = ancestors[ancestorIndex].id;
+            parentId = ancestors[ancestorIndex].parentId;
+          } else {
+            parentId = _getParentForInsertionDepth(target, depth);
+            insertAfterCategoryId = target.category.id;
+          }
+        }
+      }
+
+      final siblings = categories
+          .where((c) => c.parentId == parentId && c.type == dragged.category.type && c.id != dragged.category.id)
+          .toList()
+        ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
+      String? insertBeforeId;
+      final afterIndex = siblings.indexWhere((c) => c.id == insertAfterCategoryId);
+      if (afterIndex >= 0 && afterIndex < siblings.length - 1) {
+        insertBeforeId = siblings[afterIndex + 1].id;
+      }
+
+      ref.read(categoriesProvider.notifier).moveCategoryToPosition(
+        dragged.category.id,
+        parentId,
+        insertBeforeId,
+      );
+    }
   }
 
   /// Get the parent ID for inserting at a given depth.
@@ -434,235 +475,6 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
     }
 
     return null;
-  }
-
-  Widget _buildTreeItem(CategoryTreeNode node, CategoryTreeNode? prevNode, ColorIntensity intensity) {
-    final isExpanded = _expandedIds.contains(node.category.id);
-    final shouldShow = _shouldShowNode(node);
-
-    if (!shouldShow) {
-      return const SizedBox.shrink();
-    }
-
-    final categoryColor = _draggedNode?.category.getColor(intensity) ??
-                          node.category.getColor(intensity);
-
-    final isThisTargetParent = _currentTargetParentId != null &&
-        _currentTargetParentId == node.category.id;
-    final draggedCategory = _draggedNode?.category;
-    final targetColor = draggedCategory?.getColor(intensity);
-
-    // Suppress placeholder on the dragged item (childWhenDragging shows it instead)
-    final isDraggedNode = _draggedNode?.category.id == node.category.id;
-
-    return CategoryItemDropTarget(
-      targetNode: node,
-      highlightColor: categoryColor,
-      onHoverChanged: _handleHoverChanged,
-      suppressPlaceholder: isDraggedNode,
-      canAccept: (dragged, target, depth) {
-        // Allow dropping on same item (to cancel move or change parent)
-        if (dragged.category.id == target.category.id) {
-          if (depth == target.depth + 1) {
-            // Can't be child of itself
-            return false;
-          }
-          // Allow drop (will check in onAccept if parent actually changes)
-          return true;
-        }
-        // If inserting as child, check if that's allowed
-        if (depth == target.depth + 1) {
-          if (dragged.category.parentId == target.category.id) return false;
-          final descendants = CategoryTreeBuilder.getDescendantIds(
-            ref.read(categoriesProvider).valueOrEmpty,
-            dragged.category.id,
-          );
-          if (descendants.contains(target.category.id)) return false;
-        }
-        return true;
-      },
-      onAccept: (dragged, target, depth) {
-        final categories = ref.read(categoriesProvider).valueOrEmpty;
-
-        // Handle dropping on same item (changing parent only, or cancel move)
-        if (dragged.category.id == target.category.id) {
-          String? newParentId;
-          if (depth == target.depth) {
-            newParentId = target.category.parentId;
-          } else {
-            newParentId = _getParentForInsertionDepth(target, depth);
-          }
-          // Only update if parent would actually change
-          if (newParentId != dragged.category.parentId) {
-            // Find the correct position - should be after current parent
-            final currentParentId = dragged.category.parentId;
-            String? insertBeforeId;
-
-            if (currentParentId != null && newParentId == null) {
-              // Moving from child to root level - place after current parent
-              final siblings = categories
-                  .where((c) => c.parentId == null && c.type == dragged.category.type && c.id != dragged.category.id)
-                  .toList()
-                ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-              final parentIndex = siblings.indexWhere((c) => c.id == currentParentId);
-              if (parentIndex >= 0 && parentIndex < siblings.length - 1) {
-                insertBeforeId = siblings[parentIndex + 1].id;
-              }
-            } else if (newParentId != null) {
-              // Moving to a different parent - place at the start of new parent's children
-              final newSiblings = categories
-                  .where((c) => c.parentId == newParentId && c.type == dragged.category.type && c.id != dragged.category.id)
-                  .toList()
-                ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-              if (newSiblings.isNotEmpty) {
-                insertBeforeId = newSiblings.first.id;
-              }
-            }
-
-            ref.read(categoriesProvider.notifier).moveCategoryToPosition(
-              dragged.category.id,
-              newParentId,
-              insertBeforeId,
-            );
-          }
-          // If parent is the same, do nothing (cancel move)
-          return;
-        }
-
-        if (depth == target.depth + 1) {
-          // Insert as FIRST child of target (placeholder shows right after target)
-          final existingChildren = categories
-              .where((c) => c.parentId == target.category.id && c.type == dragged.category.type)
-              .toList()
-            ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-
-          // Insert before the first existing child to become the new first child
-          final insertBeforeId = existingChildren.isNotEmpty ? existingChildren.first.id : null;
-
-          ref.read(categoriesProvider.notifier).moveCategoryToPosition(
-            dragged.category.id,
-            target.category.id,
-            insertBeforeId,
-          );
-          setState(() {
-            _expandedIds.add(target.category.id);
-          });
-        } else {
-          // Insert as sibling at the specified depth, AFTER the target (or target's ancestor)
-          String? insertAfterCategoryId;
-          String? parentId;
-
-          if (depth == target.depth) {
-            // Same level as target - insert right after target
-            insertAfterCategoryId = target.category.id;
-            parentId = target.category.parentId;
-          } else {
-            // Shallower level - find target's ancestor at that depth and insert after it
-            final ancestors = ref.read(categoryAncestorsProvider(target.category.id));
-            // ancestors is [parent, grandparent, ..., root] with depths [target.depth-1, ..., 0]
-            if (depth == 0) {
-              // Insert at root level after the root ancestor
-              if (ancestors.isNotEmpty) {
-                insertAfterCategoryId = ancestors.last.id;
-              } else {
-                insertAfterCategoryId = target.category.id;
-              }
-              parentId = null;
-            } else {
-              // Find ancestor at the target depth
-              // Ancestor at depth D is at index (target.depth - D - 1)
-              final ancestorIndex = target.depth - depth - 1;
-              if (ancestorIndex >= 0 && ancestorIndex < ancestors.length) {
-                insertAfterCategoryId = ancestors[ancestorIndex].id;
-                parentId = ancestors[ancestorIndex].parentId;
-              } else {
-                // Fallback
-                parentId = _getParentForInsertionDepth(target, depth);
-                insertAfterCategoryId = target.category.id;
-              }
-            }
-          }
-
-          // Find the sibling that comes after insertAfterCategoryId to get insertBeforeId
-          // Exclude the dragged item from siblings list to avoid incorrect calculations
-          final siblings = categories
-              .where((c) => c.parentId == parentId && c.type == dragged.category.type && c.id != dragged.category.id)
-              .toList()
-            ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-
-          String? insertBeforeId;
-          final afterIndex = siblings.indexWhere((c) => c.id == insertAfterCategoryId);
-          if (afterIndex >= 0 && afterIndex < siblings.length - 1) {
-            insertBeforeId = siblings[afterIndex + 1].id;
-          }
-
-          ref.read(categoriesProvider.notifier).moveCategoryToPosition(
-            dragged.category.id,
-            parentId,
-            insertBeforeId,
-          );
-        }
-      },
-      child: DraggableCategoryTreeTile(
-        node: node,
-        intensity: intensity,
-        isExpanded: isExpanded,
-        isTargetParent: isThisTargetParent,
-        targetParentColor: targetColor,
-        showDragPlaceholderNotifier: _showDragPlaceholderNotifier,
-        previewDepthNotifier: _previewDepthNotifier,
-        onTap: () => _showEditModal(node.category),
-        onExpandToggle: node.hasChildren
-            ? () {
-                setState(() {
-                  if (_expandedIds.contains(node.category.id)) {
-                    _expandedIds.remove(node.category.id);
-                  } else {
-                    _expandedIds.add(node.category.id);
-                  }
-                });
-              }
-            : null,
-        onDragStarted: () => _startDrag(node),
-        onDragEnd: _endDrag,
-        onDragUpdate: _updateDragPosition,
-      ),
-    );
-  }
-
-  Widget _buildAddCategoryTile() {
-    return GestureDetector(
-      onTap: () => _showAddModal(),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: AppSpacing.xxl),
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: Colors.transparent,
-          borderRadius: AppRadius.mdAll,
-          border: Border.all(
-            color: AppColors.border,
-            style: BorderStyle.solid,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              LucideIcons.plus,
-              size: 18,
-              color: AppColors.textSecondary,
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Text(
-              'Add Category',
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   bool _shouldShowNode(CategoryTreeNode node) {
@@ -738,7 +550,11 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
           },
           onDelete: () async {
             Navigator.pop(context);
-            await _handleDelete(category);
+            await handleCategoryDelete(
+              context: context,
+              ref: ref,
+              category: category,
+            );
           },
           onAddChild: () {
             Navigator.pop(context);
@@ -785,92 +601,5 @@ class _CategoryManagementScreenState extends ConsumerState<CategoryManagementScr
         ),
       ),
     );
-  }
-
-  Future<void> _handleDelete(Category category) async {
-    final hasChildren = ref.read(hasChildrenProvider(category.id));
-    List<String> categoryIdsToDelete = [category.id];
-    bool promoteChildren = false;
-
-    // Step 1: If category has children, ask what to do with them
-    if (hasChildren) {
-      final childCount = ref.read(childCategoriesProvider(category.id)).length;
-      final action = await showDeleteCategoryDialog(
-        context: context,
-        category: category,
-        childCount: childCount,
-      );
-
-      if (action == null || action == DeleteCategoryAction.cancel) {
-        return;
-      }
-
-      if (action == DeleteCategoryAction.promoteChildren) {
-        promoteChildren = true;
-        categoryIdsToDelete = [category.id];
-      } else if (action == DeleteCategoryAction.deleteAll) {
-        final categories = ref.read(categoriesProvider).valueOrEmpty;
-        final descendantIds = CategoryTreeBuilder.getDescendantIds(categories, category.id);
-        categoryIdsToDelete = [category.id, ...descendantIds];
-      }
-    }
-
-    // Step 2: Find categories with transactions
-    final categoriesWithTransactions = <Category>[];
-    for (final id in categoryIdsToDelete) {
-      final txCount = ref.read(transactionCountByCategoryProvider(id));
-      if (txCount > 0) {
-        final cat = ref.read(categoryByIdProvider(id));
-        if (cat != null) {
-          categoriesWithTransactions.add(cat);
-        }
-      }
-    }
-
-    // Step 3: If any have transactions, show reassign screen
-    List<CategoryTransactionDecision>? decisions;
-    if (categoriesWithTransactions.isNotEmpty) {
-      if (!mounted) return;
-      decisions = await showCategoryTransactionsReassignDialog(
-        context: context,
-        categoriesToDelete: categoriesWithTransactions,
-        categoryType: category.type,
-      );
-
-      if (!mounted) return;
-      if (decisions == null) return; // Cancelled
-    }
-
-    // Step 4: Show final confirmation (as last step)
-    if (!mounted) return;
-    final confirmed = await showSimpleDeleteConfirmationDialog(
-      context: context,
-      category: category,
-    );
-
-    if (!mounted) return;
-    if (confirmed != true) return;
-
-    // Step 5: Execute transaction decisions if any
-    if (decisions != null) {
-      for (final decision in decisions) {
-        if (decision.targetCategoryId != null && decision.targetCategoryId!.isNotEmpty) {
-          await ref.read(transactionsProvider.notifier)
-              .moveTransactionsToCategory(decision.categoryId, decision.targetCategoryId!);
-        } else {
-          await ref.read(transactionsProvider.notifier)
-              .deleteTransactionsForCategory(decision.categoryId);
-        }
-      }
-    }
-
-    // Step 6: Delete categories
-    if (promoteChildren) {
-      ref.read(categoriesProvider.notifier).deleteCategoryPromotingChildren(category.id);
-    } else if (categoryIdsToDelete.length > 1) {
-      ref.read(categoriesProvider.notifier).deleteWithChildren(category.id);
-    } else {
-      ref.read(categoriesProvider.notifier).deleteCategory(category.id);
-    }
   }
 }

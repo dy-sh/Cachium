@@ -1,7 +1,5 @@
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -143,13 +141,17 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
       final accountRepo = ref.read(accountRepositoryProvider);
       final transactionRepo = ref.read(transactionRepositoryProvider);
 
-      // Get all transactions to find both outgoing and incoming
-      final allTransactions = await transactionRepo.getAllTransactions();
+      // Use already-loaded state instead of re-fetching from DB
+      final allTransactions = ref.read(transactionsProvider).valueOrNull ?? [];
       final outgoingTransactions =
           allTransactions.where((t) => t.accountId == accountId).toList();
       final incomingTransfers = allTransactions.where(
         (t) => t.destinationAccountId == accountId && t.accountId != accountId,
       ).toList();
+
+      // Capture related provider state before entering transaction
+      final rules = ref.read(recurringRulesProvider).valueOrNull ?? [];
+      final templates = ref.read(transactionTemplatesProvider).valueOrNull ?? [];
 
       // Optimistically update local state
       state = state.whenData(
@@ -178,7 +180,6 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
         }
 
         // Clean up recurring rules referencing this account
-        final rules = ref.read(recurringRulesProvider).valueOrNull ?? [];
         for (final rule in rules) {
           if (rule.accountId == accountId || rule.destinationAccountId == accountId) {
             await ref.read(recurringRulesProvider.notifier).deleteRule(rule.id);
@@ -186,7 +187,6 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
         }
 
         // Clean up transaction templates referencing this account
-        final templates = ref.read(transactionTemplatesProvider).valueOrNull ?? [];
         for (final template in templates) {
           if (template.accountId == accountId || template.destinationAccountId == accountId) {
             await ref.read(transactionTemplatesProvider.notifier).deleteTemplate(template.id);
@@ -232,8 +232,8 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
       final targetAccount =
           accounts.firstWhere((a) => a.id == targetAccountId);
 
-      // Get all transactions to find both outgoing and incoming
-      final allTransactions = await transactionRepo.getAllTransactions();
+      // Use already-loaded state instead of re-fetching from DB
+      final allTransactions = ref.read(transactionsProvider).valueOrNull ?? [];
       final transactionsToMove =
           allTransactions.where((t) => t.accountId == sourceAccountId).toList();
       final incomingTransfers = allTransactions.where(
@@ -265,6 +265,10 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
             .toList();
       });
 
+      // Capture related provider state before entering transaction
+      final rules = ref.read(recurringRulesProvider).valueOrNull ?? [];
+      final templates = ref.read(transactionTemplatesProvider).valueOrNull ?? [];
+
       // Wrap in transaction to prevent locking
       await db.transaction(() async {
         // Update outgoing transactions to point to target account
@@ -280,7 +284,6 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
         }
 
         // Update recurring rules referencing this account
-        final rules = ref.read(recurringRulesProvider).valueOrNull ?? [];
         for (final rule in rules) {
           if (rule.accountId == sourceAccountId) {
             await ref.read(recurringRulesProvider.notifier).updateRule(
@@ -292,7 +295,6 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
         }
 
         // Update transaction templates referencing this account
-        final templates = ref.read(transactionTemplatesProvider).valueOrNull ?? [];
         for (final template in templates) {
           if (template.accountId == sourceAccountId) {
             await ref.read(transactionTemplatesProvider.notifier).updateTemplate(
@@ -405,12 +407,7 @@ final totalBalanceProvider = Provider<double>((ref) {
   final mainCurrency = ref.watch(mainCurrencyCodeProvider);
   final rates = ref.watch(exchangeRatesProvider).valueOrNull;
 
-  // ignore: avoid_print
-  if (kDebugMode) print('[totalBalance] mainCurrency=$mainCurrency, rates=${rates != null ? '${rates.length} rates (EUR=${rates['EUR']})' : 'NULL'}, accounts=${accounts.length}');
-
-  final total = accounts.fold(0.0, (sum, account) {
-    // ignore: avoid_print
-    if (kDebugMode) print('[totalBalance]   account="${account.name}" balance=${account.balance} currency=${account.currencyCode}');
+  return accounts.fold(0.0, (sum, account) {
     if (account.currencyCode == mainCurrency || rates == null) {
       return sum + account.balance;
     }
@@ -421,10 +418,6 @@ final totalBalanceProvider = Provider<double>((ref) {
       rates,
     );
   });
-
-  // ignore: avoid_print
-  if (kDebugMode) print('[totalBalance] TOTAL = $total $mainCurrency');
-  return total;
 });
 
 final accountsByTypeProvider =

@@ -4,6 +4,7 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../chips/selection_chip.dart';
 
+/// Data model for a single item in an [InlineSelector].
 class InlineSelectorItem<T> {
   final T value;
   final String label;
@@ -18,6 +19,7 @@ class InlineSelectorItem<T> {
   });
 }
 
+/// A horizontal scrollable list of selection chips with an optional label.
 class InlineSelector<T> extends StatelessWidget {
   final String? label;
   final List<InlineSelectorItem<T>> items;

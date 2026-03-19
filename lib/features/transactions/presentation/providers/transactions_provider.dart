@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+import '../../../../core/exceptions/app_exception.dart';
 import '../../../../core/providers/database_providers.dart';
 import '../../../../core/providers/exchange_rate_provider.dart';
 import '../../../../core/utils/currency_conversion.dart';
@@ -33,7 +34,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     String? merchant,
   }) async {
     if (conversionRate <= 0 || !conversionRate.isFinite) {
-      throw ArgumentError('Invalid conversion rate: $conversionRate');
+      throw ValidationException.outOfRange('conversionRate', min: 0);
     }
 
     final repo = ref.read(transactionRepositoryProvider);
@@ -63,6 +64,21 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
       createdAt: DateTime.now(),
     );
 
+    // Capture account state before entering transaction to avoid race conditions
+    if (type == TransactionType.transfer && destinationAccountId != null) {
+      final srcAccount = ref.read(accountByIdProvider(accountId));
+      final dstAccount = ref.read(accountByIdProvider(destinationAccountId));
+      if (destinationAmount == null &&
+          srcAccount != null && dstAccount != null &&
+          srcAccount.currencyCode != dstAccount.currencyCode) {
+        throw ValidationException(
+          message: 'Cross-currency transfer requires destinationAmount',
+          field: 'destinationAmount',
+          rule: 'required',
+        );
+      }
+    }
+
     // Wrap in database transaction to prevent locking issues
     await db.transaction(() async {
       // Save to encrypted database
@@ -70,14 +86,6 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
 
       // Update account balances
       if (type == TransactionType.transfer && destinationAccountId != null) {
-        // Transfer: debit source, credit destination (use destinationAmount for cross-currency)
-        final srcAccount = ref.read(accountByIdProvider(accountId));
-        final dstAccount = ref.read(accountByIdProvider(destinationAccountId));
-        if (destinationAmount == null &&
-            srcAccount != null && dstAccount != null &&
-            srcAccount.currencyCode != dstAccount.currencyCode) {
-          throw StateError('Cross-currency transfer requires destinationAmount');
-        }
         await ref.read(accountsProvider.notifier).updateBalance(accountId, -amount);
         await ref.read(accountsProvider.notifier).updateBalance(destinationAccountId, destinationAmount ?? amount);
       } else {
@@ -97,14 +105,30 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     // Get original transaction to calculate balance difference
     final currentState = state.valueOrNull;
     if (currentState == null) {
-      throw StateError('Transactions not loaded');
+      throw RepositoryException.fetch(entityType: 'Transaction');
     }
 
     final index = currentState.indexWhere((t) => t.id == transaction.id);
     if (index == -1) {
-      throw StateError('Transaction ${transaction.id} not found');
+      throw EntityNotFoundException(entityType: 'Transaction', entityId: transaction.id);
     }
     final originalTransaction = currentState[index];
+
+    // Validate cross-currency transfer before entering transaction
+    if (transaction.type == TransactionType.transfer &&
+        transaction.destinationAccountId != null) {
+      final srcAcct = ref.read(accountByIdProvider(transaction.accountId));
+      final dstAcct = ref.read(accountByIdProvider(transaction.destinationAccountId!));
+      if (transaction.destinationAmount == null &&
+          srcAcct != null && dstAcct != null &&
+          srcAcct.currencyCode != dstAcct.currencyCode) {
+        throw ValidationException(
+          message: 'Cross-currency transfer requires destinationAmount',
+          field: 'destinationAmount',
+          rule: 'required',
+        );
+      }
+    }
 
     // Wrap in database transaction to prevent locking issues
     await db.transaction(() async {
@@ -129,13 +153,6 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
         await ref.read(accountsProvider.notifier).updateBalance(
               transaction.accountId, -transaction.amount);
         if (transaction.destinationAccountId != null) {
-          final srcAcct = ref.read(accountByIdProvider(transaction.accountId));
-          final dstAcct = ref.read(accountByIdProvider(transaction.destinationAccountId!));
-          if (transaction.destinationAmount == null &&
-              srcAcct != null && dstAcct != null &&
-              srcAcct.currencyCode != dstAcct.currencyCode) {
-            throw StateError('Cross-currency transfer requires destinationAmount');
-          }
           await ref.read(accountsProvider.notifier).updateBalance(
                 transaction.destinationAccountId!, transaction.destinationAmount ?? transaction.amount);
         }
@@ -165,12 +182,12 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     // Get transaction before deleting for balance reversal
     final currentState = state.valueOrNull;
     if (currentState == null) {
-      throw StateError('Transactions not loaded');
+      throw RepositoryException.fetch(entityType: 'Transaction');
     }
 
     final deleteIndex = currentState.indexWhere((t) => t.id == id);
     if (deleteIndex == -1) {
-      throw StateError('Transaction $id not found');
+      throw EntityNotFoundException(entityType: 'Transaction', entityId: id);
     }
     final transaction = currentState[deleteIndex];
 
@@ -214,16 +231,18 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     // Validate referenced accounts still exist
     final sourceAccount = ref.read(accountByIdProvider(transaction.accountId));
     if (sourceAccount == null) {
-      throw StateError(
-        'Cannot restore transaction: source account ${transaction.accountId} no longer exists',
+      throw EntityNotFoundException(
+        entityType: 'Account',
+        entityId: transaction.accountId,
       );
     }
     if (transaction.type == TransactionType.transfer &&
         transaction.destinationAccountId != null) {
       final destAccount = ref.read(accountByIdProvider(transaction.destinationAccountId!));
       if (destAccount == null) {
-        throw StateError(
-          'Cannot restore transaction: destination account ${transaction.destinationAccountId} no longer exists',
+        throw EntityNotFoundException(
+          entityType: 'Account',
+          entityId: transaction.destinationAccountId!,
         );
       }
     }
@@ -267,14 +286,14 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
 
     final currentState = state.valueOrNull;
     if (currentState == null) {
-      throw StateError('Transactions not loaded');
+      throw RepositoryException.fetch(entityType: 'Transaction');
     }
 
     await db.transaction(() async {
       for (final id in ids) {
         final batchIndex = currentState.indexWhere((t) => t.id == id);
         if (batchIndex == -1) {
-          throw StateError('Transaction $id not found');
+          throw EntityNotFoundException(entityType: 'Transaction', entityId: id);
         }
         final transaction = currentState[batchIndex];
         await repo.deleteTransaction(id);
@@ -316,16 +335,18 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     for (final transaction in transactionsToRestore) {
       final sourceAccount = ref.read(accountByIdProvider(transaction.accountId));
       if (sourceAccount == null) {
-        throw StateError(
-          'Cannot restore transaction ${transaction.id}: source account ${transaction.accountId} no longer exists',
+        throw EntityNotFoundException(
+          entityType: 'Account',
+          entityId: transaction.accountId,
         );
       }
       if (transaction.type == TransactionType.transfer &&
           transaction.destinationAccountId != null) {
         final destAccount = ref.read(accountByIdProvider(transaction.destinationAccountId!));
         if (destAccount == null) {
-          throw StateError(
-            'Cannot restore transaction ${transaction.id}: destination account ${transaction.destinationAccountId} no longer exists',
+          throw EntityNotFoundException(
+            entityType: 'Account',
+            entityId: transaction.destinationAccountId!,
           );
         }
       }
@@ -376,7 +397,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     final db = ref.read(databaseProvider);
     final currentState = state.valueOrNull;
     if (currentState == null) {
-      throw StateError('Transactions not loaded');
+      throw RepositoryException.fetch(entityType: 'Transaction');
     }
 
     final transactionsToMove = currentState.where((t) => t.accountId == fromAccountId).toList();
@@ -480,7 +501,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     final db = ref.read(databaseProvider);
     final currentState = state.valueOrNull;
     if (currentState == null) {
-      throw StateError('Transactions not loaded');
+      throw RepositoryException.fetch(entityType: 'Transaction');
     }
 
     // Find transactions where this account is the source
@@ -529,7 +550,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     final db = ref.read(databaseProvider);
     final currentState = state.valueOrNull;
     if (currentState == null) {
-      throw StateError('Transactions not loaded');
+      throw RepositoryException.fetch(entityType: 'Transaction');
     }
 
     final transactionsToMove = currentState.where((t) => t.categoryId == fromCategoryId).toList();
@@ -562,7 +583,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     final db = ref.read(databaseProvider);
     final currentState = state.valueOrNull;
     if (currentState == null) {
-      throw StateError('Transactions not loaded');
+      throw RepositoryException.fetch(entityType: 'Transaction');
     }
 
     final transactionsToDelete = currentState.where((t) => t.categoryId == categoryId).toList();

@@ -5,6 +5,7 @@ import '../../../core/constants/app_radius.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../mixins/tap_scale_mixin.dart';
 
+/// A square icon button with tap scale animation and optional border.
 class IconBtn extends StatefulWidget {
   final IconData icon;
   final VoidCallback? onPressed;

@@ -10,6 +10,7 @@ import '../../../features/settings/presentation/providers/settings_provider.dart
 import '../../mixins/tap_scale_mixin.dart';
 import '../feedback/loading_indicator.dart';
 
+/// A full-width primary action button with loading state and tap scale animation.
 class PrimaryButton extends ConsumerStatefulWidget {
   final String label;
   final VoidCallback? onPressed;

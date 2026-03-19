@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/settings/data/models/app_settings.dart';
@@ -11,11 +10,6 @@ import '../utils/currency_conversion.dart';
 final exchangeRateServiceProvider = Provider<ExchangeRateService>((ref) {
   return ExchangeRateService();
 });
-
-void _log(String msg) {
-  // ignore: avoid_print
-  if (kDebugMode) print(msg);
-}
 
 class ExchangeRatesNotifier extends AsyncNotifier<Map<String, double>> {
   @override
@@ -35,8 +29,6 @@ class ExchangeRatesNotifier extends AsyncNotifier<Map<String, double>> {
         service.setApi(ManualRatesApi());
     }
 
-    _log('[ExchangeRates] build() mainCurrency=$mainCurrency api=${apiOption.name}');
-
     // Try to load cached rates from settings first
     final cachedJson = settings?.cachedExchangeRates;
     if (cachedJson != null && cachedJson.isNotEmpty) {
@@ -45,12 +37,7 @@ class ExchangeRatesNotifier extends AsyncNotifier<Map<String, double>> {
           (k, v) => MapEntry(k, (v as num).toDouble()),
         );
         service.setCachedRates(cached, mainCurrency);
-        _log('[ExchangeRates] Loaded ${cached.length} cached rates, EUR=${cached['EUR']}');
-      } catch (e) {
-        _log('[ExchangeRates] Failed to parse cached rates: $e');
-      }
-    } else {
-      _log('[ExchangeRates] No cached rates found');
+      } catch (_) {}
     }
 
     // Check if rates are stale (>24h) or fresh enough to skip fetch
@@ -59,25 +46,19 @@ class ExchangeRatesNotifier extends AsyncNotifier<Map<String, double>> {
     final isStale = lastFetch == null || (now - lastFetch) > 24 * 60 * 60 * 1000;
 
     if (!isStale && service.cachedRates.isNotEmpty) {
-      _log('[ExchangeRates] Rates are fresh (${((now - lastFetch) / 3600000).toStringAsFixed(1)}h old), using cache');
       return service.cachedRates;
     }
 
     try {
       final rates = await service.fetchRates(mainCurrency);
-      _log('[ExchangeRates] Fetched ${rates.length} rates from API, EUR=${rates['EUR']}');
-      // Cache the fetched rates in settings
       _cacheRates(rates);
       return rates;
-    } catch (e) {
-      _log('[ExchangeRates] API fetch failed: $e');
+    } catch (_) {
       // Return cached rates if available
       if (service.cachedRates.isNotEmpty) {
-        _log('[ExchangeRates] Using ${service.cachedRates.length} cached rates as fallback');
         return service.cachedRates;
       }
       // Return minimal map with just the main currency
-      _log('[ExchangeRates] No cached rates, returning only {$mainCurrency: 1.0}');
       return {mainCurrency: 1.0};
     }
   }
@@ -121,14 +102,9 @@ double convertToMainCurrency(
   if (fromCurrency == mainCurrency) return amount;
 
   final fromRate = rates[fromCurrency];
-  if (fromRate == null) {
-    _log('[convertToMain] NO RATE for $fromCurrency in ${rates.length} rates. Returning $amount as-is');
-    return amount;
-  }
+  if (fromRate == null) return amount;
 
-  final result = roundCurrency(amount / fromRate);
-  _log('[convertToMain] $amount $fromCurrency / $fromRate = $result $mainCurrency');
-  return result;
+  return roundCurrency(amount / fromRate);
 }
 
 /// Convert a transaction amount to the main currency for display/aggregation.
@@ -143,12 +119,17 @@ double convertTransactionToMainCurrency(
   if (fromCurrency == mainCurrency) return amount;
 
   final fromRate = rates[fromCurrency];
-  if (fromRate != null) {
+  if (fromRate != null && fromRate > 0 && fromRate.isFinite) {
     return roundCurrency(amount / fromRate);
   }
 
-  // Fallback to stored rate
-  return roundCurrency(amount * storedConversionRate);
+  // Fallback to stored rate (validate it too)
+  if (storedConversionRate > 0 && storedConversionRate.isFinite) {
+    return roundCurrency(amount * storedConversionRate);
+  }
+
+  // Last resort: return amount as-is
+  return amount;
 }
 
 /// Whether exchange rates are stale (>24h old) or missing.
@@ -163,6 +144,14 @@ final exchangeRatesStaleProvider = Provider<bool>((ref) {
   return (now - lastFetch) > 24 * 60 * 60 * 1000;
 });
 
+/// Maximum reasonable exchange rate to guard against corrupt data.
+const _maxReasonableRate = 1000000.0;
+
+/// Validates that an exchange rate is positive, finite, and reasonable.
+bool isValidExchangeRate(double rate) {
+  return rate > 0 && rate.isFinite && rate <= _maxReasonableRate;
+}
+
 final exchangeRateProvider =
     Provider.family<double, ({String from, String to})>((ref, params) {
   final rates = ref.watch(exchangeRatesProvider).valueOrNull;
@@ -173,5 +162,8 @@ final exchangeRateProvider =
   final toRate = rates[params.to];
   if (fromRate == null || toRate == null) return 1.0;
 
-  return toRate / fromRate;
+  final rate = toRate / fromRate;
+  if (!isValidExchangeRate(rate)) return 1.0;
+
+  return rate;
 });

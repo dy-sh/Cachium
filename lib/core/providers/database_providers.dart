@@ -12,13 +12,14 @@ import '../../data/repositories/transaction_template_repository.dart';
 import '../database/app_database.dart';
 import '../database/services/encryption_service.dart';
 import '../database/services/key_provider.dart';
+import '../database/services/secure_key_provider.dart';
 
 /// Provider for the encryption key source.
 ///
-/// In Stage 1, this uses MockKeyProvider with a hardcoded key.
-/// In Stage 2, this will be replaced with SecureKeyProvider.
+/// Uses SecureKeyProvider backed by platform-specific secure storage
+/// (Keychain on iOS, Keystore on Android).
 final keyProviderProvider = Provider<KeyProvider>((ref) {
-  return MockKeyProvider();
+  return SecureKeyProvider();
 });
 
 /// Provider for the encryption service.

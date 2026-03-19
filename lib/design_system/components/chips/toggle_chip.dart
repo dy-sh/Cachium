@@ -7,6 +7,7 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../features/settings/presentation/providers/settings_provider.dart';
 
+/// A segmented toggle chip bar for switching between a set of options.
 class ToggleChip extends ConsumerWidget {
   final List<String> options;
   final int selectedIndex;
