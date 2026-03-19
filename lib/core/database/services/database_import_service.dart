@@ -137,6 +137,77 @@ class DatabaseImportService {
     return name;
   }
 
+  // --- Safe casting helpers for import data ---
+
+  /// Safely cast a dynamic value to String, with descriptive error.
+  static String _safeString(dynamic value, String field, [String? rowId]) {
+    if (value is String) return value;
+    if (value == null) {
+      throw FormatException('Missing required field "$field"${rowId != null ? ' (row $rowId)' : ''}');
+    }
+    throw FormatException(
+      'Expected String for "$field"${rowId != null ? ' (row $rowId)' : ''}, '
+      'got ${value.runtimeType}: $value',
+    );
+  }
+
+  /// Safely cast a dynamic value to int, with descriptive error.
+  static int _safeInt(dynamic value, String field, [String? rowId]) {
+    if (value is int) return value;
+    if (value == null) {
+      throw FormatException('Missing required field "$field"${rowId != null ? ' (row $rowId)' : ''}');
+    }
+    throw FormatException(
+      'Expected int for "$field"${rowId != null ? ' (row $rowId)' : ''}, '
+      'got ${value.runtimeType}: $value',
+    );
+  }
+
+  /// Safely cast a dynamic value to double (via num), with descriptive error.
+  static double _safeDouble(dynamic value, String field, [String? rowId]) {
+    if (value is num) return value.toDouble();
+    if (value == null) {
+      throw FormatException('Missing required field "$field"${rowId != null ? ' (row $rowId)' : ''}');
+    }
+    throw FormatException(
+      'Expected num for "$field"${rowId != null ? ' (row $rowId)' : ''}, '
+      'got ${value.runtimeType}: $value',
+    );
+  }
+
+  /// Safely cast to nullable String.
+  static String? _safeStringOrNull(dynamic value) {
+    if (value == null) return null;
+    if (value is String) return value;
+    return value.toString();
+  }
+
+  /// Safely cast to nullable int.
+  static int? _safeIntOrNull(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    throw FormatException('Expected int or null, got ${value.runtimeType}: $value');
+  }
+
+  /// Safely cast to nullable double (via num).
+  static double? _safeDoubleOrNull(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    throw FormatException('Expected num or null, got ${value.runtimeType}: $value');
+  }
+
+  /// Safely cast to Uint8List (for encrypted blobs).
+  static Uint8List _safeBlob(dynamic value, String field, [String? rowId]) {
+    if (value is Uint8List) return value;
+    if (value == null) {
+      throw FormatException('Missing required field "$field"${rowId != null ? ' (row $rowId)' : ''}');
+    }
+    throw FormatException(
+      'Expected Uint8List for "$field"${rowId != null ? ' (row $rowId)' : ''}, '
+      'got ${value.runtimeType}',
+    );
+  }
+
   /// Pick a SQLite database file and return its path.
   /// Returns FilePickResult with path, error, or cancelled state.
   Future<FilePickResult> pickSqliteFile() async {
@@ -587,22 +658,22 @@ class DatabaseImportService {
 
     for (final row in rows) {
       try {
-        final id = row['id'] as String;
-        final date = row['date'] as int;
+        final id = _safeString(row['id'], 'id');
+        final date = _safeInt(row['date'], 'date', id);
         // Handle both snake_case (actual DB) and camelCase (old exports)
-        final lastUpdatedAt = (row['last_updated_at'] ?? row['lastUpdatedAt']) as int;
-        final isDeleted = ((row['is_deleted'] ?? row['isDeleted']) as int) == 1;
+        final lastUpdatedAt = _safeInt(row['last_updated_at'] ?? row['lastUpdatedAt'], 'last_updated_at', id);
+        final isDeleted = (_safeInt(row['is_deleted'] ?? row['isDeleted'] ?? 0, 'is_deleted', id)) == 1;
 
         Uint8List encryptedBlob;
 
         if (isEncrypted) {
           // Already encrypted, use directly (handle both naming conventions)
-          encryptedBlob = (row['encrypted_blob'] ?? row['encryptedBlob']) as Uint8List;
+          encryptedBlob = _safeBlob(row['encrypted_blob'] ?? row['encryptedBlob'], 'encrypted_blob', id);
         } else {
           // Plaintext format, need to encrypt using TransactionData model
           final conversionRateRaw = row['conversion_rate'] ?? row['conversionRate'];
-          final conversionRate = conversionRateRaw != null ? (conversionRateRaw as num).toDouble() : 1.0;
-          final amount = ((row['amount']) as num).toDouble();
+          final conversionRate = conversionRateRaw != null ? _safeDouble(conversionRateRaw, 'conversion_rate', id) : 1.0;
+          final amount = _safeDouble(row['amount'], 'amount', id);
           final mainCurrencyCodeRaw = row['main_currency_code'] ?? row['mainCurrencyCode'];
           final mainCurrencyAmountRaw = row['main_currency_amount'] ?? row['mainCurrencyAmount'];
           // Parse optional fields (may not exist in old exports)
@@ -614,20 +685,20 @@ class DatabaseImportService {
           final data = TransactionData(
             id: id,
             amount: amount,
-            categoryId: (row['category_id'] ?? row['categoryId']) as String,
-            accountId: (row['account_id'] ?? row['accountId']) as String,
-            destinationAccountId: destAccountIdRaw as String?,
-            destinationAmount: destAmountRaw != null ? (destAmountRaw as num).toDouble() : null,
-            type: row['type'] as String,
-            note: row['note'] as String?,
-            merchant: merchantRaw as String?,
-            assetId: assetIdRaw as String?,
-            currency: row['currency'] as String? ?? 'USD',
+            categoryId: _safeString(row['category_id'] ?? row['categoryId'], 'category_id', id),
+            accountId: _safeString(row['account_id'] ?? row['accountId'], 'account_id', id),
+            destinationAccountId: _safeStringOrNull(destAccountIdRaw),
+            destinationAmount: _safeDoubleOrNull(destAmountRaw),
+            type: _safeString(row['type'], 'type', id),
+            note: _safeStringOrNull(row['note']),
+            merchant: _safeStringOrNull(merchantRaw),
+            assetId: _safeStringOrNull(assetIdRaw),
+            currency: _safeStringOrNull(row['currency']) ?? 'USD',
             conversionRate: conversionRate,
-            mainCurrencyCode: mainCurrencyCodeRaw as String? ?? 'USD',
-            mainCurrencyAmount: mainCurrencyAmountRaw != null ? (mainCurrencyAmountRaw as num).toDouble() : null,
-            dateMillis: (row['date_millis'] ?? row['dateMillis'] ?? date) as int,
-            createdAtMillis: (row['created_at_millis'] ?? row['createdAtMillis']) as int,
+            mainCurrencyCode: _safeStringOrNull(mainCurrencyCodeRaw) ?? 'USD',
+            mainCurrencyAmount: _safeDoubleOrNull(mainCurrencyAmountRaw),
+            dateMillis: _safeInt(row['date_millis'] ?? row['dateMillis'] ?? date, 'date_millis', id),
+            createdAtMillis: _safeInt(row['created_at_millis'] ?? row['createdAtMillis'], 'created_at_millis', id),
           );
           encryptedBlob = await encryptionService.encryptJson(data.toJson());
         }
@@ -661,30 +732,30 @@ class DatabaseImportService {
 
     for (final row in rows) {
       try {
-        final id = row['id'] as String;
+        final id = _safeString(row['id'], 'id');
         // Handle both snake_case and camelCase
-        final createdAt = (row['created_at'] ?? row['createdAt']) as int;
-        final lastUpdatedAt = (row['last_updated_at'] ?? row['lastUpdatedAt']) as int;
-        final isDeleted = ((row['is_deleted'] ?? row['isDeleted']) as int) == 1;
+        final createdAt = _safeInt(row['created_at'] ?? row['createdAt'], 'created_at', id);
+        final lastUpdatedAt = _safeInt(row['last_updated_at'] ?? row['lastUpdatedAt'], 'last_updated_at', id);
+        final isDeleted = (_safeInt(row['is_deleted'] ?? row['isDeleted'] ?? 0, 'is_deleted', id)) == 1;
 
         Uint8List encryptedBlob;
 
         if (isEncrypted) {
-          encryptedBlob = (row['encrypted_blob'] ?? row['encryptedBlob']) as Uint8List;
+          encryptedBlob = _safeBlob(row['encrypted_blob'] ?? row['encryptedBlob'], 'encrypted_blob', id);
         } else {
           // Plaintext format, need to encrypt using AccountData model
           final data = AccountData(
             id: id,
-            name: row['name'] as String,
-            type: row['type'] as String,
-            balance: (row['balance'] as num).toDouble(),
-            initialBalance: ((row['initial_balance'] ?? row['initialBalance']) as num?)?.toDouble() ?? 0.0,
-            customColorValue: (row['custom_color_value'] ?? row['customColorValue']) as int?,
-            customIconCodePoint: (row['custom_icon_code_point'] ?? row['customIconCodePoint']) as int?,
-            customIconFontFamily: (row['custom_icon_font_family'] ?? row['customIconFontFamily']) as String?,
-            customIconFontPackage: (row['custom_icon_font_package'] ?? row['customIconFontPackage']) as String?,
-            currencyCode: (row['currency_code'] ?? row['currencyCode']) as String? ?? 'USD',
-            createdAtMillis: (row['created_at_millis'] ?? row['createdAtMillis'] ?? createdAt) as int,
+            name: _safeString(row['name'], 'name', id),
+            type: _safeString(row['type'], 'type', id),
+            balance: _safeDouble(row['balance'], 'balance', id),
+            initialBalance: _safeDoubleOrNull(row['initial_balance'] ?? row['initialBalance']) ?? 0.0,
+            customColorValue: _safeIntOrNull(row['custom_color_value'] ?? row['customColorValue']),
+            customIconCodePoint: _safeIntOrNull(row['custom_icon_code_point'] ?? row['customIconCodePoint']),
+            customIconFontFamily: _safeStringOrNull(row['custom_icon_font_family'] ?? row['customIconFontFamily']),
+            customIconFontPackage: _safeStringOrNull(row['custom_icon_font_package'] ?? row['customIconFontPackage']),
+            currencyCode: _safeStringOrNull(row['currency_code'] ?? row['currencyCode']) ?? 'USD',
+            createdAtMillis: _safeInt(row['created_at_millis'] ?? row['createdAtMillis'] ?? createdAt, 'created_at_millis', id),
           );
           encryptedBlob = await encryptionService.encryptJson(data.toJson());
         }
@@ -717,31 +788,31 @@ class DatabaseImportService {
 
     for (final row in rows) {
       try {
-        final id = row['id'] as String;
+        final id = _safeString(row['id'], 'id');
         // Handle both snake_case and camelCase
-        final sortOrder = (row['sort_order'] ?? row['sortOrder']) as int;
-        final lastUpdatedAt = (row['last_updated_at'] ?? row['lastUpdatedAt']) as int;
-        final isDeleted = ((row['is_deleted'] ?? row['isDeleted']) as int) == 1;
+        final sortOrder = _safeInt(row['sort_order'] ?? row['sortOrder'], 'sort_order', id);
+        final lastUpdatedAt = _safeInt(row['last_updated_at'] ?? row['lastUpdatedAt'], 'last_updated_at', id);
+        final isDeleted = (_safeInt(row['is_deleted'] ?? row['isDeleted'] ?? 0, 'is_deleted', id)) == 1;
 
         Uint8List encryptedBlob;
 
         if (isEncrypted) {
-          encryptedBlob = (row['encrypted_blob'] ?? row['encryptedBlob']) as Uint8List;
+          encryptedBlob = _safeBlob(row['encrypted_blob'] ?? row['encryptedBlob'], 'encrypted_blob', id);
         } else {
           // Plaintext format, need to encrypt using CategoryData model
           final showAssetsRaw = row['show_assets'] ?? row['showAssets'];
           final data = CategoryData(
             id: id,
-            name: row['name'] as String,
-            iconCodePoint: (row['icon_code_point'] ?? row['iconCodePoint']) as int,
-            iconFontFamily: (row['icon_font_family'] ?? row['iconFontFamily']) as String,
-            iconFontPackage: (row['icon_font_package'] ?? row['iconFontPackage']) as String?,
-            colorIndex: (row['color_index'] ?? row['colorIndex']) as int,
-            type: row['type'] as String,
-            isCustom: ((row['is_custom'] ?? row['isCustom']) as int) == 1,
-            parentId: (row['parent_id'] ?? row['parentId']) as String?,
+            name: _safeString(row['name'], 'name', id),
+            iconCodePoint: _safeInt(row['icon_code_point'] ?? row['iconCodePoint'], 'icon_code_point', id),
+            iconFontFamily: _safeString(row['icon_font_family'] ?? row['iconFontFamily'], 'icon_font_family', id),
+            iconFontPackage: _safeStringOrNull(row['icon_font_package'] ?? row['iconFontPackage']),
+            colorIndex: _safeInt(row['color_index'] ?? row['colorIndex'], 'color_index', id),
+            type: _safeString(row['type'], 'type', id),
+            isCustom: (_safeInt(row['is_custom'] ?? row['isCustom'] ?? 0, 'is_custom', id)) == 1,
+            parentId: _safeStringOrNull(row['parent_id'] ?? row['parentId']),
             sortOrder: sortOrder,
-            showAssets: showAssetsRaw != null && (showAssetsRaw as int) == 1,
+            showAssets: showAssetsRaw != null && (_safeIntOrNull(showAssetsRaw) ?? 0) == 1,
           );
           encryptedBlob = await encryptionService.encryptJson(data.toJson());
         }
@@ -1082,10 +1153,10 @@ class DatabaseImportService {
 
     for (final row in rows) {
       try {
-        final id = row['id'] as String;
+        final id = _safeString(row['id'], 'id');
         // Handle both snake_case and camelCase
-        final lastUpdatedAt = (row['last_updated_at'] ?? row['lastUpdatedAt']) as int;
-        final jsonData = (row['json_data'] ?? row['jsonData']) as String;
+        final lastUpdatedAt = _safeInt(row['last_updated_at'] ?? row['lastUpdatedAt'], 'last_updated_at', id);
+        final jsonData = _safeString(row['json_data'] ?? row['jsonData'], 'json_data', id);
 
         await database.into(database.appSettings).insertOnConflictUpdate(
           AppSettingsCompanion(
@@ -1153,23 +1224,23 @@ class DatabaseImportService {
 
     for (final row in rows) {
       try {
-        final id = row['id'] as String;
-        final createdAt = (row['created_at'] ?? row['createdAt']) as int;
-        final lastUpdatedAt = (row['last_updated_at'] ?? row['lastUpdatedAt']) as int;
-        final isDeleted = ((row['is_deleted'] ?? row['isDeleted']) as int) == 1;
+        final id = _safeString(row['id'], 'id');
+        final createdAt = _safeInt(row['created_at'] ?? row['createdAt'], 'created_at', id);
+        final lastUpdatedAt = _safeInt(row['last_updated_at'] ?? row['lastUpdatedAt'], 'last_updated_at', id);
+        final isDeleted = (_safeInt(row['is_deleted'] ?? row['isDeleted'] ?? 0, 'is_deleted', id)) == 1;
 
         Uint8List encryptedBlob;
 
         if (isEncrypted) {
-          encryptedBlob = (row['encrypted_blob'] ?? row['encryptedBlob']) as Uint8List;
+          encryptedBlob = _safeBlob(row['encrypted_blob'] ?? row['encryptedBlob'], 'encrypted_blob', id);
         } else {
           final data = BudgetData(
             id: id,
-            categoryId: (row['category_id'] ?? row['categoryId']) as String,
-            amount: (row['amount'] as num).toDouble(),
-            year: (row['year']) as int,
-            month: (row['month']) as int,
-            createdAtMillis: (row['created_at_millis'] ?? row['createdAtMillis'] ?? createdAt) as int,
+            categoryId: _safeString(row['category_id'] ?? row['categoryId'], 'category_id', id),
+            amount: _safeDouble(row['amount'], 'amount', id),
+            year: _safeInt(row['year'], 'year', id),
+            month: _safeInt(row['month'], 'month', id),
+            createdAtMillis: _safeInt(row['created_at_millis'] ?? row['createdAtMillis'] ?? createdAt, 'created_at_millis', id),
           );
           encryptedBlob = await encryptionService.encryptJson(data.toJson());
         }
@@ -1202,28 +1273,28 @@ class DatabaseImportService {
 
     for (final row in rows) {
       try {
-        final id = row['id'] as String;
-        final createdAt = (row['created_at'] ?? row['createdAt']) as int;
-        final sortOrder = (row['sort_order'] ?? row['sortOrder'] ?? 0) as int;
-        final lastUpdatedAt = (row['last_updated_at'] ?? row['lastUpdatedAt']) as int;
-        final isDeleted = ((row['is_deleted'] ?? row['isDeleted']) as int) == 1;
+        final id = _safeString(row['id'], 'id');
+        final createdAt = _safeInt(row['created_at'] ?? row['createdAt'], 'created_at', id);
+        final sortOrder = _safeInt(row['sort_order'] ?? row['sortOrder'] ?? 0, 'sort_order', id);
+        final lastUpdatedAt = _safeInt(row['last_updated_at'] ?? row['lastUpdatedAt'], 'last_updated_at', id);
+        final isDeleted = (_safeInt(row['is_deleted'] ?? row['isDeleted'] ?? 0, 'is_deleted', id)) == 1;
 
         Uint8List encryptedBlob;
 
         if (isEncrypted) {
-          encryptedBlob = (row['encrypted_blob'] ?? row['encryptedBlob']) as Uint8List;
+          encryptedBlob = _safeBlob(row['encrypted_blob'] ?? row['encryptedBlob'], 'encrypted_blob', id);
         } else {
           final data = AssetData(
             id: id,
-            name: row['name'] as String,
-            iconCodePoint: (row['icon_code_point'] ?? row['iconCodePoint']) as int,
-            iconFontFamily: (row['icon_font_family'] ?? row['iconFontFamily']) as String?,
-            iconFontPackage: (row['icon_font_package'] ?? row['iconFontPackage']) as String?,
-            colorIndex: (row['color_index'] ?? row['colorIndex']) as int,
-            status: row['status'] as String,
-            note: row['note'] as String?,
+            name: _safeString(row['name'], 'name', id),
+            iconCodePoint: _safeInt(row['icon_code_point'] ?? row['iconCodePoint'], 'icon_code_point', id),
+            iconFontFamily: _safeStringOrNull(row['icon_font_family'] ?? row['iconFontFamily']),
+            iconFontPackage: _safeStringOrNull(row['icon_font_package'] ?? row['iconFontPackage']),
+            colorIndex: _safeInt(row['color_index'] ?? row['colorIndex'], 'color_index', id),
+            status: _safeString(row['status'], 'status', id),
+            note: _safeStringOrNull(row['note']),
             sortOrder: sortOrder,
-            createdAtMillis: (row['created_at_millis'] ?? row['createdAtMillis'] ?? createdAt) as int,
+            createdAtMillis: _safeInt(row['created_at_millis'] ?? row['createdAtMillis'] ?? createdAt, 'created_at_millis', id),
           );
           encryptedBlob = await encryptionService.encryptJson(data.toJson());
         }
@@ -1257,36 +1328,36 @@ class DatabaseImportService {
 
     for (final row in rows) {
       try {
-        final id = row['id'] as String;
-        final createdAt = (row['created_at'] ?? row['createdAt']) as int;
-        final lastUpdatedAt = (row['last_updated_at'] ?? row['lastUpdatedAt']) as int;
-        final isDeleted = ((row['is_deleted'] ?? row['isDeleted']) as int) == 1;
+        final id = _safeString(row['id'], 'id');
+        final createdAt = _safeInt(row['created_at'] ?? row['createdAt'], 'created_at', id);
+        final lastUpdatedAt = _safeInt(row['last_updated_at'] ?? row['lastUpdatedAt'], 'last_updated_at', id);
+        final isDeleted = (_safeInt(row['is_deleted'] ?? row['isDeleted'] ?? 0, 'is_deleted', id)) == 1;
 
         Uint8List encryptedBlob;
 
         if (isEncrypted) {
-          encryptedBlob = (row['encrypted_blob'] ?? row['encryptedBlob']) as Uint8List;
+          encryptedBlob = _safeBlob(row['encrypted_blob'] ?? row['encryptedBlob'], 'encrypted_blob', id);
         } else {
           final isActiveRaw = row['is_active'] ?? row['isActive'];
           final destAmountRaw = row['destination_amount'] ?? row['destinationAmount'];
           final data = RecurringRuleData(
             id: id,
-            name: row['name'] as String,
-            amount: (row['amount'] as num).toDouble(),
-            type: row['type'] as String,
-            categoryId: (row['category_id'] ?? row['categoryId']) as String,
-            accountId: (row['account_id'] ?? row['accountId']) as String,
-            destinationAccountId: (row['destination_account_id'] ?? row['destinationAccountId']) as String?,
-            merchant: row['merchant'] as String?,
-            note: row['note'] as String?,
-            currencyCode: (row['currency_code'] ?? row['currencyCode']) as String? ?? 'USD',
-            destinationAmount: destAmountRaw != null ? (destAmountRaw as num).toDouble() : null,
-            frequency: row['frequency'] as String,
-            startDateMillis: (row['start_date_millis'] ?? row['startDateMillis']) as int,
-            endDateMillis: (row['end_date_millis'] ?? row['endDateMillis']) as int?,
-            lastGeneratedDateMillis: (row['last_generated_date_millis'] ?? row['lastGeneratedDateMillis']) as int,
-            isActive: isActiveRaw == null || (isActiveRaw as int) == 1,
-            createdAtMillis: (row['created_at_millis'] ?? row['createdAtMillis'] ?? createdAt) as int,
+            name: _safeString(row['name'], 'name', id),
+            amount: _safeDouble(row['amount'], 'amount', id),
+            type: _safeString(row['type'], 'type', id),
+            categoryId: _safeString(row['category_id'] ?? row['categoryId'], 'category_id', id),
+            accountId: _safeString(row['account_id'] ?? row['accountId'], 'account_id', id),
+            destinationAccountId: _safeStringOrNull(row['destination_account_id'] ?? row['destinationAccountId']),
+            merchant: _safeStringOrNull(row['merchant']),
+            note: _safeStringOrNull(row['note']),
+            currencyCode: _safeStringOrNull(row['currency_code'] ?? row['currencyCode']) ?? 'USD',
+            destinationAmount: _safeDoubleOrNull(destAmountRaw),
+            frequency: _safeString(row['frequency'], 'frequency', id),
+            startDateMillis: _safeInt(row['start_date_millis'] ?? row['startDateMillis'], 'start_date_millis', id),
+            endDateMillis: _safeIntOrNull(row['end_date_millis'] ?? row['endDateMillis']),
+            lastGeneratedDateMillis: _safeInt(row['last_generated_date_millis'] ?? row['lastGeneratedDateMillis'], 'last_generated_date_millis', id),
+            isActive: isActiveRaw == null || (_safeIntOrNull(isActiveRaw) ?? 1) == 1,
+            createdAtMillis: _safeInt(row['created_at_millis'] ?? row['createdAtMillis'] ?? createdAt, 'created_at_millis', id),
           );
           encryptedBlob = await encryptionService.encryptJson(data.toJson());
         }
@@ -1319,29 +1390,29 @@ class DatabaseImportService {
 
     for (final row in rows) {
       try {
-        final id = row['id'] as String;
-        final createdAt = (row['created_at'] ?? row['createdAt']) as int;
-        final lastUpdatedAt = (row['last_updated_at'] ?? row['lastUpdatedAt']) as int;
-        final isDeleted = ((row['is_deleted'] ?? row['isDeleted']) as int) == 1;
+        final id = _safeString(row['id'], 'id');
+        final createdAt = _safeInt(row['created_at'] ?? row['createdAt'], 'created_at', id);
+        final lastUpdatedAt = _safeInt(row['last_updated_at'] ?? row['lastUpdatedAt'], 'last_updated_at', id);
+        final isDeleted = (_safeInt(row['is_deleted'] ?? row['isDeleted'] ?? 0, 'is_deleted', id)) == 1;
 
         Uint8List encryptedBlob;
 
         if (isEncrypted) {
-          encryptedBlob = (row['encrypted_blob'] ?? row['encryptedBlob']) as Uint8List;
+          encryptedBlob = _safeBlob(row['encrypted_blob'] ?? row['encryptedBlob'], 'encrypted_blob', id);
         } else {
           final data = SavingsGoalData(
             id: id,
-            name: row['name'] as String,
-            targetAmount: (row['target_amount'] ?? row['targetAmount'] as num).toDouble(),
-            currentAmount: ((row['current_amount'] ?? row['currentAmount'] ?? 0) as num).toDouble(),
-            colorIndex: (row['color_index'] ?? row['colorIndex']) as int,
-            iconCodePoint: (row['icon_code_point'] ?? row['iconCodePoint']) as int,
-            iconFontFamily: (row['icon_font_family'] ?? row['iconFontFamily']) as String?,
-            iconFontPackage: (row['icon_font_package'] ?? row['iconFontPackage']) as String?,
-            linkedAccountId: (row['linked_account_id'] ?? row['linkedAccountId']) as String?,
-            targetDateMillis: (row['target_date_millis'] ?? row['targetDateMillis']) as int?,
-            note: row['note'] as String?,
-            createdAtMillis: (row['created_at_millis'] ?? row['createdAtMillis'] ?? createdAt) as int,
+            name: _safeString(row['name'], 'name', id),
+            targetAmount: _safeDouble(row['target_amount'] ?? row['targetAmount'], 'target_amount', id),
+            currentAmount: _safeDouble(row['current_amount'] ?? row['currentAmount'] ?? 0, 'current_amount', id),
+            colorIndex: _safeInt(row['color_index'] ?? row['colorIndex'], 'color_index', id),
+            iconCodePoint: _safeInt(row['icon_code_point'] ?? row['iconCodePoint'], 'icon_code_point', id),
+            iconFontFamily: _safeStringOrNull(row['icon_font_family'] ?? row['iconFontFamily']),
+            iconFontPackage: _safeStringOrNull(row['icon_font_package'] ?? row['iconFontPackage']),
+            linkedAccountId: _safeStringOrNull(row['linked_account_id'] ?? row['linkedAccountId']),
+            targetDateMillis: _safeIntOrNull(row['target_date_millis'] ?? row['targetDateMillis']),
+            note: _safeStringOrNull(row['note']),
+            createdAtMillis: _safeInt(row['created_at_millis'] ?? row['createdAtMillis'] ?? createdAt, 'created_at_millis', id),
           );
           encryptedBlob = await encryptionService.encryptJson(data.toJson());
         }
@@ -1374,29 +1445,29 @@ class DatabaseImportService {
 
     for (final row in rows) {
       try {
-        final id = row['id'] as String;
-        final createdAt = (row['created_at'] ?? row['createdAt']) as int;
-        final lastUpdatedAt = (row['last_updated_at'] ?? row['lastUpdatedAt']) as int;
-        final isDeleted = ((row['is_deleted'] ?? row['isDeleted']) as int) == 1;
+        final id = _safeString(row['id'], 'id');
+        final createdAt = _safeInt(row['created_at'] ?? row['createdAt'], 'created_at', id);
+        final lastUpdatedAt = _safeInt(row['last_updated_at'] ?? row['lastUpdatedAt'], 'last_updated_at', id);
+        final isDeleted = (_safeInt(row['is_deleted'] ?? row['isDeleted'] ?? 0, 'is_deleted', id)) == 1;
 
         Uint8List encryptedBlob;
 
         if (isEncrypted) {
-          encryptedBlob = (row['encrypted_blob'] ?? row['encryptedBlob']) as Uint8List;
+          encryptedBlob = _safeBlob(row['encrypted_blob'] ?? row['encryptedBlob'], 'encrypted_blob', id);
         } else {
           final amountRaw = row['amount'];
           final data = TransactionTemplateData(
             id: id,
-            name: row['name'] as String,
-            amount: amountRaw != null ? (amountRaw as num).toDouble() : null,
-            type: row['type'] as String,
-            categoryId: (row['category_id'] ?? row['categoryId']) as String?,
-            accountId: (row['account_id'] ?? row['accountId']) as String?,
-            destinationAccountId: (row['destination_account_id'] ?? row['destinationAccountId']) as String?,
-            assetId: (row['asset_id'] ?? row['assetId']) as String?,
-            merchant: row['merchant'] as String?,
-            note: row['note'] as String?,
-            createdAtMillis: (row['created_at_millis'] ?? row['createdAtMillis'] ?? createdAt) as int,
+            name: _safeString(row['name'], 'name', id),
+            amount: _safeDoubleOrNull(amountRaw),
+            type: _safeString(row['type'], 'type', id),
+            categoryId: _safeStringOrNull(row['category_id'] ?? row['categoryId']),
+            accountId: _safeStringOrNull(row['account_id'] ?? row['accountId']),
+            destinationAccountId: _safeStringOrNull(row['destination_account_id'] ?? row['destinationAccountId']),
+            assetId: _safeStringOrNull(row['asset_id'] ?? row['assetId']),
+            merchant: _safeStringOrNull(row['merchant']),
+            note: _safeStringOrNull(row['note']),
+            createdAtMillis: _safeInt(row['created_at_millis'] ?? row['createdAtMillis'] ?? createdAt, 'created_at_millis', id),
           );
           encryptedBlob = await encryptionService.encryptJson(data.toJson());
         }

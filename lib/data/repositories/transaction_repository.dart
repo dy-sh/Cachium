@@ -81,6 +81,7 @@ class TransactionRepository {
   /// Throws [RepositoryException] if encryption or database operation fails.
   Future<void> createTransaction(ui.Transaction transaction) async {
     try {
+      transaction.validate();
       final data = _toData(transaction);
       final encryptedBlob = await encryptionService.encrypt(data);
 
@@ -262,6 +263,7 @@ class TransactionRepository {
   /// Throws [RepositoryException] if encryption or database operation fails.
   Future<void> updateTransaction(ui.Transaction transaction) async {
     try {
+      transaction.validate();
       final data = _toData(transaction);
       final encryptedBlob = await encryptionService.encrypt(data);
 

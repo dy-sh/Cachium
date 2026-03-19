@@ -120,13 +120,32 @@ class _TotalBalanceCardState extends ConsumerState<TotalBalanceCard> {
                   ),
                 ),
                 if (ratesStale && hasMultipleCurrencies) ...[
-                  const SizedBox(width: AppSpacing.xs),
-                  Tooltip(
-                    message: 'Exchange rates are outdated',
-                    child: Icon(
-                      Icons.warning_amber_rounded,
-                      size: 14,
-                      color: AppColors.getTransactionColor('expense', intensity).withValues(alpha: 0.7),
+                  const SizedBox(width: AppSpacing.sm),
+                  GestureDetector(
+                    onTap: () async {
+                      await ref.read(exchangeRatesProvider.notifier).refresh();
+                      if (context.mounted) {
+                        context.showSuccessNotification('Exchange rates refreshed');
+                      }
+                    },
+                    behavior: HitTestBehavior.opaque,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          size: 14,
+                          color: AppColors.getTransactionColor('expense', intensity).withValues(alpha: 0.7),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Rates outdated',
+                          style: AppTypography.labelSmall.copyWith(
+                            color: AppColors.getTransactionColor('expense', intensity).withValues(alpha: 0.7),
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

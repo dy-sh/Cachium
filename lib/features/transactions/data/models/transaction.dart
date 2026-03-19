@@ -1,3 +1,4 @@
+import '../../../../core/exceptions/app_exception.dart';
 import '../../../../core/utils/currency_conversion.dart';
 
 enum TransactionType {
@@ -66,11 +67,46 @@ class Transaction {
             'Conversion rate must be positive and finite'),
         assert(destinationAmount == null || destinationAmount >= 0,
             'Destination amount must be non-negative'),
+        assert(mainCurrencyAmount == null || mainCurrencyAmount >= 0,
+            'Main currency amount must be non-negative'),
         assert(currencyCode.length == 3, 'Currency code must be 3 characters'),
         assert(mainCurrencyCode.length == 3,
             'Main currency code must be 3 characters');
 
   bool get isTransfer => type == TransactionType.transfer;
+
+  /// Validates critical invariants at save-time.
+  /// Throws [ValidationException] for invalid state.
+  /// Safer than constructor assertions: won't crash on corrupt DB reads.
+  void validate() {
+    if (amount < 0) {
+      throw ValidationException(message: 'Transaction amount must be non-negative', field: 'amount');
+    }
+    if (conversionRate <= 0 || !conversionRate.isFinite) {
+      throw ValidationException(message: 'Conversion rate must be positive and finite', field: 'conversionRate');
+    }
+    if (destinationAmount != null && destinationAmount! < 0) {
+      throw ValidationException(message: 'Destination amount must be non-negative', field: 'destinationAmount');
+    }
+    if (mainCurrencyAmount != null && mainCurrencyAmount! < 0) {
+      throw ValidationException(message: 'Main currency amount must be non-negative', field: 'mainCurrencyAmount');
+    }
+    if (currencyCode.length != 3) {
+      throw ValidationException(message: 'Currency code must be 3 characters', field: 'currencyCode');
+    }
+    if (mainCurrencyCode.length != 3) {
+      throw ValidationException(message: 'Main currency code must be 3 characters', field: 'mainCurrencyCode');
+    }
+    if (id.isEmpty) {
+      throw ValidationException(message: 'Transaction ID must not be empty', field: 'id');
+    }
+    if (categoryId.isEmpty) {
+      throw ValidationException(message: 'Category ID must not be empty', field: 'categoryId');
+    }
+    if (accountId.isEmpty) {
+      throw ValidationException(message: 'Account ID must not be empty', field: 'accountId');
+    }
+  }
 
   Transaction copyWith({
     String? id,

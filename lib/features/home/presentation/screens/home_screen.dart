@@ -5,6 +5,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/providers/database_providers.dart';
+import '../../../../design_system/components/feedback/notification.dart';
 import '../../../../design_system/components/buttons/circular_button.dart';
 import '../../../../design_system/animations/staggered_list.dart';
 import '../../../../navigation/app_router.dart';
@@ -23,6 +25,21 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Show one-time warning if key migration had failures
+    final migrationStatus = ref.read(keyMigrationStatusProvider);
+    if (migrationStatus != null && migrationStatus.hasFailures) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          context.showWarningNotification(
+            'Data migration had ${migrationStatus.failureCount} failures. Some records may need re-encryption.',
+            duration: const Duration(seconds: 6),
+          );
+          // Clear so it only shows once
+          ref.read(keyMigrationStatusProvider.notifier).state = null;
+        }
+      });
+    }
+
     final showAccountsList = ref.watch(homeShowAccountsListProvider);
     final showTotalBalance = ref.watch(homeShowTotalBalanceProvider);
     final showQuickActions = ref.watch(homeShowQuickActionsProvider);

@@ -306,6 +306,43 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     }
   }
 
+  /// Re-hash a credential to PBKDF2 after successful verification.
+  /// Called from lock screen when the raw credential is available.
+  Future<void> upgradeCredentialIfNeeded({
+    String? rawPin,
+    String? rawPassword,
+  }) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+
+    var needsSave = false;
+    var updated = current;
+
+    if (rawPin != null &&
+        current.appPinCode != null &&
+        CredentialHasher.needsUpgrade(current.appPinCode!)) {
+      final hashed = await CredentialHasher.hash(rawPin);
+      updated = updated.copyWith(appPinCode: hashed);
+      needsSave = true;
+    }
+
+    if (rawPassword != null &&
+        current.appPassword != null &&
+        CredentialHasher.needsUpgrade(current.appPassword!)) {
+      final hashed = await CredentialHasher.hash(rawPassword);
+      updated = updated.copyWith(appPassword: hashed);
+      needsSave = true;
+    }
+
+    if (needsSave) {
+      try {
+        await _saveAndUpdate(updated);
+      } catch (_) {
+        // Silent failure — old format still works
+      }
+    }
+  }
+
   /// Migrate credentials to current hashing format (PBKDF2).
   /// Handles: plaintext → PBKDF2, sha256 → PBKDF2.
   /// Called once on app startup if needed.

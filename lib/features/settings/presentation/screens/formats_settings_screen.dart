@@ -121,11 +121,14 @@ class FormatsSettingsScreen extends ConsumerWidget {
 
     final lastFetch = settings.lastRateFetchTimestamp;
     String statusText;
+    String? timestampText;
     if (lastFetch == null) {
       statusText = 'Never fetched';
     } else {
       final fetchTime = DateTime.fromMillisecondsSinceEpoch(lastFetch);
       final diff = DateTime.now().difference(fetchTime);
+      timestampText = '${fetchTime.year}-${fetchTime.month.toString().padLeft(2, '0')}-${fetchTime.day.toString().padLeft(2, '0')} '
+          '${fetchTime.hour.toString().padLeft(2, '0')}:${fetchTime.minute.toString().padLeft(2, '0')}';
       if (diff.inMinutes < 1) {
         statusText = 'Just now';
       } else if (diff.inHours < 1) {
@@ -158,6 +161,16 @@ class FormatsSettingsScreen extends ConsumerWidget {
                         : AppColors.textTertiary,
                   ),
                 ),
+                if (timestampText != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    timestampText,
+                    style: AppTypography.labelSmall.copyWith(
+                      color: AppColors.textTertiary,
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

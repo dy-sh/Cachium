@@ -81,7 +81,8 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
         _initialized = true;
       }
     } else if (widget.initialType != null) {
-      // New transaction with specific type
+      // New transaction with specific type — reset account-applied flag
+      _accountApplied = false;
       final TransactionType type;
       switch (widget.initialType) {
         case 'income':

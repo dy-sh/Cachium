@@ -166,6 +166,23 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
 
   Future<void> _handleExport(BuildContext context, WidgetRef ref) async {
     final options = ExportOptions(encryptionEnabled: _encryptionEnabled);
+
+    // Warn about unencrypted CSV export
+    if (!_encryptionEnabled) {
+      final confirmed = await showConfirmationDialog(
+        context: context,
+        title: 'Unencrypted export',
+        message: 'This will export your financial data as an unencrypted file. '
+            'Anyone with access to this file can read your data.',
+        confirmLabel: 'Export Anyway',
+        cancelLabel: 'Cancel',
+        isDestructive: true,
+      );
+      if (!confirmed) return;
+    }
+
+    if (!context.mounted) return;
+
     final notifier = ref.read(exportStateProvider.notifier);
 
     if (widget.format == ExportFormat.sqlite) {

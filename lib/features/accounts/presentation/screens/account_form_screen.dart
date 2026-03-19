@@ -45,10 +45,12 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
     _balanceController = TextEditingController();
     _initialBalanceController = TextEditingController();
 
-    // Reset form when creating new account
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.accountId == null) {
         ref.read(accountFormProvider.notifier).reset();
+      } else {
+        _initializeForEdit();
+        if (mounted) setState(() {});
       }
     });
   }
@@ -76,14 +78,6 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Initialize for edit mode after the first frame
-    if (widget.accountId != null && !_initialized) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _initializeForEdit();
-        if (mounted) setState(() {});
-      });
-    }
-
     final formState = ref.watch(accountFormProvider);
     final isEditing = formState.isEditing;
     final accountName = formState.name.trim();

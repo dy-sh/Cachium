@@ -32,7 +32,11 @@ void main() async {
     final migrationService = KeyMigrationService();
     final oldKeyProvider = LegacyKeyProvider();
     final newKeyProvider = SecureKeyProvider();
-    await migrationService.migrateIfNeeded(db, oldKeyProvider, newKeyProvider);
+    final migrationResult = await migrationService.migrateIfNeeded(db, oldKeyProvider, newKeyProvider);
+    if (migrationResult.hasFailures) {
+      debugPrint('Key migration had ${migrationResult.failureCount} failures');
+      container.read(keyMigrationStatusProvider.notifier).state = migrationResult;
+    }
   } catch (e) {
     debugPrint('Key migration failed: $e');
     // Continue startup — data remains readable with the legacy key

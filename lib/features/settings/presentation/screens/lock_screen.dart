@@ -177,10 +177,22 @@ class _LockScreenState extends ConsumerState<LockScreen> {
       _errorMessage = null;
     });
 
-    // For hashed PINs, user must press submit or we auto-check at common lengths
-    if (_enteredPin.length >= 4) {
+    // For plaintext PINs where length is known, auto-verify
+    if (storedPin.length <= _maxPinLength &&
+        !CredentialHasher.isHashed(storedPin) &&
+        _enteredPin.length == storedPin.length) {
       _verifyPin();
     }
+
+    // Auto-verify at max length for all formats
+    if (_enteredPin.length >= _maxPinLength) {
+      _verifyPin();
+    }
+  }
+
+  void _submitPin() {
+    if (_isLockedOut || _enteredPin.isEmpty) return;
+    _verifyPin();
   }
 
   Future<void> _verifyPin() async {
@@ -189,10 +201,15 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     final storedPin = ref.read(appPinCodeProvider);
     if (storedPin == null) return;
 
-    final matched = await CredentialHasher.verify(_enteredPin, storedPin);
+    final rawPin = _enteredPin;
+    final matched = await CredentialHasher.verify(rawPin, storedPin);
     if (!mounted) return;
 
     if (matched) {
+      // Transparently upgrade to PBKDF2 if needed
+      if (CredentialHasher.needsUpgrade(storedPin)) {
+        ref.read(settingsProvider.notifier).upgradeCredentialIfNeeded(rawPin: rawPin);
+      }
       _unlock();
     } else if (_enteredPin.length >= _maxPinLength) {
       // Max length reached, definitely wrong
@@ -200,8 +217,13 @@ class _LockScreenState extends ConsumerState<LockScreen> {
       setState(() {
         _enteredPin = '';
       });
+    } else {
+      // Submitted via button with wrong PIN
+      _recordFailedAttempt('Wrong PIN');
+      setState(() {
+        _enteredPin = '';
+      });
     }
-    // Otherwise wait for more digits or backspace
   }
 
   void _onBackspace() {
@@ -218,13 +240,15 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     final storedPassword = ref.read(appPasswordProvider);
     if (storedPassword == null) return;
 
-    final matched = await CredentialHasher.verify(
-      _passwordController.text,
-      storedPassword,
-    );
+    final rawPassword = _passwordController.text;
+    final matched = await CredentialHasher.verify(rawPassword, storedPassword);
     if (!mounted) return;
 
     if (matched) {
+      // Transparently upgrade to PBKDF2 if needed
+      if (CredentialHasher.needsUpgrade(storedPassword)) {
+        ref.read(settingsProvider.notifier).upgradeCredentialIfNeeded(rawPassword: rawPassword);
+      }
       _unlock();
     } else {
       _recordFailedAttempt('Wrong password');
@@ -560,7 +584,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
           const SizedBox(height: AppSpacing.md),
           _buildPadRow(['7', '8', '9']),
           const SizedBox(height: AppSpacing.md),
-          _buildPadRow(['', '0', 'back']),
+          _buildPadRow(['submit', '0', 'back']),
         ],
       ),
     );
@@ -570,8 +594,25 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: keys.map((key) {
-        if (key.isEmpty) {
-          return const SizedBox(width: 72, height: 56);
+        if (key == 'submit') {
+          final hasInput = _enteredPin.isNotEmpty;
+          return GestureDetector(
+            onTap: hasInput ? _submitPin : null,
+            behavior: HitTestBehavior.opaque,
+            child: SizedBox(
+              width: 72,
+              height: 56,
+              child: Center(
+                child: Icon(
+                  LucideIcons.checkCircle2,
+                  size: 22,
+                  color: hasInput
+                      ? AppColors.accentPrimary
+                      : AppColors.textTertiary.withValues(alpha: 0.3),
+                ),
+              ),
+            ),
+          );
         }
         if (key == 'back') {
           return GestureDetector(

@@ -96,6 +96,17 @@ class _FMNotificationState extends ConsumerState<Notification>
     if (widget.duration > Duration.zero) {
       _dismissTimer = Timer(widget.duration, _dismiss);
     }
+    // Pulse animation to acknowledge duplicate
+    _pulseAcknowledge();
+  }
+
+  void _pulseAcknowledge() {
+    if (!mounted) return;
+    _controller.animateTo(0.7, duration: const Duration(milliseconds: 100)).then((_) {
+      if (mounted) {
+        _controller.animateTo(1.0, duration: const Duration(milliseconds: 100));
+      }
+    });
   }
 
   @override
@@ -309,8 +320,11 @@ class NotificationOverlay {
     // Also deduplicate from the queue (same message+type only)
     _queue.removeWhere((item) => item.message == message && item.type == type);
 
+    // Capture OverlayState eagerly while context is still valid
+    final overlayState = Overlay.of(context);
+
     _queue.add(_NotificationItem(
-      context: context,
+      overlayState: overlayState,
       message: message,
       type: type,
       duration: duration,
@@ -343,7 +357,14 @@ class NotificationOverlay {
     _currentMessage = item.message;
     _currentType = item.type;
 
-    final overlay = Overlay.of(item.context);
+    final overlay = item.overlayState;
+
+    // Verify overlay is still mounted before inserting
+    if (!overlay.mounted) {
+      _isProcessingQueue = false;
+      _showNext();
+      return;
+    }
 
     _currentEntry = OverlayEntry(
       builder: (context) => Positioned(
@@ -425,7 +446,7 @@ class NotificationOverlay {
 }
 
 class _NotificationItem {
-  final BuildContext context;
+  final OverlayState overlayState;
   final String message;
   final FMNotificationType type;
   final Duration duration;
@@ -433,7 +454,7 @@ class _NotificationItem {
   final VoidCallback? onAction;
 
   _NotificationItem({
-    required this.context,
+    required this.overlayState,
     required this.message,
     required this.type,
     required this.duration,

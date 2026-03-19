@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../design_system/components/feedback/notification.dart';
 import '../../../../design_system/components/inputs/amount_input.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../providers/transaction_form_provider.dart';
@@ -48,15 +49,24 @@ class AmountSection extends ConsumerWidget {
         if (formState.currencyCode != mainCurrency && isStale)
           Padding(
             padding: const EdgeInsets.only(top: AppSpacing.xs),
-            child: Row(
-              children: [
-                Icon(LucideIcons.alertTriangle, size: 14, color: AppColors.yellow),
-                const SizedBox(width: AppSpacing.xs),
-                Text(
-                  'Exchange rates may be outdated',
-                  style: AppTypography.bodySmall.copyWith(color: AppColors.yellow),
-                ),
-              ],
+            child: GestureDetector(
+              onTap: () async {
+                await ref.read(exchangeRatesProvider.notifier).refresh();
+                if (context.mounted) {
+                  context.showSuccessNotification('Exchange rates refreshed');
+                }
+              },
+              behavior: HitTestBehavior.opaque,
+              child: Row(
+                children: [
+                  Icon(LucideIcons.alertTriangle, size: 14, color: AppColors.yellow),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    'Rates outdated — tap to refresh',
+                    style: AppTypography.bodySmall.copyWith(color: AppColors.yellow),
+                  ),
+                ],
+              ),
             ),
           ),
       ],

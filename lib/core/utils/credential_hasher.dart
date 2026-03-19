@@ -48,6 +48,10 @@ class CredentialHasher {
   /// Returns true if the value uses the current PBKDF2 format.
   static bool isPbkdf2(String value) => value.startsWith(_pbkdf2Prefix);
 
+  /// Returns true if the stored value should be upgraded to PBKDF2.
+  /// True for legacy SHA-256 and plaintext formats.
+  static bool needsUpgrade(String storedValue) => !isPbkdf2(storedValue);
+
   static List<int> _generateSalt() {
     final random = Random.secure();
     return List<int>.generate(_saltLength, (_) => random.nextInt(256));
