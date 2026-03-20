@@ -8,6 +8,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/buttons/primary_button.dart';
 import '../../../../design_system/components/chips/toggle_chip.dart';
+import '../../../../design_system/components/feedback/confirmation_dialog.dart';
 import '../../../../design_system/components/inputs/input_field.dart';
 import '../../../../design_system/components/layout/form_header.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
@@ -107,14 +108,45 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
       assetNameExistsProvider((name: assetName, excludeId: widget.asset?.id)),
     );
 
-    return Scaffold(
+    return PopScope(
+      canPop: !_hasChanges,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final confirmed = await showConfirmationDialog(
+          context: context,
+          title: 'Discard changes?',
+          message: 'You have unsaved changes that will be lost.',
+          confirmLabel: 'Discard',
+          isDestructive: true,
+        );
+        if (confirmed == true && context.mounted) {
+          Navigator.pop(context);
+        }
+      },
+      child: Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
             FormHeader(
               title: _isEditing ? 'Edit Asset' : 'New Asset',
-              onClose: () => Navigator.pop(context),
+              onClose: () {
+                if (_hasChanges) {
+                  showConfirmationDialog(
+                    context: context,
+                    title: 'Discard changes?',
+                    message: 'You have unsaved changes that will be lost.',
+                    confirmLabel: 'Discard',
+                    isDestructive: true,
+                  ).then((confirmed) {
+                    if (confirmed == true && context.mounted) {
+                      Navigator.pop(context);
+                    }
+                  });
+                } else {
+                  Navigator.pop(context);
+                }
+              },
               trailing: _isEditing && widget.onDelete != null
                   ? GestureDetector(
                       onTap: widget.onDelete,
@@ -334,6 +366,7 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
           ],
         ),
       ),
+    ),
     );
   }
 }

@@ -1,6 +1,11 @@
 # New Features Log
 
 ## 2026-03-20
+- **PopScope Unsaved-Work Detection**: Four form screens that were missing back-navigation guards (RecurringRuleFormScreen, TransactionTemplateFormScreen, CategoryFormModal, AssetFormModal) now wrap their Scaffold in PopScope and show a "Discard changes?" confirmation dialog when the user tries to navigate back with unsaved changes.
+- **Orphaned Record Cleanup**: Database migration v24 introduces a `cleanupOrphanedRecords()` method on AppDatabase that removes `transaction_tags` and attachment rows whose parent transaction or tag no longer exists, keeping the database free of dangling references.
+- **Exchange Rate API Rate Limiting**: ExchangeRateService now enforces a 5-minute throttle between API calls. Requests within the interval return the cached rates immediately, and a `canFetch` getter lets the UI indicate when a fresh fetch is available.
+- **Onboarding Tutorial**: A 4-page TutorialScreen (Track Transactions, Manage Accounts, Set Budgets, View Analytics) is shown to new users after the welcome/onboarding flow. Users can skip or complete it; the completion state is persisted via a `tutorialCompleted` setting.
+- **Financial Calendar Screen**: A standalone monthly calendar grid, accessible from the home screen header, shows per-day income and expense mini-amounts with intensity-based background shading, bill due date indicators, and a day-detail panel listing that day's transactions. Operates independently of analytics filters.
 - **Light Theme**: Adds Dark, Light, and System theme modes selectable from Appearance settings. A `ThemeModeOption` enum drives mode selection and `AppColors.isDarkMode` makes all color helpers theme-aware.
 - **Bill Reminders / Due Date Tracking**: New bills feature module (`lib/features/bills/`) for tracking upcoming bills with due dates, amounts, and recurrence. Marking a bill paid auto-creates a transaction and generates the next bill. Per-bill reminder settings and overdue tracking included; upcoming bills shown on the home screen. Routes: `/settings/bills`, `/bill/new`, `/bill/:id/edit`.
 - **Biometric Unlock Enhancement**: Auto-lock timeout is now configurable (immediate, 30 s, 1 min, 5 min, 15 min, or never). A toggle enables or disables biometric unlock independently, and a background timer enforces timeout-based locking based on app lifecycle events.

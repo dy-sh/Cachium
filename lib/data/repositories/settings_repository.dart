@@ -65,6 +65,7 @@ class SettingsRepository {
       encryptAttachments: settings.encryptAttachments,
       homeShowBudgetProgress: settings.homeShowBudgetProgress,
       homeSectionOrder: settings.homeSectionOrder,
+      tutorialCompleted: settings.tutorialCompleted,
     );
   }
 
@@ -142,6 +143,7 @@ class SettingsRepository {
       encryptAttachments: data.encryptAttachments,
       homeShowBudgetProgress: data.homeShowBudgetProgress,
       homeSectionOrder: data.homeSectionOrder,
+      tutorialCompleted: data.tutorialCompleted,
     );
   }
 

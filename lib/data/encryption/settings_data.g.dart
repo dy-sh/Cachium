@@ -70,6 +70,7 @@ _$SettingsDataImpl _$$SettingsDataImplFromJson(
         'budgetProgress',
         'recentTransactions',
       ],
+  tutorialCompleted: json['tutorialCompleted'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$$SettingsDataImplToJson(_$SettingsDataImpl instance) =>
@@ -116,4 +117,5 @@ Map<String, dynamic> _$$SettingsDataImplToJson(_$SettingsDataImpl instance) =>
       'encryptAttachments': instance.encryptAttachments,
       'homeShowBudgetProgress': instance.homeShowBudgetProgress,
       'homeSectionOrder': instance.homeSectionOrder,
+      'tutorialCompleted': instance.tutorialCompleted,
     };

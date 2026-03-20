@@ -244,6 +244,7 @@ class AppSettings {
 
   // Onboarding
   final bool onboardingCompleted;
+  final bool tutorialCompleted;
 
   const AppSettings({
     this.themeMode = ThemeModeOption.dark,
@@ -301,6 +302,7 @@ class AppSettings {
     this.weeklySpendingSummaryDay = 1,
     this.encryptAttachments = false,
     this.onboardingCompleted = false,
+    this.tutorialCompleted = false,
   });
 
   Color get accentColor {
@@ -366,6 +368,7 @@ class AppSettings {
     int? weeklySpendingSummaryDay,
     bool? encryptAttachments,
     bool? onboardingCompleted,
+    bool? tutorialCompleted,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -423,6 +426,7 @@ class AppSettings {
       weeklySpendingSummaryDay: weeklySpendingSummaryDay ?? this.weeklySpendingSummaryDay,
       encryptAttachments: encryptAttachments ?? this.encryptAttachments,
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
+      tutorialCompleted: tutorialCompleted ?? this.tutorialCompleted,
     );
   }
 }

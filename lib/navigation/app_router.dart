@@ -7,6 +7,7 @@ import '../features/accounts/presentation/screens/accounts_screen.dart';
 import '../features/assets/presentation/screens/asset_detail_screen.dart';
 import '../features/assets/presentation/screens/assets_screen.dart';
 import '../features/analytics/presentation/screens/analytics_screen.dart';
+import '../features/analytics/presentation/screens/financial_calendar_screen.dart';
 import '../features/home/presentation/screens/home_screen.dart';
 import '../features/settings/presentation/providers/settings_provider.dart';
 import '../features/settings/data/models/export_options.dart';
@@ -91,6 +92,7 @@ class AppRoutes {
   static const accountEdit = '/account/:id/edit';
   static const assets = '/settings/assets';
   static const assetDetail = '/asset/:id';
+  static const calendar = '/calendar';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -505,6 +507,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
           state,
           const ImportPreviewScreen(),
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.calendar,
+        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
+          state,
+          const FinancialCalendarScreen(),
           animationsEnabled: ref.read(formAnimationsEnabledProvider),
         ),
       ),

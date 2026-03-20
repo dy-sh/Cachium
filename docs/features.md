@@ -644,4 +644,28 @@
 - Analytics Overview tab gains a "Conversion Gain/Loss" card (`ConversionGainLossCard`) driven by `conversionGainLossProvider`, showing the total conversion impact across all foreign-currency transactions in the selected period
 - Export/import updated to include `main_currency_code` and `main_currency_amount` columns with fallback defaults for older files; demo data seeded with these fields
 
+#### 58. PopScope Unsaved-Work Detection
+- RecurringRuleFormScreen, TransactionTemplateFormScreen, CategoryFormModal, and AssetFormModal now wrap their Scaffold in PopScope
+- Navigating back with unsaved changes triggers a "Discard changes?" confirmation dialog, preventing accidental data loss
+
+#### 59. Orphaned Record Cleanup
+- Database migration v24 adds a `cleanupOrphanedRecords()` method to AppDatabase
+- Removes orphaned `transaction_tags` and attachment records where the parent transaction or tag no longer exists
+
+#### 60. Exchange Rate API Rate Limiting
+- ExchangeRateService enforces a 5-minute minimum interval between API calls
+- Repeated calls within the throttle window return cached rates; a `canFetch` getter exposes throttle status to the UI
+
+#### 61. Onboarding Tutorial
+- 4-page tutorial screen (TutorialScreen) shown after welcome/onboarding for new users
+- Covers: Track Transactions, Manage Accounts, Set Budgets, View Analytics
+- Can be skipped or completed; completion state persisted via `tutorialCompleted` setting
+
+#### 62. Financial Calendar Screen
+- Standalone monthly calendar grid accessible via a calendar icon in the home screen header
+- Each day shows mini income/expense amounts with intensity-based background color shading
+- Bill due date indicators displayed on relevant days
+- Tapping a day opens a detail panel listing that day's transactions
+- Independent of analytics filters
+
 ---

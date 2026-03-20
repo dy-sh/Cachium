@@ -105,14 +105,49 @@ class _TransactionTemplateFormScreenState
             ? incomeCategories
             : expenseCategories;
 
-    return Scaffold(
+    final hasUnsavedWork = isEditing
+        ? formState.hasChanges
+        : (formState.name.isNotEmpty || formState.amount != null);
+
+    return PopScope(
+      canPop: !hasUnsavedWork,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final confirmed = await showConfirmationDialog(
+          context: context,
+          title: 'Discard changes?',
+          message: 'You have unsaved changes that will be lost.',
+          confirmLabel: 'Discard',
+          isDestructive: true,
+        );
+        if (confirmed == true && context.mounted) {
+          context.pop();
+        }
+      },
+      child: Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
             FormHeader(
               title: isEditing ? 'Edit Template' : 'New Template',
-              onClose: () => context.pop(),
+              onClose: () {
+                if (hasUnsavedWork) {
+                  showConfirmationDialog(
+                    context: context,
+                    title: 'Discard changes?',
+                    message: 'You have unsaved changes that will be lost.',
+                    confirmLabel: 'Discard',
+                    isDestructive: true,
+                  ).then((confirmed) {
+                    if (confirmed == true && context.mounted) {
+                      context.pop();
+                    }
+                  });
+                } else {
+                  context.pop();
+                }
+              },
               trailing: isEditing
                   ? GestureDetector(
                       onTap: () => _deleteTemplate(context),
@@ -373,6 +408,7 @@ class _TransactionTemplateFormScreenState
           ],
         ),
       ),
+    ),
     );
   }
 

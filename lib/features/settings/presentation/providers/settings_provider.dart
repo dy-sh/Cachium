@@ -223,6 +223,8 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
   }
 
   // Onboarding
+  Future<void> setTutorialCompleted(bool v) => _update((s) => s.copyWith(tutorialCompleted: v));
+
   Future<void> setOnboardingCompleted(bool completed) async {
     final current = state.valueOrNull;
     if (current == null) return;
@@ -306,6 +308,7 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
       biometricUnlockEnabled: defaults.biometricUnlockEnabled,
       // Preserve onboarding
       onboardingCompleted: current.onboardingCompleted,
+      tutorialCompleted: current.tutorialCompleted,
     );
     await _saveAndUpdate(resetSettings);
   }
@@ -389,6 +392,11 @@ final lastUsedAccountIdProvider = Provider<String?>((ref) {
 final onboardingCompletedProvider = Provider<bool>((ref) {
   final settingsAsync = ref.watch(settingsProvider);
   return settingsAsync.valueOrNull?.onboardingCompleted ?? false;
+});
+
+final tutorialCompletedProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.tutorialCompleted ?? false;
 });
 
 // Transaction settings providers

@@ -89,9 +89,16 @@ class ExchangeRateService {
   ExchangeRateApi _api;
   Map<String, double> _cachedRates = {};
   String? _cachedBaseCurrency;
+  DateTime? _lastFetchTime;
+  static const _minFetchInterval = Duration(minutes: 5);
 
   ExchangeRateService({ExchangeRateApi? api})
       : _api = api ?? FrankfurterApi();
+
+  bool get canFetch {
+    if (_lastFetchTime == null) return true;
+    return DateTime.now().difference(_lastFetchTime!) >= _minFetchInterval;
+  }
 
   void setApi(ExchangeRateApi api) {
     _api = api;
@@ -107,11 +114,21 @@ class ExchangeRateService {
   String? get cachedBaseCurrency => _cachedBaseCurrency;
 
   Future<Map<String, double>> fetchRates(String baseCurrency) async {
+    // Rate limit: return cached rates if fetched recently for the same base currency
+    if (_lastFetchTime != null &&
+        DateTime.now().difference(_lastFetchTime!) < _minFetchInterval &&
+        _cachedBaseCurrency == baseCurrency &&
+        _cachedRates.isNotEmpty) {
+      _log('[ExchangeRateService] THROTTLED: returning cached rates (last fetch ${DateTime.now().difference(_lastFetchTime!).inSeconds}s ago)');
+      return Map.from(_cachedRates);
+    }
+
     _log('[ExchangeRateService] fetchRates(base=$baseCurrency) using ${_api.name}');
     try {
       final rates = await _api.fetchRates(baseCurrency);
       _cachedRates = Map.from(rates);
       _cachedBaseCurrency = baseCurrency;
+      _lastFetchTime = DateTime.now();
       _log('[ExchangeRateService] SUCCESS: ${rates.length} rates, EUR=${rates['EUR']}');
       return rates;
     } catch (e) {

@@ -137,6 +137,9 @@ class SettingsData with _$SettingsData {
     /// Home section ordering
     @Default(['accounts', 'totalBalance', 'quickActions', 'budgetProgress', 'recentTransactions'])
     List<String> homeSectionOrder,
+
+    /// Whether the onboarding tutorial has been completed
+    @Default(false) bool tutorialCompleted,
   }) = _SettingsData;
 
   factory SettingsData.fromJson(Map<String, dynamic> json) =>

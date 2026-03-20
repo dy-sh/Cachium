@@ -7,6 +7,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/buttons/primary_button.dart';
+import '../../../../design_system/components/feedback/confirmation_dialog.dart';
 import '../../../../design_system/components/layout/form_header.dart';
 import '../../../categories/data/models/category.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
@@ -113,7 +114,22 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
       categoryNameExistsProvider((name: categoryName, excludeId: widget.category?.id)),
     );
 
-    return Scaffold(
+    return PopScope(
+      canPop: !_hasChanges,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final confirmed = await showConfirmationDialog(
+          context: context,
+          title: 'Discard changes?',
+          message: 'You have unsaved changes that will be lost.',
+          confirmLabel: 'Discard',
+          isDestructive: true,
+        );
+        if (confirmed == true && context.mounted) {
+          Navigator.pop(context);
+        }
+      },
+      child: Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
@@ -121,7 +137,23 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
             // Header
             FormHeader(
               title: isEditing ? 'Edit Category' : 'New Category',
-              onClose: () => Navigator.pop(context),
+              onClose: () {
+                if (_hasChanges) {
+                  showConfirmationDialog(
+                    context: context,
+                    title: 'Discard changes?',
+                    message: 'You have unsaved changes that will be lost.',
+                    confirmLabel: 'Discard',
+                    isDestructive: true,
+                  ).then((confirmed) {
+                    if (confirmed == true && context.mounted) {
+                      Navigator.pop(context);
+                    }
+                  });
+                } else {
+                  Navigator.pop(context);
+                }
+              },
               trailing: isEditing && widget.onDelete != null
                   ? GestureDetector(
                       onTap: () => _showDeleteConfirmation(context),
@@ -392,6 +424,7 @@ class _CategoryFormModalState extends ConsumerState<CategoryFormModal> {
           ],
         ),
       ),
+    ),
     );
   }
 

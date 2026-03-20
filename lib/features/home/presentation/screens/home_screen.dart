@@ -121,6 +121,11 @@ class HomeScreen extends ConsumerWidget {
                 Row(
                   children: [
                     CircularButton(
+                      onTap: () => context.push(AppRoutes.calendar),
+                      icon: LucideIcons.calendar,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    CircularButton(
                       onTap: () => context.push(AppRoutes.search),
                       icon: LucideIcons.search,
                     ),

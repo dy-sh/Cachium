@@ -265,7 +265,7 @@ class AppDatabase extends _$AppDatabase {
 
 
   @override
-  int get schemaVersion => 23;
+  int get schemaVersion => 24;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -329,6 +329,16 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(bills);
             await _createIndexes(m);
           }
+
+          if (from < 24) {
+            // Clean up orphaned records in join/child tables
+            await customStatement(
+              'DELETE FROM transaction_tags WHERE transaction_id NOT IN (SELECT id FROM transactions) OR tag_id NOT IN (SELECT id FROM tags)',
+            );
+            await customStatement(
+              'DELETE FROM attachments WHERE transaction_id NOT IN (SELECT id FROM transactions)',
+            );
+          }
         },
       );
 
@@ -391,6 +401,21 @@ class AppDatabase extends _$AppDatabase {
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_bills_is_deleted ON bills(is_deleted)',
     );
+  }
+
+  /// Remove orphaned records from join/child tables where the parent no longer exists.
+  Future<int> cleanupOrphanedRecords() async {
+    final tagCount = await customUpdate(
+      'DELETE FROM transaction_tags WHERE transaction_id NOT IN (SELECT id FROM transactions) OR tag_id NOT IN (SELECT id FROM tags)',
+      updates: {transactionTags},
+      updateKind: UpdateKind.delete,
+    );
+    final attachmentCount = await customUpdate(
+      'DELETE FROM attachments WHERE transaction_id NOT IN (SELECT id FROM transactions)',
+      updates: {attachments},
+      updateKind: UpdateKind.delete,
+    );
+    return tagCount + attachmentCount;
   }
 
   static QueryExecutor _openConnection() {

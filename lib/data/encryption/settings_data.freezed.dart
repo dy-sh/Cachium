@@ -147,6 +147,9 @@ mixin _$SettingsData {
   /// Home section ordering
   List<String> get homeSectionOrder => throw _privateConstructorUsedError;
 
+  /// Whether the onboarding tutorial has been completed
+  bool get tutorialCompleted => throw _privateConstructorUsedError;
+
   /// Serializes this SettingsData to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
@@ -207,6 +210,7 @@ abstract class $SettingsDataCopyWith<$Res> {
     bool encryptAttachments,
     bool homeShowBudgetProgress,
     List<String> homeSectionOrder,
+    bool tutorialCompleted,
   });
 }
 
@@ -267,6 +271,7 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
     Object? encryptAttachments = null,
     Object? homeShowBudgetProgress = null,
     Object? homeSectionOrder = null,
+    Object? tutorialCompleted = null,
   }) {
     return _then(
       _value.copyWith(
@@ -438,6 +443,10 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
                 ? _value.homeSectionOrder
                 : homeSectionOrder // ignore: cast_nullable_to_non_nullable
                       as List<String>,
+            tutorialCompleted: null == tutorialCompleted
+                ? _value.tutorialCompleted
+                : tutorialCompleted // ignore: cast_nullable_to_non_nullable
+                      as bool,
           )
           as $Val,
     );
@@ -496,6 +505,7 @@ abstract class _$$SettingsDataImplCopyWith<$Res>
     bool encryptAttachments,
     bool homeShowBudgetProgress,
     List<String> homeSectionOrder,
+    bool tutorialCompleted,
   });
 }
 
@@ -555,6 +565,7 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
     Object? encryptAttachments = null,
     Object? homeShowBudgetProgress = null,
     Object? homeSectionOrder = null,
+    Object? tutorialCompleted = null,
   }) {
     return _then(
       _$SettingsDataImpl(
@@ -726,6 +737,10 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
             ? _value._homeSectionOrder
             : homeSectionOrder // ignore: cast_nullable_to_non_nullable
                   as List<String>,
+        tutorialCompleted: null == tutorialCompleted
+            ? _value.tutorialCompleted
+            : tutorialCompleted // ignore: cast_nullable_to_non_nullable
+                  as bool,
       ),
     );
   }
@@ -783,6 +798,7 @@ class _$SettingsDataImpl implements _SettingsData {
       'budgetProgress',
       'recentTransactions',
     ],
+    this.tutorialCompleted = false,
   }) : _budgetAlertThresholds = budgetAlertThresholds,
        _homeSectionOrder = homeSectionOrder;
 
@@ -1008,9 +1024,14 @@ class _$SettingsDataImpl implements _SettingsData {
     return EqualUnmodifiableListView(_homeSectionOrder);
   }
 
+  /// Whether the onboarding tutorial has been completed
+  @override
+  @JsonKey()
+  final bool tutorialCompleted;
+
   @override
   String toString() {
-    return 'SettingsData(id: $id, themeMode: $themeMode, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, mainCurrencyCode: $mainCurrencyCode, exchangeRateApiOption: $exchangeRateApiOption, cachedExchangeRates: $cachedExchangeRates, lastRateFetchTimestamp: $lastRateFetchTimestamp, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, categoriesFoldedCount: $categoriesFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, categorySortOption: $categorySortOption, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId, appLockEnabled: $appLockEnabled, appPinCode: $appPinCode, appPassword: $appPassword, autoLockTimeout: $autoLockTimeout, biometricUnlockEnabled: $biometricUnlockEnabled, notificationsEnabled: $notificationsEnabled, budgetAlertThresholds: $budgetAlertThresholds, recurringRemindersEnabled: $recurringRemindersEnabled, recurringReminderAdvanceDays: $recurringReminderAdvanceDays, weeklySpendingSummaryEnabled: $weeklySpendingSummaryEnabled, weeklySpendingSummaryDay: $weeklySpendingSummaryDay, encryptAttachments: $encryptAttachments, homeShowBudgetProgress: $homeShowBudgetProgress, homeSectionOrder: $homeSectionOrder)';
+    return 'SettingsData(id: $id, themeMode: $themeMode, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, mainCurrencyCode: $mainCurrencyCode, exchangeRateApiOption: $exchangeRateApiOption, cachedExchangeRates: $cachedExchangeRates, lastRateFetchTimestamp: $lastRateFetchTimestamp, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, categoriesFoldedCount: $categoriesFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, categorySortOption: $categorySortOption, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId, appLockEnabled: $appLockEnabled, appPinCode: $appPinCode, appPassword: $appPassword, autoLockTimeout: $autoLockTimeout, biometricUnlockEnabled: $biometricUnlockEnabled, notificationsEnabled: $notificationsEnabled, budgetAlertThresholds: $budgetAlertThresholds, recurringRemindersEnabled: $recurringRemindersEnabled, recurringReminderAdvanceDays: $recurringReminderAdvanceDays, weeklySpendingSummaryEnabled: $weeklySpendingSummaryEnabled, weeklySpendingSummaryDay: $weeklySpendingSummaryDay, encryptAttachments: $encryptAttachments, homeShowBudgetProgress: $homeShowBudgetProgress, homeSectionOrder: $homeSectionOrder, tutorialCompleted: $tutorialCompleted)';
   }
 
   @override
@@ -1124,7 +1145,9 @@ class _$SettingsDataImpl implements _SettingsData {
             const DeepCollectionEquality().equals(
               other._homeSectionOrder,
               _homeSectionOrder,
-            ));
+            ) &&
+            (identical(other.tutorialCompleted, tutorialCompleted) ||
+                other.tutorialCompleted == tutorialCompleted));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1173,6 +1196,7 @@ class _$SettingsDataImpl implements _SettingsData {
     encryptAttachments,
     homeShowBudgetProgress,
     const DeepCollectionEquality().hash(_homeSectionOrder),
+    tutorialCompleted,
   ]);
 
   /// Create a copy of SettingsData
@@ -1233,6 +1257,7 @@ abstract class _SettingsData implements SettingsData {
     final bool encryptAttachments,
     final bool homeShowBudgetProgress,
     final List<String> homeSectionOrder,
+    final bool tutorialCompleted,
   }) = _$SettingsDataImpl;
 
   factory _SettingsData.fromJson(Map<String, dynamic> json) =
@@ -1405,6 +1430,10 @@ abstract class _SettingsData implements SettingsData {
   /// Home section ordering
   @override
   List<String> get homeSectionOrder;
+
+  /// Whether the onboarding tutorial has been completed
+  @override
+  bool get tutorialCompleted;
 
   /// Create a copy of SettingsData
   /// with the given fields replaced by the non-null parameter values.

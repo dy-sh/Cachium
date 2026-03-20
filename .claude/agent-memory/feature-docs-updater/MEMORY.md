@@ -7,8 +7,9 @@
 - New features go at the bottom of the "## New Features" section, incrementing the number.
 - Each entry uses bullet points under the `####` header (not a single-line format).
 - Sections are separated by `---` horizontal rules.
-- Current highest item in "New Features": 57 (as of 2026-03-20). Note: items are not strictly sequential — item 32 exists but 33 was inserted before it in the file; numbering follows insertion order, not file order.
-- "Core App Features" section now goes up to item 57 (Light/Dark/System Theme replaced item 52 "Dark theme"; Bill Reminders 53, Biometric Unlock Enhancement 54, Full-Text Search Enhancement 55, Budget Rollover 56, Performance Optimizations 57 added as numbered entries inside "Core App Features" rather than "New Features" — those new additions were placed just before item 21 in the file).
+- Current highest item number: 62 (as of 2026-03-20). New "New Features" items are appended after item 21 (Historical main currency value storage) at the bottom of the file, numbered sequentially from 58 onward.
+- Items 58–62 added 2026-03-20: PopScope Unsaved-Work Detection (58), Orphaned Record Cleanup (59), Exchange Rate API Rate Limiting (60), Onboarding Tutorial (61), Financial Calendar Screen (62).
+- "Core App Features" section goes up to item 57 (Light/Dark/System Theme replaced item 52 "Dark theme"; Bill Reminders 53, Biometric Unlock Enhancement 54, Full-Text Search Enhancement 55, Budget Rollover 56, Performance Optimizations 57 added as numbered entries inside "Core App Features" rather than "New Features" — those new additions were placed just before item 21 in the file).
 
 ## features_new.md Structure
 - Created 2026-03-06 (did not previously exist).
