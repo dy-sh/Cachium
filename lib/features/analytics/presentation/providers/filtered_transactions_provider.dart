@@ -7,6 +7,9 @@ import '../../data/models/analytics_filter.dart';
 import 'analytics_filter_provider.dart';
 
 final filteredAnalyticsTransactionsProvider = Provider<List<Transaction>>((ref) {
+  // Keep alive so switching analytics tabs doesn't recompute the filtered list.
+  ref.keepAlive();
+
   final transactionsAsync = ref.watch(transactionsProvider);
   final filter = ref.watch(analyticsFilterProvider);
   final categoriesAsync = ref.watch(categoriesProvider);

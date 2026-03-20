@@ -10,6 +10,7 @@ _$SettingsDataImpl _$$SettingsDataImplFromJson(
   Map<String, dynamic> json,
 ) => _$SettingsDataImpl(
   id: json['id'] as String? ?? 'app_settings',
+  themeMode: json['themeMode'] as String? ?? 'dark',
   colorIntensity: json['colorIntensity'] as String? ?? 'prism',
   accentColorIndex: (json['accentColorIndex'] as num?)?.toInt() ?? 0,
   accountCardStyle: json['accountCardStyle'] as String? ?? 'dim',
@@ -41,6 +42,8 @@ _$SettingsDataImpl _$$SettingsDataImplFromJson(
   appLockEnabled: json['appLockEnabled'] as bool? ?? false,
   appPinCode: json['appPinCode'] as String?,
   appPassword: json['appPassword'] as String?,
+  autoLockTimeout: json['autoLockTimeout'] as String? ?? 'immediate',
+  biometricUnlockEnabled: json['biometricUnlockEnabled'] as bool? ?? true,
   notificationsEnabled: json['notificationsEnabled'] as bool? ?? false,
   budgetAlertThresholds:
       (json['budgetAlertThresholds'] as List<dynamic>?)
@@ -72,6 +75,7 @@ _$SettingsDataImpl _$$SettingsDataImplFromJson(
 Map<String, dynamic> _$$SettingsDataImplToJson(_$SettingsDataImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
+      'themeMode': instance.themeMode,
       'colorIntensity': instance.colorIntensity,
       'accentColorIndex': instance.accentColorIndex,
       'accountCardStyle': instance.accountCardStyle,
@@ -101,6 +105,8 @@ Map<String, dynamic> _$$SettingsDataImplToJson(_$SettingsDataImpl instance) =>
       'appLockEnabled': instance.appLockEnabled,
       'appPinCode': instance.appPinCode,
       'appPassword': instance.appPassword,
+      'autoLockTimeout': instance.autoLockTimeout,
+      'biometricUnlockEnabled': instance.biometricUnlockEnabled,
       'notificationsEnabled': instance.notificationsEnabled,
       'budgetAlertThresholds': instance.budgetAlertThresholds,
       'recurringRemindersEnabled': instance.recurringRemindersEnabled,

@@ -70,7 +70,7 @@ class _CategoryPickerModalState extends ConsumerState<CategoryPickerModal> {
     final incomeNodes = _buildVisibleNodes(incomeTree);
 
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),

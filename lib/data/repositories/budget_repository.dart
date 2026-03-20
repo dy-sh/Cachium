@@ -22,6 +22,7 @@ class BudgetRepository {
       amount: budget.amount,
       year: budget.year,
       month: budget.month,
+      rolloverEnabled: budget.rolloverEnabled,
       createdAtMillis: budget.createdAt.millisecondsSinceEpoch,
     );
   }
@@ -33,6 +34,7 @@ class BudgetRepository {
       amount: data.amount,
       year: data.year,
       month: data.month,
+      rolloverEnabled: data.rolloverEnabled,
       createdAt: DateTime.fromMillisecondsSinceEpoch(data.createdAtMillis),
     );
   }

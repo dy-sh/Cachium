@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum SearchResultType { transaction, account, category }
+enum SearchResultType { transaction, account, category, tag }
 
 class GlobalSearchResult {
   final String id;
@@ -10,6 +10,8 @@ class GlobalSearchResult {
   final IconData icon;
   final Color color;
   final String? route;
+  /// The portion of the result that matched the query (for highlighting).
+  final String? matchedField;
 
   const GlobalSearchResult({
     required this.id,
@@ -19,5 +21,6 @@ class GlobalSearchResult {
     required this.icon,
     required this.color,
     this.route,
+    this.matchedField,
   });
 }

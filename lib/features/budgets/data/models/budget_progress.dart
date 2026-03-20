@@ -10,6 +10,8 @@ class BudgetProgress {
   final double remaining;
   final double percentage;
   final bool isOverBudget;
+  final double rolloverAmount;
+  final double effectiveBudget;
 
   const BudgetProgress({
     required this.budget,
@@ -20,5 +22,7 @@ class BudgetProgress {
     required this.remaining,
     required this.percentage,
     required this.isOverBudget,
+    this.rolloverAmount = 0,
+    required this.effectiveBudget,
   });
 }

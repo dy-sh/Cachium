@@ -198,8 +198,8 @@ class _FMTextFieldState extends ConsumerState<InputField>
                       child: showClear
                           ? GestureDetector(
                               onTap: _clearText,
-                              child: const Padding(
-                                padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                                 child: Icon(
                                   LucideIcons.x,
                                   size: 16,

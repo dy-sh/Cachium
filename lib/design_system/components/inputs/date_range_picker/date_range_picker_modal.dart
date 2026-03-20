@@ -152,7 +152,7 @@ class _DateRangePickerModalState extends ConsumerState<DateRangePickerModal> {
     final accentColor = ref.watch(accentColorProvider);
 
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),

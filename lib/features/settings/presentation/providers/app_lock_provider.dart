@@ -52,15 +52,50 @@ final biometricAvailableProvider = FutureProvider<bool>((ref) async {
   return service.isBiometricAvailable();
 });
 
-/// Tracks whether the app is currently locked.
+/// Tracks whether the app is currently locked, with auto-lock timeout support.
 class AppLockStateNotifier extends Notifier<bool> {
+  DateTime? _backgroundedAt;
+
   @override
   bool build() {
     return true; // Start locked if app lock is enabled
   }
 
   void lock() => state = true;
-  void unlock() => state = false;
+  void unlock() {
+    _backgroundedAt = null;
+    state = false;
+  }
+
+  /// Called when the app goes to background.
+  void onBackground() {
+    _backgroundedAt = DateTime.now();
+  }
+
+  /// Called when the app comes to foreground.
+  /// Returns whether the app should be locked based on the configured timeout.
+  void onForeground({required Duration? timeoutDuration, required bool isImmediate, required bool isNever}) {
+    if (state) return; // Already locked
+
+    if (isImmediate) {
+      lock();
+      return;
+    }
+
+    if (isNever) {
+      // Don't auto-lock on foreground
+      _backgroundedAt = null;
+      return;
+    }
+
+    if (_backgroundedAt != null && timeoutDuration != null) {
+      final elapsed = DateTime.now().difference(_backgroundedAt!);
+      if (elapsed >= timeoutDuration) {
+        lock();
+      }
+    }
+    _backgroundedAt = null;
+  }
 }
 
 final appLockStateProvider =

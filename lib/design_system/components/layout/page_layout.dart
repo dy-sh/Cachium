@@ -42,8 +42,8 @@ class PageLayout extends StatelessWidget {
                       if (showBackButton)
                         GestureDetector(
                           onTap: onBack ?? () => Navigator.of(context).pop(),
-                          child: const Padding(
-                            padding: EdgeInsets.all(AppSpacing.sm),
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.sm),
                             child: Icon(
                               Icons.arrow_back,
                               color: AppColors.textPrimary,
@@ -54,7 +54,7 @@ class PageLayout extends StatelessWidget {
                         Expanded(
                           child: Text(
                             title!,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.textPrimary,
                               fontSize: 18,
                               fontWeight: FontWeight.w600,

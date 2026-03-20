@@ -14,6 +14,9 @@ class SettingsData with _$SettingsData {
     /// Fixed ID - always 'app_settings'
     @Default('app_settings') String id,
 
+    /// Theme mode: 'dark', 'light', 'system'
+    @Default('dark') String themeMode,
+
     /// Color intensity: 'prism', 'zen', 'neon'
     @Default('prism') String colorIntensity,
 
@@ -100,6 +103,12 @@ class SettingsData with _$SettingsData {
 
     /// App password (stored as plaintext string)
     String? appPassword,
+
+    /// Auto-lock timeout: 'immediate', 'after30Seconds', 'after1Minute', 'after5Minutes', 'after15Minutes', 'never'
+    @Default('immediate') String autoLockTimeout,
+
+    /// Whether biometric unlock is enabled (when hardware is available)
+    @Default(true) bool biometricUnlockEnabled,
 
     /// Whether notifications are enabled
     @Default(false) bool notificationsEnabled,

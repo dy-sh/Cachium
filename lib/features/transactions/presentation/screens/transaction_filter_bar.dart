@@ -49,7 +49,7 @@ class TransactionFilterBar extends ConsumerWidget {
                 hintStyle: AppTypography.bodyMedium.copyWith(
                   color: AppColors.textTertiary,
                 ),
-                prefixIcon: const Icon(
+                prefixIcon: Icon(
                   LucideIcons.search,
                   color: AppColors.textTertiary,
                   size: 18,

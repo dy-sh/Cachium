@@ -24,6 +24,7 @@ class SettingsRepository {
   SettingsData _toData(ui.AppSettings settings) {
     return SettingsData(
       id: settingsId,
+      themeMode: settings.themeMode.name,
       colorIntensity: settings.colorIntensity.name,
       accentColorIndex: settings.accentColorIndex,
       accountCardStyle: settings.accountCardStyle.name,
@@ -53,6 +54,8 @@ class SettingsRepository {
       appLockEnabled: settings.appLockEnabled,
       appPinCode: settings.appPinCode,
       appPassword: settings.appPassword,
+      autoLockTimeout: settings.autoLockTimeout.name,
+      biometricUnlockEnabled: settings.biometricUnlockEnabled,
       notificationsEnabled: settings.notificationsEnabled,
       budgetAlertThresholds: settings.budgetAlertThresholds,
       recurringRemindersEnabled: settings.recurringRemindersEnabled,
@@ -68,6 +71,10 @@ class SettingsRepository {
   /// Convert internal SettingsData to UI AppSettings
   ui.AppSettings _toSettings(SettingsData data) {
     return ui.AppSettings(
+      themeMode: ui.ThemeModeOption.values.firstWhere(
+        (e) => e.name == data.themeMode,
+        orElse: () => ui.ThemeModeOption.dark,
+      ),
       colorIntensity: ui.ColorIntensity.values.firstWhere(
         (e) => e.name == data.colorIntensity,
         orElse: () => ui.ColorIntensity.prism,
@@ -121,6 +128,11 @@ class SettingsRepository {
       appLockEnabled: data.appLockEnabled,
       appPinCode: data.appPinCode,
       appPassword: data.appPassword,
+      autoLockTimeout: ui.AutoLockTimeout.values.firstWhere(
+        (e) => e.name == data.autoLockTimeout,
+        orElse: () => ui.AutoLockTimeout.immediate,
+      ),
+      biometricUnlockEnabled: data.biometricUnlockEnabled,
       notificationsEnabled: data.notificationsEnabled,
       budgetAlertThresholds: data.budgetAlertThresholds,
       recurringRemindersEnabled: data.recurringRemindersEnabled,

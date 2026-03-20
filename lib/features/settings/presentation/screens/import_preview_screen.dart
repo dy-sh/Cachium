@@ -31,9 +31,9 @@ class ImportPreviewScreen extends ConsumerWidget {
     }
 
     if (state.parseResult == null) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: LoadingIndicator()),
+        body: const Center(child: LoadingIndicator()),
       );
     }
 

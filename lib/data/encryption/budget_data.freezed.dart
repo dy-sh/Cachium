@@ -26,6 +26,7 @@ mixin _$BudgetData {
   double get amount => throw _privateConstructorUsedError;
   int get year => throw _privateConstructorUsedError;
   int get month => throw _privateConstructorUsedError;
+  bool get rolloverEnabled => throw _privateConstructorUsedError;
   int get createdAtMillis => throw _privateConstructorUsedError;
 
   /// Serializes this BudgetData to a JSON map.
@@ -51,6 +52,7 @@ abstract class $BudgetDataCopyWith<$Res> {
     double amount,
     int year,
     int month,
+    bool rolloverEnabled,
     int createdAtMillis,
   });
 }
@@ -75,6 +77,7 @@ class _$BudgetDataCopyWithImpl<$Res, $Val extends BudgetData>
     Object? amount = null,
     Object? year = null,
     Object? month = null,
+    Object? rolloverEnabled = null,
     Object? createdAtMillis = null,
   }) {
     return _then(
@@ -99,6 +102,10 @@ class _$BudgetDataCopyWithImpl<$Res, $Val extends BudgetData>
                 ? _value.month
                 : month // ignore: cast_nullable_to_non_nullable
                       as int,
+            rolloverEnabled: null == rolloverEnabled
+                ? _value.rolloverEnabled
+                : rolloverEnabled // ignore: cast_nullable_to_non_nullable
+                      as bool,
             createdAtMillis: null == createdAtMillis
                 ? _value.createdAtMillis
                 : createdAtMillis // ignore: cast_nullable_to_non_nullable
@@ -124,6 +131,7 @@ abstract class _$$BudgetDataImplCopyWith<$Res>
     double amount,
     int year,
     int month,
+    bool rolloverEnabled,
     int createdAtMillis,
   });
 }
@@ -147,6 +155,7 @@ class __$$BudgetDataImplCopyWithImpl<$Res>
     Object? amount = null,
     Object? year = null,
     Object? month = null,
+    Object? rolloverEnabled = null,
     Object? createdAtMillis = null,
   }) {
     return _then(
@@ -171,6 +180,10 @@ class __$$BudgetDataImplCopyWithImpl<$Res>
             ? _value.month
             : month // ignore: cast_nullable_to_non_nullable
                   as int,
+        rolloverEnabled: null == rolloverEnabled
+            ? _value.rolloverEnabled
+            : rolloverEnabled // ignore: cast_nullable_to_non_nullable
+                  as bool,
         createdAtMillis: null == createdAtMillis
             ? _value.createdAtMillis
             : createdAtMillis // ignore: cast_nullable_to_non_nullable
@@ -189,6 +202,7 @@ class _$BudgetDataImpl implements _BudgetData {
     required this.amount,
     required this.year,
     required this.month,
+    this.rolloverEnabled = false,
     required this.createdAtMillis,
   });
 
@@ -206,11 +220,14 @@ class _$BudgetDataImpl implements _BudgetData {
   @override
   final int month;
   @override
+  @JsonKey()
+  final bool rolloverEnabled;
+  @override
   final int createdAtMillis;
 
   @override
   String toString() {
-    return 'BudgetData(id: $id, categoryId: $categoryId, amount: $amount, year: $year, month: $month, createdAtMillis: $createdAtMillis)';
+    return 'BudgetData(id: $id, categoryId: $categoryId, amount: $amount, year: $year, month: $month, rolloverEnabled: $rolloverEnabled, createdAtMillis: $createdAtMillis)';
   }
 
   @override
@@ -224,6 +241,8 @@ class _$BudgetDataImpl implements _BudgetData {
             (identical(other.amount, amount) || other.amount == amount) &&
             (identical(other.year, year) || other.year == year) &&
             (identical(other.month, month) || other.month == month) &&
+            (identical(other.rolloverEnabled, rolloverEnabled) ||
+                other.rolloverEnabled == rolloverEnabled) &&
             (identical(other.createdAtMillis, createdAtMillis) ||
                 other.createdAtMillis == createdAtMillis));
   }
@@ -237,6 +256,7 @@ class _$BudgetDataImpl implements _BudgetData {
     amount,
     year,
     month,
+    rolloverEnabled,
     createdAtMillis,
   );
 
@@ -261,6 +281,7 @@ abstract class _BudgetData implements BudgetData {
     required final double amount,
     required final int year,
     required final int month,
+    final bool rolloverEnabled,
     required final int createdAtMillis,
   }) = _$BudgetDataImpl;
 
@@ -277,6 +298,8 @@ abstract class _BudgetData implements BudgetData {
   int get year;
   @override
   int get month;
+  @override
+  bool get rolloverEnabled;
   @override
   int get createdAtMillis;
 

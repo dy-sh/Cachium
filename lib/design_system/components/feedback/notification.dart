@@ -267,7 +267,7 @@ class _FMNotificationState extends ConsumerState<Notification>
                             color: AppColors.border,
                             borderRadius: AppRadius.smAll,
                           ),
-                          child: const Icon(
+                          child: Icon(
                             LucideIcons.x,
                             color: AppColors.textSecondary,
                             size: 14,

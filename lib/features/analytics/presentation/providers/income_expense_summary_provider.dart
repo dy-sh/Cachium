@@ -10,6 +10,9 @@ import 'filtered_transactions_provider.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 
 final incomeExpenseSummaryProvider = Provider<IncomeExpenseSummary>((ref) {
+  // Keep alive to cache summary across analytics tab switches.
+  ref.keepAlive();
+
   final transactions = ref.watch(filteredAnalyticsTransactionsProvider);
   final filter = ref.watch(analyticsFilterProvider);
   final allTransactionsAsync = ref.watch(transactionsProvider);
@@ -73,6 +76,9 @@ final incomeExpenseSummaryProvider = Provider<IncomeExpenseSummary>((ref) {
 
 // Period summaries for bar chart (grouped by week/month depending on range)
 final periodSummariesProvider = Provider<List<PeriodSummary>>((ref) {
+  // Keep alive to cache period summaries across tab switches.
+  ref.keepAlive();
+
   final transactions = ref.watch(filteredAnalyticsTransactionsProvider);
   final filter = ref.watch(analyticsFilterProvider);
   final mainCurrency = ref.watch(mainCurrencyCodeProvider);

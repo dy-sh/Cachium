@@ -251,7 +251,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       color: AppColors.surface,
       shape: RoundedRectangleBorder(
         borderRadius: AppRadius.mdAll,
-        side: const BorderSide(color: AppColors.border),
+        side: BorderSide(color: AppColors.border),
       ),
       items: [
         PopupMenuItem(
@@ -274,7 +274,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final groupsAsync = ref.watch(searchedTransactionsProvider);
+    final groupsAsync = ref.watch(paginatedTransactionsProvider);
+    final hasMore = ref.watch(hasMoreTransactionsProvider);
     final isSelectionMode = ref.watch(transactionSelectionModeProvider);
     final selectedCount = ref.watch(selectedCountProvider);
 
@@ -349,8 +350,14 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               data: (groups) => TransactionListView(
                 groups: groups,
                 isInitialLoad: _isInitialLoad,
+                hasMore: hasMore,
                 onRefresh: () {
                   ref.read(transactionsProvider.notifier).refresh();
+                },
+                onLoadMore: () {
+                  final current = ref.read(transactionDisplayCountProvider);
+                  ref.read(transactionDisplayCountProvider.notifier).state =
+                      current + 50;
                 },
               ),
             ),

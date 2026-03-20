@@ -12,7 +12,7 @@ Instructions for AI agents (Claude Code, Codex, etc.) working on this repository
 
 ## Project Overview
 
-**Cachium** — Flutter mobile personal finance app with dark theme.
+**Cachium** — Flutter mobile personal finance app with dark/light theme support.
 
 **Stack:** Flutter (Dart ^3.9.0), Riverpod 2.5.1, GoRouter 14.2.0, Material Design 3, SQLite3, lucide_icons, google_fonts
 
@@ -39,7 +39,7 @@ lib/
 │   ├── encryption/           # DTOs for encrypted storage
 │   └── repositories/         # Repository classes
 ├── design_system/            # Reusable components (barrel: design_system.dart)
-├── features/                 # Feature modules: accounts, categories, home, settings, transactions
+├── features/                 # Feature modules: accounts, bills, categories, home, settings, transactions
 │   └── {feature}/
 │       ├── data/models/      # Domain models + enum extensions
 │       └── presentation/     # Screens, providers, widgets
@@ -90,21 +90,47 @@ Located in `lib/design_system/components/feedback/notification.dart`.
 - Aggregated totals always in main currency; foreign items show "~ $X,XXX" subtitle
 - Exchange rates: Open ER-API (free) or Manual rates at `/settings/formats/manual-rates`
 
+## Theme System
+
+- **Dark/Light/System** theme modes via `ThemeModeOption` enum in `app_settings.dart`
+- `AppColors` uses a static `isDarkMode` flag — theme-dependent colors are getters, not `const`
+- **Do NOT use `const`** with theme-dependent `AppColors` values: `background`, `surface`, `surfaceLight`, `border`, `borderSelected`, `textPrimary`, `textSecondary`, `textTertiary`, `accentPrimary`, `selectionGlow`, `navActive`, `navInactive`
+- Hue-based colors (red, green, cyan, etc.) remain `static const` and are safe in `const` contexts
+- `CachiumApp.applyThemeMode()` sets `AppColors.isDarkMode` and updates system chrome
+- `themeModeProvider` provides the current theme mode setting
+
 ## Color System
 
-`ColorIntensity` enum (`prism`/`zen`/`pastel`/`neon`/`vintage`) in `app_settings.dart` drives global appearance.
+`ColorIntensity` enum (`prism`/`zen`/`neon`) in `app_settings.dart` drives global color saturation.
 
 Key `AppColors` methods: `getAccountColor()`, `getTransactionColor()`, `getCategoryColors()`, `getAccentColor()`, plus opacity and color manipulation helpers.
 
+## Bills & Reminders
+
+- Bill model in `lib/features/bills/data/models/bill.dart` with due dates, frequency, reminder settings
+- Encrypted storage like other entities (BillData freezed DTO)
+- `billsProvider` (AsyncNotifier), `upcomingBillsProvider`, `overdueBillsProvider`
+- `markAsPaid` creates an expense transaction and generates the next recurring bill
+- Routes: `/settings/bills`, `/bill/new`, `/bill/:id/edit`
+
+## Budget Rollover
+
+- Per-budget `rolloverEnabled` flag (default: false)
+- Effective budget = current month amount + rollover from previous months
+- Cascading rollover up to 12 months; overspending produces zero rollover (clamped)
+- `BudgetProgress.effectiveBudget` used for progress calculations
+
 ## Key Files
 
-- `lib/app.dart` — Theme and routing (single shared ThemeData, gated by welcome/lock/main screens)
+- `lib/app.dart` — Theme and routing (dark/light ThemeData, gated by welcome/lock/main screens)
 - `lib/main.dart` — Entry point (SystemChrome setup, key migration, provider container)
 - `lib/navigation/app_router.dart` — Routes (`AppRoutes` constants)
-- `lib/core/constants/app_colors.dart` — Color system
-- `lib/core/database/app_database.dart` — Database schema (version 18, incremental migrations)
+- `lib/core/constants/app_colors.dart` — Theme-aware color system (dark/light variants)
+- `lib/core/database/app_database.dart` — Database schema (version 23, incremental migrations)
 - `lib/core/utils/currency_conversion.dart` — `conversionGainLoss()`, `roundCurrency()`
 - `lib/core/utils/credential_hasher.dart` — PBKDF2 credential hashing (with legacy SHA-256 and plaintext migration)
-- `lib/features/settings/data/models/app_settings.dart` — Settings model + ColorIntensity
+- `lib/features/settings/data/models/app_settings.dart` — Settings model + ThemeModeOption + ColorIntensity + AutoLockTimeout
 - `lib/design_system/components/feedback/notification.dart` — Custom notifications
 - `lib/core/services/exchange_rate_service.dart` — Exchange rate fetching
+- `lib/features/bills/` — Bill reminders feature module
+- `lib/features/budgets/` — Budgets with rollover support

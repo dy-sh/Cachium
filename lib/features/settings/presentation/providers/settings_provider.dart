@@ -42,6 +42,7 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
   }
 
   // Appearance
+  Future<void> setThemeMode(ThemeModeOption v) => _update((s) => s.copyWith(themeMode: v));
   Future<void> setColorIntensity(ColorIntensity v) => _update((s) => s.copyWith(colorIntensity: v));
   Future<void> setAccentColorIndex(int v) => _update((s) => s.copyWith(accentColorIndex: v));
   Future<void> setAccountCardStyle(AccountCardStyle v) => _update((s) => s.copyWith(accountCardStyle: v));
@@ -121,6 +122,8 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
 
   // Security
   Future<void> setAppLockEnabled(bool v) => _update((s) => s.copyWith(appLockEnabled: v));
+  Future<void> setAutoLockTimeout(AutoLockTimeout v) => _update((s) => s.copyWith(autoLockTimeout: v));
+  Future<void> setBiometricUnlockEnabled(bool v) => _update((s) => s.copyWith(biometricUnlockEnabled: v));
 
   Future<void> setAppPinCode(String? pin) async {
     final current = state.valueOrNull;
@@ -248,6 +251,7 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     const defaults = AppSettings();
     final resetSettings = AppSettings(
       // Reset Appearance
+      themeMode: defaults.themeMode,
       colorIntensity: defaults.colorIntensity,
       accentColorIndex: defaults.accentColorIndex,
       accountCardStyle: defaults.accountCardStyle,
@@ -298,6 +302,8 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
       appLockEnabled: defaults.appLockEnabled,
       appPinCode: defaults.appPinCode,
       appPassword: defaults.appPassword,
+      autoLockTimeout: defaults.autoLockTimeout,
+      biometricUnlockEnabled: defaults.biometricUnlockEnabled,
       // Preserve onboarding
       onboardingCompleted: current.onboardingCompleted,
     );
@@ -310,6 +316,11 @@ final settingsProvider = AsyncNotifierProvider<SettingsNotifier, AppSettings>(()
 });
 
 // Convenience providers
+final themeModeProvider = Provider<ThemeModeOption>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.themeMode ?? ThemeModeOption.dark;
+});
+
 final colorIntensityProvider = Provider<ColorIntensity>((ref) {
   final settingsAsync = ref.watch(settingsProvider);
   return settingsAsync.valueOrNull?.colorIntensity ?? ColorIntensity.prism;
@@ -517,6 +528,16 @@ final appPinCodeProvider = Provider<String?>((ref) {
 final appPasswordProvider = Provider<String?>((ref) {
   final settingsAsync = ref.watch(settingsProvider);
   return settingsAsync.valueOrNull?.appPassword;
+});
+
+final autoLockTimeoutProvider = Provider<AutoLockTimeout>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.autoLockTimeout ?? AutoLockTimeout.immediate;
+});
+
+final biometricUnlockEnabledProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.biometricUnlockEnabled ?? true;
 });
 
 final homeShowBudgetProgressProvider = Provider<bool>((ref) {

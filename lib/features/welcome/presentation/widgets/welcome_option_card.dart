@@ -65,8 +65,8 @@ class _WelcomeOptionCardState extends ConsumerState<WelcomeOptionCard>
                   borderRadius: AppRadius.mdAll,
                 ),
                 child: widget.isLoading
-                    ? const Padding(
-                        padding: EdgeInsets.all(14),
+                    ? Padding(
+                        padding: const EdgeInsets.all(14),
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           color: AppColors.textSecondary,

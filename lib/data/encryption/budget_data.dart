@@ -11,6 +11,7 @@ class BudgetData with _$BudgetData {
     required double amount,
     required int year,
     required int month,
+    @Default(false) bool rolloverEnabled,
     required int createdAtMillis,
   }) = _BudgetData;
 

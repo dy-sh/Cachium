@@ -90,6 +90,13 @@ class SettingsScreen extends ConsumerWidget {
                         onTap: () => context.push('/settings/savings-goals'),
                       ),
                       SettingsTile(
+                        title: 'Bills & Reminders',
+                        description: 'Track due dates, never miss a payment',
+                        icon: LucideIcons.bellRing,
+                        iconColor: AppColors.getAccentColor(17, intensity),
+                        onTap: () => context.push('/settings/bills'),
+                      ),
+                      SettingsTile(
                         title: 'Recurring Transactions',
                         description: 'Manage auto-generated transactions',
                         icon: LucideIcons.repeat,

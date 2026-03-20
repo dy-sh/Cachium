@@ -6,6 +6,7 @@ class BudgetFormState {
   final double amount;
   final int year;
   final int month;
+  final bool rolloverEnabled;
   final String? editingBudgetId;
 
   const BudgetFormState({
@@ -13,6 +14,7 @@ class BudgetFormState {
     this.amount = 0,
     required this.year,
     required this.month,
+    this.rolloverEnabled = false,
     this.editingBudgetId,
   });
 
@@ -24,6 +26,7 @@ class BudgetFormState {
     double? amount,
     int? year,
     int? month,
+    bool? rolloverEnabled,
     String? editingBudgetId,
   }) {
     return BudgetFormState(
@@ -31,6 +34,7 @@ class BudgetFormState {
       amount: amount ?? this.amount,
       year: year ?? this.year,
       month: month ?? this.month,
+      rolloverEnabled: rolloverEnabled ?? this.rolloverEnabled,
       editingBudgetId: editingBudgetId ?? this.editingBudgetId,
     );
   }
@@ -47,6 +51,8 @@ class BudgetFormNotifier extends AutoDisposeNotifier<BudgetFormState> {
   void setAmount(double amount) => state = state.copyWith(amount: amount);
   void setYear(int year) => state = state.copyWith(year: year);
   void setMonth(int month) => state = state.copyWith(month: month);
+  void setRolloverEnabled(bool enabled) =>
+      state = state.copyWith(rolloverEnabled: enabled);
 
   void initForEdit(Budget budget) {
     state = BudgetFormState(
@@ -54,6 +60,7 @@ class BudgetFormNotifier extends AutoDisposeNotifier<BudgetFormState> {
       amount: budget.amount,
       year: budget.year,
       month: budget.month,
+      rolloverEnabled: budget.rolloverEnabled,
       editingBudgetId: budget.id,
     );
   }

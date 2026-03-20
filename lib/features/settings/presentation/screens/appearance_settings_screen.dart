@@ -40,6 +40,15 @@ class AppearanceSettingsScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Theme Section
+                    SettingsSection(
+                      title: 'Theme',
+                      children: [
+                        _buildThemeModeTile(context, ref, settings),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+
                     // Colors Section
                     SettingsSection(
                       title: 'Colors',
@@ -82,6 +91,77 @@ class AppearanceSettingsScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildThemeModeTile(BuildContext context, WidgetRef ref, AppSettings settings) {
+    final themes = [
+      (ThemeModeOption.dark, 'Dark', LucideIcons.moon),
+      (ThemeModeOption.light, 'Light', LucideIcons.sun),
+      (ThemeModeOption.system, 'System', LucideIcons.smartphone),
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.md,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Appearance', style: AppTypography.bodyMedium),
+          const SizedBox(height: 2),
+          Text(
+            'Choose light, dark, or match your system',
+            style: AppTypography.bodySmall.copyWith(color: AppColors.textTertiary),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: themes.map((theme) {
+              final (mode, name, icon) = theme;
+              final isSelected = settings.themeMode == mode;
+
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    ref.read(settingsProvider.notifier).setThemeMode(mode);
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    margin: EdgeInsets.only(right: mode != ThemeModeOption.system ? AppSpacing.sm : 0),
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.md, horizontal: AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: isSelected ? AppColors.surface : Colors.transparent,
+                      borderRadius: AppRadius.mdAll,
+                      border: Border.all(
+                        color: isSelected ? AppColors.textPrimary : AppColors.border,
+                        width: isSelected ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(
+                          icon,
+                          size: 20,
+                          color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          name,
+                          style: AppTypography.labelMedium.copyWith(
+                            color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
       ),
     );
   }

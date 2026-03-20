@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/constants/app_colors.dart';
 import 'core/services/notification_service.dart';
+import 'features/settings/data/models/app_settings.dart';
 import 'features/settings/presentation/providers/app_lock_provider.dart';
 import 'features/settings/presentation/providers/database_management_providers.dart';
 import 'features/settings/presentation/providers/settings_provider.dart';
@@ -14,16 +16,56 @@ import 'navigation/app_router.dart';
 class CachiumApp extends ConsumerWidget {
   const CachiumApp({super.key});
 
-  static final _theme = ThemeData(
+  static ThemeData get darkTheme => ThemeData(
     brightness: Brightness.dark,
-    scaffoldBackgroundColor: AppColors.background,
+    scaffoldBackgroundColor: AppColors.backgroundDark,
     colorScheme: const ColorScheme.dark(
-      surface: AppColors.surface,
-      primary: AppColors.textPrimary,
+      surface: AppColors.surfaceDark,
+      primary: AppColors.textPrimaryDark,
     ),
     splashColor: Colors.transparent,
     highlightColor: Colors.transparent,
   );
+
+  static ThemeData get lightTheme => ThemeData(
+    brightness: Brightness.light,
+    scaffoldBackgroundColor: AppColors.backgroundLight,
+    colorScheme: const ColorScheme.light(
+      surface: AppColors.surfaceColorLight,
+      primary: AppColors.textPrimaryLight,
+    ),
+    splashColor: Colors.transparent,
+    highlightColor: Colors.transparent,
+  );
+
+  static ThemeData get currentTheme => AppColors.isDarkMode ? darkTheme : lightTheme;
+
+  /// Resolve the effective dark mode flag from theme mode setting + platform brightness.
+  static bool resolveIsDarkMode(ThemeModeOption mode, Brightness platformBrightness) {
+    switch (mode) {
+      case ThemeModeOption.dark:
+        return true;
+      case ThemeModeOption.light:
+        return false;
+      case ThemeModeOption.system:
+        return platformBrightness == Brightness.dark;
+    }
+  }
+
+  /// Update AppColors.isDarkMode and system chrome based on theme mode.
+  static void applyThemeMode(ThemeModeOption mode, Brightness platformBrightness) {
+    final isDark = resolveIsDarkMode(mode, platformBrightness);
+    AppColors.isDarkMode = isDark;
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+        systemNavigationBarColor: AppColors.background,
+        systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -38,10 +80,11 @@ class _AppGate extends ConsumerStatefulWidget {
   ConsumerState<_AppGate> createState() => _AppGateState();
 }
 
-class _AppGateState extends ConsumerState<_AppGate> {
+class _AppGateState extends ConsumerState<_AppGate> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Migrate plaintext credentials to hashed on first load
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await ref.read(settingsProvider.notifier).migrateCredentialsIfNeeded();
@@ -49,8 +92,51 @@ class _AppGateState extends ConsumerState<_AppGate> {
   }
 
   @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    final appLockEnabled = ref.read(appLockEnabledProvider);
+    if (!appLockEnabled) return;
+
+    final autoLockTimeout = ref.read(settingsProvider).valueOrNull?.autoLockTimeout ?? AutoLockTimeout.immediate;
+
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden) {
+      ref.read(appLockStateProvider.notifier).onBackground();
+    } else if (state == AppLifecycleState.resumed) {
+      ref.read(appLockStateProvider.notifier).onForeground(
+        timeoutDuration: autoLockTimeout.duration,
+        isImmediate: autoLockTimeout == AutoLockTimeout.immediate,
+        isNever: autoLockTimeout == AutoLockTimeout.never,
+      );
+    }
+  }
+
+  @override
+  void didChangePlatformBrightness() {
+    // Re-evaluate theme when system brightness changes
+    final themeMode = ref.read(themeModeProvider);
+    if (themeMode == ThemeModeOption.system) {
+      setState(() {
+        CachiumApp.applyThemeMode(
+          themeMode,
+          WidgetsBinding.instance.platformDispatcher.platformBrightness,
+        );
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final ref = this.ref;
+    final themeMode = ref.watch(themeModeProvider);
+    final platformBrightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
+    CachiumApp.applyThemeMode(themeMode, platformBrightness);
+
     final shouldShowWelcomeAsync = ref.watch(shouldShowWelcomeProvider);
     final isResetting = ref.watch(isResettingDatabaseProvider);
 
@@ -65,7 +151,7 @@ class _AppGateState extends ConsumerState<_AppGate> {
         data: (showWelcome) =>
             showWelcome ? _wrapInApp(const WelcomeScreen()) : const _LockGate(),
         loading: () => _wrapInApp(
-          const Scaffold(
+          Scaffold(
             backgroundColor: AppColors.background,
             body: Center(
               child: CircularProgressIndicator(
@@ -90,7 +176,7 @@ class _AppGateState extends ConsumerState<_AppGate> {
     return MaterialApp(
       title: 'Cachium',
       debugShowCheckedModeBanner: false,
-      theme: CachiumApp._theme,
+      theme: CachiumApp.currentTheme,
       home: home,
     );
   }
@@ -109,7 +195,7 @@ class _LockGate extends ConsumerWidget {
       return MaterialApp(
         title: 'Cachium',
         debugShowCheckedModeBanner: false,
-        theme: CachiumApp._theme,
+        theme: CachiumApp.currentTheme,
         home: LockScreen(
           onUnlocked: () {
             // State already updated by the lock screen
@@ -160,7 +246,7 @@ class _MainAppState extends ConsumerState<_MainApp> {
       title: 'Cachium',
       debugShowCheckedModeBanner: false,
       routerConfig: router,
-      theme: CachiumApp._theme,
+      theme: CachiumApp.currentTheme,
     );
   }
 }

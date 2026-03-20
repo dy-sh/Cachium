@@ -40,7 +40,7 @@ class _CategoryFilterSheetState extends ConsumerState<CategoryFilterSheet> {
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.7,
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(AppRadius.xl),

@@ -47,7 +47,7 @@ class AttachmentThumbnail extends StatelessWidget {
                     width: size,
                     height: size,
                   )
-                : const Icon(
+                : Icon(
                     Icons.image,
                     color: AppColors.textTertiary,
                     size: 32,

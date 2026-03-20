@@ -10,6 +10,9 @@ import '../../data/models/net_worth_point.dart';
 import 'analytics_filter_provider.dart';
 
 final netWorthHistoryProvider = Provider<List<NetWorthPoint>>((ref) {
+  // Keep alive to cache net worth history across tab switches.
+  ref.keepAlive();
+
   final transactionsAsync = ref.watch(transactionsProvider);
   final accountsAsync = ref.watch(accountsProvider);
   final filter = ref.watch(analyticsFilterProvider);

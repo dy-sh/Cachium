@@ -13,6 +13,7 @@ _$BudgetDataImpl _$$BudgetDataImplFromJson(Map<String, dynamic> json) =>
       amount: (json['amount'] as num).toDouble(),
       year: (json['year'] as num).toInt(),
       month: (json['month'] as num).toInt(),
+      rolloverEnabled: json['rolloverEnabled'] as bool? ?? false,
       createdAtMillis: (json['createdAtMillis'] as num).toInt(),
     );
 
@@ -23,5 +24,6 @@ Map<String, dynamic> _$$BudgetDataImplToJson(_$BudgetDataImpl instance) =>
       'amount': instance.amount,
       'year': instance.year,
       'month': instance.month,
+      'rolloverEnabled': instance.rolloverEnabled,
       'createdAtMillis': instance.createdAtMillis,
     };

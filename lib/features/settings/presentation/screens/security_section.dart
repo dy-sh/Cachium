@@ -11,6 +11,8 @@ import '../providers/settings_provider.dart';
 import '../widgets/settings_section.dart';
 import '../widgets/settings_tile.dart';
 import '../widgets/settings_toggle_tile.dart';
+import '../../data/models/app_settings.dart';
+import 'appearance_section.dart';
 
 class SecuritySection extends ConsumerWidget {
   const SecuritySection({super.key});
@@ -72,6 +74,23 @@ class SecuritySection extends ConsumerWidget {
             }
           },
         ),
+        if (settings.appLockEnabled) ...[
+          SettingsTile(
+            title: 'Auto-lock Timeout',
+            description: 'How long before the app locks after backgrounding',
+            value: settings.autoLockTimeout.displayName,
+            onTap: () => _showAutoLockTimeoutPicker(context, ref, settings),
+          ),
+          if (biometricAvailable.valueOrNull ?? false)
+            SettingsToggleTile(
+              title: 'Biometric Unlock',
+              description: 'Use fingerprint or face to unlock the app',
+              value: settings.biometricUnlockEnabled,
+              onChanged: (value) {
+                ref.read(settingsProvider.notifier).setBiometricUnlockEnabled(value);
+              },
+            ),
+        ],
         SettingsTile(
           title: hasPinSet ? 'Change PIN' : 'Set PIN Code',
           description: hasPinSet
@@ -88,6 +107,50 @@ class SecuritySection extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  void _showAutoLockTimeoutPicker(BuildContext context, WidgetRef ref, AppSettings settings) {
+    final animationsEnabled = ref.read(formAnimationsEnabledProvider);
+    final modalContent = OptionPickerSheet(
+      title: 'Auto-lock Timeout',
+      options: AutoLockTimeout.values.map((e) => e.displayName).toList(),
+      selectedIndex: AutoLockTimeout.values.indexOf(settings.autoLockTimeout),
+      onSelected: (index) {
+        ref.read(settingsProvider.notifier).setAutoLockTimeout(AutoLockTimeout.values[index]);
+        Navigator.pop(context);
+      },
+    );
+
+    if (!animationsEnabled) {
+      Navigator.of(context).push(
+        PageRouteBuilder(
+          opaque: false,
+          barrierDismissible: true,
+          barrierColor: Colors.black54,
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+          pageBuilder: (context, animation, secondaryAnimation) {
+            return Align(
+              alignment: Alignment.bottomCenter,
+              child: Material(
+                color: AppColors.surface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                child: modalContent,
+              ),
+            );
+          },
+        ),
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: AppColors.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (context) => modalContent,
+      );
+    }
   }
 
   void _showPinSetupSheet(BuildContext context, WidgetRef ref, bool hasPinSet) {

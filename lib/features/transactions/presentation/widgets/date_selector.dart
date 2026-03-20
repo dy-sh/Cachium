@@ -168,7 +168,7 @@ class DateSelector extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         LucideIcons.calendar,
                         color: AppColors.textSecondary,
                         size: 20,
@@ -180,7 +180,7 @@ class DateSelector extends StatelessWidget {
                           style: AppTypography.bodyMedium,
                         ),
                       ),
-                      const Icon(
+                      Icon(
                         LucideIcons.chevronRight,
                         color: AppColors.textTertiary,
                         size: 18,
@@ -204,7 +204,7 @@ class DateSelector extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
+                    Icon(
                       LucideIcons.clock,
                       color: AppColors.textSecondary,
                       size: 20,

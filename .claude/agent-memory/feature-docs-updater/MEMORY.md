@@ -7,7 +7,8 @@
 - New features go at the bottom of the "## New Features" section, incrementing the number.
 - Each entry uses bullet points under the `####` header (not a single-line format).
 - Sections are separated by `---` horizontal rules.
-- Current highest item in "New Features": 52 (as of 2026-03-20). Note: items are not strictly sequential — item 32 exists but 33 was inserted before it in the file; numbering follows insertion order, not file order.
+- Current highest item in "New Features": 57 (as of 2026-03-20). Note: items are not strictly sequential — item 32 exists but 33 was inserted before it in the file; numbering follows insertion order, not file order.
+- "Core App Features" section now goes up to item 57 (Light/Dark/System Theme replaced item 52 "Dark theme"; Bill Reminders 53, Biometric Unlock Enhancement 54, Full-Text Search Enhancement 55, Budget Rollover 56, Performance Optimizations 57 added as numbered entries inside "Core App Features" rather than "New Features" — those new additions were placed just before item 21 in the file).
 
 ## features_new.md Structure
 - Created 2026-03-06 (did not previously exist).

@@ -287,13 +287,22 @@ class _BudgetProgressTile extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '$currencySymbol${progress.spent.toStringAsFixed(0)} / $currencySymbol${progress.budget.amount.toStringAsFixed(0)}',
+                    '$currencySymbol${progress.spent.toStringAsFixed(0)} / $currencySymbol${progress.effectiveBudget.toStringAsFixed(0)}',
                     style: AppTypography.moneyTiny.copyWith(
                       color: progressColor,
                     ),
                   ),
                 ],
               ),
+              if (progress.rolloverAmount > 0) ...[
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  '$currencySymbol${progress.budget.amount.toStringAsFixed(0)} budget + $currencySymbol${progress.rolloverAmount.toStringAsFixed(0)} rollover = $currencySymbol${progress.effectiveBudget.toStringAsFixed(0)} effective',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: AppColors.textTertiary,
+                  ),
+                ),
+              ],
               const SizedBox(height: AppSpacing.sm),
               // Progress bar
               ClipRRect(
@@ -353,6 +362,7 @@ class _BudgetFormSheet extends ConsumerStatefulWidget {
 class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
   final _amountController = TextEditingController();
   String? _selectedCategoryId;
+  bool _rolloverEnabled = false;
 
   @override
   void initState() {
@@ -360,6 +370,7 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
     if (widget.editBudget != null) {
       _selectedCategoryId = widget.editBudget!.categoryId;
       _amountController.text = widget.editBudget!.amount.toStringAsFixed(0);
+      _rolloverEnabled = widget.editBudget!.rolloverEnabled;
     }
   }
 
@@ -384,7 +395,7 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.6,
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(AppRadius.xl),
@@ -487,17 +498,44 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
                 fillColor: AppColors.surfaceLight,
                 border: OutlineInputBorder(
                   borderRadius: AppRadius.input,
-                  borderSide: const BorderSide(color: AppColors.border),
+                  borderSide: BorderSide(color: AppColors.border),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: AppRadius.input,
-                  borderSide: const BorderSide(color: AppColors.border),
+                  borderSide: BorderSide(color: AppColors.border),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: AppRadius.input,
                   borderSide: BorderSide(color: accentColor),
                 ),
               ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            // Rollover toggle
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Rollover', style: AppTypography.labelLarge),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Carry unused budget to next month',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+                Switch(
+                  value: _rolloverEnabled,
+                  onChanged: (value) =>
+                      setState(() => _rolloverEnabled = value),
+                  activeTrackColor: accentColor,
+                  activeThumbColor: AppColors.background,
+                ),
+              ],
             ),
             const SizedBox(height: AppSpacing.lg),
             // Save button
@@ -540,6 +578,7 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
       await notifier.updateBudget(widget.editBudget!.copyWith(
         categoryId: _selectedCategoryId,
         amount: amount,
+        rolloverEnabled: _rolloverEnabled,
       ));
     } else {
       await notifier.addBudget(Budget(
@@ -548,6 +587,7 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
         amount: amount,
         year: widget.year,
         month: widget.month,
+        rolloverEnabled: _rolloverEnabled,
         createdAt: DateTime.now(),
       ));
     }

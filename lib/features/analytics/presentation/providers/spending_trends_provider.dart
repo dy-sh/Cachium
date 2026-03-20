@@ -12,6 +12,9 @@ import '../../data/models/spending_trend.dart';
 import 'analytics_filter_provider.dart';
 
 final spendingTrendsProvider = Provider<OverallTrend>((ref) {
+  // Keep alive to cache trend computations across tab switches.
+  ref.keepAlive();
+
   final filter = ref.watch(analyticsFilterProvider);
   final transactionsAsync = ref.watch(transactionsProvider);
   final categoriesAsync = ref.watch(categoriesProvider);

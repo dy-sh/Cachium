@@ -42,7 +42,7 @@ class SelectionHeader extends StatelessWidget {
                 borderRadius: AppRadius.iconButton,
                 border: Border.all(color: AppColors.border),
               ),
-              child: const Icon(
+              child: Icon(
                 LucideIcons.x,
                 color: AppColors.textPrimary,
                 size: 20,
@@ -102,7 +102,7 @@ class SelectionHeader extends StatelessWidget {
                 borderRadius: AppRadius.iconButton,
                 border: Border.all(color: AppColors.border),
               ),
-              child: const Icon(
+              child: Icon(
                 LucideIcons.checkSquare,
                 color: AppColors.textPrimary,
                 size: 20,

@@ -299,10 +299,11 @@
 - Spacing scale: xs, sm, md, lg, xl, xxl, xxxl, screenPadding
 - Consistent border radius presets
 
-#### 52. Dark theme
-- Single dark theme (no light mode)
-- Material Design 3 base
-- Dark surface backgrounds throughout
+#### 52. Light/Dark/System theme
+- Three theme modes: Light, Dark, and System (follows device setting)
+- `ThemeModeOption` enum drives mode selection
+- `AppColors.isDarkMode` static flag makes all color helpers theme-aware
+- Theme toggle accessible from Appearance settings
 
 ---
 
@@ -605,6 +606,34 @@
 - Notification action buttons ("Add Expense" / "Add Income") attached to weekly summary and recurring reminder notifications
 - `NotificationService` configured with Android action buttons and iOS notification categories
 - An action stream broadcasts tapped notification actions; the main app listens and navigates to the transaction form with the transaction type pre-selected
+
+#### 53. Bill Reminders / Due Date Tracking
+- Track upcoming bills with due dates, amounts, and recurrence frequency via a dedicated bills feature module at `lib/features/bills/`
+- Mark a bill as paid to auto-create a transaction and generate the next bill occurrence
+- Per-bill reminder settings and overdue tracking
+- Home screen shows upcoming bills; manageable from Settings > Bills
+- Routes: `/settings/bills`, `/bill/new`, `/bill/:id/edit`
+
+#### 54. Biometric Unlock Enhancement
+- Configurable auto-lock timeout: immediate, 30 seconds, 1 minute, 5 minutes, 15 minutes, or never
+- Toggle to enable or disable biometric unlock independently of the timeout
+- Background timer tracks app lifecycle to enforce timeout-based locking
+
+#### 55. Full-Text Search Enhancement
+- Unified search across transactions (notes, merchants, amounts), accounts, categories, and tags
+- Recent search history: last 10 queries persisted across sessions
+- Filter chips (All, Transactions, Accounts, Categories, Tags) to narrow results by type
+- Results grouped by type with counts; matched text highlighted; debounced 300 ms input
+
+#### 56. Budget Rollover
+- Per-budget `rolloverEnabled` flag carries unused budget forward up to 12 months
+- Effective budget = base amount + accumulated rollover; overspending produces zero rollover
+- Toggle per budget in budget settings; rollover amount displayed in the budget progress view
+
+#### 57. Performance Optimizations
+- Analytics sections lazy-load: first 3 sections render immediately, the rest load on scroll
+- Transaction list pagination at 50 items per page with infinite scroll
+- Analytics providers cached with `ref.keepAlive()` to avoid redundant recalculation
 
 #### 21. Historical main currency value storage
 - `mainCurrencyCode` and `mainCurrencyAmount` fields added to Transaction model and TransactionData DTO to snapshot the main-currency equivalent at the moment a transaction is saved

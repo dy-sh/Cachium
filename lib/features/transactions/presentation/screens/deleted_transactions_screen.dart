@@ -118,7 +118,7 @@ class _DeletedTransactionsScreenState extends ConsumerState<DeletedTransactionsS
                     hintStyle: AppTypography.bodyMedium.copyWith(
                       color: AppColors.textTertiary,
                     ),
-                    prefixIcon: const Icon(
+                    prefixIcon: Icon(
                       LucideIcons.search,
                       color: AppColors.textTertiary,
                       size: 18,

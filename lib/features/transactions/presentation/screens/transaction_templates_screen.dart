@@ -67,7 +67,7 @@ class TransactionTemplatesScreen extends ConsumerWidget {
                     },
                   );
                 },
-                loading: () => const Center(
+                loading: () => Center(
                   child: CircularProgressIndicator(
                     color: AppColors.textSecondary,
                   ),

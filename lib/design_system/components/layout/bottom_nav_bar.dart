@@ -79,7 +79,7 @@ class _FMBottomNavBarState extends ConsumerState<BottomNavBar> {
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).padding.bottom,
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.background,
         border: Border(
           top: BorderSide(

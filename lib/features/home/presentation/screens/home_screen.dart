@@ -13,6 +13,8 @@ import '../../../../navigation/app_router.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
+import '../../../bills/presentation/providers/bill_provider.dart';
+import '../../../bills/presentation/widgets/upcoming_bills_list.dart';
 import '../../../budgets/presentation/providers/budget_provider.dart';
 import '../widgets/account_preview_list.dart';
 import '../widgets/budget_progress_list.dart';
@@ -47,6 +49,11 @@ class HomeScreen extends ConsumerWidget {
     final showRecentTransactions = ref.watch(homeShowRecentTransactionsProvider);
     final showBudgetProgress = ref.watch(homeShowBudgetProgressProvider);
 
+    // Bills data
+    final upcomingBills = ref.watch(upcomingBillsProvider);
+    final overdueBills = ref.watch(overdueBillsProvider);
+    final hasBills = upcomingBills.isNotEmpty || overdueBills.isNotEmpty;
+
     // Budget progress data
     final now = DateTime.now();
     final budgetProgress = ref.watch(
@@ -58,6 +65,7 @@ class HomeScreen extends ConsumerWidget {
       'accounts': showAccountsList,
       'totalBalance': showTotalBalance,
       'quickActions': showQuickActions,
+      'billsDue': hasBills,
       'budgetProgress': showBudgetProgress && budgetProgress.isNotEmpty,
       'recentTransactions': showRecentTransactions,
     };
@@ -197,6 +205,34 @@ class HomeScreen extends ConsumerWidget {
           child: const Padding(
             padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
             child: QuickActions(),
+          ),
+        );
+      case 'billsDue':
+        return StaggeredListItem(
+          index: staggerIndex,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Bills Due', style: AppTypography.h4),
+                    GestureDetector(
+                      onTap: () => context.push(AppRoutes.bills),
+                      child: Text(
+                        'See all',
+                        style: AppTypography.labelMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              const UpcomingBillsList(),
+            ],
           ),
         );
       case 'budgetProgress':

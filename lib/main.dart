@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app.dart';
-import 'core/constants/app_colors.dart';
 import 'core/database/services/key_migration_service.dart';
 import 'core/database/services/secure_key_provider.dart';
 import 'core/providers/database_providers.dart';
@@ -11,13 +10,14 @@ import 'core/services/notification_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Set system UI overlay style once at startup
+  // System UI overlay style is now managed by CachiumApp.applyThemeMode()
+  // Set initial dark mode overlay (will be updated when settings load)
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
       statusBarBrightness: Brightness.dark,
-      systemNavigationBarColor: AppColors.background,
+      systemNavigationBarColor: Colors.black,
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );

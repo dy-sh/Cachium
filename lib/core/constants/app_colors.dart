@@ -4,23 +4,52 @@ import '../../features/settings/data/models/app_settings.dart';
 class AppColors {
   AppColors._();
 
-  // Background colors
-  static const Color background = Color(0xFF000000);
-  static const Color surface = Color(0xFF0A0A0A);
-  static const Color surfaceLight = Color(0xFF121212);
+  /// Whether the app is in dark mode. Set by the theme system.
+  static bool isDarkMode = true;
+
+  // Background colors (dark + light variants exposed for ThemeData construction)
+  static const Color backgroundDark = Color(0xFF000000);
+  static const Color backgroundLight = Color(0xFFF5F5F5);
+  static Color get background => isDarkMode ? backgroundDark : backgroundLight;
+
+  static const Color surfaceDark = Color(0xFF0A0A0A);
+  static const Color surfaceColorLight = Color(0xFFFFFFFF);
+  static Color get surface => isDarkMode ? surfaceDark : surfaceColorLight;
+
+  static const Color surfaceLightDark = Color(0xFF121212);
+  static const Color surfaceLightLight = Color(0xFFF0F0F0);
+  static Color get surfaceLight => isDarkMode ? surfaceLightDark : surfaceLightLight;
 
   // Border colors
-  static const Color border = Color(0xFF1F1F1F);
-  static const Color borderSelected = Color(0xFFFFFFFF);
+  static const Color borderDark = Color(0xFF1F1F1F);
+  static const Color borderColorLight = Color(0xFFE0E0E0);
+  static Color get border => isDarkMode ? borderDark : borderColorLight;
+
+  static const Color borderSelectedDark = Color(0xFFFFFFFF);
+  static const Color borderSelectedLight = Color(0xFF000000);
+  static Color get borderSelected => isDarkMode ? borderSelectedDark : borderSelectedLight;
 
   // Text colors
-  static const Color textPrimary = Color(0xFFFFFFFF);
-  static const Color textSecondary = Color(0xFF8A8A8A);
-  static const Color textTertiary = Color(0xFF787878);
+  static const Color textPrimaryDark = Color(0xFFFFFFFF);
+  static const Color textPrimaryLight = Color(0xFF1A1A1A);
+  static Color get textPrimary => isDarkMode ? textPrimaryDark : textPrimaryLight;
+
+  static const Color textSecondaryDark = Color(0xFF8A8A8A);
+  static const Color textSecondaryLight = Color(0xFF6A6A6A);
+  static Color get textSecondary => isDarkMode ? textSecondaryDark : textSecondaryLight;
+
+  static const Color textTertiaryDark = Color(0xFF787878);
+  static const Color textTertiaryLight = Color(0xFF9A9A9A);
+  static Color get textTertiary => isDarkMode ? textTertiaryDark : textTertiaryLight;
 
   // Accent colors
-  static const Color accentPrimary = Color(0xFFFFFFFF);
-  static const Color selectionGlow = Color(0x33FFFFFF); // 20% opacity white
+  static const Color accentPrimaryDark = Color(0xFFFFFFFF);
+  static const Color accentPrimaryLight = Color(0xFF000000);
+  static Color get accentPrimary => isDarkMode ? accentPrimaryDark : accentPrimaryLight;
+
+  static const Color selectionGlowDark = Color(0x33FFFFFF);
+  static const Color selectionGlowLight = Color(0x33000000);
+  static Color get selectionGlow => isDarkMode ? selectionGlowDark : selectionGlowLight;
 
   // Base color palette (zen - softer, muted but visible)
   // 23 distinct colors evenly spaced 15° apart on the color wheel
@@ -258,8 +287,8 @@ class AppColors {
   static const Color expense = expenseZen;
 
   // Navigation colors
-  static const Color navActive = Color(0xFFFFFFFF);
-  static const Color navInactive = Color(0xFF5A5A5A);
+  static Color get navActive => isDarkMode ? const Color(0xFFFFFFFF) : const Color(0xFF1A1A1A);
+  static Color get navInactive => isDarkMode ? const Color(0xFF5A5A5A) : const Color(0xFFAAAAAA);
 
   // Category colors - dim (base palette) - 18 colors matching accent options
   static const List<Color> categoryColorsZen = [

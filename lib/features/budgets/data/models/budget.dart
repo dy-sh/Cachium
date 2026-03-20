@@ -4,6 +4,7 @@ class Budget {
   final double amount;
   final int year;
   final int month;
+  final bool rolloverEnabled;
   final DateTime createdAt;
 
   Budget({
@@ -12,6 +13,7 @@ class Budget {
     required this.amount,
     required this.year,
     required this.month,
+    this.rolloverEnabled = false,
     required this.createdAt,
   })  : assert(amount >= 0, 'Budget amount must be non-negative'),
         assert(month >= 1 && month <= 12, 'Month must be between 1 and 12'),
@@ -24,6 +26,7 @@ class Budget {
     double? amount,
     int? year,
     int? month,
+    bool? rolloverEnabled,
     DateTime? createdAt,
   }) {
     return Budget(
@@ -32,6 +35,7 @@ class Budget {
       amount: amount ?? this.amount,
       year: year ?? this.year,
       month: month ?? this.month,
+      rolloverEnabled: rolloverEnabled ?? this.rolloverEnabled,
       createdAt: createdAt ?? this.createdAt,
     );
   }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -11,6 +13,7 @@ import '../../../../design_system/design_system.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/search_result.dart';
 import '../providers/global_search_provider.dart';
+import '../providers/search_history_provider.dart';
 
 class GlobalSearchScreen extends ConsumerStatefulWidget {
   const GlobalSearchScreen({super.key});
@@ -23,6 +26,7 @@ class GlobalSearchScreen extends ConsumerStatefulWidget {
 class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
   late final TextEditingController _controller;
   late final FocusNode _focusNode;
+  Timer? _debounceTimer;
 
   @override
   void initState() {
@@ -36,9 +40,35 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  void _onQueryChanged(String value) {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        ref.read(globalSearchQueryProvider.notifier).state = value;
+      }
+    });
+  }
+
+  void _executeSearch(String query) {
+    _controller.text = query;
+    _controller.selection =
+        TextSelection.collapsed(offset: query.length);
+    ref.read(globalSearchQueryProvider.notifier).state = query;
+    ref.read(searchHistoryProvider.notifier).addSearch(query);
+    _focusNode.unfocus();
+  }
+
+  void _onSearchSubmitted(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isNotEmpty) {
+      ref.read(searchHistoryProvider.notifier).addSearch(trimmed);
+    }
   }
 
   @override
@@ -46,6 +76,8 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     final results = ref.watch(globalSearchResultsProvider);
     final query = ref.watch(globalSearchQueryProvider);
     final intensity = ref.watch(colorIntensityProvider);
+    final recentSearches =
+        ref.watch(searchHistoryProvider).valueOrNull ?? [];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -67,6 +99,9 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                           ref
                               .read(globalSearchQueryProvider.notifier)
                               .state = '';
+                          ref
+                              .read(searchFilterProvider.notifier)
+                              .state = SearchFilter.all;
                           context.pop();
                         },
                         icon: LucideIcons.chevronLeft,
@@ -84,12 +119,9 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                           child: TextField(
                             controller: _controller,
                             focusNode: _focusNode,
-                            onChanged: (value) {
-                              ref
-                                  .read(
-                                      globalSearchQueryProvider.notifier)
-                                  .state = value;
-                            },
+                            onChanged: _onQueryChanged,
+                            onSubmitted: _onSearchSubmitted,
+                            textInputAction: TextInputAction.search,
                             style: AppTypography.bodyMedium,
                             decoration: InputDecoration(
                               hintText: 'Search everywhere...',
@@ -105,6 +137,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                                   ? GestureDetector(
                                       onTap: () {
                                         _controller.clear();
+                                        _debounceTimer?.cancel();
                                         ref
                                             .read(
                                                 globalSearchQueryProvider
@@ -129,39 +162,16 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.md),
                 ],
               ),
             ),
-            // Results
+            // Filter chips (only visible when there's a query)
+            if (query.isNotEmpty) _buildFilterChips(),
+            // Results / empty state / recent searches
             Expanded(
               child: query.isEmpty
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.screenPadding,
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              LucideIcons.search,
-                              size: 48,
-                              color: AppColors.textTertiary
-                                  .withValues(alpha: 0.3),
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            Text(
-                              'Search transactions, accounts, and categories',
-                              style: AppTypography.bodySmall.copyWith(
-                                color: AppColors.textTertiary,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
+                  ? _buildEmptyQueryState(recentSearches)
                   : results.isEmpty
                       ? Center(
                           child: Padding(
@@ -172,11 +182,11 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                               icon: LucideIcons.searchX,
                               title: 'No results found',
                               subtitle:
-                                  'Try a different search term',
+                                  'Try a different search term or filter',
                             ),
                           ),
                         )
-                      : _buildResults(results, intensity),
+                      : _buildResults(results, query, intensity),
             ),
           ],
         ),
@@ -184,14 +194,131 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     );
   }
 
+  Widget _buildFilterChips() {
+    final currentFilter = ref.watch(searchFilterProvider);
+    final accentColor = ref.watch(accentColorProvider);
+
+    final filters = [
+      (SearchFilter.all, 'All', LucideIcons.layers),
+      (SearchFilter.transactions, 'Transactions', LucideIcons.receipt),
+      (SearchFilter.accounts, 'Accounts', LucideIcons.wallet),
+      (SearchFilter.categories, 'Categories', LucideIcons.layoutGrid),
+      (SearchFilter.tags, 'Tags', LucideIcons.tag),
+    ];
+
+    return SizedBox(
+      height: 40,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.screenPadding,
+        ),
+        itemCount: filters.length,
+        separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+        itemBuilder: (context, index) {
+          final (filter, label, icon) = filters[index];
+          final isSelected = currentFilter == filter;
+
+          return SelectionChip(
+            label: label,
+            icon: icon,
+            isSelected: isSelected,
+            selectedColor: accentColor,
+            onTap: () {
+              ref.read(searchFilterProvider.notifier).state = filter;
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildEmptyQueryState(List<String> recentSearches) {
+    if (recentSearches.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.screenPadding,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                LucideIcons.search,
+                size: 48,
+                color: AppColors.textTertiary.withValues(alpha: 0.3),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                'Search transactions, accounts, categories, and tags',
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textTertiary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return ListView(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.screenPadding,
+      ),
+      children: [
+        const SizedBox(height: AppSpacing.sm),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Recent Searches',
+              style: AppTypography.labelMedium.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                ref.read(searchHistoryProvider.notifier).clearAll();
+              },
+              child: Text(
+                'Clear All',
+                style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.textTertiary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        ...recentSearches.map((query) => _RecentSearchTile(
+              query: query,
+              onTap: () => _executeSearch(query),
+              onRemove: () {
+                ref
+                    .read(searchHistoryProvider.notifier)
+                    .removeSearch(query);
+              },
+            )),
+      ],
+    );
+  }
+
   Widget _buildResults(
-      List<GlobalSearchResult> results, dynamic intensity) {
+    List<GlobalSearchResult> results,
+    String query,
+    dynamic intensity,
+  ) {
     // Group results by type
     final accounts = results
         .where((r) => r.type == SearchResultType.account)
         .toList();
     final categories = results
         .where((r) => r.type == SearchResultType.category)
+        .toList();
+    final tags = results
+        .where((r) => r.type == SearchResultType.tag)
         .toList();
     final transactions = results
         .where((r) => r.type == SearchResultType.transaction)
@@ -202,13 +329,17 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
         horizontal: AppSpacing.screenPadding,
       ),
       children: [
+        const SizedBox(height: AppSpacing.sm),
         if (accounts.isNotEmpty) ...[
           _SectionHeader(
             title: 'Accounts',
             count: accounts.length,
           ),
           const SizedBox(height: AppSpacing.xs),
-          ...accounts.map((r) => _SearchResultTile(result: r)),
+          ...accounts.map((r) => _SearchResultTile(
+                result: r,
+                query: query,
+              )),
           const SizedBox(height: AppSpacing.lg),
         ],
         if (categories.isNotEmpty) ...[
@@ -217,7 +348,22 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
             count: categories.length,
           ),
           const SizedBox(height: AppSpacing.xs),
-          ...categories.map((r) => _SearchResultTile(result: r)),
+          ...categories.map((r) => _SearchResultTile(
+                result: r,
+                query: query,
+              )),
+          const SizedBox(height: AppSpacing.lg),
+        ],
+        if (tags.isNotEmpty) ...[
+          _SectionHeader(
+            title: 'Tags',
+            count: tags.length,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          ...tags.map((r) => _SearchResultTile(
+                result: r,
+                query: query,
+              )),
           const SizedBox(height: AppSpacing.lg),
         ],
         if (transactions.isNotEmpty) ...[
@@ -226,10 +372,72 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
             count: transactions.length,
           ),
           const SizedBox(height: AppSpacing.xs),
-          ...transactions.map((r) => _SearchResultTile(result: r)),
+          ...transactions.map((r) => _SearchResultTile(
+                result: r,
+                query: query,
+              )),
           const SizedBox(height: AppSpacing.lg),
         ],
       ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Private widgets
+// ---------------------------------------------------------------------------
+
+class _RecentSearchTile extends StatelessWidget {
+  final String query;
+  final VoidCallback onTap;
+  final VoidCallback onRemove;
+
+  const _RecentSearchTile({
+    required this.query,
+    required this.onTap,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+        child: Row(
+          children: [
+            Icon(
+              LucideIcons.clock,
+              size: 16,
+              color: AppColors.textTertiary,
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Text(
+                query,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            GestureDetector(
+              onTap: onRemove,
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.xs),
+                child: Icon(
+                  LucideIcons.x,
+                  size: 14,
+                  color: AppColors.textTertiary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -265,8 +473,12 @@ class _SectionHeader extends StatelessWidget {
 
 class _SearchResultTile extends StatelessWidget {
   final GlobalSearchResult result;
+  final String query;
 
-  const _SearchResultTile({required this.result});
+  const _SearchResultTile({
+    required this.result,
+    required this.query,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -302,22 +514,22 @@ class _SearchResultTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    result.title,
+                  _HighlightedText(
+                    text: result.title,
+                    query: query,
                     style: AppTypography.bodyMedium.copyWith(
                       fontWeight: FontWeight.w500,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    highlightColor: result.color,
                   ),
                   const SizedBox(height: 2),
-                  Text(
-                    result.subtitle,
+                  _HighlightedText(
+                    text: result.subtitle,
+                    query: query,
                     style: AppTypography.bodySmall.copyWith(
                       color: AppColors.textTertiary,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    highlightColor: result.color,
                   ),
                 ],
               ),
@@ -331,6 +543,72 @@ class _SearchResultTile extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Renders text with query matches highlighted.
+class _HighlightedText extends StatelessWidget {
+  final String text;
+  final String query;
+  final TextStyle style;
+  final Color highlightColor;
+
+  const _HighlightedText({
+    required this.text,
+    required this.query,
+    required this.style,
+    required this.highlightColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (query.isEmpty) {
+      return Text(
+        text,
+        style: style,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+
+    final lowerText = text.toLowerCase();
+    final lowerQuery = query.toLowerCase();
+    final spans = <TextSpan>[];
+    var start = 0;
+
+    while (start < text.length) {
+      final index = lowerText.indexOf(lowerQuery, start);
+      if (index == -1) {
+        spans.add(TextSpan(text: text.substring(start)));
+        break;
+      }
+      if (index > start) {
+        spans.add(TextSpan(text: text.substring(start, index)));
+      }
+      spans.add(TextSpan(
+        text: text.substring(index, index + query.length),
+        style: TextStyle(
+          color: highlightColor,
+          fontWeight: FontWeight.w700,
+        ),
+      ));
+      start = index + query.length;
+    }
+
+    if (spans.isEmpty) {
+      return Text(
+        text,
+        style: style,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+
+    return RichText(
+      text: TextSpan(style: style, children: spans),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
     );
   }
 }

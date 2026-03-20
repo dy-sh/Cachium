@@ -19,6 +19,23 @@ enum ColorIntensity {
   neon,
 }
 
+enum ThemeModeOption {
+  dark,
+  light,
+  system;
+
+  String get displayName {
+    switch (this) {
+      case ThemeModeOption.dark:
+        return 'Dark';
+      case ThemeModeOption.light:
+        return 'Light';
+      case ThemeModeOption.system:
+        return 'System';
+    }
+  }
+}
+
 enum StartScreen {
   home('/'),
   transactions('/transactions'),
@@ -92,6 +109,49 @@ enum AssetSortOption {
   }
 }
 
+enum AutoLockTimeout {
+  immediate,
+  after30Seconds,
+  after1Minute,
+  after5Minutes,
+  after15Minutes,
+  never;
+
+  String get displayName {
+    switch (this) {
+      case AutoLockTimeout.immediate:
+        return 'Immediately';
+      case AutoLockTimeout.after30Seconds:
+        return 'After 30 Seconds';
+      case AutoLockTimeout.after1Minute:
+        return 'After 1 Minute';
+      case AutoLockTimeout.after5Minutes:
+        return 'After 5 Minutes';
+      case AutoLockTimeout.after15Minutes:
+        return 'After 15 Minutes';
+      case AutoLockTimeout.never:
+        return 'Never';
+    }
+  }
+
+  Duration? get duration {
+    switch (this) {
+      case AutoLockTimeout.immediate:
+        return null;
+      case AutoLockTimeout.after30Seconds:
+        return const Duration(seconds: 30);
+      case AutoLockTimeout.after1Minute:
+        return const Duration(minutes: 1);
+      case AutoLockTimeout.after5Minutes:
+        return const Duration(minutes: 5);
+      case AutoLockTimeout.after15Minutes:
+        return const Duration(minutes: 15);
+      case AutoLockTimeout.never:
+        return null;
+    }
+  }
+}
+
 enum ExchangeRateApiOption {
   frankfurter,
   exchangeRateHost,
@@ -111,6 +171,7 @@ enum ExchangeRateApiOption {
 
 class AppSettings {
   // Appearance
+  final ThemeModeOption themeMode;
   final ColorIntensity colorIntensity;
   final int accentColorIndex;
   final AccountCardStyle accountCardStyle;
@@ -167,6 +228,8 @@ class AppSettings {
   final bool appLockEnabled;
   final String? appPinCode;
   final String? appPassword;
+  final AutoLockTimeout autoLockTimeout;
+  final bool biometricUnlockEnabled;
 
   // Notifications
   final bool notificationsEnabled;
@@ -183,6 +246,7 @@ class AppSettings {
   final bool onboardingCompleted;
 
   const AppSettings({
+    this.themeMode = ThemeModeOption.dark,
     this.colorIntensity = ColorIntensity.prism,
     this.accentColorIndex = 0,
     this.accountCardStyle = AccountCardStyle.dim,
@@ -227,6 +291,8 @@ class AppSettings {
     this.appLockEnabled = false,
     this.appPinCode,
     this.appPassword,
+    this.autoLockTimeout = AutoLockTimeout.immediate,
+    this.biometricUnlockEnabled = true,
     this.notificationsEnabled = false,
     this.budgetAlertThresholds = const [75, 90, 100],
     this.recurringRemindersEnabled = true,
@@ -242,6 +308,7 @@ class AppSettings {
   }
 
   AppSettings copyWith({
+    ThemeModeOption? themeMode,
     ColorIntensity? colorIntensity,
     int? accentColorIndex,
     AccountCardStyle? accountCardStyle,
@@ -289,6 +356,8 @@ class AppSettings {
     bool clearAppPinCode = false,
     String? appPassword,
     bool clearAppPassword = false,
+    AutoLockTimeout? autoLockTimeout,
+    bool? biometricUnlockEnabled,
     bool? notificationsEnabled,
     List<int>? budgetAlertThresholds,
     bool? recurringRemindersEnabled,
@@ -299,6 +368,7 @@ class AppSettings {
     bool? onboardingCompleted,
   }) {
     return AppSettings(
+      themeMode: themeMode ?? this.themeMode,
       colorIntensity: colorIntensity ?? this.colorIntensity,
       accentColorIndex: accentColorIndex ?? this.accentColorIndex,
       accountCardStyle: accountCardStyle ?? this.accountCardStyle,
@@ -343,6 +413,8 @@ class AppSettings {
       appLockEnabled: appLockEnabled ?? this.appLockEnabled,
       appPinCode: clearAppPinCode ? null : (appPinCode ?? this.appPinCode),
       appPassword: clearAppPassword ? null : (appPassword ?? this.appPassword),
+      autoLockTimeout: autoLockTimeout ?? this.autoLockTimeout,
+      biometricUnlockEnabled: biometricUnlockEnabled ?? this.biometricUnlockEnabled,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       budgetAlertThresholds: budgetAlertThresholds ?? this.budgetAlertThresholds,
       recurringRemindersEnabled: recurringRemindersEnabled ?? this.recurringRemindersEnabled,

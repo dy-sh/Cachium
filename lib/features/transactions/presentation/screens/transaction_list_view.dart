@@ -20,22 +20,67 @@ import '../providers/transaction_selection_provider.dart';
 import '../providers/transactions_provider.dart';
 
 /// Displays grouped transaction list with pull-to-refresh, swipe actions,
-/// selection mode, and staggered animation on initial load.
-class TransactionListView extends ConsumerWidget {
+/// selection mode, staggered animation on initial load, and infinite scroll
+/// pagination.
+class TransactionListView extends ConsumerStatefulWidget {
   final List<TransactionGroup> groups;
   final bool isInitialLoad;
+  final bool hasMore;
   final VoidCallback onRefresh;
+  final VoidCallback? onLoadMore;
 
   const TransactionListView({
     super.key,
     required this.groups,
     required this.isInitialLoad,
+    this.hasMore = false,
     required this.onRefresh,
+    this.onLoadMore,
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    if (groups.isEmpty) {
+  ConsumerState<TransactionListView> createState() =>
+      _TransactionListViewState();
+}
+
+class _TransactionListViewState extends ConsumerState<TransactionListView> {
+  final _scrollController = ScrollController();
+  bool _loadingMore = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!widget.hasMore || _loadingMore || widget.onLoadMore == null) return;
+
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.offset;
+
+    // Trigger load more when within 200px of the bottom.
+    if (currentScroll >= maxScroll - 200) {
+      _loadingMore = true;
+      widget.onLoadMore!();
+
+      // Reset loading flag after the frame so the new data can arrive.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _loadingMore = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.groups.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(
@@ -50,20 +95,32 @@ class TransactionListView extends ConsumerWidget {
       );
     }
 
+    // Extra item at the end for the loading indicator when more data is available.
+    final itemCount = widget.groups.length + (widget.hasMore ? 1 : 0);
+
     return RefreshIndicator(
       color: AppColors.textPrimary,
       backgroundColor: AppColors.surface,
-      onRefresh: () async => onRefresh(),
+      onRefresh: () async => widget.onRefresh(),
       child: ListView.builder(
+        controller: _scrollController,
         padding: EdgeInsets.only(
           left: AppSpacing.screenPadding,
           right: AppSpacing.screenPadding,
           bottom: AppSpacing.bottomNavHeight + AppSpacing.lg,
         ),
-        itemCount: groups.length,
+        itemCount: itemCount,
         itemBuilder: (context, index) {
-          final child = _TransactionGroupWidget(group: groups[index]);
-          if (isInitialLoad) {
+          // Loading indicator at the bottom
+          if (index >= widget.groups.length) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+              child: Center(child: LoadingIndicator()),
+            );
+          }
+
+          final child = _TransactionGroupWidget(group: widget.groups[index]);
+          if (widget.isInitialLoad) {
             return StaggeredListItem(
               index: index,
               child: child,
@@ -171,7 +228,7 @@ class _TransactionItem extends ConsumerWidget {
                 ),
               ),
               child: isSelected
-                  ? const Icon(LucideIcons.check, color: AppColors.background, size: 14)
+                  ? Icon(LucideIcons.check, color: AppColors.background, size: 14)
                   : null,
             ),
             const SizedBox(width: AppSpacing.md),

@@ -24,6 +24,9 @@ mixin _$SettingsData {
   /// Fixed ID - always 'app_settings'
   String get id => throw _privateConstructorUsedError;
 
+  /// Theme mode: 'dark', 'light', 'system'
+  String get themeMode => throw _privateConstructorUsedError;
+
   /// Color intensity: 'prism', 'zen', 'neon'
   String get colorIntensity => throw _privateConstructorUsedError;
 
@@ -111,6 +114,12 @@ mixin _$SettingsData {
   /// App password (stored as plaintext string)
   String? get appPassword => throw _privateConstructorUsedError;
 
+  /// Auto-lock timeout: 'immediate', 'after30Seconds', 'after1Minute', 'after5Minutes', 'after15Minutes', 'never'
+  String get autoLockTimeout => throw _privateConstructorUsedError;
+
+  /// Whether biometric unlock is enabled (when hardware is available)
+  bool get biometricUnlockEnabled => throw _privateConstructorUsedError;
+
   /// Whether notifications are enabled
   bool get notificationsEnabled => throw _privateConstructorUsedError;
 
@@ -157,6 +166,7 @@ abstract class $SettingsDataCopyWith<$Res> {
   @useResult
   $Res call({
     String id,
+    String themeMode,
     String colorIntensity,
     int accentColorIndex,
     String accountCardStyle,
@@ -186,6 +196,8 @@ abstract class $SettingsDataCopyWith<$Res> {
     bool appLockEnabled,
     String? appPinCode,
     String? appPassword,
+    String autoLockTimeout,
+    bool biometricUnlockEnabled,
     bool notificationsEnabled,
     List<int> budgetAlertThresholds,
     bool recurringRemindersEnabled,
@@ -214,6 +226,7 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
   @override
   $Res call({
     Object? id = null,
+    Object? themeMode = null,
     Object? colorIntensity = null,
     Object? accentColorIndex = null,
     Object? accountCardStyle = null,
@@ -243,6 +256,8 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
     Object? appLockEnabled = null,
     Object? appPinCode = freezed,
     Object? appPassword = freezed,
+    Object? autoLockTimeout = null,
+    Object? biometricUnlockEnabled = null,
     Object? notificationsEnabled = null,
     Object? budgetAlertThresholds = null,
     Object? recurringRemindersEnabled = null,
@@ -258,6 +273,10 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
             id: null == id
                 ? _value.id
                 : id // ignore: cast_nullable_to_non_nullable
+                      as String,
+            themeMode: null == themeMode
+                ? _value.themeMode
+                : themeMode // ignore: cast_nullable_to_non_nullable
                       as String,
             colorIntensity: null == colorIntensity
                 ? _value.colorIntensity
@@ -375,6 +394,14 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
                 ? _value.appPassword
                 : appPassword // ignore: cast_nullable_to_non_nullable
                       as String?,
+            autoLockTimeout: null == autoLockTimeout
+                ? _value.autoLockTimeout
+                : autoLockTimeout // ignore: cast_nullable_to_non_nullable
+                      as String,
+            biometricUnlockEnabled: null == biometricUnlockEnabled
+                ? _value.biometricUnlockEnabled
+                : biometricUnlockEnabled // ignore: cast_nullable_to_non_nullable
+                      as bool,
             notificationsEnabled: null == notificationsEnabled
                 ? _value.notificationsEnabled
                 : notificationsEnabled // ignore: cast_nullable_to_non_nullable
@@ -428,6 +455,7 @@ abstract class _$$SettingsDataImplCopyWith<$Res>
   @useResult
   $Res call({
     String id,
+    String themeMode,
     String colorIntensity,
     int accentColorIndex,
     String accountCardStyle,
@@ -457,6 +485,8 @@ abstract class _$$SettingsDataImplCopyWith<$Res>
     bool appLockEnabled,
     String? appPinCode,
     String? appPassword,
+    String autoLockTimeout,
+    bool biometricUnlockEnabled,
     bool notificationsEnabled,
     List<int> budgetAlertThresholds,
     bool recurringRemindersEnabled,
@@ -484,6 +514,7 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? id = null,
+    Object? themeMode = null,
     Object? colorIntensity = null,
     Object? accentColorIndex = null,
     Object? accountCardStyle = null,
@@ -513,6 +544,8 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
     Object? appLockEnabled = null,
     Object? appPinCode = freezed,
     Object? appPassword = freezed,
+    Object? autoLockTimeout = null,
+    Object? biometricUnlockEnabled = null,
     Object? notificationsEnabled = null,
     Object? budgetAlertThresholds = null,
     Object? recurringRemindersEnabled = null,
@@ -528,6 +561,10 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
         id: null == id
             ? _value.id
             : id // ignore: cast_nullable_to_non_nullable
+                  as String,
+        themeMode: null == themeMode
+            ? _value.themeMode
+            : themeMode // ignore: cast_nullable_to_non_nullable
                   as String,
         colorIntensity: null == colorIntensity
             ? _value.colorIntensity
@@ -645,6 +682,14 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
             ? _value.appPassword
             : appPassword // ignore: cast_nullable_to_non_nullable
                   as String?,
+        autoLockTimeout: null == autoLockTimeout
+            ? _value.autoLockTimeout
+            : autoLockTimeout // ignore: cast_nullable_to_non_nullable
+                  as String,
+        biometricUnlockEnabled: null == biometricUnlockEnabled
+            ? _value.biometricUnlockEnabled
+            : biometricUnlockEnabled // ignore: cast_nullable_to_non_nullable
+                  as bool,
         notificationsEnabled: null == notificationsEnabled
             ? _value.notificationsEnabled
             : notificationsEnabled // ignore: cast_nullable_to_non_nullable
@@ -691,6 +736,7 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
 class _$SettingsDataImpl implements _SettingsData {
   const _$SettingsDataImpl({
     this.id = 'app_settings',
+    this.themeMode = 'dark',
     this.colorIntensity = 'prism',
     this.accentColorIndex = 0,
     this.accountCardStyle = 'dim',
@@ -720,6 +766,8 @@ class _$SettingsDataImpl implements _SettingsData {
     this.appLockEnabled = false,
     this.appPinCode,
     this.appPassword,
+    this.autoLockTimeout = 'immediate',
+    this.biometricUnlockEnabled = true,
     this.notificationsEnabled = false,
     final List<int> budgetAlertThresholds = const [75, 90, 100],
     this.recurringRemindersEnabled = true,
@@ -745,6 +793,11 @@ class _$SettingsDataImpl implements _SettingsData {
   @override
   @JsonKey()
   final String id;
+
+  /// Theme mode: 'dark', 'light', 'system'
+  @override
+  @JsonKey()
+  final String themeMode;
 
   /// Color intensity: 'prism', 'zen', 'neon'
   @override
@@ -884,6 +937,16 @@ class _$SettingsDataImpl implements _SettingsData {
   @override
   final String? appPassword;
 
+  /// Auto-lock timeout: 'immediate', 'after30Seconds', 'after1Minute', 'after5Minutes', 'after15Minutes', 'never'
+  @override
+  @JsonKey()
+  final String autoLockTimeout;
+
+  /// Whether biometric unlock is enabled (when hardware is available)
+  @override
+  @JsonKey()
+  final bool biometricUnlockEnabled;
+
   /// Whether notifications are enabled
   @override
   @JsonKey()
@@ -947,7 +1010,7 @@ class _$SettingsDataImpl implements _SettingsData {
 
   @override
   String toString() {
-    return 'SettingsData(id: $id, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, mainCurrencyCode: $mainCurrencyCode, exchangeRateApiOption: $exchangeRateApiOption, cachedExchangeRates: $cachedExchangeRates, lastRateFetchTimestamp: $lastRateFetchTimestamp, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, categoriesFoldedCount: $categoriesFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, categorySortOption: $categorySortOption, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId, appLockEnabled: $appLockEnabled, appPinCode: $appPinCode, appPassword: $appPassword, notificationsEnabled: $notificationsEnabled, budgetAlertThresholds: $budgetAlertThresholds, recurringRemindersEnabled: $recurringRemindersEnabled, recurringReminderAdvanceDays: $recurringReminderAdvanceDays, weeklySpendingSummaryEnabled: $weeklySpendingSummaryEnabled, weeklySpendingSummaryDay: $weeklySpendingSummaryDay, encryptAttachments: $encryptAttachments, homeShowBudgetProgress: $homeShowBudgetProgress, homeSectionOrder: $homeSectionOrder)';
+    return 'SettingsData(id: $id, themeMode: $themeMode, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, mainCurrencyCode: $mainCurrencyCode, exchangeRateApiOption: $exchangeRateApiOption, cachedExchangeRates: $cachedExchangeRates, lastRateFetchTimestamp: $lastRateFetchTimestamp, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, categoriesFoldedCount: $categoriesFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, categorySortOption: $categorySortOption, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId, appLockEnabled: $appLockEnabled, appPinCode: $appPinCode, appPassword: $appPassword, autoLockTimeout: $autoLockTimeout, biometricUnlockEnabled: $biometricUnlockEnabled, notificationsEnabled: $notificationsEnabled, budgetAlertThresholds: $budgetAlertThresholds, recurringRemindersEnabled: $recurringRemindersEnabled, recurringReminderAdvanceDays: $recurringReminderAdvanceDays, weeklySpendingSummaryEnabled: $weeklySpendingSummaryEnabled, weeklySpendingSummaryDay: $weeklySpendingSummaryDay, encryptAttachments: $encryptAttachments, homeShowBudgetProgress: $homeShowBudgetProgress, homeSectionOrder: $homeSectionOrder)';
   }
 
   @override
@@ -956,6 +1019,8 @@ class _$SettingsDataImpl implements _SettingsData {
         (other.runtimeType == runtimeType &&
             other is _$SettingsDataImpl &&
             (identical(other.id, id) || other.id == id) &&
+            (identical(other.themeMode, themeMode) ||
+                other.themeMode == themeMode) &&
             (identical(other.colorIntensity, colorIntensity) ||
                 other.colorIntensity == colorIntensity) &&
             (identical(other.accentColorIndex, accentColorIndex) ||
@@ -1020,6 +1085,10 @@ class _$SettingsDataImpl implements _SettingsData {
                 other.appPinCode == appPinCode) &&
             (identical(other.appPassword, appPassword) ||
                 other.appPassword == appPassword) &&
+            (identical(other.autoLockTimeout, autoLockTimeout) ||
+                other.autoLockTimeout == autoLockTimeout) &&
+            (identical(other.biometricUnlockEnabled, biometricUnlockEnabled) ||
+                other.biometricUnlockEnabled == biometricUnlockEnabled) &&
             (identical(other.notificationsEnabled, notificationsEnabled) ||
                 other.notificationsEnabled == notificationsEnabled) &&
             const DeepCollectionEquality().equals(
@@ -1063,6 +1132,7 @@ class _$SettingsDataImpl implements _SettingsData {
   int get hashCode => Object.hashAll([
     runtimeType,
     id,
+    themeMode,
     colorIntensity,
     accentColorIndex,
     accountCardStyle,
@@ -1092,6 +1162,8 @@ class _$SettingsDataImpl implements _SettingsData {
     appLockEnabled,
     appPinCode,
     appPassword,
+    autoLockTimeout,
+    biometricUnlockEnabled,
     notificationsEnabled,
     const DeepCollectionEquality().hash(_budgetAlertThresholds),
     recurringRemindersEnabled,
@@ -1120,6 +1192,7 @@ class _$SettingsDataImpl implements _SettingsData {
 abstract class _SettingsData implements SettingsData {
   const factory _SettingsData({
     final String id,
+    final String themeMode,
     final String colorIntensity,
     final int accentColorIndex,
     final String accountCardStyle,
@@ -1149,6 +1222,8 @@ abstract class _SettingsData implements SettingsData {
     final bool appLockEnabled,
     final String? appPinCode,
     final String? appPassword,
+    final String autoLockTimeout,
+    final bool biometricUnlockEnabled,
     final bool notificationsEnabled,
     final List<int> budgetAlertThresholds,
     final bool recurringRemindersEnabled,
@@ -1166,6 +1241,10 @@ abstract class _SettingsData implements SettingsData {
   /// Fixed ID - always 'app_settings'
   @override
   String get id;
+
+  /// Theme mode: 'dark', 'light', 'system'
+  @override
+  String get themeMode;
 
   /// Color intensity: 'prism', 'zen', 'neon'
   @override
@@ -1282,6 +1361,14 @@ abstract class _SettingsData implements SettingsData {
   /// App password (stored as plaintext string)
   @override
   String? get appPassword;
+
+  /// Auto-lock timeout: 'immediate', 'after30Seconds', 'after1Minute', 'after5Minutes', 'after15Minutes', 'never'
+  @override
+  String get autoLockTimeout;
+
+  /// Whether biometric unlock is enabled (when hardware is available)
+  @override
+  bool get biometricUnlockEnabled;
 
   /// Whether notifications are enabled
   @override

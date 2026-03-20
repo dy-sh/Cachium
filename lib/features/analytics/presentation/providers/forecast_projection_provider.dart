@@ -10,6 +10,9 @@ import 'analytics_filter_provider.dart';
 import 'filtered_transactions_provider.dart';
 
 final forecastProjectionProvider = Provider<List<ForecastProjection>>((ref) {
+  // Keep alive to cache forecast computations across tab switches.
+  ref.keepAlive();
+
   final transactions = ref.watch(filteredAnalyticsTransactionsProvider);
   final filter = ref.watch(analyticsFilterProvider);
   final mainCurrency = ref.watch(mainCurrencyCodeProvider);

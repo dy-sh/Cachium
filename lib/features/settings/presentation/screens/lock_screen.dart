@@ -113,6 +113,8 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     final hasPassword = ref.read(appPasswordProvider) != null;
     final biometricAsync = ref.read(biometricAvailableProvider);
     final hasBiometric = biometricAsync.valueOrNull ?? false;
+    final biometricEnabled = ref.read(biometricUnlockEnabledProvider);
+    final biometricUsable = hasBiometric && biometricEnabled;
 
     // Pick default mode: PIN > Password > Biometric
     if (hasPin) {
@@ -120,15 +122,15 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     } else if (hasPassword) {
       _mode = _UnlockMode.password;
       _passwordFocusNode.requestFocus();
-    } else if (hasBiometric) {
+    } else if (biometricUsable) {
       _mode = _UnlockMode.biometric;
     } else {
       _mode = _UnlockMode.pin; // Fallback
     }
     setState(() {});
 
-    // Auto-trigger biometric if available
-    if (hasBiometric) {
+    // Auto-trigger biometric if available and enabled
+    if (biometricUsable) {
       _tryBiometric();
     }
   }
@@ -276,7 +278,8 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     final storedPin = ref.watch(appPinCodeProvider);
     final storedPassword = ref.watch(appPasswordProvider);
     final biometricAsync = ref.watch(biometricAvailableProvider);
-    final hasBiometric = biometricAsync.valueOrNull ?? false;
+    final biometricEnabled = ref.watch(biometricUnlockEnabledProvider);
+    final hasBiometric = (biometricAsync.valueOrNull ?? false) && biometricEnabled;
     final hasPin = storedPin != null;
     final hasPassword = storedPassword != null;
 
@@ -493,8 +496,8 @@ class _LockScreenState extends ConsumerState<LockScreen> {
           ),
         ),
         child: _isAuthenticating
-            ? const Padding(
-                padding: EdgeInsets.all(18),
+            ? Padding(
+                padding: const EdgeInsets.all(18),
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   color: AppColors.textSecondary,

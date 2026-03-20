@@ -29,6 +29,9 @@ final yoyAvailableYearsProvider = Provider<List<int>>((ref) {
 /// Aggregates transactions by year+period, applying account/category/type filters
 /// but ignoring date range (since YoY needs multi-year data).
 final yearOverYearDataProvider = Provider<List<YearOverYearSummary>>((ref) {
+  // Keep alive to cache YoY computations across tab switches.
+  ref.keepAlive();
+
   final transactionsAsync = ref.watch(transactionsProvider);
   final filter = ref.watch(analyticsFilterProvider);
   final categoriesAsync = ref.watch(categoriesProvider);

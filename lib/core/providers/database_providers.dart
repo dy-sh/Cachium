@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/repositories/account_repository.dart';
 import '../../data/repositories/asset_repository.dart';
+import '../../data/repositories/bill_repository.dart';
 import '../../data/repositories/budget_repository.dart';
 import '../../data/repositories/category_repository.dart';
 import '../../data/repositories/recurring_rule_repository.dart';
@@ -119,6 +120,14 @@ final transactionTemplateRepositoryProvider = Provider<TransactionTemplateReposi
 /// Provider for the attachment repository.
 final attachmentRepositoryProvider = Provider<AttachmentRepository>((ref) {
   return AttachmentRepository(
+    database: ref.watch(databaseProvider),
+    encryptionService: ref.watch(encryptionServiceProvider),
+  );
+});
+
+/// Provider for the bill repository.
+final billRepositoryProvider = Provider<BillRepository>((ref) {
+  return BillRepository(
     database: ref.watch(databaseProvider),
     encryptionService: ref.watch(encryptionServiceProvider),
   );

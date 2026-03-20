@@ -83,6 +83,63 @@ final budgetsProvider = AsyncNotifierProvider<BudgetsNotifier, List<Budget>>(() 
   return BudgetsNotifier();
 });
 
+/// Calculate expenses for a given category in a given month from a list of transactions.
+double _spentInMonth(List<Transaction> transactions, String categoryId, int year, int month) {
+  final monthStart = DateTime(year, month, 1);
+  final monthEnd = DateTime(year, month + 1, 0, 23, 59, 59);
+
+  double total = 0;
+  for (final tx in transactions) {
+    if (tx.type == TransactionType.expense &&
+        tx.categoryId == categoryId &&
+        !tx.date.isBefore(monthStart) &&
+        !tx.date.isAfter(monthEnd)) {
+      total += tx.amount;
+    }
+  }
+  return total;
+}
+
+/// Calculate cascading rollover for a budget.
+/// Looks back up to 12 months. For each prior month, rollover = max(0, budget - spent) + prior rollover.
+double _calculateRollover({
+  required List<Budget> allBudgets,
+  required List<Transaction> allTransactions,
+  required String categoryId,
+  required int year,
+  required int month,
+  int maxLookback = 12,
+}) {
+  double rollover = 0;
+
+  int curYear = year;
+  int curMonth = month;
+
+  for (int i = 0; i < maxLookback; i++) {
+    // Go to previous month
+    curMonth--;
+    if (curMonth < 1) {
+      curMonth = 12;
+      curYear--;
+    }
+
+    // Find budget for this category in the previous month
+    final prevBudget = allBudgets.where(
+      (b) => b.categoryId == categoryId && b.year == curYear && b.month == curMonth && b.rolloverEnabled,
+    );
+
+    if (prevBudget.isEmpty) break; // No rollover-enabled budget in prior month, stop cascading
+
+    final budgetAmount = prevBudget.first.amount;
+    final spent = _spentInMonth(allTransactions, categoryId, curYear, curMonth);
+    // Clamp: no negative rollover from overspending
+    final unused = (budgetAmount - spent).clamp(0.0, double.infinity);
+    rollover += unused;
+  }
+
+  return rollover;
+}
+
 final budgetProgressProvider = Provider.family<List<BudgetProgress>, ({int year, int month})>((ref, params) {
   final budgetsAsync = ref.watch(budgetsProvider);
   final transactionsAsync = ref.watch(transactionsProvider);
@@ -117,8 +174,21 @@ final budgetProgressProvider = Provider.family<List<BudgetProgress>, ({int year,
 
   return monthBudgets.map((budget) {
     final spent = spentByCategory[budget.categoryId] ?? 0;
-    final remaining = budget.amount - spent;
-    final percentage = budget.amount > 0 ? (spent / budget.amount * 100) : 0;
+
+    // Calculate rollover if enabled
+    final rolloverAmount = budget.rolloverEnabled
+        ? _calculateRollover(
+            allBudgets: budgets,
+            allTransactions: transactions,
+            categoryId: budget.categoryId,
+            year: params.year,
+            month: params.month,
+          )
+        : 0.0;
+
+    final effectiveBudget = budget.amount + rolloverAmount;
+    final remaining = effectiveBudget - spent;
+    final percentage = effectiveBudget > 0 ? (spent / effectiveBudget * 100) : 0;
 
     final category = categories.firstWhere(
       (c) => c.id == budget.categoryId,
@@ -139,7 +209,9 @@ final budgetProgressProvider = Provider.family<List<BudgetProgress>, ({int year,
       spent: spent,
       remaining: remaining,
       percentage: percentage.toDouble(),
-      isOverBudget: spent > budget.amount,
+      isOverBudget: spent > effectiveBudget,
+      rolloverAmount: rolloverAmount,
+      effectiveBudget: effectiveBudget,
     );
   }).toList()
     ..sort((a, b) => b.percentage.compareTo(a.percentage));

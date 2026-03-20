@@ -29,9 +29,9 @@ class ColumnMappingScreen extends ConsumerWidget {
     final progress = ref.watch(mappingProgressProvider);
 
     if (state.config == null) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: LoadingIndicator()),
+        body: const Center(child: LoadingIndicator()),
       );
     }
 

@@ -25,6 +25,8 @@ import '../features/settings/presentation/screens/import_preview_screen.dart';
 import '../features/settings/presentation/screens/preferences_settings_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/settings/presentation/screens/transactions_settings_screen.dart';
+import '../features/bills/presentation/screens/bills_screen.dart';
+import '../features/bills/presentation/screens/bill_form_screen.dart';
 import '../features/budgets/presentation/screens/budget_settings_screen.dart';
 import '../features/transactions/presentation/screens/deleted_transactions_screen.dart';
 import '../features/savings_goals/presentation/screens/savings_goals_screen.dart';
@@ -77,6 +79,9 @@ class AppRoutes {
   static const attachmentViewer = '/transaction/:id/attachments';
   static const attachmentStorage = '/settings/storage';
   static const manualRates = '/settings/formats/manual-rates';
+  static const bills = '/settings/bills';
+  static const billForm = '/bill/new';
+  static const billEdit = '/bill/:id/edit';
   static const deletedTransactions = '/transactions/deleted';
   static const transactionForm = '/transaction/new';
   static const transactionDetail = '/transaction/:id';
@@ -373,6 +378,33 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           const BudgetSettingsScreen(),
           animationsEnabled: ref.read(formAnimationsEnabledProvider),
         ),
+      ),
+      GoRoute(
+        path: AppRoutes.bills,
+        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
+          state,
+          const BillsScreen(),
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.billForm,
+        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
+          state,
+          const BillFormScreen(),
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.billEdit,
+        pageBuilder: (context, state) {
+          final billId = state.pathParameters['id']!;
+          return PageTransitions.buildSlideLeftTransition(
+            state,
+            BillFormScreen(billId: billId),
+            animationsEnabled: ref.read(formAnimationsEnabledProvider),
+          );
+        },
       ),
       GoRoute(
         path: AppRoutes.search,

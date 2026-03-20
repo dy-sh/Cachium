@@ -13,6 +13,8 @@ const _uuid = Uuid();
 
 /// Detects spending anomalies in transactions
 final anomalyDetectionProvider = Provider<List<SpendingAnomaly>>((ref) {
+  // Keep alive to cache anomaly detection across tab switches.
+  ref.keepAlive();
   final transactionsAsync = ref.watch(transactionsProvider);
   final filter = ref.watch(analyticsFilterProvider);
   final mainCurrency = ref.watch(mainCurrencyCodeProvider);

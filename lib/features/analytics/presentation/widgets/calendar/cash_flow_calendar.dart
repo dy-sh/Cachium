@@ -52,7 +52,7 @@ class _CashFlowCalendarState extends ConsumerState<CashFlowCalendar> {
               children: [
                 GestureDetector(
                   onTap: () => ref.read(calendarMonthOffsetProvider.notifier).state--,
-                  child: const Icon(
+                  child: Icon(
                     LucideIcons.chevronLeft,
                     size: 20,
                     color: AppColors.textSecondary,
@@ -64,7 +64,7 @@ class _CashFlowCalendarState extends ConsumerState<CashFlowCalendar> {
                 ),
                 GestureDetector(
                   onTap: () => ref.read(calendarMonthOffsetProvider.notifier).state++,
-                  child: const Icon(
+                  child: Icon(
                     LucideIcons.chevronRight,
                     size: 20,
                     color: AppColors.textSecondary,

@@ -756,6 +756,55 @@ final searchedTransactionsProvider = Provider<AsyncValue<List<TransactionGroup>>
   });
 });
 
+/// Number of transactions to show per page.
+const _transactionPageSize = 50;
+
+/// Controls how many transactions are currently displayed.
+/// Incremented by [loadMoreTransactions] when the user scrolls to the bottom.
+final transactionDisplayCountProvider = StateProvider<int>((ref) {
+  // Reset when the underlying data changes (search, filter, etc.)
+  ref.watch(searchedTransactionsProvider);
+  return _transactionPageSize;
+});
+
+/// Whether more transactions are available beyond the current display count.
+final hasMoreTransactionsProvider = Provider<bool>((ref) {
+  final displayCount = ref.watch(transactionDisplayCountProvider);
+  final groups = ref.watch(searchedTransactionsProvider).valueOrNull ?? [];
+  final totalCount = groups.fold<int>(0, (sum, g) => sum + g.transactions.length);
+  return displayCount < totalCount;
+});
+
+/// Paginated transaction groups: only includes enough groups to fill
+/// [transactionDisplayCountProvider] transactions.
+final paginatedTransactionsProvider = Provider<AsyncValue<List<TransactionGroup>>>((ref) {
+  final groupsAsync = ref.watch(searchedTransactionsProvider);
+  final displayCount = ref.watch(transactionDisplayCountProvider);
+
+  return groupsAsync.whenData((groups) {
+    int remaining = displayCount;
+    final result = <TransactionGroup>[];
+
+    for (final group in groups) {
+      if (remaining <= 0) break;
+
+      if (group.transactions.length <= remaining) {
+        result.add(group);
+        remaining -= group.transactions.length;
+      } else {
+        // Partial group: take only the first `remaining` transactions
+        result.add(TransactionGroup(
+          date: group.date,
+          transactions: group.transactions.sublist(0, remaining),
+        ));
+        remaining = 0;
+      }
+    }
+
+    return result;
+  });
+});
+
 final transactionsByAssetProvider = Provider.family<List<Transaction>, String>((ref, assetId) {
   final transactions = ref.watch(transactionsProvider).valueOrNull;
   if (transactions == null) return [];

@@ -85,7 +85,7 @@ class _ParentCategoryPickerState extends ConsumerState<ParentCategoryPicker> {
     final visibleNodes = _buildVisibleNodes(tree, excludedIds);
 
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),

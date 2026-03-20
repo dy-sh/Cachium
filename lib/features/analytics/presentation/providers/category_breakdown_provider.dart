@@ -65,6 +65,9 @@ List<CategoryBreakdown> _buildBreakdowns({
 }
 
 final categoryBreakdownProvider = Provider<List<CategoryBreakdown>>((ref) {
+  // Keep alive to avoid recomputing category breakdowns when switching tabs.
+  ref.keepAlive();
+
   final transactions = ref.watch(filteredAnalyticsTransactionsProvider);
   final categoriesAsync = ref.watch(categoriesProvider);
   final colorIntensity = ref.watch(colorIntensityProvider);

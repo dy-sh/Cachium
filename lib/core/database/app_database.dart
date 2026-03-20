@@ -4,6 +4,7 @@ import 'package:drift_flutter/drift_flutter.dart';
 import 'daos/account_dao.dart';
 import 'daos/asset_dao.dart';
 import 'daos/attachment_dao.dart';
+import 'daos/bill_dao.dart';
 import 'daos/budget_dao.dart';
 import 'daos/category_dao.dart';
 import 'daos/notification_log_dao.dart';
@@ -219,6 +220,19 @@ class NotificationLog extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Table for storing encrypted bills / due date reminders.
+@DataClassName('BillRow')
+class Bills extends Table {
+  TextColumn get id => text()();
+  IntColumn get createdAt => integer()();
+  IntColumn get lastUpdatedAt => integer()();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BlobColumn get encryptedBlob => blob()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Table for storing app settings.
 ///
 /// Settings are stored as unencrypted JSON since they don't contain sensitive data.
@@ -243,15 +257,15 @@ class AppSettings extends Table {
 /// is stored unencrypted on disk, but all sensitive transaction data is
 /// encrypted at the application layer before being stored.
 @DriftDatabase(
-  tables: [Transactions, Accounts, Categories, Budgets, Assets, RecurringRules, SavingsGoals, TransactionTemplates, Tags, TransactionTags, Attachments, NotificationLog, AppSettings],
-  daos: [TransactionDao, AccountDao, CategoryDao, BudgetDao, AssetDao, RecurringRuleDao, SavingsGoalDao, TransactionTemplateDao, TagDao, TransactionTagDao, AttachmentDao, NotificationLogDao, SettingsDao],
+  tables: [Transactions, Accounts, Categories, Budgets, Assets, RecurringRules, SavingsGoals, TransactionTemplates, Tags, TransactionTags, Attachments, NotificationLog, Bills, AppSettings],
+  daos: [TransactionDao, AccountDao, CategoryDao, BudgetDao, AssetDao, RecurringRuleDao, SavingsGoalDao, TransactionTemplateDao, TagDao, TransactionTagDao, AttachmentDao, NotificationLogDao, BillDao, SettingsDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
 
   @override
-  int get schemaVersion => 22;
+  int get schemaVersion => 23;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -307,6 +321,12 @@ class AppDatabase extends _$AppDatabase {
           if (from < 22) {
             // Add sortOrder column to accounts table
             await m.addColumn(accounts, accounts.sortOrder);
+            await _createIndexes(m);
+          }
+
+          if (from < 23) {
+            // Add Bills table for bill reminders / due date tracking
+            await m.createTable(bills);
             await _createIndexes(m);
           }
         },
@@ -367,6 +387,9 @@ class AppDatabase extends _$AppDatabase {
     );
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_attachments_is_deleted ON attachments(is_deleted)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_bills_is_deleted ON bills(is_deleted)',
     );
   }
 
@@ -885,6 +908,56 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> deleteAllAttachments() => attachmentDao.deleteAll();
 
+  // CRUD operations for bills (delegates to BillDao)
+
+  Future<void> insertBill({
+    required String id,
+    required int createdAt,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+  }) =>
+      billDao.insert(
+        id: id,
+        createdAt: createdAt,
+        lastUpdatedAt: lastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+      );
+
+  Future<void> upsertBill({
+    required String id,
+    required int createdAt,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+    bool isDeleted = false,
+  }) =>
+      billDao.upsert(
+        id: id,
+        createdAt: createdAt,
+        lastUpdatedAt: lastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+        isDeleted: isDeleted,
+      );
+
+  Future<void> updateBill({
+    required String id,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+  }) =>
+      billDao.updateRow(
+        id: id,
+        lastUpdatedAt: lastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+      );
+
+  Future<void> softDeleteBill(String id, int lastUpdatedAt) =>
+      billDao.softDelete(id, lastUpdatedAt);
+
+  Future<List<BillRow>> getAllBills() => billDao.getAll();
+
+  Stream<List<BillRow>> watchAllBills() => billDao.watchAll();
+
+  Future<void> deleteAllBills() => billDao.deleteAll();
+
   // NotificationLog operations (delegates to NotificationLogDao)
 
   Future<void> insertNotificationLog({
@@ -998,6 +1071,10 @@ class AppDatabase extends _$AppDatabase {
         'DELETE FROM attachments WHERE is_deleted = 1 AND last_updated_at < ?',
         [cutoff],
       );
+      await customStatement(
+        'DELETE FROM bills WHERE is_deleted = 1 AND last_updated_at < ?',
+        [cutoff],
+      );
     });
   }
 
@@ -1014,6 +1091,7 @@ class AppDatabase extends _$AppDatabase {
       await deleteAllTags();
       await deleteAllTransactionTags();
       await deleteAllAttachments();
+      await deleteAllBills();
       if (includeSettings) {
         await deleteAllSettings();
       }
