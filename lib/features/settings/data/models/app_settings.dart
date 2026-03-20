@@ -193,6 +193,7 @@ class AppSettings {
   final String? lastUsedAccountId;
 
   // Transactions
+  final bool autoCategorizeByMerchant;
   final bool selectLastCategory;
   final bool selectLastAccount;
   final int accountsFoldedCount;
@@ -263,6 +264,7 @@ class AppSettings {
     this.hapticFeedbackEnabled = true,
     this.startScreen = StartScreen.home,
     this.lastUsedAccountId,
+    this.autoCategorizeByMerchant = true,
     this.selectLastCategory = false,
     this.selectLastAccount = true,
     this.accountsFoldedCount = 3,
@@ -327,6 +329,7 @@ class AppSettings {
     bool? hapticFeedbackEnabled,
     StartScreen? startScreen,
     String? lastUsedAccountId,
+    bool? autoCategorizeByMerchant,
     bool? selectLastCategory,
     bool? selectLastAccount,
     int? accountsFoldedCount,
@@ -387,6 +390,7 @@ class AppSettings {
       hapticFeedbackEnabled: hapticFeedbackEnabled ?? this.hapticFeedbackEnabled,
       startScreen: startScreen ?? this.startScreen,
       lastUsedAccountId: lastUsedAccountId ?? this.lastUsedAccountId,
+      autoCategorizeByMerchant: autoCategorizeByMerchant ?? this.autoCategorizeByMerchant,
       selectLastCategory: selectLastCategory ?? this.selectLastCategory,
       selectLastAccount: selectLastAccount ?? this.selectLastAccount,
       accountsFoldedCount: accountsFoldedCount ?? this.accountsFoldedCount,

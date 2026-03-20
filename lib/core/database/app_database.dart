@@ -7,6 +7,7 @@ import 'daos/attachment_dao.dart';
 import 'daos/bill_dao.dart';
 import 'daos/budget_dao.dart';
 import 'daos/category_dao.dart';
+import 'daos/net_worth_snapshot_dao.dart';
 import 'daos/notification_log_dao.dart';
 import 'daos/recurring_rule_dao.dart';
 import 'daos/savings_goal_dao.dart';
@@ -233,6 +234,21 @@ class Bills extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Table for storing net worth snapshots (plaintext, monthly aggregates).
+@DataClassName('NetWorthSnapshotRow')
+class NetWorthSnapshots extends Table {
+  TextColumn get id => text()();
+  IntColumn get date => integer()(); // First-of-month in Unix ms
+  RealColumn get netWorth => real()();
+  RealColumn get totalHoldings => real()();
+  RealColumn get totalLiabilities => real()();
+  TextColumn get perAccountBalancesJson => text()();
+  TextColumn get mainCurrencyCode => text()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Table for storing app settings.
 ///
 /// Settings are stored as unencrypted JSON since they don't contain sensitive data.
@@ -257,15 +273,15 @@ class AppSettings extends Table {
 /// is stored unencrypted on disk, but all sensitive transaction data is
 /// encrypted at the application layer before being stored.
 @DriftDatabase(
-  tables: [Transactions, Accounts, Categories, Budgets, Assets, RecurringRules, SavingsGoals, TransactionTemplates, Tags, TransactionTags, Attachments, NotificationLog, Bills, AppSettings],
-  daos: [TransactionDao, AccountDao, CategoryDao, BudgetDao, AssetDao, RecurringRuleDao, SavingsGoalDao, TransactionTemplateDao, TagDao, TransactionTagDao, AttachmentDao, NotificationLogDao, BillDao, SettingsDao],
+  tables: [Transactions, Accounts, Categories, Budgets, Assets, RecurringRules, SavingsGoals, TransactionTemplates, Tags, TransactionTags, Attachments, NotificationLog, Bills, NetWorthSnapshots, AppSettings],
+  daos: [TransactionDao, AccountDao, CategoryDao, BudgetDao, AssetDao, RecurringRuleDao, SavingsGoalDao, TransactionTemplateDao, TagDao, TransactionTagDao, AttachmentDao, NotificationLogDao, BillDao, NetWorthSnapshotDao, SettingsDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
 
   @override
-  int get schemaVersion => 24;
+  int get schemaVersion => 25;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -338,6 +354,10 @@ class AppDatabase extends _$AppDatabase {
             await customStatement(
               'DELETE FROM attachments WHERE transaction_id NOT IN (SELECT id FROM transactions)',
             );
+          }
+
+          if (from < 25) {
+            await m.createTable(netWorthSnapshots);
           }
         },
       );
@@ -983,6 +1003,11 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> deleteAllBills() => billDao.deleteAll();
 
+  // Net Worth Snapshot operations (delegates to NetWorthSnapshotDao)
+  // Direct access via netWorthSnapshotDao for repository use
+
+  Future<void> deleteAllNetWorthSnapshots() => netWorthSnapshotDao.deleteAll();
+
   // NotificationLog operations (delegates to NotificationLogDao)
 
   Future<void> insertNotificationLog({
@@ -1117,6 +1142,7 @@ class AppDatabase extends _$AppDatabase {
       await deleteAllTransactionTags();
       await deleteAllAttachments();
       await deleteAllBills();
+      await deleteAllNetWorthSnapshots();
       if (includeSettings) {
         await deleteAllSettings();
       }

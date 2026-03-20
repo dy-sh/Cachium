@@ -60,6 +60,13 @@ class TransactionsSettingsScreen extends ConsumerWidget {
                           onChanged: (value) =>
                               ref.read(settingsProvider.notifier).setSelectLastCategory(value),
                         ),
+                        SettingsToggleTile(
+                          title: 'Auto-categorize by Merchant',
+                          description: 'Suggest category based on merchant history',
+                          value: settings.autoCategorizeByMerchant,
+                          onChanged: (value) =>
+                              ref.read(settingsProvider.notifier).setAutoCategorizeByMerchant(value),
+                        ),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.xl),

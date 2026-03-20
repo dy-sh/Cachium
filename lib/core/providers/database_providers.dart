@@ -5,6 +5,7 @@ import '../../data/repositories/asset_repository.dart';
 import '../../data/repositories/bill_repository.dart';
 import '../../data/repositories/budget_repository.dart';
 import '../../data/repositories/category_repository.dart';
+import '../../data/repositories/net_worth_snapshot_repository.dart';
 import '../../data/repositories/recurring_rule_repository.dart';
 import '../../data/repositories/savings_goal_repository.dart';
 import '../../data/repositories/attachment_repository.dart';
@@ -138,6 +139,13 @@ final tagRepositoryProvider = Provider<TagRepository>((ref) {
   return TagRepository(
     database: ref.watch(databaseProvider),
     encryptionService: ref.watch(encryptionServiceProvider),
+  );
+});
+
+/// Provider for the net worth snapshot repository.
+final netWorthSnapshotRepositoryProvider = Provider<NetWorthSnapshotRepository>((ref) {
+  return NetWorthSnapshotRepository(
+    database: ref.watch(databaseProvider),
   );
 });
 

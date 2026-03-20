@@ -62,6 +62,9 @@ class SettingsData with _$SettingsData {
     /// Last used account ID for transaction form
     String? lastUsedAccountId,
 
+    /// Whether to auto-categorize by merchant name
+    @Default(true) bool autoCategorizeByMerchant,
+
     /// Whether to pre-select last used category
     @Default(false) bool selectLastCategory,
 

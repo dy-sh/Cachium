@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app.dart';
 import 'core/database/services/key_migration_service.dart';
+import 'core/database/services/net_worth_snapshot_service.dart';
 import 'core/database/services/secure_key_provider.dart';
 import 'core/providers/database_providers.dart';
 import 'core/services/notification_service.dart';
@@ -49,6 +50,11 @@ void main() async {
 
   // Clean up soft-deleted records older than 30 days
   db.cleanupDeletedRecords();
+
+  // Take monthly net worth snapshot (non-blocking)
+  NetWorthSnapshotService.takeSnapshotIfNeeded(container);
+  // Backfill historical snapshots if none exist (async, non-blocking)
+  NetWorthSnapshotService.backfillIfNeeded(container);
 
   runApp(
     UncontrolledProviderScope(

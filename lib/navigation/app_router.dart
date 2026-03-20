@@ -8,6 +8,7 @@ import '../features/assets/presentation/screens/asset_detail_screen.dart';
 import '../features/assets/presentation/screens/assets_screen.dart';
 import '../features/analytics/presentation/screens/analytics_screen.dart';
 import '../features/analytics/presentation/screens/financial_calendar_screen.dart';
+import '../features/analytics/presentation/screens/net_worth_history_screen.dart';
 import '../features/home/presentation/screens/home_screen.dart';
 import '../features/settings/presentation/providers/settings_provider.dart';
 import '../features/settings/data/models/export_options.dart';
@@ -93,6 +94,7 @@ class AppRoutes {
   static const assets = '/settings/assets';
   static const assetDetail = '/asset/:id';
   static const calendar = '/calendar';
+  static const netWorthHistory = '/analytics/net-worth-history';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -507,6 +509,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
           state,
           const ImportPreviewScreen(),
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.netWorthHistory,
+        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
+          state,
+          const NetWorthHistoryScreen(),
           animationsEnabled: ref.read(formAnimationsEnabledProvider),
         ),
       ),

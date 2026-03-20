@@ -73,6 +73,7 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
   Future<void> setLastUsedAccountId(String? v) => _update((s) => s.copyWith(lastUsedAccountId: v));
 
   // Transactions
+  Future<void> setAutoCategorizeByMerchant(bool v) => _update((s) => s.copyWith(autoCategorizeByMerchant: v));
   Future<void> setSelectLastCategory(bool v) => _update((s) => s.copyWith(selectLastCategory: v));
   Future<void> setSelectLastAccount(bool v) => _update((s) => s.copyWith(selectLastAccount: v));
   Future<void> setAccountsFoldedCount(int v) => _update((s) => s.copyWith(accountsFoldedCount: v));
@@ -272,6 +273,7 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
       startScreen: defaults.startScreen,
       lastUsedAccountId: defaults.lastUsedAccountId,
       // Reset Transactions
+      autoCategorizeByMerchant: defaults.autoCategorizeByMerchant,
       selectLastCategory: defaults.selectLastCategory,
       selectLastAccount: defaults.selectLastAccount,
       accountsFoldedCount: defaults.accountsFoldedCount,
@@ -400,6 +402,11 @@ final tutorialCompletedProvider = Provider<bool>((ref) {
 });
 
 // Transaction settings providers
+final autoCategorizeByMerchantProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsProvider);
+  return settingsAsync.valueOrNull?.autoCategorizeByMerchant ?? true;
+});
+
 final selectLastCategoryProvider = Provider<bool>((ref) {
   final settingsAsync = ref.watch(settingsProvider);
   return settingsAsync.valueOrNull?.selectLastCategory ?? false;

@@ -258,6 +258,30 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                         ref.read(transactionFormProvider.notifier).setMerchant(value);
                       },
                     ),
+                    if (formState.categoryAutoSelected)
+                      Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.xs),
+                        child: Row(
+                          children: [
+                            Icon(LucideIcons.sparkles, size: 12, color: AppColors.textTertiary),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Auto-selected from merchant',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textTertiary,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            GestureDetector(
+                              onTap: () {
+                                ref.read(transactionFormProvider.notifier).setCategory(formState.categoryId!);
+                              },
+                              child: Icon(LucideIcons.x, size: 12, color: AppColors.textTertiary),
+                            ),
+                          ],
+                        ),
+                      ),
                     const SizedBox(height: AppSpacing.lg),
                     AttachmentPicker(
                       pendingFiles: formState.pendingAttachments,

@@ -49,6 +49,8 @@ class TransactionFormState {
   final List<String> originalTagIds;
   // Settings-driven validation
   final bool allowZeroAmount;
+  // Auto-categorization tracking
+  final bool categoryAutoSelected;
   // Validation UI state
   final bool showValidationErrors;
 
@@ -71,6 +73,7 @@ class TransactionFormState {
     this.originalTransaction,
     this.originalTagIds = const [],
     this.allowZeroAmount = false,
+    this.categoryAutoSelected = false,
     this.showValidationErrors = false,
   });
 
@@ -190,6 +193,7 @@ class TransactionFormState {
     Transaction? originalTransaction,
     List<String>? originalTagIds,
     bool? allowZeroAmount,
+    bool? categoryAutoSelected,
     bool? showValidationErrors,
   }) {
     return TransactionFormState(
@@ -215,6 +219,7 @@ class TransactionFormState {
       originalTransaction: originalTransaction ?? this.originalTransaction,
       originalTagIds: originalTagIds ?? this.originalTagIds,
       allowZeroAmount: allowZeroAmount ?? this.allowZeroAmount,
+      categoryAutoSelected: categoryAutoSelected ?? this.categoryAutoSelected,
       showValidationErrors: showValidationErrors ?? this.showValidationErrors,
     );
   }
@@ -330,7 +335,7 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
   }
 
   void setCategory(String categoryId) {
-    state = state.copyWith(categoryId: categoryId);
+    state = state.copyWith(categoryId: categoryId, categoryAutoSelected: false);
   }
 
   void setAccount(String accountId) {
@@ -369,6 +374,27 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
 
   void setMerchant(String? merchant) {
     state = state.copyWith(merchant: merchant);
+
+    // Auto-categorize by merchant when creating a new transaction
+    if (state.isEditing) return;
+    if (merchant == null || merchant.trim().isEmpty) return;
+    final autoEnabled = ref.read(autoCategorizeByMerchantProvider);
+    if (!autoEnabled) return;
+    // Only auto-fill if no manual category was selected
+    if (state.categoryId != null && !state.categoryAutoSelected) return;
+
+    final merchantMap = ref.read(merchantCategoryMapProvider);
+    final suggestedCategoryId = merchantMap[merchant.trim().toLowerCase()];
+    if (suggestedCategoryId == null) return;
+
+    // Validate the category still exists
+    final category = ref.read(categoryByIdProvider(suggestedCategoryId));
+    if (category == null) return;
+
+    state = state.copyWith(
+      categoryId: suggestedCategoryId,
+      categoryAutoSelected: true,
+    );
   }
 
   void setConversionRate(double rate) {

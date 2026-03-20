@@ -668,4 +668,19 @@
 - Tapping a day opens a detail panel listing that day's transactions
 - Independent of analytics filters
 
+#### 63. Auto-Categorization by Merchant
+- When creating a new transaction, typing a previously used merchant name automatically suggests the most frequently used category for that merchant
+- A subtle "Auto-selected from merchant" hint displays below the category field when auto-filled; manual category selection overrides it
+- Configurable via Settings > Transactions > "Auto-categorize by Merchant" (default: on)
+
+#### 64. Advanced Transaction Filters
+- Expandable filter panel on the transactions list, toggled via a sliders icon next to the search bar
+- Filters include: amount range (min/max), date range picker, category multi-select, and account multi-select
+- An active filter count badge shows on the filter icon; "Clear All Filters" resets all active filters at once
+
+#### 65. Net Worth History (Persistent Snapshots)
+- Monthly net worth snapshots are automatically recorded to the database; up to 12 months of history are backfilled from existing transaction data on first launch
+- A new "Net Worth History" screen (accessible via "Full History" on the Analytics net worth chart) displays a full-timeline chart with holdings, liabilities, and net worth lines, current net worth with month-over-month trend, and a monthly breakdown list
+- Database schema bumped to v25 with a new NetWorthSnapshots table
+
 ---

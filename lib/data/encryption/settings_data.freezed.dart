@@ -72,6 +72,9 @@ mixin _$SettingsData {
   /// Last used account ID for transaction form
   String? get lastUsedAccountId => throw _privateConstructorUsedError;
 
+  /// Whether to auto-categorize by merchant name
+  bool get autoCategorizeByMerchant => throw _privateConstructorUsedError;
+
   /// Whether to pre-select last used category
   bool get selectLastCategory => throw _privateConstructorUsedError;
 
@@ -185,6 +188,7 @@ abstract class $SettingsDataCopyWith<$Res> {
     bool hapticFeedbackEnabled,
     String startScreen,
     String? lastUsedAccountId,
+    bool autoCategorizeByMerchant,
     bool selectLastCategory,
     bool selectLastAccount,
     int accountsFoldedCount,
@@ -246,6 +250,7 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
     Object? hapticFeedbackEnabled = null,
     Object? startScreen = null,
     Object? lastUsedAccountId = freezed,
+    Object? autoCategorizeByMerchant = null,
     Object? selectLastCategory = null,
     Object? selectLastAccount = null,
     Object? accountsFoldedCount = null,
@@ -343,6 +348,10 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
                 ? _value.lastUsedAccountId
                 : lastUsedAccountId // ignore: cast_nullable_to_non_nullable
                       as String?,
+            autoCategorizeByMerchant: null == autoCategorizeByMerchant
+                ? _value.autoCategorizeByMerchant
+                : autoCategorizeByMerchant // ignore: cast_nullable_to_non_nullable
+                      as bool,
             selectLastCategory: null == selectLastCategory
                 ? _value.selectLastCategory
                 : selectLastCategory // ignore: cast_nullable_to_non_nullable
@@ -480,6 +489,7 @@ abstract class _$$SettingsDataImplCopyWith<$Res>
     bool hapticFeedbackEnabled,
     String startScreen,
     String? lastUsedAccountId,
+    bool autoCategorizeByMerchant,
     bool selectLastCategory,
     bool selectLastAccount,
     int accountsFoldedCount,
@@ -540,6 +550,7 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
     Object? hapticFeedbackEnabled = null,
     Object? startScreen = null,
     Object? lastUsedAccountId = freezed,
+    Object? autoCategorizeByMerchant = null,
     Object? selectLastCategory = null,
     Object? selectLastAccount = null,
     Object? accountsFoldedCount = null,
@@ -637,6 +648,10 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
             ? _value.lastUsedAccountId
             : lastUsedAccountId // ignore: cast_nullable_to_non_nullable
                   as String?,
+        autoCategorizeByMerchant: null == autoCategorizeByMerchant
+            ? _value.autoCategorizeByMerchant
+            : autoCategorizeByMerchant // ignore: cast_nullable_to_non_nullable
+                  as bool,
         selectLastCategory: null == selectLastCategory
             ? _value.selectLastCategory
             : selectLastCategory // ignore: cast_nullable_to_non_nullable
@@ -767,6 +782,7 @@ class _$SettingsDataImpl implements _SettingsData {
     this.hapticFeedbackEnabled = true,
     this.startScreen = 'home',
     this.lastUsedAccountId,
+    this.autoCategorizeByMerchant = true,
     this.selectLastCategory = false,
     this.selectLastAccount = true,
     this.accountsFoldedCount = 3,
@@ -886,6 +902,11 @@ class _$SettingsDataImpl implements _SettingsData {
   /// Last used account ID for transaction form
   @override
   final String? lastUsedAccountId;
+
+  /// Whether to auto-categorize by merchant name
+  @override
+  @JsonKey()
+  final bool autoCategorizeByMerchant;
 
   /// Whether to pre-select last used category
   @override
@@ -1031,7 +1052,7 @@ class _$SettingsDataImpl implements _SettingsData {
 
   @override
   String toString() {
-    return 'SettingsData(id: $id, themeMode: $themeMode, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, mainCurrencyCode: $mainCurrencyCode, exchangeRateApiOption: $exchangeRateApiOption, cachedExchangeRates: $cachedExchangeRates, lastRateFetchTimestamp: $lastRateFetchTimestamp, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, categoriesFoldedCount: $categoriesFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, categorySortOption: $categorySortOption, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId, appLockEnabled: $appLockEnabled, appPinCode: $appPinCode, appPassword: $appPassword, autoLockTimeout: $autoLockTimeout, biometricUnlockEnabled: $biometricUnlockEnabled, notificationsEnabled: $notificationsEnabled, budgetAlertThresholds: $budgetAlertThresholds, recurringRemindersEnabled: $recurringRemindersEnabled, recurringReminderAdvanceDays: $recurringReminderAdvanceDays, weeklySpendingSummaryEnabled: $weeklySpendingSummaryEnabled, weeklySpendingSummaryDay: $weeklySpendingSummaryDay, encryptAttachments: $encryptAttachments, homeShowBudgetProgress: $homeShowBudgetProgress, homeSectionOrder: $homeSectionOrder, tutorialCompleted: $tutorialCompleted)';
+    return 'SettingsData(id: $id, themeMode: $themeMode, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, mainCurrencyCode: $mainCurrencyCode, exchangeRateApiOption: $exchangeRateApiOption, cachedExchangeRates: $cachedExchangeRates, lastRateFetchTimestamp: $lastRateFetchTimestamp, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, autoCategorizeByMerchant: $autoCategorizeByMerchant, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, categoriesFoldedCount: $categoriesFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, categorySortOption: $categorySortOption, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId, appLockEnabled: $appLockEnabled, appPinCode: $appPinCode, appPassword: $appPassword, autoLockTimeout: $autoLockTimeout, biometricUnlockEnabled: $biometricUnlockEnabled, notificationsEnabled: $notificationsEnabled, budgetAlertThresholds: $budgetAlertThresholds, recurringRemindersEnabled: $recurringRemindersEnabled, recurringReminderAdvanceDays: $recurringReminderAdvanceDays, weeklySpendingSummaryEnabled: $weeklySpendingSummaryEnabled, weeklySpendingSummaryDay: $weeklySpendingSummaryDay, encryptAttachments: $encryptAttachments, homeShowBudgetProgress: $homeShowBudgetProgress, homeSectionOrder: $homeSectionOrder, tutorialCompleted: $tutorialCompleted)';
   }
 
   @override
@@ -1072,6 +1093,11 @@ class _$SettingsDataImpl implements _SettingsData {
                 other.startScreen == startScreen) &&
             (identical(other.lastUsedAccountId, lastUsedAccountId) ||
                 other.lastUsedAccountId == lastUsedAccountId) &&
+            (identical(
+                  other.autoCategorizeByMerchant,
+                  autoCategorizeByMerchant,
+                ) ||
+                other.autoCategorizeByMerchant == autoCategorizeByMerchant) &&
             (identical(other.selectLastCategory, selectLastCategory) ||
                 other.selectLastCategory == selectLastCategory) &&
             (identical(other.selectLastAccount, selectLastAccount) ||
@@ -1171,6 +1197,7 @@ class _$SettingsDataImpl implements _SettingsData {
     hapticFeedbackEnabled,
     startScreen,
     lastUsedAccountId,
+    autoCategorizeByMerchant,
     selectLastCategory,
     selectLastAccount,
     accountsFoldedCount,
@@ -1232,6 +1259,7 @@ abstract class _SettingsData implements SettingsData {
     final bool hapticFeedbackEnabled,
     final String startScreen,
     final String? lastUsedAccountId,
+    final bool autoCategorizeByMerchant,
     final bool selectLastCategory,
     final bool selectLastAccount,
     final int accountsFoldedCount,
@@ -1330,6 +1358,10 @@ abstract class _SettingsData implements SettingsData {
   /// Last used account ID for transaction form
   @override
   String? get lastUsedAccountId;
+
+  /// Whether to auto-categorize by merchant name
+  @override
+  bool get autoCategorizeByMerchant;
 
   /// Whether to pre-select last used category
   @override

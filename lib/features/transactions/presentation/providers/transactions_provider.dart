@@ -6,6 +6,7 @@ import '../../../../core/providers/exchange_rate_provider.dart';
 import '../../../../core/utils/currency_conversion.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
+import '../../data/models/advanced_transaction_filter.dart';
 import '../../data/models/transaction.dart';
 
 class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
@@ -637,21 +638,107 @@ final transactionFilterProvider = StateProvider<TransactionFilter>((ref) {
   return TransactionFilter.all;
 });
 
+class AdvancedTransactionFilterNotifier extends Notifier<AdvancedTransactionFilter> {
+  @override
+  AdvancedTransactionFilter build() => const AdvancedTransactionFilter();
+
+  void setAmountRange({double? min, double? max}) {
+    state = state.copyWith(
+      minAmount: min,
+      clearMinAmount: min == null,
+      maxAmount: max,
+      clearMaxAmount: max == null,
+    );
+  }
+
+  void setDateRange({DateTime? start, DateTime? end}) {
+    state = state.copyWith(
+      startDate: start,
+      clearStartDate: start == null,
+      endDate: end,
+      clearEndDate: end == null,
+    );
+  }
+
+  void toggleCategory(String categoryId) {
+    final current = Set<String>.from(state.selectedCategoryIds);
+    if (current.contains(categoryId)) {
+      current.remove(categoryId);
+    } else {
+      current.add(categoryId);
+    }
+    state = state.copyWith(selectedCategoryIds: current);
+  }
+
+  void setCategories(Set<String> ids) {
+    state = state.copyWith(selectedCategoryIds: ids);
+  }
+
+  void toggleAccount(String accountId) {
+    final current = Set<String>.from(state.selectedAccountIds);
+    if (current.contains(accountId)) {
+      current.remove(accountId);
+    } else {
+      current.add(accountId);
+    }
+    state = state.copyWith(selectedAccountIds: current);
+  }
+
+  void setAccounts(Set<String> ids) {
+    state = state.copyWith(selectedAccountIds: ids);
+  }
+
+  void clearAll() {
+    state = const AdvancedTransactionFilter();
+  }
+}
+
+final advancedTransactionFilterProvider =
+    NotifierProvider<AdvancedTransactionFilterNotifier, AdvancedTransactionFilter>(() {
+  return AdvancedTransactionFilterNotifier();
+});
+
+final activeFilterCountProvider = Provider<int>((ref) {
+  return ref.watch(advancedTransactionFilterProvider).activeFilterCount;
+});
+
 final filteredTransactionsProvider = Provider<AsyncValue<List<Transaction>>>((ref) {
   final transactionsAsync = ref.watch(transactionsProvider);
   final filter = ref.watch(transactionFilterProvider);
+  final advanced = ref.watch(advancedTransactionFilterProvider);
 
   return transactionsAsync.whenData((transactions) {
+    var result = transactions;
+
+    // Type filter
     switch (filter) {
       case TransactionFilter.income:
-        return transactions.where((t) => t.type == TransactionType.income).toList();
+        result = result.where((t) => t.type == TransactionType.income).toList();
       case TransactionFilter.expense:
-        return transactions.where((t) => t.type == TransactionType.expense).toList();
+        result = result.where((t) => t.type == TransactionType.expense).toList();
       case TransactionFilter.transfer:
-        return transactions.where((t) => t.type == TransactionType.transfer).toList();
+        result = result.where((t) => t.type == TransactionType.transfer).toList();
       case TransactionFilter.all:
-        return transactions;
+        break;
     }
+
+    // Advanced filters
+    if (advanced.isActive) {
+      result = result.where((t) {
+        if (advanced.minAmount != null && t.amount < advanced.minAmount!) return false;
+        if (advanced.maxAmount != null && t.amount > advanced.maxAmount!) return false;
+        if (advanced.startDate != null && t.date.isBefore(advanced.startDate!)) return false;
+        if (advanced.endDate != null) {
+          final endOfDay = DateTime(advanced.endDate!.year, advanced.endDate!.month, advanced.endDate!.day, 23, 59, 59);
+          if (t.date.isAfter(endOfDay)) return false;
+        }
+        if (advanced.selectedCategoryIds.isNotEmpty && !advanced.selectedCategoryIds.contains(t.categoryId)) return false;
+        if (advanced.selectedAccountIds.isNotEmpty && !advanced.selectedAccountIds.contains(t.accountId)) return false;
+        return true;
+      }).toList();
+    }
+
+    return result;
   });
 });
 
@@ -810,6 +897,46 @@ final transactionsByAssetProvider = Provider.family<List<Transaction>, String>((
   if (transactions == null) return [];
   return transactions.where((t) => t.assetId == assetId).toList()
     ..sort((a, b) => b.date.compareTo(a.date));
+});
+
+/// Maps lowercase merchant names to their most frequently used category ID.
+/// Excludes transfers. Used for auto-categorization.
+final merchantCategoryMapProvider = Provider<Map<String, String>>((ref) {
+  final transactions = ref.watch(transactionsProvider).valueOrNull;
+  if (transactions == null) return {};
+
+  // Count category usage per merchant
+  final merchantCategoryCounts = <String, Map<String, int>>{};
+  for (final tx in transactions) {
+    if (tx.type == TransactionType.transfer) continue;
+    final merchant = tx.merchant?.trim().toLowerCase();
+    if (merchant == null || merchant.isEmpty) continue;
+    final categoryId = tx.categoryId;
+    if (categoryId.isEmpty) continue;
+
+    merchantCategoryCounts.putIfAbsent(merchant, () => {});
+    merchantCategoryCounts[merchant]![categoryId] =
+        (merchantCategoryCounts[merchant]![categoryId] ?? 0) + 1;
+  }
+
+  // Pick the most frequent category for each merchant
+  final result = <String, String>{};
+  for (final entry in merchantCategoryCounts.entries) {
+    final counts = entry.value;
+    String? bestId;
+    int bestCount = 0;
+    for (final catEntry in counts.entries) {
+      if (catEntry.value > bestCount) {
+        bestCount = catEntry.value;
+        bestId = catEntry.key;
+      }
+    }
+    if (bestId != null) {
+      result[entry.key] = bestId;
+    }
+  }
+
+  return result;
 });
 
 /// Provides distinct merchant names from transaction history, sorted by frequency.

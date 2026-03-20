@@ -4945,6 +4945,498 @@ class BillsCompanion extends UpdateCompanion<BillRow> {
   }
 }
 
+class $NetWorthSnapshotsTable extends NetWorthSnapshots
+    with TableInfo<$NetWorthSnapshotsTable, NetWorthSnapshotRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $NetWorthSnapshotsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<int> date = GeneratedColumn<int>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _netWorthMeta = const VerificationMeta(
+    'netWorth',
+  );
+  @override
+  late final GeneratedColumn<double> netWorth = GeneratedColumn<double>(
+    'net_worth',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _totalHoldingsMeta = const VerificationMeta(
+    'totalHoldings',
+  );
+  @override
+  late final GeneratedColumn<double> totalHoldings = GeneratedColumn<double>(
+    'total_holdings',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _totalLiabilitiesMeta = const VerificationMeta(
+    'totalLiabilities',
+  );
+  @override
+  late final GeneratedColumn<double> totalLiabilities = GeneratedColumn<double>(
+    'total_liabilities',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _perAccountBalancesJsonMeta =
+      const VerificationMeta('perAccountBalancesJson');
+  @override
+  late final GeneratedColumn<String> perAccountBalancesJson =
+      GeneratedColumn<String>(
+        'per_account_balances_json',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _mainCurrencyCodeMeta = const VerificationMeta(
+    'mainCurrencyCode',
+  );
+  @override
+  late final GeneratedColumn<String> mainCurrencyCode = GeneratedColumn<String>(
+    'main_currency_code',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    date,
+    netWorth,
+    totalHoldings,
+    totalLiabilities,
+    perAccountBalancesJson,
+    mainCurrencyCode,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'net_worth_snapshots';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<NetWorthSnapshotRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('net_worth')) {
+      context.handle(
+        _netWorthMeta,
+        netWorth.isAcceptableOrUnknown(data['net_worth']!, _netWorthMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_netWorthMeta);
+    }
+    if (data.containsKey('total_holdings')) {
+      context.handle(
+        _totalHoldingsMeta,
+        totalHoldings.isAcceptableOrUnknown(
+          data['total_holdings']!,
+          _totalHoldingsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_totalHoldingsMeta);
+    }
+    if (data.containsKey('total_liabilities')) {
+      context.handle(
+        _totalLiabilitiesMeta,
+        totalLiabilities.isAcceptableOrUnknown(
+          data['total_liabilities']!,
+          _totalLiabilitiesMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_totalLiabilitiesMeta);
+    }
+    if (data.containsKey('per_account_balances_json')) {
+      context.handle(
+        _perAccountBalancesJsonMeta,
+        perAccountBalancesJson.isAcceptableOrUnknown(
+          data['per_account_balances_json']!,
+          _perAccountBalancesJsonMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_perAccountBalancesJsonMeta);
+    }
+    if (data.containsKey('main_currency_code')) {
+      context.handle(
+        _mainCurrencyCodeMeta,
+        mainCurrencyCode.isAcceptableOrUnknown(
+          data['main_currency_code']!,
+          _mainCurrencyCodeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_mainCurrencyCodeMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  NetWorthSnapshotRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return NetWorthSnapshotRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      date: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}date'],
+      )!,
+      netWorth: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}net_worth'],
+      )!,
+      totalHoldings: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total_holdings'],
+      )!,
+      totalLiabilities: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total_liabilities'],
+      )!,
+      perAccountBalancesJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}per_account_balances_json'],
+      )!,
+      mainCurrencyCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}main_currency_code'],
+      )!,
+    );
+  }
+
+  @override
+  $NetWorthSnapshotsTable createAlias(String alias) {
+    return $NetWorthSnapshotsTable(attachedDatabase, alias);
+  }
+}
+
+class NetWorthSnapshotRow extends DataClass
+    implements Insertable<NetWorthSnapshotRow> {
+  final String id;
+  final int date;
+  final double netWorth;
+  final double totalHoldings;
+  final double totalLiabilities;
+  final String perAccountBalancesJson;
+  final String mainCurrencyCode;
+  const NetWorthSnapshotRow({
+    required this.id,
+    required this.date,
+    required this.netWorth,
+    required this.totalHoldings,
+    required this.totalLiabilities,
+    required this.perAccountBalancesJson,
+    required this.mainCurrencyCode,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['date'] = Variable<int>(date);
+    map['net_worth'] = Variable<double>(netWorth);
+    map['total_holdings'] = Variable<double>(totalHoldings);
+    map['total_liabilities'] = Variable<double>(totalLiabilities);
+    map['per_account_balances_json'] = Variable<String>(perAccountBalancesJson);
+    map['main_currency_code'] = Variable<String>(mainCurrencyCode);
+    return map;
+  }
+
+  NetWorthSnapshotsCompanion toCompanion(bool nullToAbsent) {
+    return NetWorthSnapshotsCompanion(
+      id: Value(id),
+      date: Value(date),
+      netWorth: Value(netWorth),
+      totalHoldings: Value(totalHoldings),
+      totalLiabilities: Value(totalLiabilities),
+      perAccountBalancesJson: Value(perAccountBalancesJson),
+      mainCurrencyCode: Value(mainCurrencyCode),
+    );
+  }
+
+  factory NetWorthSnapshotRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return NetWorthSnapshotRow(
+      id: serializer.fromJson<String>(json['id']),
+      date: serializer.fromJson<int>(json['date']),
+      netWorth: serializer.fromJson<double>(json['netWorth']),
+      totalHoldings: serializer.fromJson<double>(json['totalHoldings']),
+      totalLiabilities: serializer.fromJson<double>(json['totalLiabilities']),
+      perAccountBalancesJson: serializer.fromJson<String>(
+        json['perAccountBalancesJson'],
+      ),
+      mainCurrencyCode: serializer.fromJson<String>(json['mainCurrencyCode']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'date': serializer.toJson<int>(date),
+      'netWorth': serializer.toJson<double>(netWorth),
+      'totalHoldings': serializer.toJson<double>(totalHoldings),
+      'totalLiabilities': serializer.toJson<double>(totalLiabilities),
+      'perAccountBalancesJson': serializer.toJson<String>(
+        perAccountBalancesJson,
+      ),
+      'mainCurrencyCode': serializer.toJson<String>(mainCurrencyCode),
+    };
+  }
+
+  NetWorthSnapshotRow copyWith({
+    String? id,
+    int? date,
+    double? netWorth,
+    double? totalHoldings,
+    double? totalLiabilities,
+    String? perAccountBalancesJson,
+    String? mainCurrencyCode,
+  }) => NetWorthSnapshotRow(
+    id: id ?? this.id,
+    date: date ?? this.date,
+    netWorth: netWorth ?? this.netWorth,
+    totalHoldings: totalHoldings ?? this.totalHoldings,
+    totalLiabilities: totalLiabilities ?? this.totalLiabilities,
+    perAccountBalancesJson:
+        perAccountBalancesJson ?? this.perAccountBalancesJson,
+    mainCurrencyCode: mainCurrencyCode ?? this.mainCurrencyCode,
+  );
+  NetWorthSnapshotRow copyWithCompanion(NetWorthSnapshotsCompanion data) {
+    return NetWorthSnapshotRow(
+      id: data.id.present ? data.id.value : this.id,
+      date: data.date.present ? data.date.value : this.date,
+      netWorth: data.netWorth.present ? data.netWorth.value : this.netWorth,
+      totalHoldings: data.totalHoldings.present
+          ? data.totalHoldings.value
+          : this.totalHoldings,
+      totalLiabilities: data.totalLiabilities.present
+          ? data.totalLiabilities.value
+          : this.totalLiabilities,
+      perAccountBalancesJson: data.perAccountBalancesJson.present
+          ? data.perAccountBalancesJson.value
+          : this.perAccountBalancesJson,
+      mainCurrencyCode: data.mainCurrencyCode.present
+          ? data.mainCurrencyCode.value
+          : this.mainCurrencyCode,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NetWorthSnapshotRow(')
+          ..write('id: $id, ')
+          ..write('date: $date, ')
+          ..write('netWorth: $netWorth, ')
+          ..write('totalHoldings: $totalHoldings, ')
+          ..write('totalLiabilities: $totalLiabilities, ')
+          ..write('perAccountBalancesJson: $perAccountBalancesJson, ')
+          ..write('mainCurrencyCode: $mainCurrencyCode')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    date,
+    netWorth,
+    totalHoldings,
+    totalLiabilities,
+    perAccountBalancesJson,
+    mainCurrencyCode,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is NetWorthSnapshotRow &&
+          other.id == this.id &&
+          other.date == this.date &&
+          other.netWorth == this.netWorth &&
+          other.totalHoldings == this.totalHoldings &&
+          other.totalLiabilities == this.totalLiabilities &&
+          other.perAccountBalancesJson == this.perAccountBalancesJson &&
+          other.mainCurrencyCode == this.mainCurrencyCode);
+}
+
+class NetWorthSnapshotsCompanion extends UpdateCompanion<NetWorthSnapshotRow> {
+  final Value<String> id;
+  final Value<int> date;
+  final Value<double> netWorth;
+  final Value<double> totalHoldings;
+  final Value<double> totalLiabilities;
+  final Value<String> perAccountBalancesJson;
+  final Value<String> mainCurrencyCode;
+  final Value<int> rowid;
+  const NetWorthSnapshotsCompanion({
+    this.id = const Value.absent(),
+    this.date = const Value.absent(),
+    this.netWorth = const Value.absent(),
+    this.totalHoldings = const Value.absent(),
+    this.totalLiabilities = const Value.absent(),
+    this.perAccountBalancesJson = const Value.absent(),
+    this.mainCurrencyCode = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  NetWorthSnapshotsCompanion.insert({
+    required String id,
+    required int date,
+    required double netWorth,
+    required double totalHoldings,
+    required double totalLiabilities,
+    required String perAccountBalancesJson,
+    required String mainCurrencyCode,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       date = Value(date),
+       netWorth = Value(netWorth),
+       totalHoldings = Value(totalHoldings),
+       totalLiabilities = Value(totalLiabilities),
+       perAccountBalancesJson = Value(perAccountBalancesJson),
+       mainCurrencyCode = Value(mainCurrencyCode);
+  static Insertable<NetWorthSnapshotRow> custom({
+    Expression<String>? id,
+    Expression<int>? date,
+    Expression<double>? netWorth,
+    Expression<double>? totalHoldings,
+    Expression<double>? totalLiabilities,
+    Expression<String>? perAccountBalancesJson,
+    Expression<String>? mainCurrencyCode,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (date != null) 'date': date,
+      if (netWorth != null) 'net_worth': netWorth,
+      if (totalHoldings != null) 'total_holdings': totalHoldings,
+      if (totalLiabilities != null) 'total_liabilities': totalLiabilities,
+      if (perAccountBalancesJson != null)
+        'per_account_balances_json': perAccountBalancesJson,
+      if (mainCurrencyCode != null) 'main_currency_code': mainCurrencyCode,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  NetWorthSnapshotsCompanion copyWith({
+    Value<String>? id,
+    Value<int>? date,
+    Value<double>? netWorth,
+    Value<double>? totalHoldings,
+    Value<double>? totalLiabilities,
+    Value<String>? perAccountBalancesJson,
+    Value<String>? mainCurrencyCode,
+    Value<int>? rowid,
+  }) {
+    return NetWorthSnapshotsCompanion(
+      id: id ?? this.id,
+      date: date ?? this.date,
+      netWorth: netWorth ?? this.netWorth,
+      totalHoldings: totalHoldings ?? this.totalHoldings,
+      totalLiabilities: totalLiabilities ?? this.totalLiabilities,
+      perAccountBalancesJson:
+          perAccountBalancesJson ?? this.perAccountBalancesJson,
+      mainCurrencyCode: mainCurrencyCode ?? this.mainCurrencyCode,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<int>(date.value);
+    }
+    if (netWorth.present) {
+      map['net_worth'] = Variable<double>(netWorth.value);
+    }
+    if (totalHoldings.present) {
+      map['total_holdings'] = Variable<double>(totalHoldings.value);
+    }
+    if (totalLiabilities.present) {
+      map['total_liabilities'] = Variable<double>(totalLiabilities.value);
+    }
+    if (perAccountBalancesJson.present) {
+      map['per_account_balances_json'] = Variable<String>(
+        perAccountBalancesJson.value,
+      );
+    }
+    if (mainCurrencyCode.present) {
+      map['main_currency_code'] = Variable<String>(mainCurrencyCode.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NetWorthSnapshotsCompanion(')
+          ..write('id: $id, ')
+          ..write('date: $date, ')
+          ..write('netWorth: $netWorth, ')
+          ..write('totalHoldings: $totalHoldings, ')
+          ..write('totalLiabilities: $totalLiabilities, ')
+          ..write('perAccountBalancesJson: $perAccountBalancesJson, ')
+          ..write('mainCurrencyCode: $mainCurrencyCode, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $AppSettingsTable extends AppSettings
     with TableInfo<$AppSettingsTable, AppSetting> {
   @override
@@ -5237,6 +5729,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this,
   );
   late final $BillsTable bills = $BillsTable(this);
+  late final $NetWorthSnapshotsTable netWorthSnapshots =
+      $NetWorthSnapshotsTable(this);
   late final $AppSettingsTable appSettings = $AppSettingsTable(this);
   late final TransactionDao transactionDao = TransactionDao(
     this as AppDatabase,
@@ -5262,6 +5756,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this as AppDatabase,
   );
   late final BillDao billDao = BillDao(this as AppDatabase);
+  late final NetWorthSnapshotDao netWorthSnapshotDao = NetWorthSnapshotDao(
+    this as AppDatabase,
+  );
   late final SettingsDao settingsDao = SettingsDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -5281,6 +5778,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     attachments,
     notificationLog,
     bills,
+    netWorthSnapshots,
     appSettings,
   ];
 }
@@ -7942,6 +8440,265 @@ typedef $$BillsTableProcessedTableManager =
       BillRow,
       PrefetchHooks Function()
     >;
+typedef $$NetWorthSnapshotsTableCreateCompanionBuilder =
+    NetWorthSnapshotsCompanion Function({
+      required String id,
+      required int date,
+      required double netWorth,
+      required double totalHoldings,
+      required double totalLiabilities,
+      required String perAccountBalancesJson,
+      required String mainCurrencyCode,
+      Value<int> rowid,
+    });
+typedef $$NetWorthSnapshotsTableUpdateCompanionBuilder =
+    NetWorthSnapshotsCompanion Function({
+      Value<String> id,
+      Value<int> date,
+      Value<double> netWorth,
+      Value<double> totalHoldings,
+      Value<double> totalLiabilities,
+      Value<String> perAccountBalancesJson,
+      Value<String> mainCurrencyCode,
+      Value<int> rowid,
+    });
+
+class $$NetWorthSnapshotsTableFilterComposer
+    extends Composer<_$AppDatabase, $NetWorthSnapshotsTable> {
+  $$NetWorthSnapshotsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get netWorth => $composableBuilder(
+    column: $table.netWorth,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get totalHoldings => $composableBuilder(
+    column: $table.totalHoldings,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get totalLiabilities => $composableBuilder(
+    column: $table.totalLiabilities,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get perAccountBalancesJson => $composableBuilder(
+    column: $table.perAccountBalancesJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mainCurrencyCode => $composableBuilder(
+    column: $table.mainCurrencyCode,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$NetWorthSnapshotsTableOrderingComposer
+    extends Composer<_$AppDatabase, $NetWorthSnapshotsTable> {
+  $$NetWorthSnapshotsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get netWorth => $composableBuilder(
+    column: $table.netWorth,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get totalHoldings => $composableBuilder(
+    column: $table.totalHoldings,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get totalLiabilities => $composableBuilder(
+    column: $table.totalLiabilities,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get perAccountBalancesJson => $composableBuilder(
+    column: $table.perAccountBalancesJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mainCurrencyCode => $composableBuilder(
+    column: $table.mainCurrencyCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$NetWorthSnapshotsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $NetWorthSnapshotsTable> {
+  $$NetWorthSnapshotsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<double> get netWorth =>
+      $composableBuilder(column: $table.netWorth, builder: (column) => column);
+
+  GeneratedColumn<double> get totalHoldings => $composableBuilder(
+    column: $table.totalHoldings,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get totalLiabilities => $composableBuilder(
+    column: $table.totalLiabilities,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get perAccountBalancesJson => $composableBuilder(
+    column: $table.perAccountBalancesJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get mainCurrencyCode => $composableBuilder(
+    column: $table.mainCurrencyCode,
+    builder: (column) => column,
+  );
+}
+
+class $$NetWorthSnapshotsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $NetWorthSnapshotsTable,
+          NetWorthSnapshotRow,
+          $$NetWorthSnapshotsTableFilterComposer,
+          $$NetWorthSnapshotsTableOrderingComposer,
+          $$NetWorthSnapshotsTableAnnotationComposer,
+          $$NetWorthSnapshotsTableCreateCompanionBuilder,
+          $$NetWorthSnapshotsTableUpdateCompanionBuilder,
+          (
+            NetWorthSnapshotRow,
+            BaseReferences<
+              _$AppDatabase,
+              $NetWorthSnapshotsTable,
+              NetWorthSnapshotRow
+            >,
+          ),
+          NetWorthSnapshotRow,
+          PrefetchHooks Function()
+        > {
+  $$NetWorthSnapshotsTableTableManager(
+    _$AppDatabase db,
+    $NetWorthSnapshotsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$NetWorthSnapshotsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$NetWorthSnapshotsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$NetWorthSnapshotsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<int> date = const Value.absent(),
+                Value<double> netWorth = const Value.absent(),
+                Value<double> totalHoldings = const Value.absent(),
+                Value<double> totalLiabilities = const Value.absent(),
+                Value<String> perAccountBalancesJson = const Value.absent(),
+                Value<String> mainCurrencyCode = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => NetWorthSnapshotsCompanion(
+                id: id,
+                date: date,
+                netWorth: netWorth,
+                totalHoldings: totalHoldings,
+                totalLiabilities: totalLiabilities,
+                perAccountBalancesJson: perAccountBalancesJson,
+                mainCurrencyCode: mainCurrencyCode,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required int date,
+                required double netWorth,
+                required double totalHoldings,
+                required double totalLiabilities,
+                required String perAccountBalancesJson,
+                required String mainCurrencyCode,
+                Value<int> rowid = const Value.absent(),
+              }) => NetWorthSnapshotsCompanion.insert(
+                id: id,
+                date: date,
+                netWorth: netWorth,
+                totalHoldings: totalHoldings,
+                totalLiabilities: totalLiabilities,
+                perAccountBalancesJson: perAccountBalancesJson,
+                mainCurrencyCode: mainCurrencyCode,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$NetWorthSnapshotsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $NetWorthSnapshotsTable,
+      NetWorthSnapshotRow,
+      $$NetWorthSnapshotsTableFilterComposer,
+      $$NetWorthSnapshotsTableOrderingComposer,
+      $$NetWorthSnapshotsTableAnnotationComposer,
+      $$NetWorthSnapshotsTableCreateCompanionBuilder,
+      $$NetWorthSnapshotsTableUpdateCompanionBuilder,
+      (
+        NetWorthSnapshotRow,
+        BaseReferences<
+          _$AppDatabase,
+          $NetWorthSnapshotsTable,
+          NetWorthSnapshotRow
+        >,
+      ),
+      NetWorthSnapshotRow,
+      PrefetchHooks Function()
+    >;
 typedef $$AppSettingsTableCreateCompanionBuilder =
     AppSettingsCompanion Function({
       required String id,
@@ -8135,6 +8892,8 @@ class $AppDatabaseManager {
       $$NotificationLogTableTableManager(_db, _db.notificationLog);
   $$BillsTableTableManager get bills =>
       $$BillsTableTableManager(_db, _db.bills);
+  $$NetWorthSnapshotsTableTableManager get netWorthSnapshots =>
+      $$NetWorthSnapshotsTableTableManager(_db, _db.netWorthSnapshots);
   $$AppSettingsTableTableManager get appSettings =>
       $$AppSettingsTableTableManager(_db, _db.appSettings);
 }

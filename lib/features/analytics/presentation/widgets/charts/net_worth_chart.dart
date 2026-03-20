@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../core/constants/app_colors.dart';
@@ -8,6 +9,7 @@ import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
 import '../../../../../core/constants/currencies.dart';
+import '../../../../../navigation/app_router.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
 import '../../providers/net_worth_history_provider.dart';
 
@@ -77,9 +79,23 @@ class NetWorthChart extends ConsumerWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Net Worth Over Time',
-                    style: AppTypography.labelLarge,
+                  Row(
+                    children: [
+                      Text(
+                        'Net Worth Over Time',
+                        style: AppTypography.labelLarge,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      GestureDetector(
+                        onTap: () => context.push(AppRoutes.netWorthHistory),
+                        child: Text(
+                          'Full History',
+                          style: AppTypography.labelSmall.copyWith(
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 2),
                   Text(
