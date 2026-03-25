@@ -3,6 +3,7 @@ import 'package:drift_flutter/drift_flutter.dart';
 
 import 'daos/account_dao.dart';
 import 'daos/asset_dao.dart';
+import 'daos/asset_category_dao.dart';
 import 'daos/attachment_dao.dart';
 import 'daos/bill_dao.dart';
 import 'daos/budget_dao.dart';
@@ -117,6 +118,23 @@ class Budgets extends Table {
 /// for querying and sorting. All other asset data is encrypted in `encryptedBlob`.
 @DataClassName('Asset')
 class Assets extends Table {
+  TextColumn get id => text()();
+  IntColumn get createdAt => integer()();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+  IntColumn get lastUpdatedAt => integer()();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BlobColumn get encryptedBlob => blob()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Table for storing encrypted asset categories.
+///
+/// Only `id`, `createdAt`, `lastUpdatedAt`, and `isDeleted` are stored in plaintext
+/// for querying and sorting. All other data is encrypted in `encryptedBlob`.
+@DataClassName('AssetCategoryRow')
+class AssetCategories extends Table {
   TextColumn get id => text()();
   IntColumn get createdAt => integer()();
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
@@ -273,15 +291,15 @@ class AppSettings extends Table {
 /// is stored unencrypted on disk, but all sensitive transaction data is
 /// encrypted at the application layer before being stored.
 @DriftDatabase(
-  tables: [Transactions, Accounts, Categories, Budgets, Assets, RecurringRules, SavingsGoals, TransactionTemplates, Tags, TransactionTags, Attachments, NotificationLog, Bills, NetWorthSnapshots, AppSettings],
-  daos: [TransactionDao, AccountDao, CategoryDao, BudgetDao, AssetDao, RecurringRuleDao, SavingsGoalDao, TransactionTemplateDao, TagDao, TransactionTagDao, AttachmentDao, NotificationLogDao, BillDao, NetWorthSnapshotDao, SettingsDao],
+  tables: [Transactions, Accounts, Categories, Budgets, Assets, AssetCategories, RecurringRules, SavingsGoals, TransactionTemplates, Tags, TransactionTags, Attachments, NotificationLog, Bills, NetWorthSnapshots, AppSettings],
+  daos: [TransactionDao, AccountDao, CategoryDao, BudgetDao, AssetDao, AssetCategoryDao, RecurringRuleDao, SavingsGoalDao, TransactionTemplateDao, TagDao, TransactionTagDao, AttachmentDao, NotificationLogDao, BillDao, NetWorthSnapshotDao, SettingsDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
 
   @override
-  int get schemaVersion => 25;
+  int get schemaVersion => 26;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -359,6 +377,11 @@ class AppDatabase extends _$AppDatabase {
           if (from < 25) {
             await m.createTable(netWorthSnapshots);
           }
+
+          if (from < 26) {
+            await m.createTable(assetCategories);
+            await _createIndexes(m);
+          }
         },
       );
 
@@ -390,6 +413,9 @@ class AppDatabase extends _$AppDatabase {
     );
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_assets_is_deleted ON assets(is_deleted)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_asset_categories_is_deleted ON asset_categories(is_deleted)',
     );
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_recurring_rules_is_deleted ON recurring_rules(is_deleted)',
@@ -714,6 +740,64 @@ class AppDatabase extends _$AppDatabase {
   Stream<List<Asset>> watchAllAssets() => assetDao.watchAll();
 
   Future<bool> hasAssets() => assetDao.hasAny();
+
+  // CRUD operations for asset categories (delegates to AssetCategoryDao)
+
+  Future<void> insertAssetCategory({
+    required String id,
+    required int createdAt,
+    required int sortOrder,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+  }) =>
+      assetCategoryDao.insert(
+        id: id,
+        createdAt: createdAt,
+        sortOrder: sortOrder,
+        lastUpdatedAt: lastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+      );
+
+  Future<void> upsertAssetCategory({
+    required String id,
+    required int createdAt,
+    required int sortOrder,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+    bool isDeleted = false,
+  }) =>
+      assetCategoryDao.upsert(
+        id: id,
+        createdAt: createdAt,
+        sortOrder: sortOrder,
+        lastUpdatedAt: lastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+        isDeleted: isDeleted,
+      );
+
+  Future<void> updateAssetCategory({
+    required String id,
+    required int sortOrder,
+    required int lastUpdatedAt,
+    required Uint8List encryptedBlob,
+  }) =>
+      assetCategoryDao.updateRow(
+        id: id,
+        sortOrder: sortOrder,
+        lastUpdatedAt: lastUpdatedAt,
+        encryptedBlob: encryptedBlob,
+      );
+
+  Future<void> softDeleteAssetCategory(String id, int lastUpdatedAt) =>
+      assetCategoryDao.softDelete(id, lastUpdatedAt);
+
+  Future<AssetCategoryRow?> getAssetCategory(String id) => assetCategoryDao.getById(id);
+
+  Future<List<AssetCategoryRow>> getAllAssetCategories() => assetCategoryDao.getAll();
+
+  Stream<List<AssetCategoryRow>> watchAllAssetCategories() => assetCategoryDao.watchAll();
+
+  Future<bool> hasAssetCategories() => assetCategoryDao.hasAny();
 
   // CRUD operations for recurring rules (delegates to RecurringRuleDao)
 

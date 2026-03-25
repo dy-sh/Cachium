@@ -27,6 +27,9 @@ class AssetsNotifier extends AsyncNotifier<List<Asset>> {
     required IconData icon,
     required int colorIndex,
     String? note,
+    double? purchasePrice,
+    String? purchaseCurrencyCode,
+    String? assetCategoryId,
   }) async {
     final previousState = state;
 
@@ -45,6 +48,9 @@ class AssetsNotifier extends AsyncNotifier<List<Asset>> {
         icon: icon,
         colorIndex: colorIndex,
         note: note,
+        purchasePrice: purchasePrice,
+        purchaseCurrencyCode: purchaseCurrencyCode,
+        assetCategoryId: assetCategoryId,
         sortOrder: maxSortOrder + 1,
         createdAt: DateTime.now(),
       );
@@ -262,8 +268,9 @@ final assetsForCategoryProvider = Provider.family<List<Asset>, String?>((ref, ca
   return activeAssets.where((a) => usedAssetIds.contains(a.id)).toList();
 });
 
-/// Net cost for an asset: total expenses minus total income.
+/// Net cost for an asset: purchase price + total expenses - total income.
 final assetNetCostProvider = Provider.family<double, String>((ref, assetId) {
+  final asset = ref.watch(assetByIdProvider(assetId));
   final transactions = ref.watch(transactionsByAssetProvider(assetId));
   double totalSpent = 0;
   double totalIncome = 0;
@@ -274,10 +281,31 @@ final assetNetCostProvider = Provider.family<double, String>((ref, assetId) {
       totalIncome += tx.effectiveMainCurrencyAmount;
     }
   }
-  return totalSpent - totalIncome;
+  return (asset?.purchasePrice ?? 0) + totalSpent - totalIncome;
 });
 
 /// Count of linked transactions for an asset.
 final assetTransactionCountProvider = Provider.family<int, String>((ref, assetId) {
   return ref.watch(transactionsByAssetProvider(assetId)).length;
+});
+
+/// Summary stats for active assets.
+final activeAssetsSummaryProvider = Provider<({int count, double totalNetCost})>((ref) {
+  final activeAssets = ref.watch(activeAssetsProvider);
+  double totalNetCost = 0;
+  for (final asset in activeAssets) {
+    totalNetCost += ref.watch(assetNetCostProvider(asset.id));
+  }
+  return (count: activeAssets.length, totalNetCost: totalNetCost);
+});
+
+/// Summary stats for sold assets.
+final soldAssetsSummaryProvider = Provider<({int count, double totalNetCost})>((ref) {
+  final allAssets = ref.watch(assetsProvider).valueOrNull ?? [];
+  final sold = allAssets.where((a) => a.status == AssetStatus.sold).toList();
+  double totalNetCost = 0;
+  for (final asset in sold) {
+    totalNetCost += ref.watch(assetNetCostProvider(asset.id));
+  }
+  return (count: sold.length, totalNetCost: totalNetCost);
 });

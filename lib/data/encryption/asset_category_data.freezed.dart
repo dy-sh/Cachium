@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
-part of 'asset_data.dart';
+part of 'asset_category_data.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -15,16 +15,16 @@ final _privateConstructorUsedError = UnsupportedError(
   'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
 );
 
-AssetData _$AssetDataFromJson(Map<String, dynamic> json) {
-  return _AssetData.fromJson(json);
+AssetCategoryData _$AssetCategoryDataFromJson(Map<String, dynamic> json) {
+  return _AssetCategoryData.fromJson(json);
 }
 
 /// @nodoc
-mixin _$AssetData {
+mixin _$AssetCategoryData {
   /// Duplicated for integrity check - must match row id
   String get id => throw _privateConstructorUsedError;
 
-  /// Asset name
+  /// Category name
   String get name => throw _privateConstructorUsedError;
 
   /// Icon code point (from IconData)
@@ -39,45 +39,28 @@ mixin _$AssetData {
   /// Color index in accent palette (0-23)
   int get colorIndex => throw _privateConstructorUsedError;
 
-  /// Asset status: 'active' or 'sold'
-  String get status => throw _privateConstructorUsedError;
-
-  /// When the asset was marked as sold (milliseconds since epoch)
-  int? get soldDateMillis => throw _privateConstructorUsedError;
-
-  /// Optional description/note
-  String? get note => throw _privateConstructorUsedError;
-
-  /// Purchase price metadata (for display/analytics, not balance-affecting)
-  double? get purchasePrice => throw _privateConstructorUsedError;
-
-  /// Currency code for the purchase price
-  String? get purchaseCurrencyCode => throw _privateConstructorUsedError;
-
-  /// Optional link to an asset category
-  String? get assetCategoryId => throw _privateConstructorUsedError;
-
   /// Sort order for display ordering
   int get sortOrder => throw _privateConstructorUsedError;
 
-  /// Matches the database createdAt field for integrity verification during import.
-  /// Not exported as a separate CSV column to avoid duplication.
+  /// Matches the database createdAt field for integrity verification.
   int get createdAtMillis => throw _privateConstructorUsedError;
 
-  /// Serializes this AssetData to a JSON map.
+  /// Serializes this AssetCategoryData to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
-  /// Create a copy of AssetData
+  /// Create a copy of AssetCategoryData
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  $AssetDataCopyWith<AssetData> get copyWith =>
+  $AssetCategoryDataCopyWith<AssetCategoryData> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $AssetDataCopyWith<$Res> {
-  factory $AssetDataCopyWith(AssetData value, $Res Function(AssetData) then) =
-      _$AssetDataCopyWithImpl<$Res, AssetData>;
+abstract class $AssetCategoryDataCopyWith<$Res> {
+  factory $AssetCategoryDataCopyWith(
+    AssetCategoryData value,
+    $Res Function(AssetCategoryData) then,
+  ) = _$AssetCategoryDataCopyWithImpl<$Res, AssetCategoryData>;
   @useResult
   $Res call({
     String id,
@@ -86,28 +69,22 @@ abstract class $AssetDataCopyWith<$Res> {
     String? iconFontFamily,
     String? iconFontPackage,
     int colorIndex,
-    String status,
-    int? soldDateMillis,
-    String? note,
-    double? purchasePrice,
-    String? purchaseCurrencyCode,
-    String? assetCategoryId,
     int sortOrder,
     int createdAtMillis,
   });
 }
 
 /// @nodoc
-class _$AssetDataCopyWithImpl<$Res, $Val extends AssetData>
-    implements $AssetDataCopyWith<$Res> {
-  _$AssetDataCopyWithImpl(this._value, this._then);
+class _$AssetCategoryDataCopyWithImpl<$Res, $Val extends AssetCategoryData>
+    implements $AssetCategoryDataCopyWith<$Res> {
+  _$AssetCategoryDataCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of AssetData
+  /// Create a copy of AssetCategoryData
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
@@ -118,12 +95,6 @@ class _$AssetDataCopyWithImpl<$Res, $Val extends AssetData>
     Object? iconFontFamily = freezed,
     Object? iconFontPackage = freezed,
     Object? colorIndex = null,
-    Object? status = null,
-    Object? soldDateMillis = freezed,
-    Object? note = freezed,
-    Object? purchasePrice = freezed,
-    Object? purchaseCurrencyCode = freezed,
-    Object? assetCategoryId = freezed,
     Object? sortOrder = null,
     Object? createdAtMillis = null,
   }) {
@@ -153,30 +124,6 @@ class _$AssetDataCopyWithImpl<$Res, $Val extends AssetData>
                 ? _value.colorIndex
                 : colorIndex // ignore: cast_nullable_to_non_nullable
                       as int,
-            status: null == status
-                ? _value.status
-                : status // ignore: cast_nullable_to_non_nullable
-                      as String,
-            soldDateMillis: freezed == soldDateMillis
-                ? _value.soldDateMillis
-                : soldDateMillis // ignore: cast_nullable_to_non_nullable
-                      as int?,
-            note: freezed == note
-                ? _value.note
-                : note // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            purchasePrice: freezed == purchasePrice
-                ? _value.purchasePrice
-                : purchasePrice // ignore: cast_nullable_to_non_nullable
-                      as double?,
-            purchaseCurrencyCode: freezed == purchaseCurrencyCode
-                ? _value.purchaseCurrencyCode
-                : purchaseCurrencyCode // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            assetCategoryId: freezed == assetCategoryId
-                ? _value.assetCategoryId
-                : assetCategoryId // ignore: cast_nullable_to_non_nullable
-                      as String?,
             sortOrder: null == sortOrder
                 ? _value.sortOrder
                 : sortOrder // ignore: cast_nullable_to_non_nullable
@@ -192,12 +139,12 @@ class _$AssetDataCopyWithImpl<$Res, $Val extends AssetData>
 }
 
 /// @nodoc
-abstract class _$$AssetDataImplCopyWith<$Res>
-    implements $AssetDataCopyWith<$Res> {
-  factory _$$AssetDataImplCopyWith(
-    _$AssetDataImpl value,
-    $Res Function(_$AssetDataImpl) then,
-  ) = __$$AssetDataImplCopyWithImpl<$Res>;
+abstract class _$$AssetCategoryDataImplCopyWith<$Res>
+    implements $AssetCategoryDataCopyWith<$Res> {
+  factory _$$AssetCategoryDataImplCopyWith(
+    _$AssetCategoryDataImpl value,
+    $Res Function(_$AssetCategoryDataImpl) then,
+  ) = __$$AssetCategoryDataImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call({
@@ -207,27 +154,21 @@ abstract class _$$AssetDataImplCopyWith<$Res>
     String? iconFontFamily,
     String? iconFontPackage,
     int colorIndex,
-    String status,
-    int? soldDateMillis,
-    String? note,
-    double? purchasePrice,
-    String? purchaseCurrencyCode,
-    String? assetCategoryId,
     int sortOrder,
     int createdAtMillis,
   });
 }
 
 /// @nodoc
-class __$$AssetDataImplCopyWithImpl<$Res>
-    extends _$AssetDataCopyWithImpl<$Res, _$AssetDataImpl>
-    implements _$$AssetDataImplCopyWith<$Res> {
-  __$$AssetDataImplCopyWithImpl(
-    _$AssetDataImpl _value,
-    $Res Function(_$AssetDataImpl) _then,
+class __$$AssetCategoryDataImplCopyWithImpl<$Res>
+    extends _$AssetCategoryDataCopyWithImpl<$Res, _$AssetCategoryDataImpl>
+    implements _$$AssetCategoryDataImplCopyWith<$Res> {
+  __$$AssetCategoryDataImplCopyWithImpl(
+    _$AssetCategoryDataImpl _value,
+    $Res Function(_$AssetCategoryDataImpl) _then,
   ) : super(_value, _then);
 
-  /// Create a copy of AssetData
+  /// Create a copy of AssetCategoryData
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
@@ -238,17 +179,11 @@ class __$$AssetDataImplCopyWithImpl<$Res>
     Object? iconFontFamily = freezed,
     Object? iconFontPackage = freezed,
     Object? colorIndex = null,
-    Object? status = null,
-    Object? soldDateMillis = freezed,
-    Object? note = freezed,
-    Object? purchasePrice = freezed,
-    Object? purchaseCurrencyCode = freezed,
-    Object? assetCategoryId = freezed,
     Object? sortOrder = null,
     Object? createdAtMillis = null,
   }) {
     return _then(
-      _$AssetDataImpl(
+      _$AssetCategoryDataImpl(
         id: null == id
             ? _value.id
             : id // ignore: cast_nullable_to_non_nullable
@@ -273,30 +208,6 @@ class __$$AssetDataImplCopyWithImpl<$Res>
             ? _value.colorIndex
             : colorIndex // ignore: cast_nullable_to_non_nullable
                   as int,
-        status: null == status
-            ? _value.status
-            : status // ignore: cast_nullable_to_non_nullable
-                  as String,
-        soldDateMillis: freezed == soldDateMillis
-            ? _value.soldDateMillis
-            : soldDateMillis // ignore: cast_nullable_to_non_nullable
-                  as int?,
-        note: freezed == note
-            ? _value.note
-            : note // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        purchasePrice: freezed == purchasePrice
-            ? _value.purchasePrice
-            : purchasePrice // ignore: cast_nullable_to_non_nullable
-                  as double?,
-        purchaseCurrencyCode: freezed == purchaseCurrencyCode
-            ? _value.purchaseCurrencyCode
-            : purchaseCurrencyCode // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        assetCategoryId: freezed == assetCategoryId
-            ? _value.assetCategoryId
-            : assetCategoryId // ignore: cast_nullable_to_non_nullable
-                  as String?,
         sortOrder: null == sortOrder
             ? _value.sortOrder
             : sortOrder // ignore: cast_nullable_to_non_nullable
@@ -312,32 +223,26 @@ class __$$AssetDataImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$AssetDataImpl implements _AssetData {
-  const _$AssetDataImpl({
+class _$AssetCategoryDataImpl implements _AssetCategoryData {
+  const _$AssetCategoryDataImpl({
     required this.id,
     required this.name,
     required this.iconCodePoint,
     this.iconFontFamily,
     this.iconFontPackage,
     required this.colorIndex,
-    required this.status,
-    this.soldDateMillis,
-    this.note,
-    this.purchasePrice,
-    this.purchaseCurrencyCode,
-    this.assetCategoryId,
     this.sortOrder = 0,
     required this.createdAtMillis,
   });
 
-  factory _$AssetDataImpl.fromJson(Map<String, dynamic> json) =>
-      _$$AssetDataImplFromJson(json);
+  factory _$AssetCategoryDataImpl.fromJson(Map<String, dynamic> json) =>
+      _$$AssetCategoryDataImplFromJson(json);
 
   /// Duplicated for integrity check - must match row id
   @override
   final String id;
 
-  /// Asset name
+  /// Category name
   @override
   final String name;
 
@@ -357,50 +262,25 @@ class _$AssetDataImpl implements _AssetData {
   @override
   final int colorIndex;
 
-  /// Asset status: 'active' or 'sold'
-  @override
-  final String status;
-
-  /// When the asset was marked as sold (milliseconds since epoch)
-  @override
-  final int? soldDateMillis;
-
-  /// Optional description/note
-  @override
-  final String? note;
-
-  /// Purchase price metadata (for display/analytics, not balance-affecting)
-  @override
-  final double? purchasePrice;
-
-  /// Currency code for the purchase price
-  @override
-  final String? purchaseCurrencyCode;
-
-  /// Optional link to an asset category
-  @override
-  final String? assetCategoryId;
-
   /// Sort order for display ordering
   @override
   @JsonKey()
   final int sortOrder;
 
-  /// Matches the database createdAt field for integrity verification during import.
-  /// Not exported as a separate CSV column to avoid duplication.
+  /// Matches the database createdAt field for integrity verification.
   @override
   final int createdAtMillis;
 
   @override
   String toString() {
-    return 'AssetData(id: $id, name: $name, iconCodePoint: $iconCodePoint, iconFontFamily: $iconFontFamily, iconFontPackage: $iconFontPackage, colorIndex: $colorIndex, status: $status, soldDateMillis: $soldDateMillis, note: $note, purchasePrice: $purchasePrice, purchaseCurrencyCode: $purchaseCurrencyCode, assetCategoryId: $assetCategoryId, sortOrder: $sortOrder, createdAtMillis: $createdAtMillis)';
+    return 'AssetCategoryData(id: $id, name: $name, iconCodePoint: $iconCodePoint, iconFontFamily: $iconFontFamily, iconFontPackage: $iconFontPackage, colorIndex: $colorIndex, sortOrder: $sortOrder, createdAtMillis: $createdAtMillis)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$AssetDataImpl &&
+            other is _$AssetCategoryDataImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.name, name) || other.name == name) &&
             (identical(other.iconCodePoint, iconCodePoint) ||
@@ -411,16 +291,6 @@ class _$AssetDataImpl implements _AssetData {
                 other.iconFontPackage == iconFontPackage) &&
             (identical(other.colorIndex, colorIndex) ||
                 other.colorIndex == colorIndex) &&
-            (identical(other.status, status) || other.status == status) &&
-            (identical(other.soldDateMillis, soldDateMillis) ||
-                other.soldDateMillis == soldDateMillis) &&
-            (identical(other.note, note) || other.note == note) &&
-            (identical(other.purchasePrice, purchasePrice) ||
-                other.purchasePrice == purchasePrice) &&
-            (identical(other.purchaseCurrencyCode, purchaseCurrencyCode) ||
-                other.purchaseCurrencyCode == purchaseCurrencyCode) &&
-            (identical(other.assetCategoryId, assetCategoryId) ||
-                other.assetCategoryId == assetCategoryId) &&
             (identical(other.sortOrder, sortOrder) ||
                 other.sortOrder == sortOrder) &&
             (identical(other.createdAtMillis, createdAtMillis) ||
@@ -437,56 +307,47 @@ class _$AssetDataImpl implements _AssetData {
     iconFontFamily,
     iconFontPackage,
     colorIndex,
-    status,
-    soldDateMillis,
-    note,
-    purchasePrice,
-    purchaseCurrencyCode,
-    assetCategoryId,
     sortOrder,
     createdAtMillis,
   );
 
-  /// Create a copy of AssetData
+  /// Create a copy of AssetCategoryData
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$AssetDataImplCopyWith<_$AssetDataImpl> get copyWith =>
-      __$$AssetDataImplCopyWithImpl<_$AssetDataImpl>(this, _$identity);
+  _$$AssetCategoryDataImplCopyWith<_$AssetCategoryDataImpl> get copyWith =>
+      __$$AssetCategoryDataImplCopyWithImpl<_$AssetCategoryDataImpl>(
+        this,
+        _$identity,
+      );
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$AssetDataImplToJson(this);
+    return _$$AssetCategoryDataImplToJson(this);
   }
 }
 
-abstract class _AssetData implements AssetData {
-  const factory _AssetData({
+abstract class _AssetCategoryData implements AssetCategoryData {
+  const factory _AssetCategoryData({
     required final String id,
     required final String name,
     required final int iconCodePoint,
     final String? iconFontFamily,
     final String? iconFontPackage,
     required final int colorIndex,
-    required final String status,
-    final int? soldDateMillis,
-    final String? note,
-    final double? purchasePrice,
-    final String? purchaseCurrencyCode,
-    final String? assetCategoryId,
     final int sortOrder,
     required final int createdAtMillis,
-  }) = _$AssetDataImpl;
+  }) = _$AssetCategoryDataImpl;
 
-  factory _AssetData.fromJson(Map<String, dynamic> json) =
-      _$AssetDataImpl.fromJson;
+  factory _AssetCategoryData.fromJson(Map<String, dynamic> json) =
+      _$AssetCategoryDataImpl.fromJson;
 
   /// Duplicated for integrity check - must match row id
   @override
   String get id;
 
-  /// Asset name
+  /// Category name
   @override
   String get name;
 
@@ -506,43 +367,18 @@ abstract class _AssetData implements AssetData {
   @override
   int get colorIndex;
 
-  /// Asset status: 'active' or 'sold'
-  @override
-  String get status;
-
-  /// When the asset was marked as sold (milliseconds since epoch)
-  @override
-  int? get soldDateMillis;
-
-  /// Optional description/note
-  @override
-  String? get note;
-
-  /// Purchase price metadata (for display/analytics, not balance-affecting)
-  @override
-  double? get purchasePrice;
-
-  /// Currency code for the purchase price
-  @override
-  String? get purchaseCurrencyCode;
-
-  /// Optional link to an asset category
-  @override
-  String? get assetCategoryId;
-
   /// Sort order for display ordering
   @override
   int get sortOrder;
 
-  /// Matches the database createdAt field for integrity verification during import.
-  /// Not exported as a separate CSV column to avoid duplication.
+  /// Matches the database createdAt field for integrity verification.
   @override
   int get createdAtMillis;
 
-  /// Create a copy of AssetData
+  /// Create a copy of AssetCategoryData
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$AssetDataImplCopyWith<_$AssetDataImpl> get copyWith =>
+  _$$AssetCategoryDataImplCopyWith<_$AssetCategoryDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

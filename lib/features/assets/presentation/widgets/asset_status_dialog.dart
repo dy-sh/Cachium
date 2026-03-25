@@ -126,6 +126,23 @@ class _MarkAsSoldDialogState extends ConsumerState<_MarkAsSoldDialog> {
                 color: AppColors.textSecondary,
               ),
             ),
+            if (widget.asset.purchasePrice != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: AppRadius.mdAll,
+                ),
+                child: Text(
+                  'Purchase price: ${Currency.symbolFromCode(ref.watch(mainCurrencyCodeProvider))}${widget.asset.purchasePrice!.toStringAsFixed(2)}',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: AppSpacing.lg),
             Text('Sale price (optional)', style: AppTypography.labelSmall),
             const SizedBox(height: AppSpacing.xs),

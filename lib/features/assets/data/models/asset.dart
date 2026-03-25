@@ -42,6 +42,9 @@ class Asset {
   final AssetStatus status;
   final DateTime? soldDate;
   final String? note;
+  final double? purchasePrice;
+  final String? purchaseCurrencyCode;
+  final String? assetCategoryId;
   final int sortOrder;
   final DateTime createdAt;
 
@@ -53,6 +56,9 @@ class Asset {
     this.status = AssetStatus.active,
     this.soldDate,
     this.note,
+    this.purchasePrice,
+    this.purchaseCurrencyCode,
+    this.assetCategoryId,
     this.sortOrder = 0,
     required this.createdAt,
   });
@@ -71,6 +77,12 @@ class Asset {
     bool clearSoldDate = false,
     String? note,
     bool clearNote = false,
+    double? purchasePrice,
+    bool clearPurchasePrice = false,
+    String? purchaseCurrencyCode,
+    bool clearPurchaseCurrencyCode = false,
+    String? assetCategoryId,
+    bool clearAssetCategoryId = false,
     int? sortOrder,
     DateTime? createdAt,
   }) {
@@ -82,6 +94,9 @@ class Asset {
       status: status ?? this.status,
       soldDate: clearSoldDate ? null : (soldDate ?? this.soldDate),
       note: clearNote ? null : (note ?? this.note),
+      purchasePrice: clearPurchasePrice ? null : (purchasePrice ?? this.purchasePrice),
+      purchaseCurrencyCode: clearPurchaseCurrencyCode ? null : (purchaseCurrencyCode ?? this.purchaseCurrencyCode),
+      assetCategoryId: clearAssetCategoryId ? null : (assetCategoryId ?? this.assetCategoryId),
       sortOrder: sortOrder ?? this.sortOrder,
       createdAt: createdAt ?? this.createdAt,
     );

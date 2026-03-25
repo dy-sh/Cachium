@@ -6,20 +6,33 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/constants/currencies.dart';
 import '../../../../design_system/components/buttons/primary_button.dart';
 import '../../../../design_system/components/chips/toggle_chip.dart';
 import '../../../../design_system/components/feedback/confirmation_dialog.dart';
 import '../../../../design_system/components/inputs/input_field.dart';
 import '../../../../design_system/components/layout/form_header.dart';
+import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../settings/presentation/widgets/color_picker_grid.dart';
 import '../../../settings/presentation/widgets/icon_picker_grid.dart';
 import '../../data/models/asset.dart';
+import '../../data/models/asset_category.dart';
+import '../providers/asset_categories_provider.dart';
 import '../providers/assets_provider.dart';
 
 class AssetFormModal extends ConsumerStatefulWidget {
   final Asset? asset;
-  final void Function(String name, IconData icon, int colorIndex, AssetStatus status, String? note) onSave;
+  final void Function(
+    String name,
+    IconData icon,
+    int colorIndex,
+    AssetStatus status,
+    String? note,
+    double? purchasePrice,
+    String? purchaseCurrencyCode,
+    String? assetCategoryId,
+  ) onSave;
   final VoidCallback? onDelete;
 
   const AssetFormModal({
@@ -36,10 +49,12 @@ class AssetFormModal extends ConsumerStatefulWidget {
 class _AssetFormModalState extends ConsumerState<AssetFormModal> {
   late TextEditingController _nameController;
   late TextEditingController _noteController;
+  late TextEditingController _purchasePriceController;
   late FocusNode _nameFocusNode;
   late IconData _selectedIcon;
   late int _selectedColorIndex;
   late AssetStatus _selectedStatus;
+  String? _selectedAssetCategoryId;
   bool _isEditingName = false;
   String _previousName = '';
 
@@ -50,10 +65,16 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
     super.initState();
     _nameController = TextEditingController(text: widget.asset?.name ?? '');
     _noteController = TextEditingController(text: widget.asset?.note ?? '');
+    _purchasePriceController = TextEditingController(
+      text: widget.asset?.purchasePrice != null
+          ? widget.asset!.purchasePrice!.toStringAsFixed(2)
+          : '',
+    );
     _nameFocusNode = FocusNode();
     _selectedIcon = widget.asset?.icon ?? LucideIcons.box;
     _selectedColorIndex = widget.asset?.colorIndex ?? 0;
     _selectedStatus = widget.asset?.status ?? AssetStatus.active;
+    _selectedAssetCategoryId = widget.asset?.assetCategoryId;
 
     if (!_isEditing) {
       _isEditingName = true;
@@ -64,6 +85,7 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
   void dispose() {
     _nameController.dispose();
     _noteController.dispose();
+    _purchasePriceController.dispose();
     _nameFocusNode.dispose();
     super.dispose();
   }
@@ -87,6 +109,12 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
 
   bool get _isValid => _nameController.text.trim().isNotEmpty;
 
+  double? get _parsedPrice {
+    final text = _purchasePriceController.text.trim();
+    if (text.isEmpty) return null;
+    return double.tryParse(text);
+  }
+
   bool get _hasChanges {
     if (!_isEditing) return true;
     final asset = widget.asset!;
@@ -94,7 +122,9 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
         _selectedIcon != asset.icon ||
         _selectedColorIndex != asset.colorIndex ||
         _selectedStatus != asset.status ||
-        (_noteController.text.trim()) != (asset.note ?? '');
+        (_noteController.text.trim()) != (asset.note ?? '') ||
+        _parsedPrice != asset.purchasePrice ||
+        _selectedAssetCategoryId != asset.assetCategoryId;
   }
 
   @override
@@ -103,6 +133,9 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
     final accentColors = AppColors.getAccentOptions(intensity);
     final selectedColor = accentColors[_selectedColorIndex.clamp(0, accentColors.length - 1)];
     final assetName = _nameController.text.trim();
+    final mainCurrencyCode = ref.watch(mainCurrencyCodeProvider);
+    final currencySymbol = Currency.symbolFromCode(mainCurrencyCode);
+    final categoriesAsync = ref.watch(assetCategoriesProvider);
 
     final isDuplicateName = assetName.isNotEmpty && ref.watch(
       assetNameExistsProvider((name: assetName, excludeId: widget.asset?.id)),
@@ -278,6 +311,61 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
                       ),
                     const SizedBox(height: AppSpacing.xxl),
 
+                    // Purchase price
+                    Text('Purchase Price (optional)', style: AppTypography.labelMedium),
+                    const SizedBox(height: AppSpacing.sm),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: AppRadius.mdAll,
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: TextField(
+                        controller: _purchasePriceController,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        style: AppTypography.input,
+                        cursorColor: AppColors.textPrimary,
+                        onChanged: (_) => setState(() {}),
+                        decoration: InputDecoration(
+                          hintText: '0.00',
+                          hintStyle: AppTypography.inputHint,
+                          prefixText: '$currencySymbol ',
+                          prefixStyle: AppTypography.input.copyWith(
+                            color: AppColors.textTertiary,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: AppSpacing.md,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+
+                    // Asset category
+                    categoriesAsync.when(
+                      data: (categories) {
+                        if (categories.isEmpty) return const SizedBox.shrink();
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Category (optional)', style: AppTypography.labelMedium),
+                            const SizedBox(height: AppSpacing.sm),
+                            _AssetCategorySelector(
+                              categories: categories,
+                              selectedId: _selectedAssetCategoryId,
+                              intensity: intensity,
+                              onChanged: (id) => setState(() => _selectedAssetCategoryId = id),
+                            ),
+                            const SizedBox(height: AppSpacing.xxl),
+                          ],
+                        );
+                      },
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, __) => const SizedBox.shrink(),
+                    ),
+
                     // Status toggle (edit mode only)
                     if (_isEditing) ...[
                       Text('Status', style: AppTypography.labelMedium),
@@ -367,6 +455,9 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
                               _selectedColorIndex,
                               _selectedStatus,
                               note.isEmpty ? null : note,
+                              _parsedPrice,
+                              mainCurrencyCode,
+                              _selectedAssetCategoryId,
                             );
                           }
                         : null,
@@ -378,6 +469,95 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
         ),
       ),
     ),
+    );
+  }
+}
+
+class _AssetCategorySelector extends StatelessWidget {
+  final List<AssetCategory> categories;
+  final String? selectedId;
+  final ColorIntensity intensity;
+  final ValueChanged<String?> onChanged;
+
+  const _AssetCategorySelector({
+    required this.categories,
+    required this.selectedId,
+    required this.intensity,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: AppSpacing.chipGap,
+      runSpacing: AppSpacing.chipGap,
+      children: [
+        _CategoryChip(
+          label: 'None',
+          icon: LucideIcons.circleOff,
+          color: AppColors.textSecondary,
+          isSelected: selectedId == null,
+          onTap: () => onChanged(null),
+        ),
+        ...categories.map((cat) {
+          final catColor = cat.getColor(intensity);
+          return _CategoryChip(
+            label: cat.name,
+            icon: cat.icon,
+            color: catColor,
+            isSelected: cat.id == selectedId,
+            onTap: () => onChanged(cat.id),
+          );
+        }),
+      ],
+    );
+  }
+}
+
+class _CategoryChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _CategoryChip({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+        decoration: BoxDecoration(
+          color: isSelected ? color.withValues(alpha: 0.15) : AppColors.surface,
+          borderRadius: AppRadius.smAll,
+          border: Border.all(
+            color: isSelected ? color : AppColors.border,
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: isSelected ? color : AppColors.textSecondary),
+            const SizedBox(width: AppSpacing.xs),
+            Text(
+              label,
+              style: AppTypography.labelSmall.copyWith(
+                color: isSelected ? color : AppColors.textSecondary,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

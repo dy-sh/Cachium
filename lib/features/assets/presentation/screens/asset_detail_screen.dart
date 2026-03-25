@@ -15,6 +15,7 @@ import '../../../transactions/data/models/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../data/models/asset.dart';
 import '../providers/asset_analytics_providers.dart';
+import '../providers/asset_categories_provider.dart';
 import '../providers/assets_provider.dart';
 import '../widgets/asset_category_breakdown.dart';
 import '../widgets/asset_form_modal.dart';
@@ -32,7 +33,7 @@ class AssetDetailScreen extends ConsumerWidget {
       MaterialPageRoute(
         builder: (context) => AssetFormModal(
           asset: asset,
-          onSave: (name, icon, colorIndex, status, note) async {
+          onSave: (name, icon, colorIndex, status, note, purchasePrice, purchaseCurrencyCode, assetCategoryId) async {
             final updatedAsset = asset.copyWith(
               name: name,
               icon: icon,
@@ -40,6 +41,12 @@ class AssetDetailScreen extends ConsumerWidget {
               status: status,
               note: note,
               clearNote: note == null,
+              purchasePrice: purchasePrice,
+              clearPurchasePrice: purchasePrice == null,
+              purchaseCurrencyCode: purchaseCurrencyCode,
+              clearPurchaseCurrencyCode: purchaseCurrencyCode == null,
+              assetCategoryId: assetCategoryId,
+              clearAssetCategoryId: assetCategoryId == null,
             );
             await ref.read(assetsProvider.notifier).updateAsset(updatedAsset);
             if (context.mounted) {
@@ -90,18 +97,10 @@ class AssetDetailScreen extends ConsumerWidget {
     final transactions = ref.watch(transactionsByAssetProvider(assetId));
     final monthGroups = ref.watch(assetTransactionsByMonthProvider(assetId));
     final bgOpacity = AppColors.getBgOpacity(intensity);
-
-    // Cost analysis
-    double totalSpent = 0;
-    double totalIncome = 0;
-    for (final tx in transactions) {
-      if (tx.type == TransactionType.expense) {
-        totalSpent += tx.effectiveMainCurrencyAmount;
-      } else if (tx.type == TransactionType.income) {
-        totalIncome += tx.effectiveMainCurrencyAmount;
-      }
-    }
-    final netCost = totalSpent - totalIncome;
+    final costBreakdown = ref.watch(assetCostBreakdownProvider(assetId));
+    final assetCategory = asset.assetCategoryId != null
+        ? ref.watch(assetCategoryByIdProvider(asset.assetCategoryId!))
+        : null;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -164,19 +163,56 @@ class AssetDetailScreen extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(height: AppSpacing.md),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: asset.status.color.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            asset.status.displayName,
-                            style: AppTypography.labelSmall.copyWith(
-                              color: asset.status.color,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: asset.status.color.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                asset.status.displayName,
+                                style: AppTypography.labelSmall.copyWith(
+                                  color: asset.status.color,
+                                ),
+                              ),
+                            ),
+                            if (assetCategory != null) ...[
+                              const SizedBox(width: AppSpacing.xs),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: assetCategory.getColor(intensity).withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(assetCategory.icon, size: 12, color: assetCategory.getColor(intensity)),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      assetCategory.name,
+                                      style: AppTypography.labelSmall.copyWith(
+                                        color: assetCategory.getColor(intensity),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        if (asset.purchasePrice != null) ...[
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            'Purchased for ${CurrencyFormatter.format(asset.purchasePrice!, currencyCode: asset.purchaseCurrencyCode ?? ref.watch(mainCurrencyCodeProvider))}',
+                            style: AppTypography.labelMedium.copyWith(
+                              color: AppColors.textSecondary,
                             ),
                           ),
-                        ),
+                        ],
                         if (asset.note != null && asset.note!.isNotEmpty) ...[
                           const SizedBox(height: AppSpacing.sm),
                           Text(
@@ -193,7 +229,7 @@ class AssetDetailScreen extends ConsumerWidget {
                             'Added ${DateFormatter.formatRelative(asset.createdAt)}',
                             if (asset.soldDate != null)
                               'Sold ${DateFormatter.formatRelative(asset.soldDate!)}',
-                          ].join('  ·  '),
+                          ].join('  \u00B7  '),
                           style: AppTypography.bodySmall.copyWith(
                             color: AppColors.textTertiary,
                             fontSize: 11,
@@ -210,8 +246,8 @@ class AssetDetailScreen extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: _CostCard(
-                          label: 'Total Spent',
-                          amount: totalSpent,
+                          label: 'Acquisition',
+                          amount: costBreakdown.acquisitionCost,
                           color: AppColors.getTransactionColor('expense', intensity),
                           currencyCode: ref.watch(mainCurrencyCodeProvider),
                         ),
@@ -219,23 +255,49 @@ class AssetDetailScreen extends ConsumerWidget {
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
                         child: _CostCard(
-                          label: 'Revenue',
-                          amount: totalIncome,
-                          color: AppColors.getTransactionColor('income', intensity),
+                          label: 'Running Costs',
+                          amount: costBreakdown.runningCosts,
+                          color: AppColors.getTransactionColor('expense', intensity),
                           currencyCode: ref.watch(mainCurrencyCodeProvider),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  _CostCard(
-                    label: 'Net Cost',
-                    amount: netCost,
-                    color: netCost > 0
-                        ? AppColors.getTransactionColor('expense', intensity)
-                        : AppColors.getTransactionColor('income', intensity),
-                    currencyCode: ref.watch(mainCurrencyCodeProvider),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _CostCard(
+                          label: 'Revenue',
+                          amount: costBreakdown.revenue,
+                          color: AppColors.getTransactionColor('income', intensity),
+                          currencyCode: ref.watch(mainCurrencyCodeProvider),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: _CostCard(
+                          label: 'Net Cost',
+                          amount: costBreakdown.netCost,
+                          color: costBreakdown.netCost > 0
+                              ? AppColors.getTransactionColor('expense', intensity)
+                              : AppColors.getTransactionColor('income', intensity),
+                          currencyCode: ref.watch(mainCurrencyCodeProvider),
+                        ),
+                      ),
+                    ],
                   ),
+                  if (costBreakdown.profitLoss != null) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    _CostCard(
+                      label: costBreakdown.profitLoss! >= 0 ? 'Profit on Sale' : 'Loss on Sale',
+                      amount: costBreakdown.profitLoss!.abs(),
+                      color: costBreakdown.profitLoss! >= 0
+                          ? AppColors.getTransactionColor('income', intensity)
+                          : AppColors.getTransactionColor('expense', intensity),
+                      currencyCode: ref.watch(mainCurrencyCodeProvider),
+                    ),
+                  ],
 
                   // 3. Stats cards
                   if (transactions.isNotEmpty) ...[

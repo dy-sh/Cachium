@@ -9,6 +9,7 @@ import 'package:sqlite3/sqlite3.dart' as sql;
 
 import '../../../data/encryption/account_data.dart';
 import '../../../data/encryption/asset_data.dart';
+import '../../../data/encryption/asset_category_data.dart';
 import '../../../data/encryption/budget_data.dart';
 import '../../../data/encryption/category_data.dart';
 import '../../../data/encryption/recurring_rule_data.dart';
@@ -72,6 +73,7 @@ class DatabaseExportService {
         await _exportSettingsEncrypted(exportDb);
         await _exportBudgetsEncrypted(exportDb);
         await _exportAssetsEncrypted(exportDb);
+        await _exportAssetCategoriesEncrypted(exportDb);
         await _exportRecurringRulesEncrypted(exportDb);
         await _exportSavingsGoalsEncrypted(exportDb);
         await _exportTransactionTemplatesEncrypted(exportDb);
@@ -83,6 +85,7 @@ class DatabaseExportService {
         await _exportSettingsPlaintext(exportDb);
         await _exportBudgetsPlaintext(exportDb);
         await _exportAssetsPlaintext(exportDb);
+        await _exportAssetCategoriesPlaintext(exportDb);
         await _exportRecurringRulesPlaintext(exportDb);
         await _exportSavingsGoalsPlaintext(exportDb);
         await _exportTransactionTemplatesPlaintext(exportDb);
@@ -227,6 +230,17 @@ class DatabaseExportService {
     ''');
 
     db.execute('''
+      CREATE TABLE asset_categories (
+        id TEXT PRIMARY KEY,
+        created_at INTEGER NOT NULL,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        last_updated_at INTEGER NOT NULL,
+        is_deleted INTEGER NOT NULL DEFAULT 0,
+        encrypted_blob BLOB NOT NULL
+      )
+    ''');
+
+    db.execute('''
       CREATE TABLE recurring_rules (
         id TEXT PRIMARY KEY,
         created_at INTEGER NOT NULL,
@@ -356,6 +370,25 @@ class DatabaseExportService {
         color_index INTEGER NOT NULL,
         status TEXT NOT NULL,
         note TEXT,
+        purchase_price REAL,
+        purchase_currency_code TEXT,
+        asset_category_id TEXT,
+        created_at_millis INTEGER NOT NULL
+      )
+    ''');
+
+    db.execute('''
+      CREATE TABLE asset_categories (
+        id TEXT PRIMARY KEY,
+        created_at INTEGER NOT NULL,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        last_updated_at INTEGER NOT NULL,
+        is_deleted INTEGER NOT NULL DEFAULT 0,
+        name TEXT NOT NULL,
+        icon_code_point INTEGER NOT NULL,
+        icon_font_family TEXT,
+        icon_font_package TEXT,
+        color_index INTEGER NOT NULL,
         created_at_millis INTEGER NOT NULL
       )
     ''');
@@ -513,6 +546,27 @@ class DatabaseExportService {
 
     final stmt = exportDb.prepare(
       'INSERT INTO assets (id, created_at, sort_order, last_updated_at, is_deleted, encrypted_blob) VALUES (?, ?, ?, ?, ?, ?)',
+    );
+
+    for (final row in rows) {
+      stmt.execute([
+        row.id,
+        row.createdAt,
+        row.sortOrder,
+        row.lastUpdatedAt,
+        row.isDeleted ? 1 : 0,
+        row.encryptedBlob,
+      ]);
+    }
+
+    stmt.dispose();
+  }
+
+  Future<void> _exportAssetCategoriesEncrypted(sql.Database exportDb) async {
+    final rows = await database.select(database.assetCategories).get();
+
+    final stmt = exportDb.prepare(
+      'INSERT INTO asset_categories (id, created_at, sort_order, last_updated_at, is_deleted, encrypted_blob) VALUES (?, ?, ?, ?, ?, ?)',
     );
 
     for (final row in rows) {
@@ -732,8 +786,8 @@ class DatabaseExportService {
 
     final stmt = exportDb.prepare(
       '''INSERT INTO assets
-         (id, created_at, sort_order, last_updated_at, is_deleted, name, icon_code_point, icon_font_family, icon_font_package, color_index, status, note, created_at_millis)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+         (id, created_at, sort_order, last_updated_at, is_deleted, name, icon_code_point, icon_font_family, icon_font_package, color_index, status, note, purchase_price, purchase_currency_code, asset_category_id, created_at_millis)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
     );
 
     for (final row in rows) {
@@ -753,6 +807,40 @@ class DatabaseExportService {
         data.colorIndex,
         data.status,
         data.note,
+        data.purchasePrice,
+        data.purchaseCurrencyCode,
+        data.assetCategoryId,
+        data.createdAtMillis,
+      ]);
+    }
+
+    stmt.dispose();
+  }
+
+  Future<void> _exportAssetCategoriesPlaintext(sql.Database exportDb) async {
+    final rows = await database.select(database.assetCategories).get();
+
+    final stmt = exportDb.prepare(
+      '''INSERT INTO asset_categories
+         (id, created_at, sort_order, last_updated_at, is_deleted, name, icon_code_point, icon_font_family, icon_font_package, color_index, created_at_millis)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+    );
+
+    for (final row in rows) {
+      final json = await encryptionService.decryptJson(row.encryptedBlob);
+      final data = AssetCategoryData.fromJson(json);
+
+      stmt.execute([
+        row.id,
+        row.createdAt,
+        row.sortOrder,
+        row.lastUpdatedAt,
+        row.isDeleted ? 1 : 0,
+        data.name,
+        data.iconCodePoint,
+        data.iconFontFamily,
+        data.iconFontPackage,
+        data.colorIndex,
         data.createdAtMillis,
       ]);
     }

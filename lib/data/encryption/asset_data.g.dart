@@ -17,6 +17,9 @@ _$AssetDataImpl _$$AssetDataImplFromJson(Map<String, dynamic> json) =>
       status: json['status'] as String,
       soldDateMillis: (json['soldDateMillis'] as num?)?.toInt(),
       note: json['note'] as String?,
+      purchasePrice: (json['purchasePrice'] as num?)?.toDouble(),
+      purchaseCurrencyCode: json['purchaseCurrencyCode'] as String?,
+      assetCategoryId: json['assetCategoryId'] as String?,
       sortOrder: (json['sortOrder'] as num?)?.toInt() ?? 0,
       createdAtMillis: (json['createdAtMillis'] as num).toInt(),
     );
@@ -32,6 +35,9 @@ Map<String, dynamic> _$$AssetDataImplToJson(_$AssetDataImpl instance) =>
       'status': instance.status,
       'soldDateMillis': instance.soldDateMillis,
       'note': instance.note,
+      'purchasePrice': instance.purchasePrice,
+      'purchaseCurrencyCode': instance.purchaseCurrencyCode,
+      'assetCategoryId': instance.assetCategoryId,
       'sortOrder': instance.sortOrder,
       'createdAtMillis': instance.createdAtMillis,
     };

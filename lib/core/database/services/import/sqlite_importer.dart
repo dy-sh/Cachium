@@ -6,6 +6,7 @@ import 'package:sqlite3/sqlite3.dart' as sql;
 
 import '../../../../data/encryption/account_data.dart';
 import '../../../../data/encryption/asset_data.dart';
+import '../../../../data/encryption/asset_category_data.dart';
 import '../../../../data/encryption/budget_data.dart';
 import '../../../../data/encryption/category_data.dart';
 import '../../../../data/encryption/recurring_rule_data.dart';
@@ -303,6 +304,16 @@ class SqliteImporter {
           assetsImported = await _importAssetsFromSqlite(
             importDb,
             isEncryptedAssets,
+            errors,
+          );
+        }
+
+        // Import asset categories
+        if (_tableExists(importDb, 'asset_categories')) {
+          final isEncryptedCats = _hasEncryptedBlob(importDb, 'asset_categories');
+          await _importAssetCategoriesFromSqlite(
+            importDb,
+            isEncryptedCats,
             errors,
           );
         }
@@ -677,6 +688,7 @@ class SqliteImporter {
         if (isEncrypted) {
           encryptedBlob = safeBlob(row['encrypted_blob'] ?? row['encryptedBlob'], 'encrypted_blob', id);
         } else {
+          final purchasePriceRaw = row['purchase_price'] ?? row['purchasePrice'];
           final data = AssetData(
             id: id,
             name: safeString(row['name'], 'name', id),
@@ -686,6 +698,9 @@ class SqliteImporter {
             colorIndex: safeInt(row['color_index'] ?? row['colorIndex'], 'color_index', id),
             status: safeString(row['status'], 'status', id),
             note: safeStringOrNull(row['note']),
+            purchasePrice: purchasePriceRaw != null ? (purchasePriceRaw as num).toDouble() : null,
+            purchaseCurrencyCode: safeStringOrNull(row['purchase_currency_code'] ?? row['purchaseCurrencyCode']),
+            assetCategoryId: safeStringOrNull(row['asset_category_id'] ?? row['assetCategoryId']),
             sortOrder: sortOrder,
             createdAtMillis: safeInt(row['created_at_millis'] ?? row['createdAtMillis'] ?? createdAt, 'created_at_millis', id),
           );
@@ -705,6 +720,59 @@ class SqliteImporter {
         count++;
       } catch (e) {
         errors.add('Failed to import asset: $e');
+      }
+    }
+
+    return count;
+  }
+
+  Future<int> _importAssetCategoriesFromSqlite(
+    sql.Database importDb,
+    bool isEncrypted,
+    List<String> errors,
+  ) async {
+    int count = 0;
+    final rows = importDb.select('SELECT * FROM asset_categories');
+
+    for (final row in rows) {
+      try {
+        final id = safeString(row['id'], 'id');
+        final createdAt = safeInt(row['created_at'] ?? row['createdAt'], 'created_at', id);
+        final sortOrder = safeInt(row['sort_order'] ?? row['sortOrder'] ?? 0, 'sort_order', id);
+        final lastUpdatedAt = safeInt(row['last_updated_at'] ?? row['lastUpdatedAt'], 'last_updated_at', id);
+        final isDeleted = (safeInt(row['is_deleted'] ?? row['isDeleted'] ?? 0, 'is_deleted', id)) == 1;
+
+        Uint8List encryptedBlob;
+
+        if (isEncrypted) {
+          encryptedBlob = safeBlob(row['encrypted_blob'] ?? row['encryptedBlob'], 'encrypted_blob', id);
+        } else {
+          final data = AssetCategoryData(
+            id: id,
+            name: safeString(row['name'], 'name', id),
+            iconCodePoint: safeInt(row['icon_code_point'] ?? row['iconCodePoint'], 'icon_code_point', id),
+            iconFontFamily: safeStringOrNull(row['icon_font_family'] ?? row['iconFontFamily']),
+            iconFontPackage: safeStringOrNull(row['icon_font_package'] ?? row['iconFontPackage']),
+            colorIndex: safeInt(row['color_index'] ?? row['colorIndex'], 'color_index', id),
+            sortOrder: sortOrder,
+            createdAtMillis: safeInt(row['created_at_millis'] ?? row['createdAtMillis'] ?? createdAt, 'created_at_millis', id),
+          );
+          encryptedBlob = await encryptionService.encryptJson(data.toJson());
+        }
+
+        await database.into(database.assetCategories).insertOnConflictUpdate(
+          AssetCategoriesCompanion(
+            id: Value(id),
+            createdAt: Value(createdAt),
+            sortOrder: Value(sortOrder),
+            lastUpdatedAt: Value(lastUpdatedAt),
+            isDeleted: Value(isDeleted),
+            encryptedBlob: Value(encryptedBlob),
+          ),
+        );
+        count++;
+      } catch (e) {
+        errors.add('Failed to import asset category: $e');
       }
     }
 

@@ -10,7 +10,9 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../../../design_system/design_system.dart';
 import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
+import '../../../transactions/presentation/providers/transaction_form_provider.dart';
 import '../../data/models/asset.dart';
+import '../providers/asset_categories_provider.dart';
 import '../providers/assets_provider.dart';
 import '../widgets/asset_form_modal.dart';
 
@@ -27,6 +29,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
   _AssetTab _tab = _AssetTab.active;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  String? _selectedCategoryFilter;
 
   @override
   void dispose() {
@@ -38,18 +41,86 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => AssetFormModal(
-          onSave: (name, icon, colorIndex, status, note) async {
-            await ref.read(assetsProvider.notifier).addAsset(
+          onSave: (name, icon, colorIndex, status, note, purchasePrice, purchaseCurrencyCode, assetCategoryId) async {
+            final assetId = await ref.read(assetsProvider.notifier).addAsset(
               name: name,
               icon: icon,
               colorIndex: colorIndex,
               note: note,
+              purchasePrice: purchasePrice,
+              purchaseCurrencyCode: purchaseCurrencyCode,
+              assetCategoryId: assetCategoryId,
             );
             if (context.mounted) {
               Navigator.of(context).pop();
               context.showSuccessNotification('Asset created');
+
+              // Offer to create purchase transaction if price was provided
+              if (purchasePrice != null && purchasePrice > 0) {
+                _offerPurchaseTransaction(assetId, name, purchasePrice);
+              }
             }
           },
+        ),
+      ),
+    );
+  }
+
+  void _offerPurchaseTransaction(String assetId, String assetName, double purchasePrice) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.lgAll),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(LucideIcons.receipt, size: 22, color: AppColors.textPrimary),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text('Create Purchase Transaction?', style: AppTypography.h4),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                'Would you like to create a transaction for the purchase of "$assetName"?',
+                style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              PrimaryButton(
+                label: 'Create Transaction',
+                icon: LucideIcons.plus,
+                onPressed: () {
+                  Navigator.of(dialogContext).pop();
+                  context.push('/transaction/new?type=expense');
+                  Future.microtask(() {
+                    final formNotifier = ref.read(transactionFormProvider.notifier);
+                    formNotifier.setAsset(assetId);
+                    formNotifier.setNote('Purchase of $assetName');
+                    formNotifier.setAmount(purchasePrice);
+                  });
+                },
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              GestureDetector(
+                onTap: () => Navigator.of(dialogContext).pop(),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                  child: Center(
+                    child: Text(
+                      'Skip',
+                      style: AppTypography.labelMedium.copyWith(color: AppColors.textTertiary),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -60,7 +131,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
       MaterialPageRoute(
         builder: (context) => AssetFormModal(
           asset: asset,
-          onSave: (name, icon, colorIndex, status, note) async {
+          onSave: (name, icon, colorIndex, status, note, purchasePrice, purchaseCurrencyCode, assetCategoryId) async {
             final updatedAsset = asset.copyWith(
               name: name,
               icon: icon,
@@ -68,6 +139,12 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
               status: status,
               note: note,
               clearNote: note == null,
+              purchasePrice: purchasePrice,
+              clearPurchasePrice: purchasePrice == null,
+              purchaseCurrencyCode: purchaseCurrencyCode,
+              clearPurchaseCurrencyCode: purchaseCurrencyCode == null,
+              assetCategoryId: assetCategoryId,
+              clearAssetCategoryId: assetCategoryId == null,
             );
             await ref.read(assetsProvider.notifier).updateAsset(updatedAsset);
             if (context.mounted) {
@@ -91,6 +168,11 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
   Widget build(BuildContext context) {
     final assetsAsync = ref.watch(assetsProvider);
     final intensity = ref.watch(colorIntensityProvider);
+    final activeSummary = ref.watch(activeAssetsSummaryProvider);
+    final soldSummary = ref.watch(soldAssetsSummaryProvider);
+    final summary = _tab == _AssetTab.active ? activeSummary : soldSummary;
+    final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+    final categoriesAsync = ref.watch(assetCategoriesProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -111,6 +193,24 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
                   Expanded(
                     child: Text('Assets', style: AppTypography.h2),
                   ),
+                  GestureDetector(
+                    onTap: () => context.push('/settings/assets/categories'),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: AppRadius.iconButton,
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Icon(
+                        LucideIcons.settings2,
+                        color: AppColors.textSecondary,
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
                   GestureDetector(
                     onTap: _openCreateModal,
                     child: Container(
@@ -137,11 +237,63 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
                 options: const ['Active', 'Sold'],
                 selectedIndex: _tab.index,
                 onChanged: (index) {
-                  setState(() => _tab = _AssetTab.values[index]);
+                  setState(() {
+                    _tab = _AssetTab.values[index];
+                    _selectedCategoryFilter = null;
+                  });
                 },
               ),
             ),
+
+            // Summary stats
+            if (summary.count > 0) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Center(
+                child: Text(
+                  '${summary.count} ${summary.count == 1 ? 'asset' : 'assets'}  \u00B7  ${CurrencyFormatter.format(summary.totalNetCost.abs(), currencyCode: mainCurrency)} net cost',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textTertiary,
+                  ),
+                ),
+              ),
+            ],
+
             const SizedBox(height: AppSpacing.md),
+
+            // Category filter chips
+            categoriesAsync.when(
+              data: (categories) {
+                if (categories.isEmpty) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                  child: SizedBox(
+                    height: 32,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+                      children: [
+                        _FilterChip(
+                          label: 'All',
+                          isSelected: _selectedCategoryFilter == null,
+                          onTap: () => setState(() => _selectedCategoryFilter = null),
+                        ),
+                        ...categories.map((cat) => Padding(
+                          padding: const EdgeInsets.only(left: AppSpacing.xs),
+                          child: _FilterChip(
+                            label: cat.name,
+                            isSelected: _selectedCategoryFilter == cat.id,
+                            onTap: () => setState(() => _selectedCategoryFilter = cat.id),
+                          ),
+                        )),
+                      ],
+                    ),
+                  ),
+                );
+              },
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
+            ),
+
             // Search bar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
@@ -196,6 +348,11 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
       _AssetTab.active => assets.where((a) => a.status == AssetStatus.active).toList(),
       _AssetTab.sold => assets.where((a) => a.status == AssetStatus.sold).toList(),
     };
+
+    // Filter by category
+    if (_selectedCategoryFilter != null) {
+      filtered = filtered.where((a) => a.assetCategoryId == _selectedCategoryFilter).toList();
+    }
 
     // Filter by search
     if (_searchQuery.isNotEmpty) {
@@ -431,6 +588,42 @@ class _AssetCard extends ConsumerWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _FilterChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.accentPrimary.withValues(alpha: 0.15) : AppColors.surface,
+          borderRadius: AppRadius.smAll,
+          border: Border.all(
+            color: isSelected ? AppColors.accentPrimary : AppColors.border,
+          ),
+        ),
+        child: Text(
+          label,
+          style: AppTypography.labelSmall.copyWith(
+            color: isSelected ? AppColors.accentPrimary : AppColors.textSecondary,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          ),
         ),
       ),
     );

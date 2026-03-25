@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/repositories/account_repository.dart';
 import '../../data/repositories/asset_repository.dart';
+import '../../data/repositories/asset_category_repository.dart';
 import '../../data/repositories/bill_repository.dart';
 import '../../data/repositories/budget_repository.dart';
 import '../../data/repositories/category_repository.dart';
@@ -89,6 +90,14 @@ final budgetRepositoryProvider = Provider<BudgetRepository>((ref) {
 /// Provider for the asset repository.
 final assetRepositoryProvider = Provider<AssetRepository>((ref) {
   return AssetRepository(
+    database: ref.watch(databaseProvider),
+    encryptionService: ref.watch(encryptionServiceProvider),
+  );
+});
+
+/// Provider for the asset category repository.
+final assetCategoryRepositoryProvider = Provider<AssetCategoryRepository>((ref) {
+  return AssetCategoryRepository(
     database: ref.watch(databaseProvider),
     encryptionService: ref.watch(encryptionServiceProvider),
   );

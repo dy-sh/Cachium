@@ -38,6 +38,15 @@ class AssetData with _$AssetData {
     /// Optional description/note
     String? note,
 
+    /// Purchase price metadata (for display/analytics, not balance-affecting)
+    double? purchasePrice,
+
+    /// Currency code for the purchase price
+    String? purchaseCurrencyCode,
+
+    /// Optional link to an asset category
+    String? assetCategoryId,
+
     /// Sort order for display ordering
     @Default(0) int sortOrder,
 

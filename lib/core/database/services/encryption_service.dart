@@ -5,6 +5,7 @@ import 'package:cryptography/cryptography.dart';
 
 import '../../../data/encryption/account_data.dart';
 import '../../../data/encryption/asset_data.dart';
+import '../../../data/encryption/asset_category_data.dart';
 import '../../../data/encryption/attachment_data.dart';
 import '../../../data/encryption/bill_data.dart';
 import '../../../data/encryption/budget_data.dart';
@@ -365,6 +366,41 @@ class EncryptionService {
   }) async {
     final json = await decryptJson(encryptedBlob);
     final data = AssetData.fromJson(json);
+
+    if (data.id != expectedId) {
+      throw SecurityException(
+        rowId: expectedId,
+        fieldName: 'id',
+        expectedValue: expectedId,
+        actualValue: data.id,
+      );
+    }
+
+    if (data.createdAtMillis != expectedCreatedAtMillis) {
+      throw SecurityException(
+        rowId: expectedId,
+        fieldName: 'createdAtMillis',
+        expectedValue: expectedCreatedAtMillis.toString(),
+        actualValue: data.createdAtMillis.toString(),
+      );
+    }
+
+    return data;
+  }
+
+  /// Encrypts asset category data into a binary blob.
+  Future<Uint8List> encryptAssetCategory(AssetCategoryData data) async {
+    return encryptJson(data.toJson());
+  }
+
+  /// Decrypts an encrypted blob back to asset category data.
+  Future<AssetCategoryData> decryptAssetCategory(
+    Uint8List encryptedBlob, {
+    required String expectedId,
+    required int expectedCreatedAtMillis,
+  }) async {
+    final json = await decryptJson(encryptedBlob);
+    final data = AssetCategoryData.fromJson(json);
 
     if (data.id != expectedId) {
       throw SecurityException(

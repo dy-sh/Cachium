@@ -20,6 +20,15 @@ typedef AssetCategoryEntry = ({
   double percentage,
 });
 
+/// Cost breakdown for an asset.
+typedef AssetCostBreakdown = ({
+  double acquisitionCost,
+  double runningCosts,
+  double revenue,
+  double netCost,
+  double? profitLoss,
+});
+
 /// Computed stats for an asset.
 typedef AssetStats = ({
   double monthlyAverage,
@@ -102,13 +111,45 @@ final assetCategoryBreakdownProvider =
   return entries;
 });
 
+/// Cost breakdown: acquisition vs running vs revenue.
+final assetCostBreakdownProvider =
+    Provider.family<AssetCostBreakdown, String>((ref, assetId) {
+  final asset = ref.watch(assetByIdProvider(assetId));
+  final transactions = ref.watch(transactionsByAssetProvider(assetId));
+
+  final acquisitionCost = asset?.purchasePrice ?? 0;
+  double runningCosts = 0;
+  double revenue = 0;
+
+  for (final tx in transactions) {
+    if (tx.type == TransactionType.expense) {
+      runningCosts += tx.effectiveMainCurrencyAmount;
+    } else if (tx.type == TransactionType.income) {
+      revenue += tx.effectiveMainCurrencyAmount;
+    }
+  }
+
+  final netCost = acquisitionCost + runningCosts - revenue;
+  final profitLoss = (asset?.status == AssetStatus.sold)
+      ? revenue - acquisitionCost
+      : null;
+
+  return (
+    acquisitionCost: acquisitionCost,
+    runningCosts: runningCosts,
+    revenue: revenue,
+    netCost: netCost,
+    profitLoss: profitLoss,
+  );
+});
+
 /// Computed summary statistics for an asset.
 final assetStatsProvider =
     Provider.family<AssetStats, String>((ref, assetId) {
   final transactions = ref.watch(transactionsByAssetProvider(assetId));
   final asset = ref.watch(assetByIdProvider(assetId));
 
-  double totalExpense = 0;
+  double totalExpense = asset?.purchasePrice ?? 0;
   for (final tx in transactions) {
     if (tx.type == TransactionType.expense) {
       totalExpense += tx.effectiveMainCurrencyAmount;
