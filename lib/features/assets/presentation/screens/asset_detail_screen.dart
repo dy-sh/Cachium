@@ -96,9 +96,9 @@ class AssetDetailScreen extends ConsumerWidget {
     double totalIncome = 0;
     for (final tx in transactions) {
       if (tx.type == TransactionType.expense) {
-        totalSpent += tx.amount;
+        totalSpent += tx.effectiveMainCurrencyAmount;
       } else if (tx.type == TransactionType.income) {
-        totalIncome += tx.amount;
+        totalIncome += tx.effectiveMainCurrencyAmount;
       }
     }
     final netCost = totalSpent - totalIncome;
@@ -189,7 +189,11 @@ class AssetDetailScreen extends ConsumerWidget {
                         ],
                         const SizedBox(height: AppSpacing.sm),
                         Text(
-                          'Added ${DateFormatter.formatRelative(asset.createdAt)}',
+                          [
+                            'Added ${DateFormatter.formatRelative(asset.createdAt)}',
+                            if (asset.soldDate != null)
+                              'Sold ${DateFormatter.formatRelative(asset.soldDate!)}',
+                          ].join('  ·  '),
                           style: AppTypography.bodySmall.copyWith(
                             color: AppColors.textTertiary,
                             fontSize: 11,
@@ -440,15 +444,21 @@ class _AssetTransactionItem extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    category?.name ?? 'Unknown',
+                    transaction.note?.isNotEmpty == true
+                        ? transaction.note!
+                        : transaction.merchant?.isNotEmpty == true
+                            ? transaction.merchant!
+                            : category?.name ?? 'Unknown',
                     style: AppTypography.labelMedium,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    DateFormatter.formatRelative(transaction.date),
+                    '${category?.name ?? 'Unknown'}  ·  ${DateFormatter.formatRelative(transaction.date)}',
                     style: AppTypography.bodySmall.copyWith(
                       color: AppColors.textTertiary,
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

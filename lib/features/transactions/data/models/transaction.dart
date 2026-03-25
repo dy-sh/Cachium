@@ -75,6 +75,10 @@ class Transaction {
 
   bool get isTransfer => type == TransactionType.transfer;
 
+  /// Amount in the user's main currency, with fallback for legacy records.
+  double get effectiveMainCurrencyAmount =>
+      mainCurrencyAmount ?? roundCurrency(amount * conversionRate);
+
   /// Validates critical invariants at save-time.
   /// Throws [ValidationException] for invalid state.
   /// Safer than constructor assertions: won't crash on corrupt DB reads.

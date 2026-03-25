@@ -40,6 +40,7 @@ class Asset {
   final IconData icon;
   final int colorIndex;
   final AssetStatus status;
+  final DateTime? soldDate;
   final String? note;
   final int sortOrder;
   final DateTime createdAt;
@@ -50,6 +51,7 @@ class Asset {
     required this.icon,
     required this.colorIndex,
     this.status = AssetStatus.active,
+    this.soldDate,
     this.note,
     this.sortOrder = 0,
     required this.createdAt,
@@ -65,6 +67,8 @@ class Asset {
     IconData? icon,
     int? colorIndex,
     AssetStatus? status,
+    DateTime? soldDate,
+    bool clearSoldDate = false,
     String? note,
     bool clearNote = false,
     int? sortOrder,
@@ -76,6 +80,7 @@ class Asset {
       icon: icon ?? this.icon,
       colorIndex: colorIndex ?? this.colorIndex,
       status: status ?? this.status,
+      soldDate: clearSoldDate ? null : (soldDate ?? this.soldDate),
       note: clearNote ? null : (note ?? this.note),
       sortOrder: sortOrder ?? this.sortOrder,
       createdAt: createdAt ?? this.createdAt,

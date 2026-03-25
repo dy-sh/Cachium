@@ -32,6 +32,9 @@ class AssetData with _$AssetData {
     /// Asset status: 'active' or 'sold'
     required String status,
 
+    /// When the asset was marked as sold (milliseconds since epoch)
+    int? soldDateMillis,
+
     /// Optional description/note
     String? note,
 

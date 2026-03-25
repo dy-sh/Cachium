@@ -4,6 +4,7 @@ import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
+import '../../data/models/asset.dart';
 import 'assets_provider.dart';
 
 /// Monthly spending data for an asset.
@@ -52,9 +53,9 @@ final assetMonthlySpendingProvider =
     double income = existing?.income ?? 0;
 
     if (tx.type == TransactionType.expense) {
-      expense += tx.amount;
+      expense += tx.effectiveMainCurrencyAmount;
     } else if (tx.type == TransactionType.income) {
-      income += tx.amount;
+      income += tx.effectiveMainCurrencyAmount;
     }
 
     byMonth[key] = (expense: expense, income: income, month: month);
@@ -77,11 +78,11 @@ final assetCategoryBreakdownProvider =
   final expenses = transactions.where((tx) => tx.type == TransactionType.expense).toList();
   if (expenses.isEmpty) return [];
 
-  final double totalExpense = expenses.fold(0, (sum, tx) => sum + tx.amount);
+  final double totalExpense = expenses.fold(0, (sum, tx) => sum + tx.effectiveMainCurrencyAmount);
 
   final Map<String, double> byCategoryId = {};
   for (final tx in expenses) {
-    byCategoryId[tx.categoryId] = (byCategoryId[tx.categoryId] ?? 0) + tx.amount;
+    byCategoryId[tx.categoryId] = (byCategoryId[tx.categoryId] ?? 0) + tx.effectiveMainCurrencyAmount;
   }
 
   final entries = <AssetCategoryEntry>[];
@@ -110,18 +111,20 @@ final assetStatsProvider =
   double totalExpense = 0;
   for (final tx in transactions) {
     if (tx.type == TransactionType.expense) {
-      totalExpense += tx.amount;
+      totalExpense += tx.effectiveMainCurrencyAmount;
     }
   }
 
-  final now = DateTime.now();
-  final createdAt = asset?.createdAt ?? now;
-  final timeOwned = now.difference(createdAt);
+  final endDate = (asset?.status == AssetStatus.sold && asset?.soldDate != null)
+      ? asset!.soldDate!
+      : DateTime.now();
+  final createdAt = asset?.createdAt ?? endDate;
+  final timeOwned = endDate.difference(createdAt);
   final daysOwned = timeOwned.inDays.clamp(1, double.maxFinite).toInt();
 
   // Monthly average based on months owned
-  final monthsOwned = ((now.year - createdAt.year) * 12 +
-          (now.month - createdAt.month))
+  final monthsOwned = ((endDate.year - createdAt.year) * 12 +
+          (endDate.month - createdAt.month))
       .clamp(1, double.maxFinite)
       .toInt();
   final monthlyAverage = totalExpense / monthsOwned;
@@ -156,9 +159,9 @@ final assetTransactionsByMonthProvider =
     double incomeSubtotal = 0;
     for (final tx in txs) {
       if (tx.type == TransactionType.expense) {
-        expenseSubtotal += tx.amount;
+        expenseSubtotal += tx.effectiveMainCurrencyAmount;
       } else if (tx.type == TransactionType.income) {
-        incomeSubtotal += tx.amount;
+        incomeSubtotal += tx.effectiveMainCurrencyAmount;
       }
     }
     groups.add((

@@ -34,6 +34,7 @@ class AssetRepository {
       iconFontPackage: asset.icon.fontPackage,
       colorIndex: asset.colorIndex,
       status: asset.status.name,
+      soldDateMillis: asset.soldDate?.millisecondsSinceEpoch,
       note: asset.note,
       sortOrder: asset.sortOrder,
       createdAtMillis: asset.createdAt.millisecondsSinceEpoch,
@@ -55,6 +56,9 @@ class AssetRepository {
         (s) => s.name == data.status,
         orElse: () => ui.AssetStatus.active,
       ),
+      soldDate: data.soldDateMillis != null
+          ? DateTime.fromMillisecondsSinceEpoch(data.soldDateMillis!)
+          : null,
       note: data.note,
       sortOrder: data.sortOrder,
       createdAt: DateTime.fromMillisecondsSinceEpoch(data.createdAtMillis),

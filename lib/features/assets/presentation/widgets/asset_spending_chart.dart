@@ -7,6 +7,7 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/constants/currencies.dart';
+import '../../../../core/utils/currency_formatter.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../providers/asset_analytics_providers.dart';
 
@@ -153,7 +154,7 @@ class AssetSpendingChart extends ConsumerWidget {
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       final isExpense = rodIndex == 0;
                       return BarTooltipItem(
-                        '${isExpense ? 'Expense' : 'Income'}\n$currencySymbol${rod.toY.toStringAsFixed(2)}',
+                        '${isExpense ? 'Expense' : 'Income'}\n${CurrencyFormatter.format(rod.toY, currencyCode: mainCurrencyCode)}',
                         AppTypography.bodySmall.copyWith(
                           color: isExpense ? expenseColor : incomeColor,
                         ),

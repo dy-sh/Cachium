@@ -42,6 +42,9 @@ mixin _$AssetData {
   /// Asset status: 'active' or 'sold'
   String get status => throw _privateConstructorUsedError;
 
+  /// When the asset was marked as sold (milliseconds since epoch)
+  int? get soldDateMillis => throw _privateConstructorUsedError;
+
   /// Optional description/note
   String? get note => throw _privateConstructorUsedError;
 
@@ -75,6 +78,7 @@ abstract class $AssetDataCopyWith<$Res> {
     String? iconFontPackage,
     int colorIndex,
     String status,
+    int? soldDateMillis,
     String? note,
     int sortOrder,
     int createdAtMillis,
@@ -103,6 +107,7 @@ class _$AssetDataCopyWithImpl<$Res, $Val extends AssetData>
     Object? iconFontPackage = freezed,
     Object? colorIndex = null,
     Object? status = null,
+    Object? soldDateMillis = freezed,
     Object? note = freezed,
     Object? sortOrder = null,
     Object? createdAtMillis = null,
@@ -137,6 +142,10 @@ class _$AssetDataCopyWithImpl<$Res, $Val extends AssetData>
                 ? _value.status
                 : status // ignore: cast_nullable_to_non_nullable
                       as String,
+            soldDateMillis: freezed == soldDateMillis
+                ? _value.soldDateMillis
+                : soldDateMillis // ignore: cast_nullable_to_non_nullable
+                      as int?,
             note: freezed == note
                 ? _value.note
                 : note // ignore: cast_nullable_to_non_nullable
@@ -172,6 +181,7 @@ abstract class _$$AssetDataImplCopyWith<$Res>
     String? iconFontPackage,
     int colorIndex,
     String status,
+    int? soldDateMillis,
     String? note,
     int sortOrder,
     int createdAtMillis,
@@ -199,6 +209,7 @@ class __$$AssetDataImplCopyWithImpl<$Res>
     Object? iconFontPackage = freezed,
     Object? colorIndex = null,
     Object? status = null,
+    Object? soldDateMillis = freezed,
     Object? note = freezed,
     Object? sortOrder = null,
     Object? createdAtMillis = null,
@@ -233,6 +244,10 @@ class __$$AssetDataImplCopyWithImpl<$Res>
             ? _value.status
             : status // ignore: cast_nullable_to_non_nullable
                   as String,
+        soldDateMillis: freezed == soldDateMillis
+            ? _value.soldDateMillis
+            : soldDateMillis // ignore: cast_nullable_to_non_nullable
+                  as int?,
         note: freezed == note
             ? _value.note
             : note // ignore: cast_nullable_to_non_nullable
@@ -261,6 +276,7 @@ class _$AssetDataImpl implements _AssetData {
     this.iconFontPackage,
     required this.colorIndex,
     required this.status,
+    this.soldDateMillis,
     this.note,
     this.sortOrder = 0,
     required this.createdAtMillis,
@@ -297,6 +313,10 @@ class _$AssetDataImpl implements _AssetData {
   @override
   final String status;
 
+  /// When the asset was marked as sold (milliseconds since epoch)
+  @override
+  final int? soldDateMillis;
+
   /// Optional description/note
   @override
   final String? note;
@@ -313,7 +333,7 @@ class _$AssetDataImpl implements _AssetData {
 
   @override
   String toString() {
-    return 'AssetData(id: $id, name: $name, iconCodePoint: $iconCodePoint, iconFontFamily: $iconFontFamily, iconFontPackage: $iconFontPackage, colorIndex: $colorIndex, status: $status, note: $note, sortOrder: $sortOrder, createdAtMillis: $createdAtMillis)';
+    return 'AssetData(id: $id, name: $name, iconCodePoint: $iconCodePoint, iconFontFamily: $iconFontFamily, iconFontPackage: $iconFontPackage, colorIndex: $colorIndex, status: $status, soldDateMillis: $soldDateMillis, note: $note, sortOrder: $sortOrder, createdAtMillis: $createdAtMillis)';
   }
 
   @override
@@ -332,6 +352,8 @@ class _$AssetDataImpl implements _AssetData {
             (identical(other.colorIndex, colorIndex) ||
                 other.colorIndex == colorIndex) &&
             (identical(other.status, status) || other.status == status) &&
+            (identical(other.soldDateMillis, soldDateMillis) ||
+                other.soldDateMillis == soldDateMillis) &&
             (identical(other.note, note) || other.note == note) &&
             (identical(other.sortOrder, sortOrder) ||
                 other.sortOrder == sortOrder) &&
@@ -350,6 +372,7 @@ class _$AssetDataImpl implements _AssetData {
     iconFontPackage,
     colorIndex,
     status,
+    soldDateMillis,
     note,
     sortOrder,
     createdAtMillis,
@@ -378,6 +401,7 @@ abstract class _AssetData implements AssetData {
     final String? iconFontPackage,
     required final int colorIndex,
     required final String status,
+    final int? soldDateMillis,
     final String? note,
     final int sortOrder,
     required final int createdAtMillis,
@@ -413,6 +437,10 @@ abstract class _AssetData implements AssetData {
   /// Asset status: 'active' or 'sold'
   @override
   String get status;
+
+  /// When the asset was marked as sold (milliseconds since epoch)
+  @override
+  int? get soldDateMillis;
 
   /// Optional description/note
   @override

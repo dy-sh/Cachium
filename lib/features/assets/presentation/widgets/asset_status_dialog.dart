@@ -10,9 +10,7 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/buttons/primary_button.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../../design_system/components/feedback/notification.dart';
-import '../../../transactions/data/models/transaction.dart';
 import '../../../transactions/presentation/providers/transaction_form_provider.dart';
-import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../data/models/asset.dart';
 import '../providers/assets_provider.dart';
 
@@ -65,38 +63,30 @@ class _MarkAsSoldDialogState extends ConsumerState<_MarkAsSoldDialog> {
     final assetName = widget.asset.name;
     final assetId = widget.asset.id;
 
-    // Capture notifiers before async gap
+    // Capture notifier before async gap
     final assetsNotifier = ref.read(assetsProvider.notifier);
-    final transactionsNotifier = ref.read(transactionsProvider.notifier);
 
     // Mark as sold
-    final updatedAsset = widget.asset.copyWith(status: AssetStatus.sold);
+    final updatedAsset = widget.asset.copyWith(
+      status: AssetStatus.sold,
+      soldDate: DateTime.now(),
+    );
     await assetsNotifier.updateAsset(updatedAsset);
 
     if (!mounted) return;
     Navigator.of(context).pop();
 
-    if (createTransaction && salePrice != null && salePrice > 0) {
-      // Create an income transaction linked to this asset
-      await transactionsNotifier.addTransaction(
-        amount: salePrice,
-        type: TransactionType.income,
-        categoryId: '',
-        accountId: '',
-        assetId: assetId,
-        date: DateTime.now(),
-        note: 'Sale of $assetName',
-      );
-      if (context.mounted) {
-        context.showSuccessNotification('Asset sold & transaction created');
-      }
-    } else if (createTransaction) {
-      // Navigate to transaction form pre-filled
+    if (createTransaction) {
+      // Navigate to transaction form pre-filled with sale details
       if (context.mounted) {
         context.push('/transaction/new?type=income');
-        // Set asset after navigation
         Future.microtask(() {
-          ref.read(transactionFormProvider.notifier).setAsset(assetId);
+          final formNotifier = ref.read(transactionFormProvider.notifier);
+          formNotifier.setAsset(assetId);
+          formNotifier.setNote('Sale of $assetName');
+          if (salePrice != null && salePrice > 0) {
+            formNotifier.setAmount(salePrice);
+          }
         });
         context.showSuccessNotification('Asset marked as sold');
       }
@@ -232,7 +222,10 @@ class _ReactivateDialogState extends ConsumerState<_ReactivateDialog> {
     if (_isLoading) return;
     setState(() => _isLoading = true);
 
-    final updatedAsset = widget.asset.copyWith(status: AssetStatus.active);
+    final updatedAsset = widget.asset.copyWith(
+      status: AssetStatus.active,
+      clearSoldDate: true,
+    );
     await ref.read(assetsProvider.notifier).updateAsset(updatedAsset);
 
     if (context.mounted) {

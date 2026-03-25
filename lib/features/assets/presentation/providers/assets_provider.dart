@@ -269,9 +269,9 @@ final assetNetCostProvider = Provider.family<double, String>((ref, assetId) {
   double totalIncome = 0;
   for (final tx in transactions) {
     if (tx.type == TransactionType.expense) {
-      totalSpent += tx.amount;
+      totalSpent += tx.effectiveMainCurrencyAmount;
     } else if (tx.type == TransactionType.income) {
-      totalIncome += tx.amount;
+      totalIncome += tx.effectiveMainCurrencyAmount;
     }
   }
   return totalSpent - totalIncome;

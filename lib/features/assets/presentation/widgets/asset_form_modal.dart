@@ -149,7 +149,18 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
               },
               trailing: _isEditing && widget.onDelete != null
                   ? GestureDetector(
-                      onTap: widget.onDelete,
+                      onTap: () async {
+                        final confirmed = await showConfirmationDialog(
+                          context: context,
+                          title: 'Delete asset?',
+                          message: 'This will permanently delete "${widget.asset!.name}". Linked transactions will not be deleted.',
+                          confirmLabel: 'Delete',
+                          isDestructive: true,
+                        );
+                        if (confirmed == true) {
+                          widget.onDelete?.call();
+                        }
+                      },
                       child: Container(
                         padding: const EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
