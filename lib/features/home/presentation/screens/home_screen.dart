@@ -146,10 +146,14 @@ class HomeScreen extends ConsumerWidget {
               color: AppColors.textPrimary,
               backgroundColor: AppColors.surface,
               onRefresh: () async {
-                await Future.wait([
-                  ref.read(transactionsProvider.notifier).refresh(),
-                  ref.read(accountsProvider.notifier).refresh(),
-                ]);
+                try {
+                  await Future.wait([
+                    ref.read(transactionsProvider.notifier).refresh(),
+                    ref.read(accountsProvider.notifier).refresh(),
+                  ]);
+                } catch (_) {
+                  // Individual providers handle their own error state
+                }
               },
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),

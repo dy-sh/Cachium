@@ -89,7 +89,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       builder: (context) => BulkPickerSheet(
         title: 'Change Category',
         items: categories
-            .where((c) => c.parentId == null || true) // all categories
             .map((c) => BulkPickerItem(
                   id: c.id,
                   name: c.name,
@@ -110,34 +109,42 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     // Capture old category IDs for undo
     final oldCategoryIds = {for (final tx in toUpdate) tx.id: tx.categoryId};
 
-    await db.transaction(() async {
-      for (final tx in toUpdate) {
-        final updated = tx.copyWith(categoryId: selectedCategoryId);
-        await repo.updateTransaction(updated);
-      }
-    });
+    try {
+      await db.transaction(() async {
+        for (final tx in toUpdate) {
+          final updated = tx.copyWith(categoryId: selectedCategoryId);
+          await repo.updateTransaction(updated);
+        }
+      });
 
-    await ref.read(transactionsProvider.notifier).refresh();
-    _exitSelectionMode();
+      await ref.read(transactionsProvider.notifier).refresh();
+      _exitSelectionMode();
 
-    if (mounted) {
-      context.showUndoNotification(
-        '${toUpdate.length} transaction${toUpdate.length == 1 ? '' : 's'} updated',
-        () async {
-          final undoRepo = ref.read(transactionRepositoryProvider);
-          final undoDb = ref.read(databaseProvider);
-          final currentTransactions = ref.read(transactionsProvider).valueOrNull ?? [];
-          await undoDb.transaction(() async {
-            for (final tx in currentTransactions) {
-              final oldCategoryId = oldCategoryIds[tx.id];
-              if (oldCategoryId != null && tx.categoryId != oldCategoryId) {
-                await undoRepo.updateTransaction(tx.copyWith(categoryId: oldCategoryId));
-              }
+      if (mounted) {
+        context.showUndoNotification(
+          '${toUpdate.length} transaction${toUpdate.length == 1 ? '' : 's'} updated',
+          () async {
+            try {
+              final undoRepo = ref.read(transactionRepositoryProvider);
+              final undoDb = ref.read(databaseProvider);
+              final currentTransactions = ref.read(transactionsProvider).valueOrNull ?? [];
+              await undoDb.transaction(() async {
+                for (final tx in currentTransactions) {
+                  final oldCategoryId = oldCategoryIds[tx.id];
+                  if (oldCategoryId != null && tx.categoryId != oldCategoryId) {
+                    await undoRepo.updateTransaction(tx.copyWith(categoryId: oldCategoryId));
+                  }
+                }
+              });
+              await ref.read(transactionsProvider.notifier).refresh();
+            } catch (_) {
+              if (mounted) context.showErrorNotification('Failed to undo category change');
             }
-          });
-          await ref.read(transactionsProvider.notifier).refresh();
-        },
-      );
+          },
+        );
+      }
+    } catch (_) {
+      if (mounted) context.showErrorNotification('Failed to change category');
     }
   }
 
@@ -178,59 +185,67 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final oldAccountIds = {for (final tx in toUpdate) tx.id: tx.accountId};
 
     // Calculate balance adjustments
-    await db.transaction(() async {
-      for (final tx in toUpdate) {
-        if (tx.accountId == selectedAccountId) continue;
+    try {
+      await db.transaction(() async {
+        for (final tx in toUpdate) {
+          if (tx.accountId == selectedAccountId) continue;
 
-        // Reverse old account balance
-        if (tx.type == TransactionType.transfer) {
-          await ref.read(accountsProvider.notifier).updateBalance(tx.accountId, tx.amount);
-          await ref.read(accountsProvider.notifier).updateBalance(selectedAccountId, -tx.amount);
-        } else {
-          final reverseChange = tx.type == TransactionType.income ? -tx.amount : tx.amount;
-          await ref.read(accountsProvider.notifier).updateBalance(tx.accountId, reverseChange);
-          final applyChange = tx.type == TransactionType.income ? tx.amount : -tx.amount;
-          await ref.read(accountsProvider.notifier).updateBalance(selectedAccountId, applyChange);
+          // Reverse old account balance
+          if (tx.type == TransactionType.transfer) {
+            await ref.read(accountsProvider.notifier).updateBalance(tx.accountId, tx.amount);
+            await ref.read(accountsProvider.notifier).updateBalance(selectedAccountId, -tx.amount);
+          } else {
+            final reverseChange = tx.type == TransactionType.income ? -tx.amount : tx.amount;
+            await ref.read(accountsProvider.notifier).updateBalance(tx.accountId, reverseChange);
+            final applyChange = tx.type == TransactionType.income ? tx.amount : -tx.amount;
+            await ref.read(accountsProvider.notifier).updateBalance(selectedAccountId, applyChange);
+          }
+
+          final updated = tx.copyWith(accountId: selectedAccountId);
+          await repo.updateTransaction(updated);
         }
+      });
 
-        final updated = tx.copyWith(accountId: selectedAccountId);
-        await repo.updateTransaction(updated);
-      }
-    });
+      await ref.read(transactionsProvider.notifier).refresh();
+      _exitSelectionMode();
 
-    await ref.read(transactionsProvider.notifier).refresh();
-    _exitSelectionMode();
+      if (mounted) {
+        context.showUndoNotification(
+          '${toUpdate.length} transaction${toUpdate.length == 1 ? '' : 's'} updated',
+          () async {
+            try {
+              final undoRepo = ref.read(transactionRepositoryProvider);
+              final undoDb = ref.read(databaseProvider);
+              final currentTransactions = ref.read(transactionsProvider).valueOrNull ?? [];
 
-    if (mounted) {
-      context.showUndoNotification(
-        '${toUpdate.length} transaction${toUpdate.length == 1 ? '' : 's'} updated',
-        () async {
-          final undoRepo = ref.read(transactionRepositoryProvider);
-          final undoDb = ref.read(databaseProvider);
-          final currentTransactions = ref.read(transactionsProvider).valueOrNull ?? [];
+              await undoDb.transaction(() async {
+                for (final tx in currentTransactions) {
+                  final oldAccountId = oldAccountIds[tx.id];
+                  if (oldAccountId != null && tx.accountId != oldAccountId) {
+                    // Reverse balance adjustments
+                    if (tx.type == TransactionType.transfer) {
+                      await ref.read(accountsProvider.notifier).updateBalance(tx.accountId, tx.amount);
+                      await ref.read(accountsProvider.notifier).updateBalance(oldAccountId, -tx.amount);
+                    } else {
+                      final reverseChange = tx.type == TransactionType.income ? -tx.amount : tx.amount;
+                      await ref.read(accountsProvider.notifier).updateBalance(tx.accountId, reverseChange);
+                      final applyChange = tx.type == TransactionType.income ? tx.amount : -tx.amount;
+                      await ref.read(accountsProvider.notifier).updateBalance(oldAccountId, applyChange);
+                    }
 
-          await undoDb.transaction(() async {
-            for (final tx in currentTransactions) {
-              final oldAccountId = oldAccountIds[tx.id];
-              if (oldAccountId != null && tx.accountId != oldAccountId) {
-                // Reverse balance adjustments
-                if (tx.type == TransactionType.transfer) {
-                  await ref.read(accountsProvider.notifier).updateBalance(tx.accountId, tx.amount);
-                  await ref.read(accountsProvider.notifier).updateBalance(oldAccountId, -tx.amount);
-                } else {
-                  final reverseChange = tx.type == TransactionType.income ? -tx.amount : tx.amount;
-                  await ref.read(accountsProvider.notifier).updateBalance(tx.accountId, reverseChange);
-                  final applyChange = tx.type == TransactionType.income ? tx.amount : -tx.amount;
-                  await ref.read(accountsProvider.notifier).updateBalance(oldAccountId, applyChange);
+                    await undoRepo.updateTransaction(tx.copyWith(accountId: oldAccountId));
+                  }
                 }
-
-                await undoRepo.updateTransaction(tx.copyWith(accountId: oldAccountId));
-              }
+              });
+              await ref.read(transactionsProvider.notifier).refresh();
+            } catch (_) {
+              if (mounted) context.showErrorNotification('Failed to undo account change');
             }
-          });
-          await ref.read(transactionsProvider.notifier).refresh();
-        },
-      );
+          },
+        );
+      }
+    } catch (_) {
+      if (mounted) context.showErrorNotification('Failed to change account');
     }
   }
 
@@ -351,8 +366,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                 groups: groups,
                 isInitialLoad: _isInitialLoad,
                 hasMore: hasMore,
-                onRefresh: () {
-                  ref.read(transactionsProvider.notifier).refresh();
+                onRefresh: () async {
+                  await ref.read(transactionsProvider.notifier).refresh();
                 },
                 onLoadMore: () {
                   final current = ref.read(transactionDisplayCountProvider);
