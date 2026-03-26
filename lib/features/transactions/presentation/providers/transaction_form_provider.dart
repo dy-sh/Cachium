@@ -52,6 +52,8 @@ class TransactionFormState {
   final bool allowZeroAmount;
   // Auto-categorization tracking
   final bool categoryAutoSelected;
+  // Auto-asset-suggestion tracking
+  final bool assetAutoSelected;
   // Validation UI state
   final bool showValidationErrors;
 
@@ -76,6 +78,7 @@ class TransactionFormState {
     this.originalTagIds = const [],
     this.allowZeroAmount = false,
     this.categoryAutoSelected = false,
+    this.assetAutoSelected = false,
     this.showValidationErrors = false,
   });
 
@@ -197,6 +200,7 @@ class TransactionFormState {
     List<String>? originalTagIds,
     bool? allowZeroAmount,
     bool? categoryAutoSelected,
+    bool? assetAutoSelected,
     bool? showValidationErrors,
   }) {
     return TransactionFormState(
@@ -224,6 +228,7 @@ class TransactionFormState {
       originalTagIds: originalTagIds ?? this.originalTagIds,
       allowZeroAmount: allowZeroAmount ?? this.allowZeroAmount,
       categoryAutoSelected: categoryAutoSelected ?? this.categoryAutoSelected,
+      assetAutoSelected: assetAutoSelected ?? this.assetAutoSelected,
       showValidationErrors: showValidationErrors ?? this.showValidationErrors,
     );
   }
@@ -340,6 +345,7 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
 
   void setCategory(String categoryId) {
     state = state.copyWith(categoryId: categoryId, categoryAutoSelected: false);
+    _autoSuggestAsset();
   }
 
   void setAccount(String accountId) {
@@ -379,26 +385,49 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
   void setMerchant(String? merchant) {
     state = state.copyWith(merchant: merchant);
 
-    // Auto-categorize by merchant when creating a new transaction
+    if (!state.isEditing) {
+      // Auto-categorize by merchant when creating a new transaction
+      if (merchant != null && merchant.trim().isNotEmpty) {
+        final autoEnabled = ref.read(autoCategorizeByMerchantProvider);
+        if (autoEnabled) {
+          // Only auto-fill if no manual category was selected
+          if (state.categoryId == null || state.categoryAutoSelected) {
+            final merchantMap = ref.read(merchantCategoryMapProvider);
+            final suggestedCategoryId = merchantMap[merchant.trim().toLowerCase()];
+            if (suggestedCategoryId != null) {
+              final category = ref.read(categoryByIdProvider(suggestedCategoryId));
+              if (category != null) {
+                state = state.copyWith(
+                  categoryId: suggestedCategoryId,
+                  categoryAutoSelected: true,
+                );
+              }
+            }
+          }
+        }
+      }
+
+      // Auto-suggest asset by merchant
+      _autoSuggestAsset();
+    }
+  }
+
+  void _autoSuggestAsset() {
     if (state.isEditing) return;
-    if (merchant == null || merchant.trim().isEmpty) return;
-    final autoEnabled = ref.read(autoCategorizeByMerchantProvider);
-    if (!autoEnabled) return;
-    // Only auto-fill if no manual category was selected
-    if (state.categoryId != null && !state.categoryAutoSelected) return;
+    // Don't override manual asset selection
+    if (state.assetId != null && !state.assetAutoSelected) return;
 
-    final merchantMap = ref.read(merchantCategoryMapProvider);
-    final suggestedCategoryId = merchantMap[merchant.trim().toLowerCase()];
-    if (suggestedCategoryId == null) return;
+    final suggested = ref.read(suggestedAssetProvider((
+      merchant: state.merchant,
+      categoryId: state.categoryId,
+    )));
 
-    // Validate the category still exists
-    final category = ref.read(categoryByIdProvider(suggestedCategoryId));
-    if (category == null) return;
-
-    state = state.copyWith(
-      categoryId: suggestedCategoryId,
-      categoryAutoSelected: true,
-    );
+    if (suggested != null) {
+      state = state.copyWith(assetId: suggested, assetAutoSelected: true);
+    } else if (state.assetAutoSelected) {
+      // Clear auto-suggested asset when suggestion no longer applies
+      state = state.copyWith(clearAssetId: true, assetAutoSelected: false);
+    }
   }
 
   void setConversionRate(double rate) {
@@ -447,6 +476,7 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
       assetId: assetId,
       clearAssetId: assetId == null,
       isAcquisitionCost: assetId == null ? false : state.isAcquisitionCost,
+      assetAutoSelected: false,
     );
   }
 

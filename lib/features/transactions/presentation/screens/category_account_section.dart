@@ -78,7 +78,7 @@ class CategorySection extends ConsumerWidget {
   }
 }
 
-class AssetSection extends ConsumerWidget {
+class AssetSection extends ConsumerStatefulWidget {
   final TransactionFormState formState;
   final ValueChanged<String?> onAssetChanged;
   final VoidCallback onCreateAsset;
@@ -95,67 +95,187 @@ class AssetSection extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AssetSection> createState() => _AssetSectionState();
+}
+
+class _AssetSectionState extends ConsumerState<AssetSection> {
+  bool _isExpanded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Auto-expand when editing with an existing asset or when pre-filled
+    if (widget.formState.assetId != null) {
+      _isExpanded = true;
+    }
+  }
+
+  @override
+  void didUpdateWidget(AssetSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Auto-expand when an asset gets auto-suggested or pre-filled
+    if (oldWidget.formState.assetId == null && widget.formState.assetId != null) {
+      setState(() => _isExpanded = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final intensity = ref.watch(colorIntensityProvider);
     final globalShowAssets = ref.watch(showAssetSelectorProvider);
-    final categoryShowsAssets = ref.watch(categoryShowsAssetsProvider(formState.categoryId));
-    final isTransfer = formState.isTransfer;
-    final showAssets = !isTransfer && globalShowAssets && (categoryShowsAssets || formState.assetId != null);
+    final isTransfer = widget.formState.isTransfer;
 
-    // Auto-clear asset when category changes to one that doesn't show assets
-    // (skip for editing mode and when asset was pre-selected before category choice)
-    if (!isTransfer && globalShowAssets && !categoryShowsAssets &&
-        formState.assetId != null && !formState.isEditing &&
-        formState.categoryId != null) {
-      Future.microtask(() {
-        onClearAsset();
-      });
-    }
+    if (isTransfer || !globalShowAssets) return const SizedBox.shrink();
 
-    if (showAssets) {
-      final activeAssets = ref.watch(activeAssetsProvider);
-      final categoryAssets = ref.watch(assetsForCategoryProvider(formState.categoryId));
-      final assetsFoldedCount = ref.watch(assetsFoldedCountProvider);
-      final showAddAssetButton = ref.watch(showAddAssetButtonProvider);
-      final assetSortOption = ref.watch(assetSortOptionProvider);
-      final recentAssetIds = ref.watch(recentlyUsedAssetIdsProvider);
+    final activeAssets = ref.watch(activeAssetsProvider);
+    if (activeAssets.isEmpty) return const SizedBox.shrink();
 
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Asset (optional)', style: AppTypography.labelMedium),
-          const SizedBox(height: AppSpacing.sm),
-          AssetSelector(
-            assets: activeAssets,
-            categoryAssets: categoryAssets,
-            selectedId: formState.assetId,
-            recentAssetIds: recentAssetIds,
-            initialVisibleCount: assetsFoldedCount,
-            sortOption: assetSortOption,
-            onChanged: onAssetChanged,
-            onCreatePressed: showAddAssetButton
-                ? () => onCreateAsset()
-                : null,
+    final selectedAsset = widget.formState.assetId != null
+        ? ref.watch(assetByIdProvider(widget.formState.assetId!))
+        : null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Collapsed header / expand toggle
+        GestureDetector(
+          onTap: () {
+            HapticHelper.lightImpact();
+            setState(() => _isExpanded = !_isExpanded);
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            decoration: BoxDecoration(
+              color: selectedAsset != null
+                  ? selectedAsset.getColor(intensity).withValues(alpha: AppColors.getBgOpacity(intensity))
+                  : AppColors.surface,
+              borderRadius: AppRadius.smAll,
+              border: Border.all(
+                color: selectedAsset != null
+                    ? selectedAsset.getColor(intensity)
+                    : AppColors.border,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  selectedAsset != null ? selectedAsset.icon : LucideIcons.box,
+                  size: 16,
+                  color: selectedAsset != null
+                      ? selectedAsset.getColor(intensity)
+                      : AppColors.textTertiary,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    selectedAsset != null
+                        ? selectedAsset.name
+                        : 'Asset (optional)',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: selectedAsset != null
+                          ? selectedAsset.getColor(intensity)
+                          : AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+                if (selectedAsset != null) ...[
+                  GestureDetector(
+                    onTap: () {
+                      HapticHelper.lightImpact();
+                      widget.onAssetChanged(null);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: AppSpacing.sm),
+                      child: Icon(
+                        LucideIcons.x,
+                        size: 14,
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
+                  ),
+                ],
+                Icon(
+                  _isExpanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
+                  size: 16,
+                  color: AppColors.textTertiary,
+                ),
+              ],
+            ),
           ),
-          if (formState.assetId != null &&
-              formState.type == TransactionType.expense &&
-              onAcquisitionCostChanged != null)
+        ),
+
+        // Auto-suggestion hint
+        if (widget.formState.assetAutoSelected && selectedAsset != null)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.xs),
+            child: Row(
+              children: [
+                Icon(LucideIcons.sparkles, size: 12, color: AppColors.textTertiary),
+                const SizedBox(width: 4),
+                Text(
+                  'Auto-suggested from merchant',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textTertiary,
+                    fontSize: 11,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                GestureDetector(
+                  onTap: () {
+                    HapticHelper.lightImpact();
+                    widget.onClearAsset();
+                  },
+                  child: Icon(LucideIcons.x, size: 12, color: AppColors.textTertiary),
+                ),
+              ],
+            ),
+          ),
+
+        // Expanded asset selector
+        if (_isExpanded) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Builder(builder: (context) {
+            final categoryAssets = ref.watch(assetsForCategoryProvider(widget.formState.categoryId));
+            final assetsFoldedCount = ref.watch(assetsFoldedCountProvider);
+            final showAddAssetButton = ref.watch(showAddAssetButtonProvider);
+            final assetSortOption = ref.watch(assetSortOptionProvider);
+            final recentAssetIds = ref.watch(recentlyUsedAssetIdsProvider);
+
+            return AssetSelector(
+              assets: activeAssets,
+              categoryAssets: categoryAssets,
+              selectedId: widget.formState.assetId,
+              recentAssetIds: recentAssetIds,
+              initialVisibleCount: assetsFoldedCount,
+              sortOption: assetSortOption,
+              onChanged: widget.onAssetChanged,
+              onCreatePressed: showAddAssetButton
+                  ? () => widget.onCreateAsset()
+                  : null,
+            );
+          }),
+          if (widget.formState.assetId != null &&
+              widget.formState.type == TransactionType.expense &&
+              widget.onAcquisitionCostChanged != null)
             Padding(
               padding: const EdgeInsets.only(top: AppSpacing.sm),
               child: GestureDetector(
-                onTap: () => onAcquisitionCostChanged!(!formState.isAcquisitionCost),
+                onTap: () => widget.onAcquisitionCostChanged!(!widget.formState.isAcquisitionCost),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.md,
                     vertical: AppSpacing.sm,
                   ),
                   decoration: BoxDecoration(
-                    color: formState.isAcquisitionCost
+                    color: widget.formState.isAcquisitionCost
                         ? AppColors.accentPrimary.withValues(alpha: 0.1)
                         : AppColors.surface,
                     borderRadius: AppRadius.smAll,
                     border: Border.all(
-                      color: formState.isAcquisitionCost
+                      color: widget.formState.isAcquisitionCost
                           ? AppColors.accentPrimary
                           : AppColors.border,
                     ),
@@ -163,11 +283,11 @@ class AssetSection extends ConsumerWidget {
                   child: Row(
                     children: [
                       Icon(
-                        formState.isAcquisitionCost
+                        widget.formState.isAcquisitionCost
                             ? LucideIcons.checkSquare
                             : LucideIcons.square,
                         size: 16,
-                        color: formState.isAcquisitionCost
+                        color: widget.formState.isAcquisitionCost
                             ? AppColors.accentPrimary
                             : AppColors.textTertiary,
                       ),
@@ -179,7 +299,7 @@ class AssetSection extends ConsumerWidget {
                             Text(
                               'Acquisition cost',
                               style: AppTypography.labelSmall.copyWith(
-                                color: formState.isAcquisitionCost
+                                color: widget.formState.isAcquisitionCost
                                     ? AppColors.accentPrimary
                                     : AppColors.textSecondary,
                               ),
@@ -199,67 +319,10 @@ class AssetSection extends ConsumerWidget {
                 ),
               ),
             ),
-          const SizedBox(height: AppSpacing.xxl),
         ],
-      );
-    }
-
-    // Show linked asset read-only when editing a tx that has an asset
-    // but the category now has showAssets=false
-    if (!isTransfer && globalShowAssets && formState.assetId != null && formState.isEditing) {
-      final asset = ref.watch(assetByIdProvider(formState.assetId!));
-      if (asset == null) return const SizedBox.shrink();
-      final assetColor = asset.getColor(intensity);
-      final bgOpacity = AppColors.getBgOpacity(intensity);
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Asset', style: AppTypography.labelMedium),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                  vertical: AppSpacing.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: assetColor.withValues(alpha: bgOpacity),
-                  borderRadius: AppRadius.smAll,
-                  border: Border.all(color: assetColor),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(asset.icon, size: 14, color: assetColor),
-                    const SizedBox(width: 4),
-                    Text(
-                      asset.name,
-                      style: AppTypography.labelSmall.copyWith(color: assetColor),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              GestureDetector(
-                onTap: () {
-                  HapticHelper.lightImpact();
-                  onAssetChanged(null);
-                },
-                child: Icon(
-                  LucideIcons.x,
-                  size: 16,
-                  color: AppColors.textTertiary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xxl),
-        ],
-      );
-    }
-
-    return const SizedBox.shrink();
+        const SizedBox(height: AppSpacing.xxl),
+      ],
+    );
   }
 }
 

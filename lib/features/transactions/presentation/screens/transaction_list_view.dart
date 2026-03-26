@@ -233,17 +233,45 @@ class _TransactionItem extends ConsumerWidget {
             ),
             const SizedBox(width: AppSpacing.md),
           ],
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: categoryColor.withValues(alpha: bgOpacity),
-              borderRadius: AppRadius.iconButton,
-            ),
-            child: Icon(
-              isTransfer ? LucideIcons.arrowLeftRight : (category?.icon ?? Icons.circle),
-              color: categoryColor,
-              size: 20,
+          SizedBox(
+            width: 43,
+            height: 43,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: categoryColor.withValues(alpha: bgOpacity),
+                    borderRadius: AppRadius.iconButton,
+                  ),
+                  child: Icon(
+                    isTransfer ? LucideIcons.arrowLeftRight : (category?.icon ?? Icons.circle),
+                    color: categoryColor,
+                    size: 20,
+                  ),
+                ),
+                if (transaction.assetId != null)
+                  Positioned(
+                    right: -1,
+                    bottom: -1,
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.border, width: 1),
+                      ),
+                      child: Icon(
+                        LucideIcons.box,
+                        size: 9,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
           const SizedBox(width: AppSpacing.md),

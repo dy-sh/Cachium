@@ -374,3 +374,63 @@ final portfolioMonthlyAverageProvider = Provider<double>((ref) {
   }
   return total;
 });
+
+/// Maps lowercase merchant names to their most frequently linked active asset ID.
+/// Used for auto-suggesting assets when creating transactions.
+final merchantAssetMapProvider = Provider<Map<String, String>>((ref) {
+  final transactions = ref.watch(transactionsProvider).valueOrNull;
+  if (transactions == null) return {};
+
+  final activeAssets = ref.watch(activeAssetsProvider);
+  final activeIds = {for (final a in activeAssets) a.id};
+
+  final merchantAssetCounts = <String, Map<String, int>>{};
+  for (final tx in transactions) {
+    if (tx.type == TransactionType.transfer) continue;
+    final merchant = tx.merchant?.trim().toLowerCase();
+    if (merchant == null || merchant.isEmpty) continue;
+    final assetId = tx.assetId;
+    if (assetId == null || !activeIds.contains(assetId)) continue;
+
+    merchantAssetCounts.putIfAbsent(merchant, () => {});
+    merchantAssetCounts[merchant]![assetId] =
+        (merchantAssetCounts[merchant]![assetId] ?? 0) + 1;
+  }
+
+  final result = <String, String>{};
+  for (final entry in merchantAssetCounts.entries) {
+    final counts = entry.value;
+    String? bestId;
+    int bestCount = 0;
+    for (final assetEntry in counts.entries) {
+      if (assetEntry.value > bestCount) {
+        bestCount = assetEntry.value;
+        bestId = assetEntry.key;
+      }
+    }
+    if (bestId != null) {
+      result[entry.key] = bestId;
+    }
+  }
+
+  return result;
+});
+
+/// Suggests an asset ID for the current form context.
+/// Priority: (1) merchant match, (2) sole category-associated asset.
+final suggestedAssetProvider = Provider.family<String?, ({String? merchant, String? categoryId})>((ref, params) {
+  // 1. Merchant-based match
+  if (params.merchant != null && params.merchant!.isNotEmpty) {
+    final merchantMap = ref.watch(merchantAssetMapProvider);
+    final assetId = merchantMap[params.merchant!.trim().toLowerCase()];
+    if (assetId != null) return assetId;
+  }
+
+  // 2. If category has exactly one associated active asset, suggest it
+  if (params.categoryId != null) {
+    final categoryAssets = ref.watch(assetsForCategoryProvider(params.categoryId));
+    if (categoryAssets.length == 1) return categoryAssets.first.id;
+  }
+
+  return null;
+});
