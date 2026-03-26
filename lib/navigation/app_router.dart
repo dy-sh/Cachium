@@ -5,6 +5,7 @@ import '../features/accounts/presentation/screens/account_detail_screen.dart';
 import '../features/accounts/presentation/screens/account_form_screen.dart';
 import '../features/accounts/presentation/screens/accounts_screen.dart';
 import '../features/assets/presentation/screens/asset_categories_screen.dart';
+import '../features/assets/presentation/screens/asset_comparison_screen.dart';
 import '../features/assets/presentation/screens/asset_detail_screen.dart';
 import '../features/assets/presentation/screens/assets_screen.dart';
 import '../features/analytics/presentation/screens/analytics_screen.dart';
@@ -95,6 +96,7 @@ class AppRoutes {
   static const assets = '/settings/assets';
   static const assetCategories = '/settings/assets/categories';
   static const assetDetail = '/asset/:id';
+  static const assetCompare = '/assets/compare';
   static const calendar = '/calendar';
   static const netWorthHistory = '/analytics/net-worth-history';
 }
@@ -234,6 +236,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             animationsEnabled: ref.read(formAnimationsEnabledProvider),
           );
         },
+      ),
+      GoRoute(
+        path: AppRoutes.assetCompare,
+        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
+          state,
+          const AssetComparisonScreen(),
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
+        ),
       ),
       GoRoute(
         path: AppRoutes.categoryManagement,

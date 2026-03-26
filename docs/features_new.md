@@ -1,6 +1,18 @@
 # New Features Log
 
 ## 2026-03-26
+- **Asset ROI Calculation**: Sold assets now display a return on investment percentage (net proceeds vs. total cost) on both the asset detail screen and asset list cards.
+- **Portfolio Summary Card**: The assets list screen shows a summary card with total purchase value, net cost, and monthly average for the active tab, and total P&L with best/worst performer for the sold tab.
+- **Asset Detail Collapsible Sections**: The asset detail screen organizes content into collapsible sections (Cost Overview, Statistics, Charts, Transactions) that users can expand or collapse independently.
+- **Asset Transaction Empty States**: Empty transaction states on the asset detail screen include action buttons and onboarding hints to guide users toward adding or linking their first transaction.
+- **Category Suggestion for Asset Expenses**: The quick-add expense button on the asset detail screen pre-selects the most frequently used expense category for that asset, reducing taps for common entries.
+- **Richer Asset Cards**: Asset list cards now show purchase date, asset age or ownership duration, and ROI percentage for sold assets.
+- **Value Over Time Chart**: New chart on the asset detail screen shows estimated asset value over time, starting at purchase price and adjusting as linked expense and income transactions are recorded.
+- **Year-over-Year Cost Trends**: New chart on the asset detail screen groups linked costs by calendar year for easy year-over-year comparison.
+- **Portfolio Category Breakdown**: Cross-asset analytics section aggregates the top expense categories across all assets in the portfolio.
+- **Link Existing Transactions**: A bottom sheet on the asset detail screen allows users to retroactively search for and link unlinked transactions to an asset.
+- **Asset Comparison Screen**: New screen at `/assets/compare` lets users compare 2–3 assets side-by-side on net cost, monthly average, time owned, and ROI. A compare button appears on the assets list when 2 or more assets exist.
+- **Asset Duplication**: Assets can be duplicated from the edit modal; the duplicate copies name, icon, color, category, and note into a new asset record.
 - **Asset Acquisition Cost Flag**: Adds an `isAcquisitionCost` boolean to the Transaction model to reliably identify transactions auto-created from the asset purchase or sale flow. `assetCostBreakdownProvider` uses this flag instead of fragile note string-matching; legacy note-matching is kept as a fallback for older records. DB schema bumped to v27; Transaction model, DTO, repository, form provider, transactions provider, asset analytics providers, and export/import services all updated.
 - **Asset-Bill Linking**: Bills can now be linked to an asset via an optional `assetId` field. When a linked bill is paid, the auto-created transaction and the next recurring occurrence both inherit the `assetId`. A "Linked Bills" section on the asset detail screen lists upcoming bills tied to the asset; the bill form screen includes an optional asset selector. `billsByAssetProvider` added for fetching bills by asset.
 - **Asset Detail Time Range Filtering**: The asset detail screen gains a time range selector (All Time / This Year / Last 12 Months / Custom) below the hero card. All analytics panels — monthly spending, cumulative cost, category breakdown, cost breakdown, stats, and transactions by month — are filtered through a new `filteredTransactionsByAssetProvider` driven by `assetDetailDateRangeProvider`. The asset list screen continues to show all-time data.

@@ -303,17 +303,65 @@ final activeAssetsSummaryProvider = Provider<({int count, double totalNetCost})>
 });
 
 /// Summary stats for sold assets.
-final soldAssetsSummaryProvider = Provider<({int count, double totalNetCost, double totalProfitLoss})>((ref) {
+final soldAssetsSummaryProvider = Provider<({
+  int count,
+  double totalNetCost,
+  double totalProfitLoss,
+  String? bestPerformerId,
+  String? worstPerformerId,
+})>((ref) {
   final allAssets = ref.watch(assetsProvider).valueOrNull ?? [];
   final sold = allAssets.where((a) => a.status == AssetStatus.sold).toList();
   double totalNetCost = 0;
   double totalProfitLoss = 0;
+  String? bestId;
+  double bestPL = double.negativeInfinity;
+  String? worstId;
+  double worstPL = double.infinity;
+
   for (final asset in sold) {
     totalNetCost += ref.watch(assetNetCostProvider(asset.id));
     final breakdown = ref.watch(assetCostBreakdownProvider(asset.id));
     if (breakdown.profitLoss != null) {
       totalProfitLoss += breakdown.profitLoss!;
+      if (breakdown.profitLoss! > bestPL) {
+        bestPL = breakdown.profitLoss!;
+        bestId = asset.id;
+      }
+      if (breakdown.profitLoss! < worstPL) {
+        worstPL = breakdown.profitLoss!;
+        worstId = asset.id;
+      }
     }
   }
-  return (count: sold.length, totalNetCost: totalNetCost, totalProfitLoss: totalProfitLoss);
+  return (
+    count: sold.length,
+    totalNetCost: totalNetCost,
+    totalProfitLoss: totalProfitLoss,
+    bestPerformerId: bestId,
+    worstPerformerId: worstId,
+  );
+});
+
+/// Total purchase value of all active assets (sum of purchasePrice where available).
+final portfolioTotalPurchaseValueProvider = Provider<double>((ref) {
+  final activeAssets = ref.watch(activeAssetsProvider);
+  double total = 0;
+  for (final asset in activeAssets) {
+    if (asset.purchasePrice != null) {
+      total += asset.purchasePrice!;
+    }
+  }
+  return total;
+});
+
+/// Total monthly average across all active assets.
+final portfolioMonthlyAverageProvider = Provider<double>((ref) {
+  final activeAssets = ref.watch(activeAssetsProvider);
+  double total = 0;
+  for (final asset in activeAssets) {
+    final stats = ref.watch(assetStatsProvider(asset.id));
+    total += stats.monthlyAverage;
+  }
+  return total;
 });

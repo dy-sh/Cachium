@@ -699,4 +699,54 @@
 - All analytics on the screen — monthly spending, cumulative cost, category breakdown, cost breakdown, stats, and transactions by month — are driven by a new `filteredTransactionsByAssetProvider` that respects the selected date range
 - `assetDetailDateRangeProvider` manages the selected range; the asset list screen continues to use all-time data
 
+#### 69. Asset ROI Calculation
+- Sold assets display a return on investment percentage computed from net proceeds vs. total cost
+- ROI percentage appears on both the asset detail screen and asset list cards for sold assets
+
+#### 70. Portfolio Summary Card
+- The assets list screen shows a summary card above the asset list
+- Active tab displays total purchase value, net cost, and monthly average across all active assets
+- Sold tab displays total profit/loss, and identifies the best and worst performing sold assets
+
+#### 71. Asset Detail Collapsible Sections
+- The asset detail screen organizes content into collapsible sections: Cost Overview, Statistics, Charts, and Transactions
+- Users can expand or collapse each section independently to focus on the information they need
+
+#### 72. Asset Transaction Empty States
+- Empty transaction states on the asset detail screen include action buttons and onboarding hints
+- Guides users to add their first transaction or link existing ones when no transactions are associated with an asset
+
+#### 73. Category Suggestion for Asset Expenses
+- The quick-add expense button on the asset detail screen pre-selects the most frequently used expense category for that asset
+- Reduces taps for common asset-related expenses
+
+#### 74. Richer Asset Cards
+- Asset list cards now display purchase date, asset age or ownership duration, and ROI percentage for sold assets
+- Provides key metrics at a glance without opening the detail screen
+
+#### 75. Value Over Time Chart
+- A new chart on the asset detail screen shows estimated asset value over time
+- Starts at the purchase price and adjusts incrementally as linked expenses and income transactions are added
+
+#### 76. Year-over-Year Cost Trends
+- A new chart on the asset detail screen groups linked costs by year for a year-over-year comparison
+- Helps identify whether asset-related spending is increasing or decreasing over time
+
+#### 77. Portfolio Category Breakdown
+- Cross-asset analytics section showing the top expense categories aggregated across all assets in the portfolio
+- Surfaces which spending categories drive the most asset-related costs
+
+#### 78. Link Existing Transactions
+- A bottom sheet on the asset detail screen allows users to retroactively link unlinked transactions to the current asset
+- Transactions can be searched and selected; linking updates the asset reference on the transaction record
+
+#### 79. Asset Comparison Screen
+- New screen at `/assets/compare` for comparing 2–3 assets side-by-side
+- Comparison metrics include net cost, monthly average cost, time owned, and ROI percentage
+- A compare button appears on the assets list screen when 2 or more assets exist
+
+#### 80. Asset Duplication
+- Assets can be duplicated directly from the asset edit modal
+- The duplicate copies the asset's name, icon, color, category, and note into a new asset record
+
 ---

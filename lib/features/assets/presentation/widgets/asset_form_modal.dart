@@ -38,12 +38,14 @@ class AssetFormModal extends ConsumerStatefulWidget {
     DateTime? purchaseDate,
   ) onSave;
   final VoidCallback? onDelete;
+  final void Function(Asset asset)? onDuplicate;
 
   const AssetFormModal({
     super.key,
     this.asset,
     required this.onSave,
     this.onDelete,
+    this.onDuplicate,
   });
 
   @override
@@ -191,32 +193,60 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
                   Navigator.pop(context);
                 }
               },
-              trailing: _isEditing && widget.onDelete != null
-                  ? GestureDetector(
-                      onTap: () async {
-                        final confirmed = await showConfirmationDialog(
-                          context: context,
-                          title: 'Delete asset?',
-                          message: 'This will permanently delete "${widget.asset!.name}". Linked transactions will not be deleted.',
-                          confirmLabel: 'Delete',
-                          isDestructive: true,
-                        );
-                        if (confirmed == true) {
-                          widget.onDelete?.call();
-                        }
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(AppSpacing.sm),
-                        decoration: BoxDecoration(
-                          color: AppColors.expense.withValues(alpha: 0.1),
-                          borderRadius: AppRadius.smAll,
-                        ),
-                        child: Icon(
-                          LucideIcons.trash2,
-                          size: 18,
-                          color: AppColors.expense,
-                        ),
-                      ),
+              trailing: _isEditing
+                  ? Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (widget.onDuplicate != null)
+                          GestureDetector(
+                            onTap: () {
+                              final duplicateAsset = widget.asset!;
+                              Navigator.pop(context);
+                              widget.onDuplicate?.call(duplicateAsset);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(AppSpacing.sm),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceLight,
+                                borderRadius: AppRadius.smAll,
+                              ),
+                              child: Icon(
+                                LucideIcons.copy,
+                                size: 18,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ),
+                        if (widget.onDuplicate != null && widget.onDelete != null)
+                          const SizedBox(width: AppSpacing.xs),
+                        if (widget.onDelete != null)
+                          GestureDetector(
+                            onTap: () async {
+                              final confirmed = await showConfirmationDialog(
+                                context: context,
+                                title: 'Delete asset?',
+                                message: 'This will permanently delete "${widget.asset!.name}". Linked transactions will not be deleted.',
+                                confirmLabel: 'Delete',
+                                isDestructive: true,
+                              );
+                              if (confirmed == true) {
+                                widget.onDelete?.call();
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(AppSpacing.sm),
+                              decoration: BoxDecoration(
+                                color: AppColors.expense.withValues(alpha: 0.1),
+                                borderRadius: AppRadius.smAll,
+                              ),
+                              child: Icon(
+                                LucideIcons.trash2,
+                                size: 18,
+                                color: AppColors.expense,
+                              ),
+                            ),
+                          ),
+                      ],
                     )
                   : null,
             ),

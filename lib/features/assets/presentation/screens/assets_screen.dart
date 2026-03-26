@@ -7,6 +7,7 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../../core/utils/date_formatter.dart';
 import '../../../../design_system/design_system.dart';
 import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
@@ -164,6 +165,45 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
               context.showSuccessNotification('Asset deleted');
             }
           },
+          onDuplicate: (sourceAsset) => _openDuplicateModal(sourceAsset),
+        ),
+      ),
+    );
+  }
+
+  void _openDuplicateModal(Asset sourceAsset) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AssetFormModal(
+          asset: Asset(
+            id: '', // will be replaced by addAsset
+            name: '${sourceAsset.name} (Copy)',
+            icon: sourceAsset.icon,
+            colorIndex: sourceAsset.colorIndex,
+            note: sourceAsset.note,
+            purchasePrice: sourceAsset.purchasePrice,
+            purchaseCurrencyCode: sourceAsset.purchaseCurrencyCode,
+            assetCategoryId: sourceAsset.assetCategoryId,
+            purchaseDate: null,
+            sortOrder: 0,
+            createdAt: DateTime.now(),
+          ),
+          onSave: (name, icon, colorIndex, status, note, purchasePrice, purchaseCurrencyCode, assetCategoryId, purchaseDate) async {
+            await ref.read(assetsProvider.notifier).addAsset(
+              name: name,
+              icon: icon,
+              colorIndex: colorIndex,
+              note: note,
+              purchasePrice: purchasePrice,
+              purchaseCurrencyCode: purchaseCurrencyCode,
+              assetCategoryId: assetCategoryId,
+              purchaseDate: purchaseDate,
+            );
+            if (context.mounted) {
+              Navigator.of(context).pop();
+              context.showSuccessNotification('Asset duplicated');
+            }
+          },
         ),
       ),
     );
@@ -173,13 +213,8 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
   Widget build(BuildContext context) {
     final assetsAsync = ref.watch(assetsProvider);
     final intensity = ref.watch(colorIntensityProvider);
-    final activeSummary = ref.watch(activeAssetsSummaryProvider);
-    final soldSummary = ref.watch(soldAssetsSummaryProvider);
-    final ({int count, double totalNetCost}) summary = _tab == _AssetTab.active
-        ? (count: activeSummary.count, totalNetCost: activeSummary.totalNetCost)
-        : (count: soldSummary.count, totalNetCost: soldSummary.totalNetCost);
-    final mainCurrency = ref.watch(mainCurrencyCodeProvider);
     final categoriesAsync = ref.watch(assetCategoriesProvider);
+    final activeAssets = ref.watch(activeAssetsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -200,6 +235,27 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
                   Expanded(
                     child: Text('Assets', style: AppTypography.h2),
                   ),
+                  // Compare button (visible when 2+ active assets)
+                  if (activeAssets.length >= 2)
+                    GestureDetector(
+                      onTap: () => context.push('/assets/compare'),
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: AppRadius.iconButton,
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Icon(
+                          LucideIcons.gitCompare,
+                          color: AppColors.textSecondary,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                  if (activeAssets.length >= 2)
+                    const SizedBox(width: AppSpacing.sm),
                   GestureDetector(
                     onTap: () => context.push('/settings/assets/categories'),
                     child: Container(
@@ -252,20 +308,8 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
               ),
             ),
 
-            // Summary stats
-            if (summary.count > 0) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Center(
-                child: Text(
-                  _tab == _AssetTab.sold
-                      ? '${summary.count} ${summary.count == 1 ? 'asset' : 'assets'}  \u00B7  ${soldSummary.totalProfitLoss >= 0 ? '+' : '-'}${CurrencyFormatter.format(soldSummary.totalProfitLoss.abs(), currencyCode: mainCurrency)} P&L'
-                      : '${summary.count} ${summary.count == 1 ? 'asset' : 'assets'}  \u00B7  ${CurrencyFormatter.format(summary.totalNetCost.abs(), currencyCode: mainCurrency)} net cost',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textTertiary,
-                  ),
-                ),
-              ),
-            ],
+            // Portfolio summary card
+            _PortfolioSummaryCard(tab: _tab),
 
             const SizedBox(height: AppSpacing.md),
 
@@ -352,18 +396,15 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
   }
 
   List<Asset> _filterAssets(List<Asset> assets) {
-    // Filter by status tab
     var filtered = switch (_tab) {
       _AssetTab.active => assets.where((a) => a.status == AssetStatus.active).toList(),
       _AssetTab.sold => assets.where((a) => a.status == AssetStatus.sold).toList(),
     };
 
-    // Filter by category
     if (_selectedCategoryFilter != null) {
       filtered = filtered.where((a) => a.assetCategoryId == _selectedCategoryFilter).toList();
     }
 
-    // Filter by search
     if (_searchQuery.isNotEmpty) {
       filtered = filtered.where((a) =>
           a.name.toLowerCase().contains(_searchQuery) ||
@@ -374,7 +415,6 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
   }
 
   Widget _buildAssetList(List<Asset> filtered, List<Asset> allAssets, ColorIntensity intensity) {
-    // Only allow reordering on the Active tab with no search query
     final canReorder = _tab == _AssetTab.active && _searchQuery.isEmpty;
 
     if (canReorder) {
@@ -394,10 +434,9 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
         onReorder: (oldIndex, newIndex) {
           if (oldIndex < newIndex) newIndex--;
           final asset = filtered[oldIndex];
-          // Calculate the new index in the full assets list
           ref.read(assetsProvider.notifier).moveAssetToPosition(asset.id, newIndex);
         },
-        itemCount: filtered.length + 1, // +1 for add tile
+        itemCount: filtered.length + 1,
         itemBuilder: (context, index) {
           if (index == filtered.length) {
             return KeyedSubtree(
@@ -474,6 +513,172 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
   }
 }
 
+/// Portfolio-level summary card showing key stats.
+class _PortfolioSummaryCard extends ConsumerWidget {
+  final _AssetTab tab;
+
+  const _PortfolioSummaryCard({required this.tab});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+    final intensity = ref.watch(colorIntensityProvider);
+
+    if (tab == _AssetTab.active) {
+      final activeSummary = ref.watch(activeAssetsSummaryProvider);
+      if (activeSummary.count == 0) return const SizedBox.shrink();
+
+      final totalPurchaseValue = ref.watch(portfolioTotalPurchaseValueProvider);
+      final monthlyAvg = ref.watch(portfolioMonthlyAverageProvider);
+
+      return Padding(
+        padding: const EdgeInsets.only(
+          left: AppSpacing.screenPadding,
+          right: AppSpacing.screenPadding,
+          top: AppSpacing.md,
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: AppRadius.mdAll,
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: _SummaryItem(
+                  label: 'Purchase Value',
+                  value: CurrencyFormatter.format(totalPurchaseValue, currencyCode: mainCurrency),
+                ),
+              ),
+              Container(width: 1, height: 32, color: AppColors.border),
+              Expanded(
+                child: _SummaryItem(
+                  label: 'Net Cost',
+                  value: CurrencyFormatter.format(activeSummary.totalNetCost.abs(), currencyCode: mainCurrency),
+                  valueColor: activeSummary.totalNetCost > 0
+                      ? AppColors.getTransactionColor('expense', intensity)
+                      : AppColors.getTransactionColor('income', intensity),
+                ),
+              ),
+              Container(width: 1, height: 32, color: AppColors.border),
+              Expanded(
+                child: _SummaryItem(
+                  label: 'Monthly Avg',
+                  value: CurrencyFormatter.format(monthlyAvg, currencyCode: mainCurrency),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      final soldSummary = ref.watch(soldAssetsSummaryProvider);
+      if (soldSummary.count == 0) return const SizedBox.shrink();
+
+      final bestAsset = soldSummary.bestPerformerId != null
+          ? ref.watch(assetByIdProvider(soldSummary.bestPerformerId!))
+          : null;
+      final worstAsset = soldSummary.worstPerformerId != null
+          ? ref.watch(assetByIdProvider(soldSummary.worstPerformerId!))
+          : null;
+
+      return Padding(
+        padding: const EdgeInsets.only(
+          left: AppSpacing.screenPadding,
+          right: AppSpacing.screenPadding,
+          top: AppSpacing.md,
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: AppRadius.mdAll,
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: _SummaryItem(
+                      label: 'Total P&L',
+                      value: '${soldSummary.totalProfitLoss >= 0 ? '+' : '-'}${CurrencyFormatter.format(soldSummary.totalProfitLoss.abs(), currencyCode: mainCurrency)}',
+                      valueColor: soldSummary.totalProfitLoss >= 0
+                          ? AppColors.getTransactionColor('income', intensity)
+                          : AppColors.getTransactionColor('expense', intensity),
+                    ),
+                  ),
+                  Container(width: 1, height: 32, color: AppColors.border),
+                  Expanded(
+                    child: _SummaryItem(
+                      label: 'Assets Sold',
+                      value: '${soldSummary.count}',
+                    ),
+                  ),
+                ],
+              ),
+              if (bestAsset != null && worstAsset != null && bestAsset.id != worstAsset.id) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Divider(height: 1, color: AppColors.border),
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _SummaryItem(
+                        label: 'Best',
+                        value: bestAsset.name,
+                        valueColor: AppColors.getTransactionColor('income', intensity),
+                      ),
+                    ),
+                    Container(width: 1, height: 32, color: AppColors.border),
+                    Expanded(
+                      child: _SummaryItem(
+                        label: 'Worst',
+                        value: worstAsset.name,
+                        valueColor: AppColors.getTransactionColor('expense', intensity),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
+  }
+}
+
+class _SummaryItem extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  const _SummaryItem({required this.label, required this.value, this.valueColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: AppTypography.labelSmall.copyWith(color: AppColors.textTertiary),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: AppTypography.labelSmall.copyWith(
+            color: valueColor ?? AppColors.textPrimary,
+          ),
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+  }
+}
+
 class _AssetCard extends ConsumerWidget {
   final Asset asset;
   final ColorIntensity intensity;
@@ -489,6 +694,19 @@ class _AssetCard extends ConsumerWidget {
     this.showDragHandle = false,
   });
 
+  String _formatAge(DateTime start, DateTime end) {
+    final months = (end.year - start.year) * 12 + (end.month - start.month);
+    if (months < 1) {
+      final days = end.difference(start).inDays;
+      return '${days}d';
+    }
+    if (months < 12) return '${months}mo';
+    final years = months ~/ 12;
+    final rem = months % 12;
+    if (rem == 0) return '${years}y';
+    return '${years}y ${rem}mo';
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final color = asset.getColor(intensity);
@@ -502,6 +720,17 @@ class _AssetCard extends ConsumerWidget {
     final costBreakdown = asset.status == AssetStatus.sold
         ? ref.watch(assetCostBreakdownProvider(asset.id))
         : null;
+    final roi = asset.status == AssetStatus.sold
+        ? ref.watch(assetROIProvider(asset.id))
+        : null;
+
+    // Age/duration info
+    final startDate = asset.purchaseDate ?? asset.createdAt;
+    final endDate = (asset.status == AssetStatus.sold && asset.soldDate != null)
+        ? asset.soldDate!
+        : DateTime.now();
+    final ageText = _formatAge(startDate, endDate);
+    final dateLabel = asset.status == AssetStatus.sold ? 'Held $ageText' : ageText;
 
     return GestureDetector(
       onTap: onTap,
@@ -586,6 +815,15 @@ class _AssetCard extends ConsumerWidget {
                             color: AppColors.textTertiary,
                           ),
                         ),
+                        if (roi != null)
+                          Text(
+                            ' (${roi >= 0 ? '+' : ''}${roi.toStringAsFixed(0)}%)',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: roi >= 0
+                                  ? AppColors.getTransactionColor('income', intensity)
+                                  : AppColors.getTransactionColor('expense', intensity),
+                            ),
+                          ),
                       ] else ...[
                         Text(
                           CurrencyFormatter.format(netCost.abs(), currencyCode: mainCurrency),
@@ -611,6 +849,21 @@ class _AssetCard extends ConsumerWidget {
                         ),
                       ],
                     ],
+                  ),
+                  // Age/duration line
+                  const SizedBox(height: 2),
+                  Text(
+                    [
+                      if (asset.purchaseDate != null)
+                        DateFormatter.formatShort(asset.purchaseDate!)
+                      else
+                        DateFormatter.formatShort(asset.createdAt),
+                      dateLabel,
+                    ].join('  \u00B7  '),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textTertiary,
+                      fontSize: 11,
+                    ),
                   ),
                 ],
               ),

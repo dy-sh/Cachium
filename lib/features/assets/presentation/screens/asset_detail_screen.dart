@@ -20,6 +20,7 @@ import '../providers/asset_categories_provider.dart';
 import '../providers/assets_provider.dart';
 import '../widgets/asset_category_breakdown.dart';
 import '../widgets/asset_form_modal.dart';
+import '../widgets/asset_link_transactions_sheet.dart';
 import '../widgets/asset_spending_chart.dart';
 import '../widgets/asset_stats_cards.dart';
 import '../widgets/asset_status_dialog.dart';
@@ -65,6 +66,44 @@ class AssetDetailScreen extends ConsumerWidget {
               context.showSuccessNotification('Asset deleted');
             }
           },
+          onDuplicate: (sourceAsset) {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (ctx) => AssetFormModal(
+                  asset: Asset(
+                    id: '',
+                    name: '${sourceAsset.name} (Copy)',
+                    icon: sourceAsset.icon,
+                    colorIndex: sourceAsset.colorIndex,
+                    note: sourceAsset.note,
+                    purchasePrice: sourceAsset.purchasePrice,
+                    purchaseCurrencyCode: sourceAsset.purchaseCurrencyCode,
+                    assetCategoryId: sourceAsset.assetCategoryId,
+                    purchaseDate: null,
+                    sortOrder: 0,
+                    createdAt: DateTime.now(),
+                  ),
+                  onSave: (name, icon, colorIndex, status, note, purchasePrice, purchaseCurrencyCode, assetCategoryId, purchaseDate) async {
+                    final newId = await ref.read(assetsProvider.notifier).addAsset(
+                      name: name,
+                      icon: icon,
+                      colorIndex: colorIndex,
+                      note: note,
+                      purchasePrice: purchasePrice,
+                      purchaseCurrencyCode: purchaseCurrencyCode,
+                      assetCategoryId: assetCategoryId,
+                      purchaseDate: purchaseDate,
+                    );
+                    if (ctx.mounted) {
+                      Navigator.of(ctx).pop();
+                      context.showSuccessNotification('Asset duplicated');
+                      context.push('/asset/$newId');
+                    }
+                  },
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -101,9 +140,11 @@ class AssetDetailScreen extends ConsumerWidget {
     final monthGroups = ref.watch(assetTransactionsByMonthProvider(assetId));
     final bgOpacity = AppColors.getBgOpacity(intensity);
     final costBreakdown = ref.watch(assetCostBreakdownProvider(assetId));
+    final roi = ref.watch(assetROIProvider(assetId));
     final assetCategory = asset.assetCategoryId != null
         ? ref.watch(assetCategoryByIdProvider(asset.assetCategoryId!))
         : null;
+    final topCategoryId = ref.watch(assetTopCategoryProvider(assetId));
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -134,7 +175,7 @@ class AssetDetailScreen extends ConsumerWidget {
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
                 children: [
-                  // 1. Hero card
+                  // Hero card
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(AppSpacing.xl),
@@ -260,7 +301,36 @@ class AssetDetailScreen extends ConsumerWidget {
                   _TimeRangeSelector(assetId: assetId),
                   const SizedBox(height: AppSpacing.sm),
 
-                  // 2. Info hint when purchase price exists but no transactions
+                  // Onboarding hint when no transactions and no purchase price
+                  if (transactions.isEmpty && (asset.purchasePrice == null || asset.purchasePrice == 0))
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: AppColors.accentPrimary.withValues(alpha: 0.08),
+                          borderRadius: AppRadius.mdAll,
+                          border: Border.all(color: AppColors.accentPrimary.withValues(alpha: 0.2)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(LucideIcons.info, size: 16, color: AppColors.accentPrimary),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: Text(
+                                'Get started by adding a purchase price or linking transactions to track this asset\'s costs.',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: AppColors.accentPrimary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                  // Info hint when purchase price exists but no transactions
                   if (asset.purchasePrice != null && asset.purchasePrice! > 0 && transactions.isEmpty)
                     Padding(
                       padding: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -289,159 +359,210 @@ class AssetDetailScreen extends ConsumerWidget {
                       ),
                     ),
 
-                  // Total Cost of Ownership
-                  if (transactions.isNotEmpty) ...[
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      decoration: BoxDecoration(
-                        color: assetColor.withValues(alpha: bgOpacity * 0.3),
-                        borderRadius: AppRadius.mdAll,
-                        border: Border.all(color: assetColor.withValues(alpha: 0.2)),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            'Total Cost of Ownership',
-                            style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            CurrencyFormatter.format(
-                              costBreakdown.acquisitionCost + costBreakdown.runningCosts,
-                              currencyCode: ref.watch(mainCurrencyCodeProvider),
-                            ),
-                            style: AppTypography.moneyLarge.copyWith(
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          if (costBreakdown.revenue > 0) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              'After income: ${CurrencyFormatter.format(costBreakdown.netCost.abs(), currencyCode: ref.watch(mainCurrencyCodeProvider))} ${costBreakdown.netCost > 0 ? 'net cost' : 'net gain'}',
-                              style: AppTypography.bodySmall.copyWith(
-                                color: AppColors.textTertiary,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                  ],
-
-                  // Cost breakdown
-                  if (costBreakdown.acquisitionCost > 0) ...[
-                    Row(
+                  // ── COST OVERVIEW SECTION ──
+                  _Section(
+                    title: 'Cost Overview',
+                    icon: LucideIcons.wallet,
+                    visible: transactions.isNotEmpty || costBreakdown.revenue > 0,
+                    child: Column(
                       children: [
-                        Expanded(
-                          child: _CostCard(
-                            label: 'Acquisition',
-                            amount: costBreakdown.acquisitionCost,
-                            color: AppColors.getTransactionColor('expense', intensity),
-                            currencyCode: ref.watch(mainCurrencyCodeProvider),
+                        // Total Cost of Ownership
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          decoration: BoxDecoration(
+                            color: assetColor.withValues(alpha: bgOpacity * 0.3),
+                            borderRadius: AppRadius.mdAll,
+                            border: Border.all(color: assetColor.withValues(alpha: 0.2)),
                           ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Expanded(
-                          child: _CostCard(
-                            label: 'Running Costs',
-                            amount: costBreakdown.runningCosts,
-                            color: AppColors.getTransactionColor('expense', intensity),
-                            currencyCode: ref.watch(mainCurrencyCodeProvider),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                  ] else ...[
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _CostCard(
-                            label: 'Total Expenses',
-                            amount: costBreakdown.runningCosts,
-                            color: AppColors.getTransactionColor('expense', intensity),
-                            currencyCode: ref.watch(mainCurrencyCodeProvider),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        const Expanded(child: SizedBox.shrink()),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                  ],
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _CostCard(
-                          label: asset.status == AssetStatus.sold ? 'Sale & Income' : 'Income',
-                          amount: costBreakdown.revenue,
-                          color: AppColors.getTransactionColor('income', intensity),
-                          currencyCode: ref.watch(mainCurrencyCodeProvider),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: _CostCard(
-                          label: 'Net Cost',
-                          amount: costBreakdown.netCost.abs(),
-                          color: costBreakdown.netCost > 0
-                              ? AppColors.getTransactionColor('expense', intensity)
-                              : AppColors.getTransactionColor('income', intensity),
-                          currencyCode: ref.watch(mainCurrencyCodeProvider),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (costBreakdown.profitLoss != null) ...[
-                    const SizedBox(height: AppSpacing.sm),
-                    _CostCard(
-                      label: costBreakdown.profitLoss! >= 0 ? 'Profit on Sale' : 'Loss on Sale',
-                      amount: costBreakdown.profitLoss!.abs(),
-                      color: costBreakdown.profitLoss! >= 0
-                          ? AppColors.getTransactionColor('income', intensity)
-                          : AppColors.getTransactionColor('expense', intensity),
-                      currencyCode: ref.watch(mainCurrencyCodeProvider),
-                    ),
-                  ],
-                  if (costBreakdown.revenueFromSalePrice)
-                    Padding(
-                      padding: const EdgeInsets.only(top: AppSpacing.sm),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        decoration: BoxDecoration(
-                          color: AppColors.accentPrimary.withValues(alpha: 0.08),
-                          borderRadius: AppRadius.mdAll,
-                          border: Border.all(color: AppColors.accentPrimary.withValues(alpha: 0.2)),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(LucideIcons.info, size: 16, color: AppColors.accentPrimary),
-                            const SizedBox(width: AppSpacing.sm),
-                            Expanded(
-                              child: Text(
-                                'Revenue is based on the sale price. Create a sale transaction for more accurate tracking.',
-                                style: AppTypography.bodySmall.copyWith(
-                                  color: AppColors.accentPrimary,
+                          child: Column(
+                            children: [
+                              Text(
+                                'Total Cost of Ownership',
+                                style: AppTypography.labelSmall.copyWith(
+                                  color: AppColors.textSecondary,
                                 ),
                               ),
+                              const SizedBox(height: AppSpacing.xs),
+                              Text(
+                                CurrencyFormatter.format(
+                                  costBreakdown.acquisitionCost + costBreakdown.runningCosts,
+                                  currencyCode: ref.watch(mainCurrencyCodeProvider),
+                                ),
+                                style: AppTypography.moneyLarge.copyWith(
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              if (costBreakdown.revenue > 0) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  'After income: ${CurrencyFormatter.format(costBreakdown.netCost.abs(), currencyCode: ref.watch(mainCurrencyCodeProvider))} ${costBreakdown.netCost > 0 ? 'net cost' : 'net gain'}',
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: AppColors.textTertiary,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+
+                        // Cost breakdown cards
+                        if (costBreakdown.acquisitionCost > 0) ...[
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _CostCard(
+                                  label: 'Acquisition',
+                                  amount: costBreakdown.acquisitionCost,
+                                  color: AppColors.getTransactionColor('expense', intensity),
+                                  currencyCode: ref.watch(mainCurrencyCodeProvider),
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Expanded(
+                                child: _CostCard(
+                                  label: 'Running Costs',
+                                  amount: costBreakdown.runningCosts,
+                                  color: AppColors.getTransactionColor('expense', intensity),
+                                  currencyCode: ref.watch(mainCurrencyCodeProvider),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                        ] else ...[
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _CostCard(
+                                  label: 'Total Expenses',
+                                  amount: costBreakdown.runningCosts,
+                                  color: AppColors.getTransactionColor('expense', intensity),
+                                  currencyCode: ref.watch(mainCurrencyCodeProvider),
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              const Expanded(child: SizedBox.shrink()),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                        ],
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _CostCard(
+                                label: asset.status == AssetStatus.sold ? 'Sale & Income' : 'Income',
+                                amount: costBreakdown.revenue,
+                                color: AppColors.getTransactionColor('income', intensity),
+                                currencyCode: ref.watch(mainCurrencyCodeProvider),
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: _CostCard(
+                                label: 'Net Cost',
+                                amount: costBreakdown.netCost.abs(),
+                                color: costBreakdown.netCost > 0
+                                    ? AppColors.getTransactionColor('expense', intensity)
+                                    : AppColors.getTransactionColor('income', intensity),
+                                currencyCode: ref.watch(mainCurrencyCodeProvider),
+                              ),
                             ),
                           ],
                         ),
-                      ),
+                        if (costBreakdown.profitLoss != null) ...[
+                          const SizedBox(height: AppSpacing.sm),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _CostCard(
+                                  label: costBreakdown.profitLoss! >= 0 ? 'Profit on Sale' : 'Loss on Sale',
+                                  amount: costBreakdown.profitLoss!.abs(),
+                                  color: costBreakdown.profitLoss! >= 0
+                                      ? AppColors.getTransactionColor('income', intensity)
+                                      : AppColors.getTransactionColor('expense', intensity),
+                                  currencyCode: ref.watch(mainCurrencyCodeProvider),
+                                ),
+                              ),
+                              if (roi != null) ...[
+                                const SizedBox(width: AppSpacing.sm),
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.all(AppSpacing.md),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.surface,
+                                      borderRadius: AppRadius.mdAll,
+                                      border: Border.all(color: AppColors.border),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'ROI',
+                                          style: AppTypography.labelSmall.copyWith(
+                                            color: AppColors.textTertiary,
+                                          ),
+                                        ),
+                                        const SizedBox(height: AppSpacing.xs),
+                                        Text(
+                                          '${roi >= 0 ? '+' : ''}${roi.toStringAsFixed(1)}%',
+                                          style: AppTypography.moneySmall.copyWith(
+                                            color: roi >= 0
+                                                ? AppColors.getTransactionColor('income', intensity)
+                                                : AppColors.getTransactionColor('expense', intensity),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ] else
+                                const Expanded(child: SizedBox.shrink()),
+                            ],
+                          ),
+                        ],
+                        if (costBreakdown.revenueFromSalePrice)
+                          Padding(
+                            padding: const EdgeInsets.only(top: AppSpacing.sm),
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(AppSpacing.md),
+                              decoration: BoxDecoration(
+                                color: AppColors.accentPrimary.withValues(alpha: 0.08),
+                                borderRadius: AppRadius.mdAll,
+                                border: Border.all(color: AppColors.accentPrimary.withValues(alpha: 0.2)),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(LucideIcons.info, size: 16, color: AppColors.accentPrimary),
+                                  const SizedBox(width: AppSpacing.sm),
+                                  Expanded(
+                                    child: Text(
+                                      'Revenue is based on the sale price. Create a sale transaction for more accurate tracking.',
+                                      style: AppTypography.bodySmall.copyWith(
+                                        color: AppColors.accentPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
+                  ),
 
-                  // 3. Stats cards
-                  if (transactions.isNotEmpty) ...[
-                    const SizedBox(height: AppSpacing.lg),
-                    AssetStatsCards(assetId: assetId),
-                  ],
+                  // ── STATISTICS SECTION ──
+                  _Section(
+                    title: 'Statistics',
+                    icon: LucideIcons.barChart3,
+                    visible: transactions.isNotEmpty,
+                    child: AssetStatsCards(assetId: assetId),
+                  ),
 
-                  // 4. Quick add transaction buttons
+                  // ── ACTIONS ──
+                  // Quick add transaction buttons
                   if (asset.status == AssetStatus.active) ...[
                     const SizedBox(height: AppSpacing.lg),
                     Row(
@@ -453,6 +574,9 @@ class AssetDetailScreen extends ConsumerWidget {
                               Future.microtask(() {
                                 final formNotifier = ref.read(transactionFormProvider.notifier);
                                 formNotifier.setAsset(assetId);
+                                if (topCategoryId != null) {
+                                  formNotifier.setCategory(topCategoryId);
+                                }
                               });
                             },
                             child: Container(
@@ -513,9 +637,36 @@ class AssetDetailScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
+                    const SizedBox(height: AppSpacing.sm),
+                    // Link existing transactions button
+                    GestureDetector(
+                      onTap: () => showLinkTransactionsSheet(context, ref, assetId),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: AppRadius.mdAll,
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(LucideIcons.link, size: 16, color: AppColors.textSecondary),
+                            const SizedBox(width: AppSpacing.xs),
+                            Text(
+                              'Link Existing Transactions',
+                              style: AppTypography.labelMedium.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
 
-                  // 5. Record Sale / Reactivate button
+                  // Record Sale / Reactivate button
                   const SizedBox(height: AppSpacing.lg),
                   if (asset.status == AssetStatus.active)
                     GestureDetector(
@@ -555,45 +706,50 @@ class AssetDetailScreen extends ConsumerWidget {
                       onPressed: () => showReactivateDialog(context, ref, asset),
                     ),
 
-                  // 5. Linked Bills
+                  // Linked Bills
                   _LinkedBillsSection(assetId: assetId),
 
-                  // 6. Spending chart
-                  const SizedBox(height: AppSpacing.lg),
-                  AssetSpendingChart(assetId: assetId),
+                  // ── CHARTS SECTION ──
+                  _Section(
+                    title: 'Charts',
+                    icon: LucideIcons.lineChart,
+                    visible: transactions.length >= 2,
+                    child: Column(
+                      children: [
+                        AssetSpendingChart(assetId: assetId),
+                        const SizedBox(height: AppSpacing.lg),
+                        AssetCumulativeCostChart(assetId: assetId),
+                        if (asset.purchasePrice != null) ...[
+                          const SizedBox(height: AppSpacing.lg),
+                          AssetValueChart(assetId: assetId),
+                        ],
+                        const SizedBox(height: AppSpacing.lg),
+                        AssetCategoryBreakdown(assetId: assetId),
+                        // Year-over-year chart
+                        _YearOverYearSection(assetId: assetId),
+                      ],
+                    ),
+                  ),
 
-                  // 6. Cumulative cost chart
-                  const SizedBox(height: AppSpacing.lg),
-                  AssetCumulativeCostChart(assetId: assetId),
-
-                  // 7. Category breakdown
-                  const SizedBox(height: AppSpacing.lg),
-                  AssetCategoryBreakdown(assetId: assetId),
-
-                  // 7. Linked Transactions (grouped by month)
+                  // ── TRANSACTIONS SECTION ──
                   const SizedBox(height: AppSpacing.xxl),
-                  Text('Linked Transactions', style: AppTypography.h4),
-                  const SizedBox(height: AppSpacing.md),
-
-                  if (transactions.isEmpty)
-                    Container(
-                      padding: const EdgeInsets.all(AppSpacing.xxl),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: AppRadius.mdAll,
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'No linked transactions yet',
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                    )
-                  else
-                    ...monthGroups.map((group) => _MonthTransactionGroup(group: group)),
+                  _TransactionsSection(
+                    assetId: assetId,
+                    transactions: transactions,
+                    monthGroups: monthGroups,
+                    onAddFirstTransaction: asset.status == AssetStatus.active
+                        ? () {
+                            context.push('/transaction/new?type=expense');
+                            Future.microtask(() {
+                              final formNotifier = ref.read(transactionFormProvider.notifier);
+                              formNotifier.setAsset(assetId);
+                              if (topCategoryId != null) {
+                                formNotifier.setCategory(topCategoryId);
+                              }
+                            });
+                          }
+                        : null,
+                  ),
 
                   const SizedBox(height: AppSpacing.xxxl),
                 ],
@@ -602,6 +758,259 @@ class AssetDetailScreen extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Collapsible section with icon + title header.
+class _Section extends StatefulWidget {
+  final String title;
+  final IconData icon;
+  final bool visible;
+  final bool initiallyExpanded;
+  final Widget child;
+
+  const _Section({
+    required this.title,
+    required this.icon,
+    this.visible = true,
+    this.initiallyExpanded = true,
+    required this.child,
+  });
+
+  @override
+  State<_Section> createState() => _SectionState();
+}
+
+class _SectionState extends State<_Section> {
+  late bool _expanded;
+
+  @override
+  void initState() {
+    super.initState();
+    _expanded = widget.initiallyExpanded;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.visible) return const SizedBox.shrink();
+
+    return Column(
+      children: [
+        const SizedBox(height: AppSpacing.lg),
+        GestureDetector(
+          onTap: () => setState(() => _expanded = !_expanded),
+          behavior: HitTestBehavior.opaque,
+          child: Row(
+            children: [
+              Icon(widget.icon, size: 16, color: AppColors.textSecondary),
+              const SizedBox(width: AppSpacing.sm),
+              Text(widget.title, style: AppTypography.h4),
+              const Spacer(),
+              Icon(
+                _expanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
+                size: 16,
+                color: AppColors.textTertiary,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        AnimatedCrossFade(
+          firstChild: widget.child,
+          secondChild: const SizedBox.shrink(),
+          crossFadeState: _expanded ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+          duration: const Duration(milliseconds: 200),
+        ),
+      ],
+    );
+  }
+}
+
+/// Transactions section with collapsible behavior when >10 transactions.
+class _TransactionsSection extends StatefulWidget {
+  final String assetId;
+  final List<Transaction> transactions;
+  final List<AssetMonthGroup> monthGroups;
+  final VoidCallback? onAddFirstTransaction;
+
+  const _TransactionsSection({
+    required this.assetId,
+    required this.transactions,
+    required this.monthGroups,
+    this.onAddFirstTransaction,
+  });
+
+  @override
+  State<_TransactionsSection> createState() => _TransactionsSectionState();
+}
+
+class _TransactionsSectionState extends State<_TransactionsSection> {
+  late bool _expanded;
+
+  @override
+  void initState() {
+    super.initState();
+    _expanded = widget.transactions.length <= 10;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          onTap: () => setState(() => _expanded = !_expanded),
+          behavior: HitTestBehavior.opaque,
+          child: Row(
+            children: [
+              Icon(LucideIcons.list, size: 16, color: AppColors.textSecondary),
+              const SizedBox(width: AppSpacing.sm),
+              Text('Linked Transactions', style: AppTypography.h4),
+              if (widget.transactions.isNotEmpty) ...[
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  '(${widget.transactions.length})',
+                  style: AppTypography.bodySmall.copyWith(color: AppColors.textTertiary),
+                ),
+              ],
+              const Spacer(),
+              if (widget.transactions.isNotEmpty)
+                Icon(
+                  _expanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
+                  size: 16,
+                  color: AppColors.textTertiary,
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        if (widget.transactions.isEmpty)
+          GestureDetector(
+            onTap: widget.onAddFirstTransaction,
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.xxl),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: AppRadius.mdAll,
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(LucideIcons.receipt, size: 32, color: AppColors.textTertiary),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      'No linked transactions yet',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    if (widget.onAddFirstTransaction != null) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        'Tap to add first transaction',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.accentPrimary,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          )
+        else
+          AnimatedCrossFade(
+            firstChild: Column(
+              children: widget.monthGroups.map((group) => _MonthTransactionGroup(group: group)).toList(),
+            ),
+            secondChild: const SizedBox.shrink(),
+            crossFadeState: _expanded ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+            duration: const Duration(milliseconds: 200),
+          ),
+      ],
+    );
+  }
+}
+
+/// Year-over-year section — only shows when asset owned >12 months.
+class _YearOverYearSection extends ConsumerWidget {
+  final String assetId;
+
+  const _YearOverYearSection({required this.assetId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final yearlyData = ref.watch(assetYearlyCostProvider(assetId));
+    if (yearlyData.length < 2) return const SizedBox.shrink();
+
+    final intensity = ref.watch(colorIntensityProvider);
+    final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+    final expenseColor = AppColors.getTransactionColor('expense', intensity);
+    final incomeColor = AppColors.getTransactionColor('income', intensity);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: AppSpacing.lg),
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.cardPadding),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: AppRadius.card,
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Year-over-Year', style: AppTypography.labelLarge),
+              const SizedBox(height: AppSpacing.md),
+              ...yearlyData.map((data) {
+                final net = data.expense - data.income;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 40,
+                        child: Text(
+                          '${data.year}',
+                          style: AppTypography.labelSmall.copyWith(color: AppColors.textSecondary),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Text(
+                              '-${CurrencyFormatter.format(data.expense, currencyCode: mainCurrency)}',
+                              style: AppTypography.bodySmall.copyWith(color: expenseColor),
+                            ),
+                            if (data.income > 0) ...[
+                              const SizedBox(width: AppSpacing.sm),
+                              Text(
+                                '+${CurrencyFormatter.format(data.income, currencyCode: mainCurrency)}',
+                                style: AppTypography.bodySmall.copyWith(color: incomeColor),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      Text(
+                        CurrencyFormatter.format(net.abs(), currencyCode: mainCurrency),
+                        style: AppTypography.labelSmall.copyWith(
+                          color: net > 0 ? expenseColor : incomeColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -752,7 +1161,7 @@ class _AssetTransactionItem extends ConsumerWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${category?.name ?? 'Unknown'}  ·  ${DateFormatter.formatRelative(transaction.date)}',
+                    '${category?.name ?? 'Unknown'}  \u00B7  ${DateFormatter.formatRelative(transaction.date)}',
                     style: AppTypography.bodySmall.copyWith(
                       color: AppColors.textTertiary,
                     ),
@@ -863,7 +1272,6 @@ class _TimeRangeSelectorState extends ConsumerState<_TimeRangeSelector> {
   @override
   void initState() {
     super.initState();
-    // Reset the date range when the screen is first opened
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(assetDetailDateRangeProvider.notifier).state = null;
     });
@@ -887,7 +1295,7 @@ class _TimeRangeSelectorState extends ConsumerState<_TimeRangeSelector> {
           end: now,
         );
       case _TimeRange.custom:
-        return; // handled separately
+        return;
     }
     ref.read(assetDetailDateRangeProvider.notifier).state = dateRange;
   }
@@ -961,7 +1369,7 @@ class _TimeRangeSelectorState extends ConsumerState<_TimeRangeSelector> {
 
   String _formatCustomRange(DateTimeRange? range) {
     if (range == null) return 'Custom';
-    return '${DateFormatter.formatShort(range.start)} – ${DateFormatter.formatShort(range.end)}';
+    return '${DateFormatter.formatShort(range.start)} \u2013 ${DateFormatter.formatShort(range.end)}';
   }
 }
 

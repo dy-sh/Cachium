@@ -38,6 +38,12 @@ typedef AssetStats = ({
   int totalTransactions,
 });
 
+/// Yearly cost data for an asset.
+typedef AssetYearlyData = ({int year, double expense, double income});
+
+/// Value over time data point for an asset.
+typedef AssetValuePoint = ({DateTime month, double value});
+
 /// Transactions grouped by month.
 typedef AssetMonthGroup = ({
   DateTime month,
@@ -270,4 +276,133 @@ final assetTransactionsByMonthProvider =
 
   groups.sort((a, b) => b.month.compareTo(a.month));
   return groups;
+});
+
+/// ROI percentage for a sold asset: ((revenue - totalCosts) / totalCosts) * 100.
+/// Returns null if asset is not sold or has no costs.
+final assetROIProvider = Provider.family<double?, String>((ref, assetId) {
+  final breakdown = ref.watch(assetCostBreakdownProvider(assetId));
+  if (breakdown.profitLoss == null) return null;
+  final totalCosts = breakdown.acquisitionCost + breakdown.runningCosts;
+  if (totalCosts <= 0) return null;
+  return (breakdown.profitLoss! / totalCosts) * 100;
+});
+
+/// Most-used expense category for an asset (by transaction count).
+/// Returns null if the asset has no expense transactions.
+final assetTopCategoryProvider = Provider.family<String?, String>((ref, assetId) {
+  final transactions = ref.watch(transactionsByAssetProvider(assetId));
+  final expenses = transactions.where((tx) => tx.type == TransactionType.expense);
+  if (expenses.isEmpty) return null;
+
+  final Map<String, int> counts = {};
+  for (final tx in expenses) {
+    counts[tx.categoryId] = (counts[tx.categoryId] ?? 0) + 1;
+  }
+
+  String? topId;
+  int topCount = 0;
+  for (final entry in counts.entries) {
+    if (entry.value > topCount) {
+      topCount = entry.value;
+      topId = entry.key;
+    }
+  }
+  return topId;
+});
+
+/// Asset value over time: starts at purchasePrice, adjusts by monthly
+/// expenses (decrease) and income (increase). Ends at salePrice if sold.
+final assetValueOverTimeProvider =
+    Provider.family<List<AssetValuePoint>, String>((ref, assetId) {
+  final asset = ref.watch(assetByIdProvider(assetId));
+  if (asset?.purchasePrice == null) return [];
+  final monthlyData = ref.watch(assetMonthlySpendingProvider(assetId));
+
+  double value = asset!.purchasePrice!;
+  final points = <AssetValuePoint>[];
+
+  final startDate = asset.purchaseDate ?? asset.createdAt;
+  points.add((month: DateTime(startDate.year, startDate.month), value: value));
+
+  for (final d in monthlyData) {
+    value = value - d.expense + d.income;
+    points.add((month: d.month, value: value));
+  }
+
+  if (asset.status == AssetStatus.sold && asset.salePrice != null) {
+    final soldMonth = asset.soldDate ?? DateTime.now();
+    points.add((month: DateTime(soldMonth.year, soldMonth.month), value: asset.salePrice!));
+  }
+
+  return points;
+});
+
+/// Year-over-year cost data for an asset.
+final assetYearlyCostProvider =
+    Provider.family<List<AssetYearlyData>, String>((ref, assetId) {
+  final transactions = ref.watch(filteredTransactionsByAssetProvider(assetId));
+  if (transactions.isEmpty) return [];
+
+  final Map<int, ({double expense, double income})> byYear = {};
+
+  for (final tx in transactions) {
+    final year = tx.date.year;
+    final existing = byYear[year];
+    double expense = existing?.expense ?? 0;
+    double income = existing?.income ?? 0;
+
+    if (tx.type == TransactionType.expense) {
+      expense += tx.effectiveMainCurrencyAmount;
+    } else if (tx.type == TransactionType.income) {
+      income += tx.effectiveMainCurrencyAmount;
+    }
+
+    byYear[year] = (expense: expense, income: income);
+  }
+
+  final sorted = byYear.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
+  return sorted
+      .map((e) => (year: e.key, expense: e.value.expense, income: e.value.income))
+      .toList();
+});
+
+/// Portfolio category breakdown: aggregates all asset-linked transactions by category.
+final portfolioCategoryBreakdownProvider =
+    Provider<List<AssetCategoryEntry>>((ref) {
+  final allAssets = ref.watch(assetsProvider).valueOrNull ?? [];
+  final intensity = ref.watch(colorIntensityProvider);
+  if (allAssets.isEmpty) return [];
+
+  double totalExpense = 0;
+  final Map<String, double> byCategoryId = {};
+
+  for (final asset in allAssets) {
+    final transactions = ref.watch(transactionsByAssetProvider(asset.id));
+    for (final tx in transactions) {
+      if (tx.type == TransactionType.expense) {
+        final amount = tx.effectiveMainCurrencyAmount;
+        totalExpense += amount;
+        byCategoryId[tx.categoryId] = (byCategoryId[tx.categoryId] ?? 0) + amount;
+      }
+    }
+  }
+
+  if (totalExpense <= 0) return [];
+
+  final entries = <AssetCategoryEntry>[];
+  for (final entry in byCategoryId.entries) {
+    final category = ref.watch(categoryByIdProvider(entry.key));
+    entries.add((
+      categoryId: entry.key,
+      name: category?.name ?? 'Unknown',
+      icon: category?.icon ?? Icons.circle,
+      color: category?.getColor(intensity) ?? Colors.grey,
+      amount: entry.value,
+      percentage: entry.value / totalExpense,
+    ));
+  }
+
+  entries.sort((a, b) => b.amount.compareTo(a.amount));
+  return entries;
 });
