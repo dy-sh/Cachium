@@ -86,10 +86,6 @@ class _AppGateState extends ConsumerState<_AppGate> with WidgetsBindingObserver 
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // Migrate plaintext credentials to hashed on first load
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await ref.read(settingsProvider.notifier).migrateCredentialsIfNeeded();
-    });
   }
 
   @override

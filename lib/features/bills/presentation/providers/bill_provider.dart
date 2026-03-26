@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../core/exceptions/app_exception.dart';
 import '../../../../core/providers/database_providers.dart';
 import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/providers/optimistic_notifier.dart';
 import '../../../../core/utils/currency_conversion.dart';
 import '../../../settings/presentation/providers/settings_provider.dart'
     show mainCurrencyCodeProvider;
@@ -10,7 +12,8 @@ import '../../../transactions/data/models/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../data/models/bill.dart';
 
-class BillsNotifier extends AsyncNotifier<List<Bill>> {
+class BillsNotifier extends AsyncNotifier<List<Bill>>
+    with OptimisticAsyncNotifier<Bill> {
   final _uuid = const Uuid();
 
   @override
@@ -19,23 +22,27 @@ class BillsNotifier extends AsyncNotifier<List<Bill>> {
     return repository.getAllBills();
   }
 
-  Future<void> addBill(Bill bill) async {
-    final repository = ref.read(billRepositoryProvider);
-    await repository.createBill(bill);
-    ref.invalidateSelf();
-  }
+  Future<void> addBill(Bill bill) => runOptimistic(
+        update: (bills) => [...bills, bill],
+        action: () => ref.read(billRepositoryProvider).createBill(bill),
+        onError: (e) =>
+            RepositoryException.create(entityType: 'Bill', cause: e),
+      );
 
-  Future<void> updateBill(Bill bill) async {
-    final repository = ref.read(billRepositoryProvider);
-    await repository.updateBill(bill);
-    ref.invalidateSelf();
-  }
+  Future<void> updateBill(Bill bill) => runOptimistic(
+        update: (bills) =>
+            bills.map((b) => b.id == bill.id ? bill : b).toList(),
+        action: () => ref.read(billRepositoryProvider).updateBill(bill),
+        onError: (e) => RepositoryException.update(
+            entityType: 'Bill', entityId: bill.id, cause: e),
+      );
 
-  Future<void> deleteBill(String id) async {
-    final repository = ref.read(billRepositoryProvider);
-    await repository.deleteBill(id);
-    ref.invalidateSelf();
-  }
+  Future<void> deleteBill(String id) => runOptimistic(
+        update: (bills) => bills.where((b) => b.id != id).toList(),
+        action: () => ref.read(billRepositoryProvider).deleteBill(id),
+        onError: (e) => RepositoryException.delete(
+            entityType: 'Bill', entityId: id, cause: e),
+      );
 
   /// Mark a bill as paid and optionally create an expense transaction.
   Future<void> markAsPaid(String id, {bool createTransaction = true}) async {
@@ -98,7 +105,17 @@ class BillsNotifier extends AsyncNotifier<List<Bill>> {
   }
 
   Future<void> refresh() async {
-    ref.invalidateSelf();
+    try {
+      final repository = ref.read(billRepositoryProvider);
+      state = AsyncData(await repository.getAllBills());
+    } catch (e, st) {
+      state = AsyncError(
+        e is AppException
+            ? e
+            : RepositoryException.fetch(entityType: 'Bill', cause: e),
+        st,
+      );
+    }
   }
 }
 

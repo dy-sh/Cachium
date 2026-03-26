@@ -84,8 +84,10 @@ class _MerchantAutocompleteState extends ConsumerState<MerchantAutocomplete> {
                 controller: controller,
                 focusNode: focusNode,
                 onChanged: widget.onChanged,
+                maxLength: 100,
                 style: AppTypography.input,
                 cursorColor: accentColor,
+                buildCounter: (context, {required currentLength, required isFocused, required maxLength}) => null,
                 decoration: InputDecoration(
                   hintText: 'e.g. Amazon, Starbucks...',
                   hintStyle: AppTypography.inputHint,

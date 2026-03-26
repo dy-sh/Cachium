@@ -25,6 +25,7 @@ class InputField extends ConsumerStatefulWidget {
   final FocusNode? focusNode;
   final String? errorText;
   final bool showClearButton;
+  final int? maxLength;
 
   const InputField({
     super.key,
@@ -43,6 +44,7 @@ class InputField extends ConsumerStatefulWidget {
     this.focusNode,
     this.errorText,
     this.showClearButton = true,
+    this.maxLength,
   });
 
   @override
@@ -178,9 +180,13 @@ class _FMTextFieldState extends ConsumerState<InputField>
                         inputFormatters: widget.inputFormatters,
                         obscureText: widget.obscureText,
                         maxLines: widget.maxLines,
+                        maxLength: widget.maxLength,
                         autofocus: widget.autofocus,
                         style: AppTypography.input,
                         cursorColor: accentColor,
+                        buildCounter: widget.maxLength != null
+                            ? (context, {required currentLength, required isFocused, required maxLength}) => null
+                            : null,
                         decoration: InputDecoration(
                           hintText: widget.hint,
                           hintStyle: AppTypography.inputHint,

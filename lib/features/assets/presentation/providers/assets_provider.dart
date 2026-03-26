@@ -18,10 +18,7 @@ class AssetsNotifier extends AsyncNotifier<List<Asset>> {
   @override
   Future<List<Asset>> build() async {
     final repo = ref.watch(assetRepositoryProvider);
-    final assets = await repo.getAllAssets();
-    // Sort by sortOrder
-    assets.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-    return assets;
+    return repo.getAllAssets();
   }
 
   /// Add a new asset. Returns the new asset's ID.
@@ -162,9 +159,7 @@ class AssetsNotifier extends AsyncNotifier<List<Asset>> {
   Future<void> refresh() async {
     try {
       final repo = ref.read(assetRepositoryProvider);
-      final assets = await repo.getAllAssets();
-      assets.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-      state = AsyncData(assets);
+      state = AsyncData(await repo.getAllAssets());
     } catch (e, st) {
       state = AsyncError(
         e is AppException ? e : RepositoryException.fetch(entityType: 'Asset', cause: e),

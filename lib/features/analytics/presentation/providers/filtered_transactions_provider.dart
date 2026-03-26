@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../categories/data/models/category.dart';
 import '../../../categories/data/models/category_tree_node.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../transactions/data/models/transaction.dart';
@@ -19,6 +20,12 @@ final filteredAnalyticsTransactionsProvider = Provider<List<Transaction>>((ref) 
 
   if (transactions == null) return [];
 
+  // Pre-compute expanded category IDs (selected + all descendants) once
+  Set<String>? expandedCategoryIds;
+  if (filter.hasCategoryFilter && categories != null) {
+    expandedCategoryIds = _expandCategoryIds(filter.selectedCategoryIds, categories);
+  }
+
   return transactions.where((tx) {
     // Date filter
     if (!filter.dateRange.contains(tx.date)) {
@@ -30,16 +37,9 @@ final filteredAnalyticsTransactionsProvider = Provider<List<Transaction>>((ref) 
       return false;
     }
 
-    // Category filter (including descendants)
-    if (filter.hasCategoryFilter && categories != null) {
-      final matchesCategory = _matchesCategoryFilter(
-        tx.categoryId,
-        filter.selectedCategoryIds,
-        categories,
-      );
-      if (!matchesCategory) {
-        return false;
-      }
+    // Category filter (pre-computed set lookup — O(1) per transaction)
+    if (expandedCategoryIds != null && !expandedCategoryIds.contains(tx.categoryId)) {
+      return false;
     }
 
     // Type filter
@@ -51,28 +51,17 @@ final filteredAnalyticsTransactionsProvider = Provider<List<Transaction>>((ref) 
   }).toList();
 });
 
-bool _matchesCategoryFilter(
-  String categoryId,
+/// Expands selected category IDs to include all descendant IDs.
+/// Computed once per filter change rather than per transaction.
+Set<String> _expandCategoryIds(
   Set<String> selectedIds,
-  List<dynamic> categories,
+  List<Category> categories,
 ) {
-  // Direct match
-  if (selectedIds.contains(categoryId)) {
-    return true;
-  }
-
-  // Check if any selected category is an ancestor
+  final expanded = <String>{...selectedIds};
   for (final selectedId in selectedIds) {
-    final descendants = CategoryTreeBuilder.getDescendantIds(
-      categories.cast(),
-      selectedId,
-    );
-    if (descendants.contains(categoryId)) {
-      return true;
-    }
+    expanded.addAll(CategoryTreeBuilder.getDescendantIds(categories, selectedId));
   }
-
-  return false;
+  return expanded;
 }
 
 // Convenience providers for filtered data

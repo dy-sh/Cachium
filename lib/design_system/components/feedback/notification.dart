@@ -217,7 +217,7 @@ class _FMNotificationState extends ConsumerState<Notification>
                 child: Text(
                   widget.message,
                   style: AppTypography.bodyMedium,
-                  maxLines: 2,
+                  maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),

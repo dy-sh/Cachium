@@ -40,13 +40,17 @@ class PageLayout extends StatelessWidget {
                   child: Row(
                     children: [
                       if (showBackButton)
-                        GestureDetector(
-                          onTap: onBack ?? () => Navigator.of(context).pop(),
-                          child: Padding(
-                            padding: const EdgeInsets.all(AppSpacing.sm),
-                            child: Icon(
-                              Icons.arrow_back,
-                              color: AppColors.textPrimary,
+                        Semantics(
+                          button: true,
+                          label: 'Go back',
+                          child: GestureDetector(
+                            onTap: onBack ?? () => Navigator.of(context).pop(),
+                            child: Padding(
+                              padding: const EdgeInsets.all(AppSpacing.sm),
+                              child: Icon(
+                                Icons.arrow_back,
+                                color: AppColors.textPrimary,
+                              ),
                             ),
                           ),
                         ),

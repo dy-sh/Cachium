@@ -777,7 +777,8 @@ class FlexibleCsvImportService {
     );
 
     // Use upsertRaw to preserve lastUpdatedAt from import
-    final currency = values['currency'] as String? ?? 'USD';
+    final rawCurrency = values['currency'] as String? ?? 'USD';
+    final currency = RegExp(r'^[A-Z]{3}$').hasMatch(rawCurrency) ? rawCurrency : 'USD';
     final lastUpdatedAt = values['lastUpdatedAt'] as DateTime?;
     await transactionRepository.upsertTransactionRaw(
       transaction,

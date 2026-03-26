@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/exceptions/app_exception.dart';
 import '../../../../core/providers/database_providers.dart';
 import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/providers/optimistic_notifier.dart';
 import '../../../../core/utils/currency_conversion.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
@@ -10,30 +12,38 @@ import '../../data/models/recurring_rule.dart';
 import '../../data/models/transaction.dart';
 import 'transactions_provider.dart';
 
-class RecurringRulesNotifier extends AsyncNotifier<List<RecurringRule>> {
+class RecurringRulesNotifier extends AsyncNotifier<List<RecurringRule>>
+    with OptimisticAsyncNotifier<RecurringRule> {
   @override
   Future<List<RecurringRule>> build() async {
     final repository = ref.watch(recurringRuleRepositoryProvider);
     return repository.getAllRules();
   }
 
-  Future<void> addRule(RecurringRule rule) async {
-    final repository = ref.read(recurringRuleRepositoryProvider);
-    await repository.createRule(rule);
-    ref.invalidateSelf();
-  }
+  Future<void> addRule(RecurringRule rule) => runOptimistic(
+        update: (rules) => [...rules, rule],
+        action: () =>
+            ref.read(recurringRuleRepositoryProvider).createRule(rule),
+        onError: (e) =>
+            RepositoryException.create(entityType: 'RecurringRule', cause: e),
+      );
 
-  Future<void> updateRule(RecurringRule rule) async {
-    final repository = ref.read(recurringRuleRepositoryProvider);
-    await repository.updateRule(rule);
-    ref.invalidateSelf();
-  }
+  Future<void> updateRule(RecurringRule rule) => runOptimistic(
+        update: (rules) =>
+            rules.map((r) => r.id == rule.id ? rule : r).toList(),
+        action: () =>
+            ref.read(recurringRuleRepositoryProvider).updateRule(rule),
+        onError: (e) => RepositoryException.update(
+            entityType: 'RecurringRule', entityId: rule.id, cause: e),
+      );
 
-  Future<void> deleteRule(String id) async {
-    final repository = ref.read(recurringRuleRepositoryProvider);
-    await repository.deleteRule(id);
-    ref.invalidateSelf();
-  }
+  Future<void> deleteRule(String id) => runOptimistic(
+        update: (rules) => rules.where((r) => r.id != id).toList(),
+        action: () =>
+            ref.read(recurringRuleRepositoryProvider).deleteRule(id),
+        onError: (e) => RepositoryException.delete(
+            entityType: 'RecurringRule', entityId: id, cause: e),
+      );
 
   Future<void> toggleActive(String id) async {
     final rules = state.valueOrNull ?? [];

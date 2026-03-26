@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/exceptions/app_exception.dart';
 import '../../../../core/providers/database_providers.dart';
+import '../../../../core/providers/optimistic_notifier.dart';
 import '../../../categories/data/models/category.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
@@ -10,61 +11,35 @@ import '../../../transactions/presentation/providers/transactions_provider.dart'
 import '../../data/models/budget.dart';
 import '../../data/models/budget_progress.dart';
 
-class BudgetsNotifier extends AsyncNotifier<List<Budget>> {
+class BudgetsNotifier extends AsyncNotifier<List<Budget>>
+    with OptimisticAsyncNotifier<Budget> {
   @override
   Future<List<Budget>> build() async {
     final repo = ref.watch(budgetRepositoryProvider);
     return repo.getAllBudgets();
   }
 
-  Future<void> addBudget(Budget budget) async {
-    final previousState = state;
-    try {
-      final repo = ref.read(budgetRepositoryProvider);
-      state = state.whenData((budgets) => [...budgets, budget]);
-      await repo.createBudget(budget);
-    } catch (e, st) {
-      state = previousState;
-      Error.throwWithStackTrace(
-        e is AppException ? e : RepositoryException.create(entityType: 'Budget', cause: e),
-        st,
+  Future<void> addBudget(Budget budget) => runOptimistic(
+        update: (budgets) => [...budgets, budget],
+        action: () => ref.read(budgetRepositoryProvider).createBudget(budget),
+        onError: (e) =>
+            RepositoryException.create(entityType: 'Budget', cause: e),
       );
-    }
-  }
 
-  Future<void> updateBudget(Budget budget) async {
-    final previousState = state;
-    try {
-      final repo = ref.read(budgetRepositoryProvider);
-      state = state.whenData(
-        (budgets) => budgets.map((b) => b.id == budget.id ? budget : b).toList(),
+  Future<void> updateBudget(Budget budget) => runOptimistic(
+        update: (budgets) =>
+            budgets.map((b) => b.id == budget.id ? budget : b).toList(),
+        action: () => ref.read(budgetRepositoryProvider).updateBudget(budget),
+        onError: (e) => RepositoryException.update(
+            entityType: 'Budget', entityId: budget.id, cause: e),
       );
-      await repo.updateBudget(budget);
-    } catch (e, st) {
-      state = previousState;
-      Error.throwWithStackTrace(
-        e is AppException ? e : RepositoryException.update(entityType: 'Budget', entityId: budget.id, cause: e),
-        st,
-      );
-    }
-  }
 
-  Future<void> deleteBudget(String id) async {
-    final previousState = state;
-    try {
-      final repo = ref.read(budgetRepositoryProvider);
-      state = state.whenData(
-        (budgets) => budgets.where((b) => b.id != id).toList(),
+  Future<void> deleteBudget(String id) => runOptimistic(
+        update: (budgets) => budgets.where((b) => b.id != id).toList(),
+        action: () => ref.read(budgetRepositoryProvider).deleteBudget(id),
+        onError: (e) => RepositoryException.delete(
+            entityType: 'Budget', entityId: id, cause: e),
       );
-      await repo.deleteBudget(id);
-    } catch (e, st) {
-      state = previousState;
-      Error.throwWithStackTrace(
-        e is AppException ? e : RepositoryException.delete(entityType: 'Budget', entityId: id, cause: e),
-        st,
-      );
-    }
-  }
 
   Future<void> refresh() async {
     try {
@@ -72,7 +47,9 @@ class BudgetsNotifier extends AsyncNotifier<List<Budget>> {
       state = AsyncData(await repo.getAllBudgets());
     } catch (e, st) {
       state = AsyncError(
-        e is AppException ? e : RepositoryException.fetch(entityType: 'Budget', cause: e),
+        e is AppException
+            ? e
+            : RepositoryException.fetch(entityType: 'Budget', cause: e),
         st,
       );
     }

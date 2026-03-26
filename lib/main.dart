@@ -7,6 +7,7 @@ import 'core/database/services/net_worth_snapshot_service.dart';
 import 'core/database/services/secure_key_provider.dart';
 import 'core/providers/database_providers.dart';
 import 'core/services/notification_service.dart';
+import 'features/settings/presentation/providers/settings_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,6 +44,14 @@ void main() async {
     debugPrint('Key migration failed: $e');
     // Continue startup — data remains readable with the legacy key
     // until migration succeeds on a future launch.
+  }
+
+  // Migrate plaintext/SHA-256 credentials to PBKDF2 hashing
+  try {
+    await container.read(settingsProvider.future);
+    await container.read(settingsProvider.notifier).migrateCredentialsIfNeeded();
+  } catch (e) {
+    debugPrint('Credential migration failed: $e');
   }
 
   // Initialize notification service

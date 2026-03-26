@@ -299,7 +299,7 @@ class AppDatabase extends _$AppDatabase {
 
 
   @override
-  int get schemaVersion => 27;
+  int get schemaVersion => 28;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -325,12 +325,8 @@ class AppDatabase extends _$AppDatabase {
           }
 
           // Incremental migrations
-          if (from < 17) {
-            await _createIndexes(m);
-          }
-
           if (from < 18) {
-            // Add composite and additional table indexes
+            // Add performance indexes (v17 + v18 consolidated)
             await _createIndexes(m);
           }
 
@@ -388,6 +384,12 @@ class AppDatabase extends _$AppDatabase {
             // No schema change needed — field defaults to false in the DTO.
             // Legacy note-matching fallback is kept in assetCostBreakdownProvider
             // for backward compatibility with existing data.
+          }
+
+          if (from < 28) {
+            // Add lastUpdatedAt indexes for sync/LWW performance
+            // and composite (is_deleted, last_updated_at) for cleanup queries
+            await _createIndexes(m);
           }
         },
       );
@@ -453,6 +455,67 @@ class AppDatabase extends _$AppDatabase {
     );
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_bills_is_deleted ON bills(is_deleted)',
+    );
+
+    // lastUpdatedAt indexes for sync/LWW resolution
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_transactions_last_updated ON transactions(last_updated_at)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_accounts_last_updated ON accounts(last_updated_at)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_categories_last_updated ON categories(last_updated_at)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_budgets_last_updated ON budgets(last_updated_at)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_assets_last_updated ON assets(last_updated_at)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_asset_categories_last_updated ON asset_categories(last_updated_at)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_recurring_rules_last_updated ON recurring_rules(last_updated_at)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_savings_goals_last_updated ON savings_goals(last_updated_at)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_transaction_templates_last_updated ON transaction_templates(last_updated_at)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_tags_last_updated ON tags(last_updated_at)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_attachments_last_updated ON attachments(last_updated_at)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_bills_last_updated ON bills(last_updated_at)',
+    );
+
+    // Composite indexes for cleanup queries (is_deleted + last_updated_at)
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_transactions_deleted_updated ON transactions(is_deleted, last_updated_at)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_accounts_deleted_updated ON accounts(is_deleted, last_updated_at)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_categories_deleted_updated ON categories(is_deleted, last_updated_at)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_budgets_deleted_updated ON budgets(is_deleted, last_updated_at)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_assets_deleted_updated ON assets(is_deleted, last_updated_at)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_tags_deleted_updated ON tags(is_deleted, last_updated_at)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_bills_deleted_updated ON bills(is_deleted, last_updated_at)',
     );
   }
 

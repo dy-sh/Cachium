@@ -2,10 +2,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../core/exceptions/app_exception.dart';
 import '../../../../core/providers/database_providers.dart';
+import '../../../../core/providers/optimistic_notifier.dart';
 import '../../data/models/savings_goal.dart';
 
-class SavingsGoalsNotifier extends AsyncNotifier<List<SavingsGoal>> {
+class SavingsGoalsNotifier extends AsyncNotifier<List<SavingsGoal>>
+    with OptimisticAsyncNotifier<SavingsGoal> {
   final _uuid = const Uuid();
 
   @override
@@ -24,7 +27,6 @@ class SavingsGoalsNotifier extends AsyncNotifier<List<SavingsGoal>> {
     DateTime? targetDate,
     String? note,
   }) async {
-    final repository = ref.read(savingsGoalRepositoryProvider);
     final id = _uuid.v4();
 
     final goal = SavingsGoal(
@@ -40,22 +42,29 @@ class SavingsGoalsNotifier extends AsyncNotifier<List<SavingsGoal>> {
       createdAt: DateTime.now(),
     );
 
-    await repository.createGoal(goal);
-    ref.invalidateSelf();
+    await runOptimistic(
+      update: (goals) => [...goals, goal],
+      action: () => ref.read(savingsGoalRepositoryProvider).createGoal(goal),
+      onError: (e) =>
+          RepositoryException.create(entityType: 'SavingsGoal', cause: e),
+    );
     return id;
   }
 
-  Future<void> updateGoal(SavingsGoal goal) async {
-    final repository = ref.read(savingsGoalRepositoryProvider);
-    await repository.updateGoal(goal);
-    ref.invalidateSelf();
-  }
+  Future<void> updateGoal(SavingsGoal goal) => runOptimistic(
+        update: (goals) =>
+            goals.map((g) => g.id == goal.id ? goal : g).toList(),
+        action: () => ref.read(savingsGoalRepositoryProvider).updateGoal(goal),
+        onError: (e) => RepositoryException.update(
+            entityType: 'SavingsGoal', entityId: goal.id, cause: e),
+      );
 
-  Future<void> deleteGoal(String id) async {
-    final repository = ref.read(savingsGoalRepositoryProvider);
-    await repository.deleteGoal(id);
-    ref.invalidateSelf();
-  }
+  Future<void> deleteGoal(String id) => runOptimistic(
+        update: (goals) => goals.where((g) => g.id != id).toList(),
+        action: () => ref.read(savingsGoalRepositoryProvider).deleteGoal(id),
+        onError: (e) => RepositoryException.delete(
+            entityType: 'SavingsGoal', entityId: id, cause: e),
+      );
 
   Future<void> contribute(String id, double amount) async {
     final goals = state.valueOrNull ?? [];

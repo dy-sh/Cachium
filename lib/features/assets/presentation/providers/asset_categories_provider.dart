@@ -4,16 +4,17 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/exceptions/app_exception.dart';
 import '../../../../core/providers/database_providers.dart';
+import '../../../../core/providers/optimistic_notifier.dart';
 import '../../data/models/asset_category.dart';
 
-class AssetCategoriesNotifier extends AsyncNotifier<List<AssetCategory>> {
+class AssetCategoriesNotifier extends AsyncNotifier<List<AssetCategory>>
+    with OptimisticAsyncNotifier<AssetCategory> {
   final _uuid = const Uuid();
 
   @override
   Future<List<AssetCategory>> build() async {
     final repo = ref.watch(assetCategoryRepositoryProvider);
     final categories = await repo.getAllCategories();
-    categories.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
     // Seed defaults if empty
     if (categories.isEmpty) {
@@ -81,45 +82,23 @@ class AssetCategoriesNotifier extends AsyncNotifier<List<AssetCategory>> {
     }
   }
 
-  Future<void> updateCategory(AssetCategory category) async {
-    final previousState = state;
-
-    try {
-      final repo = ref.read(assetCategoryRepositoryProvider);
-
-      state = state.whenData(
-        (categories) => categories.map((c) => c.id == category.id ? category : c).toList(),
+  Future<void> updateCategory(AssetCategory category) => runOptimistic(
+        update: (categories) =>
+            categories.map((c) => c.id == category.id ? category : c).toList(),
+        action: () =>
+            ref.read(assetCategoryRepositoryProvider).updateCategory(category),
+        onError: (e) => RepositoryException.update(
+            entityType: 'AssetCategory', entityId: category.id, cause: e),
       );
 
-      await repo.updateCategory(category);
-    } catch (e, st) {
-      state = previousState;
-      Error.throwWithStackTrace(
-        e is AppException ? e : RepositoryException.update(entityType: 'AssetCategory', entityId: category.id, cause: e),
-        st,
+  Future<void> deleteCategory(String id) => runOptimistic(
+        update: (categories) =>
+            categories.where((c) => c.id != id).toList(),
+        action: () =>
+            ref.read(assetCategoryRepositoryProvider).deleteCategory(id),
+        onError: (e) => RepositoryException.delete(
+            entityType: 'AssetCategory', entityId: id, cause: e),
       );
-    }
-  }
-
-  Future<void> deleteCategory(String id) async {
-    final previousState = state;
-
-    try {
-      final repo = ref.read(assetCategoryRepositoryProvider);
-
-      state = state.whenData(
-        (categories) => categories.where((c) => c.id != id).toList(),
-      );
-
-      await repo.deleteCategory(id);
-    } catch (e, st) {
-      state = previousState;
-      Error.throwWithStackTrace(
-        e is AppException ? e : RepositoryException.delete(entityType: 'AssetCategory', entityId: id, cause: e),
-        st,
-      );
-    }
-  }
 
   Future<void> moveCategoryToPosition(String categoryId, int newIndex) async {
     final previousState = state;

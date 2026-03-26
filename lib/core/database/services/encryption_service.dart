@@ -15,6 +15,7 @@ import '../../../data/encryption/savings_goal_data.dart';
 import '../../../data/encryption/tag_data.dart';
 import '../../../data/encryption/transaction_data.dart';
 import '../../../data/encryption/transaction_template_data.dart';
+import '../../exceptions/app_exception.dart';
 import '../../exceptions/security_exception.dart';
 import 'key_provider.dart';
 
@@ -104,7 +105,14 @@ class EncryptionService {
 
     // Parse JSON
     final jsonString = utf8.decode(plaintext);
-    return jsonDecode(jsonString) as Map<String, dynamic>;
+    try {
+      return jsonDecode(jsonString) as Map<String, dynamic>;
+    } catch (e) {
+      throw RepositoryException.decryption(
+        entityType: 'unknown',
+        cause: e,
+      );
+    }
   }
 
   /// Encrypts transaction data into a binary blob.

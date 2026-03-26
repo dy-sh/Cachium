@@ -305,6 +305,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                       label: 'Note (optional)',
                       hint: 'Add a note...',
                       controller: _noteController,
+                      maxLength: 500,
                       onChanged: (value) {
                         ref.read(transactionFormProvider.notifier).setNote(value);
                       },
