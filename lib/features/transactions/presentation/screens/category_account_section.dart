@@ -83,6 +83,7 @@ class AssetSection extends ConsumerWidget {
   final ValueChanged<String?> onAssetChanged;
   final VoidCallback onCreateAsset;
   final VoidCallback onClearAsset;
+  final ValueChanged<bool>? onAcquisitionCostChanged;
 
   const AssetSection({
     super.key,
@@ -90,6 +91,7 @@ class AssetSection extends ConsumerWidget {
     required this.onAssetChanged,
     required this.onCreateAsset,
     required this.onClearAsset,
+    this.onAcquisitionCostChanged,
   });
 
   @override
@@ -135,6 +137,68 @@ class AssetSection extends ConsumerWidget {
                 ? () => onCreateAsset()
                 : null,
           ),
+          if (formState.assetId != null &&
+              formState.type == TransactionType.expense &&
+              onAcquisitionCostChanged != null)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.sm),
+              child: GestureDetector(
+                onTap: () => onAcquisitionCostChanged!(!formState.isAcquisitionCost),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  decoration: BoxDecoration(
+                    color: formState.isAcquisitionCost
+                        ? AppColors.accentPrimary.withValues(alpha: 0.1)
+                        : AppColors.surface,
+                    borderRadius: AppRadius.smAll,
+                    border: Border.all(
+                      color: formState.isAcquisitionCost
+                          ? AppColors.accentPrimary
+                          : AppColors.border,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        formState.isAcquisitionCost
+                            ? LucideIcons.checkSquare
+                            : LucideIcons.square,
+                        size: 16,
+                        color: formState.isAcquisitionCost
+                            ? AppColors.accentPrimary
+                            : AppColors.textTertiary,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Acquisition cost',
+                              style: AppTypography.labelSmall.copyWith(
+                                color: formState.isAcquisitionCost
+                                    ? AppColors.accentPrimary
+                                    : AppColors.textSecondary,
+                              ),
+                            ),
+                            Text(
+                              'Part of the purchase price of this asset',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.textTertiary,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           const SizedBox(height: AppSpacing.xxl),
         ],
       );

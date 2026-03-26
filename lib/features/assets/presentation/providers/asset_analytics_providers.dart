@@ -27,6 +27,7 @@ typedef AssetCostBreakdown = ({
   double revenue,
   double netCost,
   double? profitLoss,
+  bool revenueFromSalePrice,
 });
 
 /// Computed stats for an asset.
@@ -173,10 +174,12 @@ final assetCostBreakdownProvider =
   }
 
   // Fallback: use stored salePrice as revenue when no income transactions exist
+  bool revenueFromSalePrice = false;
   if (asset?.status == AssetStatus.sold &&
       asset?.salePrice != null &&
       revenue == 0) {
     revenue = asset!.salePrice!;
+    revenueFromSalePrice = true;
   }
 
   final runningCosts = totalExpenses - acquisitionCost;
@@ -191,6 +194,7 @@ final assetCostBreakdownProvider =
     revenue: revenue,
     netCost: netCost,
     profitLoss: profitLoss,
+    revenueFromSalePrice: revenueFromSalePrice,
   );
 });
 

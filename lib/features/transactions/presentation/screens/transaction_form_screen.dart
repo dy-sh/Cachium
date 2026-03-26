@@ -217,6 +217,9 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                         onClearAsset: () {
                           ref.read(transactionFormProvider.notifier).clearAsset();
                         },
+                        onAcquisitionCostChanged: (value) {
+                          ref.read(transactionFormProvider.notifier).setIsAcquisitionCost(value);
+                        },
                       ),
                     ],
                     AccountSection(

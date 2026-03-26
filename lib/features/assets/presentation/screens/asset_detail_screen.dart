@@ -289,6 +289,49 @@ class AssetDetailScreen extends ConsumerWidget {
                       ),
                     ),
 
+                  // Total Cost of Ownership
+                  if (transactions.isNotEmpty) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      decoration: BoxDecoration(
+                        color: assetColor.withValues(alpha: bgOpacity * 0.3),
+                        borderRadius: AppRadius.mdAll,
+                        border: Border.all(color: assetColor.withValues(alpha: 0.2)),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Total Cost of Ownership',
+                            style: AppTypography.labelSmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            CurrencyFormatter.format(
+                              costBreakdown.acquisitionCost + costBreakdown.runningCosts,
+                              currencyCode: ref.watch(mainCurrencyCodeProvider),
+                            ),
+                            style: AppTypography.moneyLarge.copyWith(
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          if (costBreakdown.revenue > 0) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              'After income: ${CurrencyFormatter.format(costBreakdown.netCost.abs(), currencyCode: ref.watch(mainCurrencyCodeProvider))} ${costBreakdown.netCost > 0 ? 'net cost' : 'net gain'}',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.textTertiary,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                  ],
+
                   // Cost breakdown
                   if (costBreakdown.acquisitionCost > 0) ...[
                     Row(
@@ -364,6 +407,33 @@ class AssetDetailScreen extends ConsumerWidget {
                       currencyCode: ref.watch(mainCurrencyCodeProvider),
                     ),
                   ],
+                  if (costBreakdown.revenueFromSalePrice)
+                    Padding(
+                      padding: const EdgeInsets.only(top: AppSpacing.sm),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: AppColors.accentPrimary.withValues(alpha: 0.08),
+                          borderRadius: AppRadius.mdAll,
+                          border: Border.all(color: AppColors.accentPrimary.withValues(alpha: 0.2)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(LucideIcons.info, size: 16, color: AppColors.accentPrimary),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: Text(
+                                'Revenue is based on the sale price. Create a sale transaction for more accurate tracking.',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: AppColors.accentPrimary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
 
                   // 3. Stats cards
                   if (transactions.isNotEmpty) ...[
@@ -445,16 +515,35 @@ class AssetDetailScreen extends ConsumerWidget {
                     ),
                   ],
 
-                  // 5. Mark as Sold / Reactivate button
+                  // 5. Record Sale / Reactivate button
                   const SizedBox(height: AppSpacing.lg),
                   if (asset.status == AssetStatus.active)
-                    PrimaryButton(
-                      label: 'Mark as Sold',
-                      icon: LucideIcons.badgeCheck,
-                      backgroundColor: AppColors.surface,
-                      textColor: AppColors.textSecondary,
-                      useAccentColor: false,
-                      onPressed: () => showMarkAsSoldDialog(context, ref, asset),
+                    GestureDetector(
+                      onTap: () => showMarkAsSoldDialog(context, ref, asset),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: AppColors.getTransactionColor('income', intensity).withValues(alpha: 0.1),
+                          borderRadius: AppRadius.mdAll,
+                          border: Border.all(
+                            color: AppColors.getTransactionColor('income', intensity).withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(LucideIcons.banknote, size: 16, color: AppColors.getTransactionColor('income', intensity)),
+                            const SizedBox(width: AppSpacing.xs),
+                            Text(
+                              'Record Sale',
+                              style: AppTypography.labelMedium.copyWith(
+                                color: AppColors.getTransactionColor('income', intensity),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     )
                   else
                     PrimaryButton(
