@@ -7,10 +7,11 @@
 - New features go at the bottom of the "## New Features" section, incrementing the number.
 - Each entry uses bullet points under the `####` header (not a single-line format).
 - Sections are separated by `---` horizontal rules.
-- Current highest item number: 68 (as of 2026-03-26). New "New Features" items are appended after item 21 (Historical main currency value storage) at the bottom of the file, numbered sequentially from 58 onward.
+- Current highest item number: 80 (as of 2026-03-26). New "New Features" items are appended after item 21 (Historical main currency value storage) at the bottom of the file, numbered sequentially from 58 onward.
 - Items 58–62 added 2026-03-20: PopScope Unsaved-Work Detection (58), Orphaned Record Cleanup (59), Exchange Rate API Rate Limiting (60), Onboarding Tutorial (61), Financial Calendar Screen (62).
 - Items 63–65 added 2026-03-20: Auto-Categorization by Merchant (63), Advanced Transaction Filters (64), Net Worth History / Persistent Snapshots (65).
 - Items 66–68 added 2026-03-26: Asset Acquisition Cost Flag (66), Asset-Bill Linking (67), Asset Detail Time Range Filtering (68).
+- Items 69–80 added 2026-03-26: Asset ROI Calculation (69), Portfolio Summary Card (70), Asset Detail Collapsible Sections (71), Asset Transaction Empty States (72), Category Suggestion for Asset Expenses (73), Richer Asset Cards (74), Value Over Time Chart (75), Year-over-Year Cost Trends (76), Portfolio Category Breakdown (77), Link Existing Transactions (78), Asset Comparison Screen (79), Asset Duplication (80).
 - "Core App Features" section goes up to item 57 (Light/Dark/System Theme replaced item 52 "Dark theme"; Bill Reminders 53, Biometric Unlock Enhancement 54, Full-Text Search Enhancement 55, Budget Rollover 56, Performance Optimizations 57 added as numbered entries inside "Core App Features" rather than "New Features" — those new additions were placed just before item 21 in the file).
 
 ## features_new.md Structure

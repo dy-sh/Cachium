@@ -14,12 +14,13 @@ import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../../transactions/presentation/providers/transaction_form_provider.dart';
+import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../data/models/asset.dart';
 import '../providers/asset_analytics_providers.dart';
 import '../providers/asset_categories_provider.dart';
 import '../providers/assets_provider.dart';
 import '../widgets/asset_category_breakdown.dart';
-import '../widgets/asset_form_modal.dart';
+import '../utils/asset_edit_helper.dart';
 import '../widgets/asset_link_transactions_sheet.dart';
 import '../widgets/asset_spending_chart.dart';
 import '../widgets/asset_stats_cards.dart';
@@ -31,81 +32,12 @@ class AssetDetailScreen extends ConsumerWidget {
   const AssetDetailScreen({super.key, required this.assetId});
 
   void _openEditModal(BuildContext context, WidgetRef ref, Asset asset) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => AssetFormModal(
-          asset: asset,
-          onSave: (name, icon, colorIndex, status, note, purchasePrice, purchaseCurrencyCode, assetCategoryId, purchaseDate) async {
-            final updatedAsset = asset.copyWith(
-              name: name,
-              icon: icon,
-              colorIndex: colorIndex,
-              status: status,
-              note: note,
-              clearNote: note == null,
-              purchasePrice: purchasePrice,
-              clearPurchasePrice: purchasePrice == null,
-              purchaseCurrencyCode: purchaseCurrencyCode,
-              clearPurchaseCurrencyCode: purchaseCurrencyCode == null,
-              assetCategoryId: assetCategoryId,
-              clearAssetCategoryId: assetCategoryId == null,
-              purchaseDate: purchaseDate,
-              clearPurchaseDate: purchaseDate == null,
-            );
-            await ref.read(assetsProvider.notifier).updateAsset(updatedAsset);
-            if (context.mounted) {
-              Navigator.of(context).pop();
-              context.showSuccessNotification('Asset updated');
-            }
-          },
-          onDelete: () async {
-            await ref.read(assetsProvider.notifier).deleteAsset(asset.id);
-            if (context.mounted) {
-              Navigator.of(context).pop(); // close modal
-              context.pop(); // close detail screen
-              context.showSuccessNotification('Asset deleted');
-            }
-          },
-          onDuplicate: (sourceAsset) {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (ctx) => AssetFormModal(
-                  asset: Asset(
-                    id: '',
-                    name: '${sourceAsset.name} (Copy)',
-                    icon: sourceAsset.icon,
-                    colorIndex: sourceAsset.colorIndex,
-                    note: sourceAsset.note,
-                    purchasePrice: sourceAsset.purchasePrice,
-                    purchaseCurrencyCode: sourceAsset.purchaseCurrencyCode,
-                    assetCategoryId: sourceAsset.assetCategoryId,
-                    purchaseDate: null,
-                    sortOrder: 0,
-                    createdAt: DateTime.now(),
-                  ),
-                  onSave: (name, icon, colorIndex, status, note, purchasePrice, purchaseCurrencyCode, assetCategoryId, purchaseDate) async {
-                    final newId = await ref.read(assetsProvider.notifier).addAsset(
-                      name: name,
-                      icon: icon,
-                      colorIndex: colorIndex,
-                      note: note,
-                      purchasePrice: purchasePrice,
-                      purchaseCurrencyCode: purchaseCurrencyCode,
-                      assetCategoryId: assetCategoryId,
-                      purchaseDate: purchaseDate,
-                    );
-                    if (ctx.mounted) {
-                      Navigator.of(ctx).pop();
-                      context.showSuccessNotification('Asset duplicated');
-                      context.push('/asset/$newId');
-                    }
-                  },
-                ),
-              ),
-            );
-          },
-        ),
-      ),
+    openAssetEditModal(
+      context,
+      ref,
+      asset,
+      onDeleted: () => context.pop(),
+      onDuplicated: (newId) => context.push('/asset/$newId'),
     );
   }
 
@@ -1112,6 +1044,80 @@ class _AssetTransactionItem extends ConsumerWidget {
 
   const _AssetTransactionItem({required this.transaction});
 
+  void _showActionMenu(BuildContext context, WidgetRef ref, Offset position) {
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    showMenu<String>(
+      context: context,
+      position: RelativeRect.fromRect(
+        position & const Size(1, 1),
+        Offset.zero & overlay.size,
+      ),
+      color: AppColors.surface,
+      shape: RoundedRectangleBorder(borderRadius: AppRadius.mdAll),
+      items: [
+        PopupMenuItem<String>(
+          value: 'toggle_acquisition',
+          child: Row(
+            children: [
+              Icon(
+                transaction.isAcquisitionCost ? LucideIcons.xCircle : LucideIcons.tag,
+                size: 16,
+                color: AppColors.textSecondary,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                transaction.isAcquisitionCost ? 'Remove Acquisition Flag' : 'Mark as Acquisition Cost',
+                style: AppTypography.bodySmall,
+              ),
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
+          value: 'unlink',
+          child: Row(
+            children: [
+              Icon(LucideIcons.unlink, size: 16, color: AppColors.expense),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                'Unlink from Asset',
+                style: AppTypography.bodySmall.copyWith(color: AppColors.expense),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ).then((value) async {
+      if (value == null) return;
+      try {
+        final notifier = ref.read(transactionsProvider.notifier);
+        if (value == 'toggle_acquisition') {
+          final updated = transaction.copyWith(
+            isAcquisitionCost: !transaction.isAcquisitionCost,
+          );
+          await notifier.updateTransaction(updated);
+          if (context.mounted) {
+            context.showSuccessNotification(
+              updated.isAcquisitionCost ? 'Marked as acquisition cost' : 'Acquisition flag removed',
+            );
+          }
+        } else if (value == 'unlink') {
+          final updated = transaction.copyWith(
+            clearAssetId: true,
+            isAcquisitionCost: false,
+          );
+          await notifier.updateTransaction(updated);
+          if (context.mounted) {
+            context.showSuccessNotification('Transaction unlinked');
+          }
+        }
+      } catch (e) {
+        if (context.mounted) {
+          context.showErrorNotification('Failed to update transaction');
+        }
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final category = ref.watch(categoryByIdProvider(transaction.categoryId));
@@ -1122,6 +1128,7 @@ class _AssetTransactionItem extends ConsumerWidget {
 
     return GestureDetector(
       onTap: () => context.push('/transaction/${transaction.id}'),
+      onLongPressStart: (details) => _showActionMenu(context, ref, details.globalPosition),
       child: Container(
         margin: const EdgeInsets.only(bottom: AppSpacing.sm),
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -1150,14 +1157,38 @@ class _AssetTransactionItem extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    transaction.note?.isNotEmpty == true
-                        ? transaction.note!
-                        : transaction.merchant?.isNotEmpty == true
-                            ? transaction.merchant!
-                            : category?.name ?? 'Unknown',
-                    style: AppTypography.labelMedium,
-                    overflow: TextOverflow.ellipsis,
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          transaction.note?.isNotEmpty == true
+                              ? transaction.note!
+                              : transaction.merchant?.isNotEmpty == true
+                                  ? transaction.merchant!
+                                  : category?.name ?? 'Unknown',
+                          style: AppTypography.labelMedium,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (transaction.isAcquisitionCost) ...[
+                        const SizedBox(width: AppSpacing.xs),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: AppColors.accentPrimary.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'ACQ',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.accentPrimary,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   const SizedBox(height: 2),
                   Text(

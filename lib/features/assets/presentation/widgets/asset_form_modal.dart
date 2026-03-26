@@ -7,6 +7,7 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/constants/currencies.dart';
+import '../../../../core/utils/currency_conversion.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../design_system/components/buttons/primary_button.dart';
 import '../../../../design_system/components/chips/toggle_chip.dart';
@@ -24,19 +25,33 @@ import '../../data/models/asset_category.dart';
 import '../providers/asset_categories_provider.dart';
 import '../providers/assets_provider.dart';
 
+class AssetFormResult {
+  final String name;
+  final IconData icon;
+  final int colorIndex;
+  final AssetStatus status;
+  final String? note;
+  final double? purchasePrice;
+  final String? purchaseCurrencyCode;
+  final String? assetCategoryId;
+  final DateTime? purchaseDate;
+
+  const AssetFormResult({
+    required this.name,
+    required this.icon,
+    required this.colorIndex,
+    required this.status,
+    this.note,
+    this.purchasePrice,
+    this.purchaseCurrencyCode,
+    this.assetCategoryId,
+    this.purchaseDate,
+  });
+}
+
 class AssetFormModal extends ConsumerStatefulWidget {
   final Asset? asset;
-  final void Function(
-    String name,
-    IconData icon,
-    int colorIndex,
-    AssetStatus status,
-    String? note,
-    double? purchasePrice,
-    String? purchaseCurrencyCode,
-    String? assetCategoryId,
-    DateTime? purchaseDate,
-  ) onSave;
+  final void Function(AssetFormResult result) onSave;
   final VoidCallback? onDelete;
   final void Function(Asset asset)? onDuplicate;
 
@@ -75,7 +90,8 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
     _noteController = TextEditingController(text: widget.asset?.note ?? '');
     _purchasePriceController = TextEditingController(
       text: widget.asset?.purchasePrice != null
-          ? widget.asset!.purchasePrice!.toStringAsFixed(2)
+          ? widget.asset!.purchasePrice!.toStringAsFixed(
+              currencyDecimalPlaces(widget.asset!.purchaseCurrencyCode ?? 'USD'))
           : '',
     );
     _nameFocusNode = FocusNode();
@@ -572,17 +588,17 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
                     onPressed: _isValid && !isDuplicateName && _hasChanges
                         ? () {
                             final note = _noteController.text.trim();
-                            widget.onSave(
-                              _nameController.text.trim(),
-                              _selectedIcon,
-                              _selectedColorIndex,
-                              _selectedStatus,
-                              note.isEmpty ? null : note,
-                              _parsedPrice,
-                              _parsedPrice != null ? purchaseCurrencyCode : null,
-                              _selectedAssetCategoryId,
-                              _selectedPurchaseDate,
-                            );
+                            widget.onSave(AssetFormResult(
+                              name: _nameController.text.trim(),
+                              icon: _selectedIcon,
+                              colorIndex: _selectedColorIndex,
+                              status: _selectedStatus,
+                              note: note.isEmpty ? null : note,
+                              purchasePrice: _parsedPrice,
+                              purchaseCurrencyCode: _parsedPrice != null ? purchaseCurrencyCode : null,
+                              assetCategoryId: _selectedAssetCategoryId,
+                              purchaseDate: _selectedPurchaseDate,
+                            ));
                           }
                         : null,
                   ),

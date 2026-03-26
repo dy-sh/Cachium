@@ -4,7 +4,9 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/exceptions/app_exception.dart';
 import '../../../../core/providers/database_providers.dart';
+import '../../../../core/providers/exchange_rate_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
+import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../data/models/asset.dart';
@@ -343,13 +345,20 @@ final soldAssetsSummaryProvider = Provider<({
   );
 });
 
-/// Total purchase value of all active assets (sum of purchasePrice where available).
+/// Total purchase value of all active assets in main currency.
 final portfolioTotalPurchaseValueProvider = Provider<double>((ref) {
   final activeAssets = ref.watch(activeAssetsProvider);
+  final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
   double total = 0;
   for (final asset in activeAssets) {
     if (asset.purchasePrice != null) {
-      total += asset.purchasePrice!;
+      total += convertToMainCurrency(
+        asset.purchasePrice!,
+        asset.purchaseCurrencyCode ?? mainCurrency,
+        mainCurrency,
+        rates,
+      );
     }
   }
   return total;

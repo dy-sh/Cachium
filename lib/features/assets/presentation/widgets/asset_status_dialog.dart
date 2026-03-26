@@ -7,6 +7,7 @@ import '../../../../core/constants/currencies.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../design_system/components/buttons/primary_button.dart';
 import '../../../../design_system/components/inputs/currency_picker.dart';
@@ -143,7 +144,7 @@ class _MarkAsSoldDialogState extends ConsumerState<_MarkAsSoldDialog> {
                   borderRadius: AppRadius.mdAll,
                 ),
                 child: Text(
-                  'Purchase price: ${Currency.symbolFromCode(ref.watch(mainCurrencyCodeProvider))}${widget.asset.purchasePrice!.toStringAsFixed(2)}',
+                  'Purchase price: ${CurrencyFormatter.format(widget.asset.purchasePrice!, currencyCode: widget.asset.purchaseCurrencyCode ?? ref.watch(mainCurrencyCodeProvider))}',
                   style: AppTypography.bodySmall.copyWith(
                     color: AppColors.textSecondary,
                   ),

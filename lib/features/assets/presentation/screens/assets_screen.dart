@@ -16,6 +16,7 @@ import '../../data/models/asset.dart';
 import '../providers/asset_analytics_providers.dart';
 import '../providers/asset_categories_provider.dart';
 import '../providers/assets_provider.dart';
+import '../utils/asset_edit_helper.dart';
 import '../widgets/asset_form_modal.dart';
 
 enum _AssetTab { active, sold }
@@ -43,24 +44,24 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => AssetFormModal(
-          onSave: (name, icon, colorIndex, status, note, purchasePrice, purchaseCurrencyCode, assetCategoryId, purchaseDate) async {
+          onSave: (result) async {
             final assetId = await ref.read(assetsProvider.notifier).addAsset(
-              name: name,
-              icon: icon,
-              colorIndex: colorIndex,
-              note: note,
-              purchasePrice: purchasePrice,
-              purchaseCurrencyCode: purchaseCurrencyCode,
-              assetCategoryId: assetCategoryId,
-              purchaseDate: purchaseDate,
+              name: result.name,
+              icon: result.icon,
+              colorIndex: result.colorIndex,
+              note: result.note,
+              purchasePrice: result.purchasePrice,
+              purchaseCurrencyCode: result.purchaseCurrencyCode,
+              assetCategoryId: result.assetCategoryId,
+              purchaseDate: result.purchaseDate,
             );
             if (context.mounted) {
               Navigator.of(context).pop();
               context.showSuccessNotification('Asset created');
 
               // Offer to create purchase transaction if price was provided
-              if (purchasePrice != null && purchasePrice > 0) {
-                _offerPurchaseTransaction(assetId, name, purchasePrice);
+              if (result.purchasePrice != null && result.purchasePrice! > 0) {
+                _offerPurchaseTransaction(assetId, result.name, result.purchasePrice!);
               }
             }
           },
@@ -131,82 +132,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
   }
 
   void _openEditModal(Asset asset) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => AssetFormModal(
-          asset: asset,
-          onSave: (name, icon, colorIndex, status, note, purchasePrice, purchaseCurrencyCode, assetCategoryId, purchaseDate) async {
-            final updatedAsset = asset.copyWith(
-              name: name,
-              icon: icon,
-              colorIndex: colorIndex,
-              status: status,
-              note: note,
-              clearNote: note == null,
-              purchasePrice: purchasePrice,
-              clearPurchasePrice: purchasePrice == null,
-              purchaseCurrencyCode: purchaseCurrencyCode,
-              clearPurchaseCurrencyCode: purchaseCurrencyCode == null,
-              assetCategoryId: assetCategoryId,
-              clearAssetCategoryId: assetCategoryId == null,
-              purchaseDate: purchaseDate,
-              clearPurchaseDate: purchaseDate == null,
-            );
-            await ref.read(assetsProvider.notifier).updateAsset(updatedAsset);
-            if (context.mounted) {
-              Navigator.of(context).pop();
-              context.showSuccessNotification('Asset updated');
-            }
-          },
-          onDelete: () async {
-            await ref.read(assetsProvider.notifier).deleteAsset(asset.id);
-            if (context.mounted) {
-              Navigator.of(context).pop();
-              context.showSuccessNotification('Asset deleted');
-            }
-          },
-          onDuplicate: (sourceAsset) => _openDuplicateModal(sourceAsset),
-        ),
-      ),
-    );
-  }
-
-  void _openDuplicateModal(Asset sourceAsset) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => AssetFormModal(
-          asset: Asset(
-            id: '', // will be replaced by addAsset
-            name: '${sourceAsset.name} (Copy)',
-            icon: sourceAsset.icon,
-            colorIndex: sourceAsset.colorIndex,
-            note: sourceAsset.note,
-            purchasePrice: sourceAsset.purchasePrice,
-            purchaseCurrencyCode: sourceAsset.purchaseCurrencyCode,
-            assetCategoryId: sourceAsset.assetCategoryId,
-            purchaseDate: null,
-            sortOrder: 0,
-            createdAt: DateTime.now(),
-          ),
-          onSave: (name, icon, colorIndex, status, note, purchasePrice, purchaseCurrencyCode, assetCategoryId, purchaseDate) async {
-            await ref.read(assetsProvider.notifier).addAsset(
-              name: name,
-              icon: icon,
-              colorIndex: colorIndex,
-              note: note,
-              purchasePrice: purchasePrice,
-              purchaseCurrencyCode: purchaseCurrencyCode,
-              assetCategoryId: assetCategoryId,
-              purchaseDate: purchaseDate,
-            );
-            if (context.mounted) {
-              Navigator.of(context).pop();
-              context.showSuccessNotification('Asset duplicated');
-            }
-          },
-        ),
-      ),
-    );
+    openAssetEditModal(context, ref, asset);
   }
 
   @override

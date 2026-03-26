@@ -160,19 +160,12 @@ final assetCostBreakdownProvider =
   double totalExpenses = 0;
   double acquisitionCost = 0;
   double revenue = 0;
-  final assetName = asset?.name.toLowerCase() ?? '';
 
   for (final tx in transactions) {
     if (tx.type == TransactionType.expense) {
       totalExpenses += tx.effectiveMainCurrencyAmount;
-      // Use explicit flag, with legacy note-matching fallback for old data
       if (tx.isAcquisitionCost) {
         acquisitionCost += tx.effectiveMainCurrencyAmount;
-      } else if (assetName.isNotEmpty) {
-        final note = tx.note?.toLowerCase() ?? '';
-        if (note.startsWith('purchase of ') && note.contains(assetName)) {
-          acquisitionCost += tx.effectiveMainCurrencyAmount;
-        }
       }
     } else if (tx.type == TransactionType.income) {
       revenue += tx.effectiveMainCurrencyAmount;
