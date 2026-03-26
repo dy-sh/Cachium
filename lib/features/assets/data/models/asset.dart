@@ -41,6 +41,8 @@ class Asset {
   final int colorIndex;
   final AssetStatus status;
   final DateTime? soldDate;
+  final double? salePrice;
+  final String? saleCurrencyCode;
   final String? note;
   final double? purchasePrice;
   final String? purchaseCurrencyCode;
@@ -55,6 +57,8 @@ class Asset {
     required this.colorIndex,
     this.status = AssetStatus.active,
     this.soldDate,
+    this.salePrice,
+    this.saleCurrencyCode,
     this.note,
     this.purchasePrice,
     this.purchaseCurrencyCode,
@@ -75,6 +79,10 @@ class Asset {
     AssetStatus? status,
     DateTime? soldDate,
     bool clearSoldDate = false,
+    double? salePrice,
+    bool clearSalePrice = false,
+    String? saleCurrencyCode,
+    bool clearSaleCurrencyCode = false,
     String? note,
     bool clearNote = false,
     double? purchasePrice,
@@ -93,6 +101,8 @@ class Asset {
       colorIndex: colorIndex ?? this.colorIndex,
       status: status ?? this.status,
       soldDate: clearSoldDate ? null : (soldDate ?? this.soldDate),
+      salePrice: clearSalePrice ? null : (salePrice ?? this.salePrice),
+      saleCurrencyCode: clearSaleCurrencyCode ? null : (saleCurrencyCode ?? this.saleCurrencyCode),
       note: clearNote ? null : (note ?? this.note),
       purchasePrice: clearPurchasePrice ? null : (purchasePrice ?? this.purchasePrice),
       purchaseCurrencyCode: clearPurchaseCurrencyCode ? null : (purchaseCurrencyCode ?? this.purchaseCurrencyCode),

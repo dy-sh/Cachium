@@ -35,6 +35,8 @@ class AssetRepository {
       colorIndex: asset.colorIndex,
       status: asset.status.name,
       soldDateMillis: asset.soldDate?.millisecondsSinceEpoch,
+      salePrice: asset.salePrice,
+      saleCurrencyCode: asset.saleCurrencyCode,
       note: asset.note,
       purchasePrice: asset.purchasePrice,
       purchaseCurrencyCode: asset.purchaseCurrencyCode,
@@ -62,6 +64,8 @@ class AssetRepository {
       soldDate: data.soldDateMillis != null
           ? DateTime.fromMillisecondsSinceEpoch(data.soldDateMillis!)
           : null,
+      salePrice: data.salePrice,
+      saleCurrencyCode: data.saleCurrencyCode,
       note: data.note,
       purchasePrice: data.purchasePrice,
       purchaseCurrencyCode: data.purchaseCurrencyCode,

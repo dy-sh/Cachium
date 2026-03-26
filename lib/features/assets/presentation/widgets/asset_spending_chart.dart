@@ -11,6 +11,141 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../providers/asset_analytics_providers.dart';
 
+class AssetCumulativeCostChart extends ConsumerWidget {
+  final String assetId;
+
+  const AssetCumulativeCostChart({super.key, required this.assetId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cumulativeData = ref.watch(assetCumulativeCostProvider(assetId));
+    final mainCurrencyCode = ref.watch(mainCurrencyCodeProvider);
+    final currencySymbol = Currency.symbolFromCode(mainCurrencyCode);
+    final accentColor = ref.watch(accentColorProvider);
+
+    if (cumulativeData.length < 2) return const SizedBox.shrink();
+
+    final maxY = cumulativeData.fold<double>(0, (max, d) => d.cumulativeCost.abs() > max ? d.cumulativeCost.abs() : max);
+    final minY = cumulativeData.fold<double>(0, (min, d) => d.cumulativeCost < min ? d.cumulativeCost : min);
+    final monthFormat = DateFormat('MMM');
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.cardPadding),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppRadius.card,
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Cumulative Cost', style: AppTypography.labelLarge),
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            height: 160,
+            child: LineChart(
+              LineChartData(
+                minY: minY < 0 ? minY * 1.1 : 0,
+                maxY: maxY * 1.1,
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: cumulativeData.asMap().entries.map((e) =>
+                      FlSpot(e.key.toDouble(), e.value.cumulativeCost),
+                    ).toList(),
+                    isCurved: true,
+                    curveSmoothness: 0.2,
+                    color: accentColor,
+                    barWidth: 2.5,
+                    dotData: FlDotData(
+                      show: cumulativeData.length <= 12,
+                      getDotPainter: (spot, percent, barData, index) =>
+                        FlDotCirclePainter(
+                          radius: 3,
+                          color: accentColor,
+                          strokeWidth: 0,
+                        ),
+                    ),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: accentColor.withValues(alpha: 0.08),
+                    ),
+                  ),
+                ],
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval: maxY > 0 ? maxY / 3 : 1,
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: AppColors.border,
+                    strokeWidth: 1,
+                    dashArray: [5, 5],
+                  ),
+                ),
+                titlesData: FlTitlesData(
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 28,
+                      getTitlesWidget: (value, meta) {
+                        final index = value.toInt();
+                        if (index < 0 || index >= cumulativeData.length) return const SizedBox.shrink();
+                        if (cumulativeData.length > 12 && index % 2 != 0) return const SizedBox.shrink();
+                        return Padding(
+                          padding: const EdgeInsets.only(top: AppSpacing.xs),
+                          child: Text(
+                            monthFormat.format(cumulativeData[index].month),
+                            style: AppTypography.labelSmall,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 46,
+                      getTitlesWidget: (value, meta) => Text(
+                        _formatAmount(value, currencySymbol),
+                        style: AppTypography.labelSmall,
+                      ),
+                    ),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                lineTouchData: LineTouchData(
+                  touchTooltipData: LineTouchTooltipData(
+                    getTooltipColor: (_) => AppColors.surfaceLight,
+                    tooltipRoundedRadius: AppRadius.sm,
+                    getTooltipItems: (spots) => spots.map((spot) =>
+                      LineTooltipItem(
+                        CurrencyFormatter.format(spot.y, currencyCode: mainCurrencyCode),
+                        AppTypography.bodySmall.copyWith(color: accentColor),
+                      ),
+                    ).toList(),
+                  ),
+                ),
+              ),
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeInOut,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatAmount(double value, String symbol) {
+    if (value.abs() >= 1000000) {
+      return '$symbol${(value / 1000000).toStringAsFixed(1)}M';
+    } else if (value.abs() >= 1000) {
+      return '$symbol${(value / 1000).toStringAsFixed(0)}K';
+    }
+    return '$symbol${value.toStringAsFixed(0)}';
+  }
+}
+
 class AssetSpendingChart extends ConsumerWidget {
   final String assetId;
 

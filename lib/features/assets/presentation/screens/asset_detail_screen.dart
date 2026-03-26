@@ -12,6 +12,7 @@ import '../../../../design_system/design_system.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../transactions/data/models/transaction.dart';
+import '../../../transactions/presentation/providers/transaction_form_provider.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../data/models/asset.dart';
 import '../providers/asset_analytics_providers.dart';
@@ -213,6 +214,15 @@ class AssetDetailScreen extends ConsumerWidget {
                             ),
                           ),
                         ],
+                        if (asset.salePrice != null) ...[
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            'Sold for ${CurrencyFormatter.format(asset.salePrice!, currencyCode: asset.saleCurrencyCode ?? ref.watch(mainCurrencyCodeProvider))}',
+                            style: AppTypography.labelMedium.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
                         if (asset.note != null && asset.note!.isNotEmpty) ...[
                           const SizedBox(height: AppSpacing.sm),
                           Text(
@@ -305,7 +315,81 @@ class AssetDetailScreen extends ConsumerWidget {
                     AssetStatsCards(assetId: assetId),
                   ],
 
-                  // 4. Mark as Sold / Reactivate button
+                  // 4. Quick add transaction buttons
+                  if (asset.status == AssetStatus.active) ...[
+                    const SizedBox(height: AppSpacing.lg),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              context.push('/transaction/new?type=expense');
+                              Future.microtask(() {
+                                final formNotifier = ref.read(transactionFormProvider.notifier);
+                                formNotifier.setAsset(assetId);
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius: AppRadius.mdAll,
+                                border: Border.all(color: AppColors.border),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(LucideIcons.minus, size: 16, color: AppColors.getTransactionColor('expense', intensity)),
+                                  const SizedBox(width: AppSpacing.xs),
+                                  Text(
+                                    'Add Expense',
+                                    style: AppTypography.labelMedium.copyWith(
+                                      color: AppColors.getTransactionColor('expense', intensity),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              context.push('/transaction/new?type=income');
+                              Future.microtask(() {
+                                final formNotifier = ref.read(transactionFormProvider.notifier);
+                                formNotifier.setAsset(assetId);
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius: AppRadius.mdAll,
+                                border: Border.all(color: AppColors.border),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(LucideIcons.plus, size: 16, color: AppColors.getTransactionColor('income', intensity)),
+                                  const SizedBox(width: AppSpacing.xs),
+                                  Text(
+                                    'Add Income',
+                                    style: AppTypography.labelMedium.copyWith(
+                                      color: AppColors.getTransactionColor('income', intensity),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+
+                  // 5. Mark as Sold / Reactivate button
                   const SizedBox(height: AppSpacing.lg),
                   if (asset.status == AssetStatus.active)
                     PrimaryButton(
@@ -330,7 +414,11 @@ class AssetDetailScreen extends ConsumerWidget {
                   const SizedBox(height: AppSpacing.lg),
                   AssetSpendingChart(assetId: assetId),
 
-                  // 6. Category breakdown
+                  // 6. Cumulative cost chart
+                  const SizedBox(height: AppSpacing.lg),
+                  AssetCumulativeCostChart(assetId: assetId),
+
+                  // 7. Category breakdown
                   const SizedBox(height: AppSpacing.lg),
                   AssetCategoryBreakdown(assetId: assetId),
 

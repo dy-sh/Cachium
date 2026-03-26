@@ -35,6 +35,12 @@ class AssetData with _$AssetData {
     /// When the asset was marked as sold (milliseconds since epoch)
     int? soldDateMillis,
 
+    /// Sale price when asset was sold
+    double? salePrice,
+
+    /// Currency code for the sale price
+    String? saleCurrencyCode,
+
     /// Optional description/note
     String? note,
 

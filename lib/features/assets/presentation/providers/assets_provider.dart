@@ -8,6 +8,7 @@ import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../data/models/asset.dart';
+import 'asset_analytics_providers.dart';
 
 class AssetsNotifier extends AsyncNotifier<List<Asset>> {
   final _uuid = const Uuid();
@@ -300,12 +301,17 @@ final activeAssetsSummaryProvider = Provider<({int count, double totalNetCost})>
 });
 
 /// Summary stats for sold assets.
-final soldAssetsSummaryProvider = Provider<({int count, double totalNetCost})>((ref) {
+final soldAssetsSummaryProvider = Provider<({int count, double totalNetCost, double totalProfitLoss})>((ref) {
   final allAssets = ref.watch(assetsProvider).valueOrNull ?? [];
   final sold = allAssets.where((a) => a.status == AssetStatus.sold).toList();
   double totalNetCost = 0;
+  double totalProfitLoss = 0;
   for (final asset in sold) {
     totalNetCost += ref.watch(assetNetCostProvider(asset.id));
+    final breakdown = ref.watch(assetCostBreakdownProvider(asset.id));
+    if (breakdown.profitLoss != null) {
+      totalProfitLoss += breakdown.profitLoss!;
+    }
   }
-  return (count: sold.length, totalNetCost: totalNetCost);
+  return (count: sold.length, totalNetCost: totalNetCost, totalProfitLoss: totalProfitLoss);
 });

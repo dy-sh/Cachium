@@ -66,10 +66,13 @@ class _MarkAsSoldDialogState extends ConsumerState<_MarkAsSoldDialog> {
     // Capture notifier before async gap
     final assetsNotifier = ref.read(assetsProvider.notifier);
 
-    // Mark as sold
+    // Mark as sold (persist sale price on the asset)
+    final mainCurrency = ref.read(mainCurrencyCodeProvider);
     final updatedAsset = widget.asset.copyWith(
       status: AssetStatus.sold,
       soldDate: DateTime.now(),
+      salePrice: salePrice,
+      saleCurrencyCode: salePrice != null ? mainCurrency : null,
     );
     await assetsNotifier.updateAsset(updatedAsset);
 
@@ -242,6 +245,8 @@ class _ReactivateDialogState extends ConsumerState<_ReactivateDialog> {
     final updatedAsset = widget.asset.copyWith(
       status: AssetStatus.active,
       clearSoldDate: true,
+      clearSalePrice: true,
+      clearSaleCurrencyCode: true,
     );
     await ref.read(assetsProvider.notifier).updateAsset(updatedAsset);
 

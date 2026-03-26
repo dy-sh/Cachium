@@ -10,6 +10,7 @@ import '../../../../core/constants/currencies.dart';
 import '../../../../design_system/components/buttons/primary_button.dart';
 import '../../../../design_system/components/chips/toggle_chip.dart';
 import '../../../../design_system/components/feedback/confirmation_dialog.dart';
+import '../../../../design_system/components/inputs/currency_picker.dart';
 import '../../../../design_system/components/inputs/input_field.dart';
 import '../../../../design_system/components/layout/form_header.dart';
 import '../../../settings/data/models/app_settings.dart';
@@ -55,6 +56,7 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
   late int _selectedColorIndex;
   late AssetStatus _selectedStatus;
   String? _selectedAssetCategoryId;
+  String? _selectedPurchaseCurrencyCode;
   bool _isEditingName = false;
   String _previousName = '';
 
@@ -124,6 +126,7 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
         _selectedStatus != asset.status ||
         (_noteController.text.trim()) != (asset.note ?? '') ||
         _parsedPrice != asset.purchasePrice ||
+        _selectedPurchaseCurrencyCode != asset.purchaseCurrencyCode ||
         _selectedAssetCategoryId != asset.assetCategoryId;
   }
 
@@ -134,7 +137,9 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
     final selectedColor = accentColors[_selectedColorIndex.clamp(0, accentColors.length - 1)];
     final assetName = _nameController.text.trim();
     final mainCurrencyCode = ref.watch(mainCurrencyCodeProvider);
-    final currencySymbol = Currency.symbolFromCode(mainCurrencyCode);
+    _selectedPurchaseCurrencyCode ??= widget.asset?.purchaseCurrencyCode ?? mainCurrencyCode;
+    final purchaseCurrencyCode = _selectedPurchaseCurrencyCode!;
+    final currencySymbol = Currency.symbolFromCode(purchaseCurrencyCode);
     final categoriesAsync = ref.watch(assetCategoriesProvider);
 
     final isDuplicateName = assetName.isNotEmpty && ref.watch(
@@ -320,25 +325,55 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
                         borderRadius: AppRadius.mdAll,
                         border: Border.all(color: AppColors.border),
                       ),
-                      child: TextField(
-                        controller: _purchasePriceController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        style: AppTypography.input,
-                        cursorColor: AppColors.textPrimary,
-                        onChanged: (_) => setState(() {}),
-                        decoration: InputDecoration(
-                          hintText: '0.00',
-                          hintStyle: AppTypography.inputHint,
-                          prefixText: '$currencySymbol ',
-                          prefixStyle: AppTypography.input.copyWith(
-                            color: AppColors.textTertiary,
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => showCurrencyPickerSheet(
+                              context: context,
+                              selectedCode: purchaseCurrencyCode,
+                              onSelected: (code) => setState(() => _selectedPurchaseCurrencyCode = code),
+                            ),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    '$currencySymbol $purchaseCurrencyCode',
+                                    style: AppTypography.input.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Icon(LucideIcons.chevronDown, size: 14, color: AppColors.textTertiary),
+                                ],
+                              ),
+                            ),
                           ),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.md,
-                            vertical: AppSpacing.md,
+                          Container(
+                            width: 1,
+                            height: 24,
+                            color: AppColors.border,
                           ),
-                        ),
+                          Expanded(
+                            child: TextField(
+                              controller: _purchasePriceController,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              style: AppTypography.input,
+                              cursorColor: AppColors.textPrimary,
+                              onChanged: (_) => setState(() {}),
+                              decoration: InputDecoration(
+                                hintText: '0.00',
+                                hintStyle: AppTypography.inputHint,
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.md,
+                                  vertical: AppSpacing.md,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xxl),
@@ -456,7 +491,7 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
                               _selectedStatus,
                               note.isEmpty ? null : note,
                               _parsedPrice,
-                              mainCurrencyCode,
+                              _parsedPrice != null ? purchaseCurrencyCode : null,
                               _selectedAssetCategoryId,
                             );
                           }

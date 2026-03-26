@@ -170,7 +170,9 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
     final intensity = ref.watch(colorIntensityProvider);
     final activeSummary = ref.watch(activeAssetsSummaryProvider);
     final soldSummary = ref.watch(soldAssetsSummaryProvider);
-    final summary = _tab == _AssetTab.active ? activeSummary : soldSummary;
+    final ({int count, double totalNetCost}) summary = _tab == _AssetTab.active
+        ? (count: activeSummary.count, totalNetCost: activeSummary.totalNetCost)
+        : (count: soldSummary.count, totalNetCost: soldSummary.totalNetCost);
     final mainCurrency = ref.watch(mainCurrencyCodeProvider);
     final categoriesAsync = ref.watch(assetCategoriesProvider);
 
@@ -250,7 +252,9 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
               const SizedBox(height: AppSpacing.sm),
               Center(
                 child: Text(
-                  '${summary.count} ${summary.count == 1 ? 'asset' : 'assets'}  \u00B7  ${CurrencyFormatter.format(summary.totalNetCost.abs(), currencyCode: mainCurrency)} net cost',
+                  _tab == _AssetTab.sold
+                      ? '${summary.count} ${summary.count == 1 ? 'asset' : 'assets'}  \u00B7  ${soldSummary.totalProfitLoss >= 0 ? '+' : '-'}${CurrencyFormatter.format(soldSummary.totalProfitLoss.abs(), currencyCode: mainCurrency)} P&L'
+                      : '${summary.count} ${summary.count == 1 ? 'asset' : 'assets'}  \u00B7  ${CurrencyFormatter.format(summary.totalNetCost.abs(), currencyCode: mainCurrency)} net cost',
                   style: AppTypography.bodySmall.copyWith(
                     color: AppColors.textTertiary,
                   ),

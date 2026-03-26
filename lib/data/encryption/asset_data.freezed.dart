@@ -45,6 +45,12 @@ mixin _$AssetData {
   /// When the asset was marked as sold (milliseconds since epoch)
   int? get soldDateMillis => throw _privateConstructorUsedError;
 
+  /// Sale price when asset was sold
+  double? get salePrice => throw _privateConstructorUsedError;
+
+  /// Currency code for the sale price
+  String? get saleCurrencyCode => throw _privateConstructorUsedError;
+
   /// Optional description/note
   String? get note => throw _privateConstructorUsedError;
 
@@ -88,6 +94,8 @@ abstract class $AssetDataCopyWith<$Res> {
     int colorIndex,
     String status,
     int? soldDateMillis,
+    double? salePrice,
+    String? saleCurrencyCode,
     String? note,
     double? purchasePrice,
     String? purchaseCurrencyCode,
@@ -120,6 +128,8 @@ class _$AssetDataCopyWithImpl<$Res, $Val extends AssetData>
     Object? colorIndex = null,
     Object? status = null,
     Object? soldDateMillis = freezed,
+    Object? salePrice = freezed,
+    Object? saleCurrencyCode = freezed,
     Object? note = freezed,
     Object? purchasePrice = freezed,
     Object? purchaseCurrencyCode = freezed,
@@ -161,6 +171,14 @@ class _$AssetDataCopyWithImpl<$Res, $Val extends AssetData>
                 ? _value.soldDateMillis
                 : soldDateMillis // ignore: cast_nullable_to_non_nullable
                       as int?,
+            salePrice: freezed == salePrice
+                ? _value.salePrice
+                : salePrice // ignore: cast_nullable_to_non_nullable
+                      as double?,
+            saleCurrencyCode: freezed == saleCurrencyCode
+                ? _value.saleCurrencyCode
+                : saleCurrencyCode // ignore: cast_nullable_to_non_nullable
+                      as String?,
             note: freezed == note
                 ? _value.note
                 : note // ignore: cast_nullable_to_non_nullable
@@ -209,6 +227,8 @@ abstract class _$$AssetDataImplCopyWith<$Res>
     int colorIndex,
     String status,
     int? soldDateMillis,
+    double? salePrice,
+    String? saleCurrencyCode,
     String? note,
     double? purchasePrice,
     String? purchaseCurrencyCode,
@@ -240,6 +260,8 @@ class __$$AssetDataImplCopyWithImpl<$Res>
     Object? colorIndex = null,
     Object? status = null,
     Object? soldDateMillis = freezed,
+    Object? salePrice = freezed,
+    Object? saleCurrencyCode = freezed,
     Object? note = freezed,
     Object? purchasePrice = freezed,
     Object? purchaseCurrencyCode = freezed,
@@ -281,6 +303,14 @@ class __$$AssetDataImplCopyWithImpl<$Res>
             ? _value.soldDateMillis
             : soldDateMillis // ignore: cast_nullable_to_non_nullable
                   as int?,
+        salePrice: freezed == salePrice
+            ? _value.salePrice
+            : salePrice // ignore: cast_nullable_to_non_nullable
+                  as double?,
+        saleCurrencyCode: freezed == saleCurrencyCode
+            ? _value.saleCurrencyCode
+            : saleCurrencyCode // ignore: cast_nullable_to_non_nullable
+                  as String?,
         note: freezed == note
             ? _value.note
             : note // ignore: cast_nullable_to_non_nullable
@@ -322,6 +352,8 @@ class _$AssetDataImpl implements _AssetData {
     required this.colorIndex,
     required this.status,
     this.soldDateMillis,
+    this.salePrice,
+    this.saleCurrencyCode,
     this.note,
     this.purchasePrice,
     this.purchaseCurrencyCode,
@@ -365,6 +397,14 @@ class _$AssetDataImpl implements _AssetData {
   @override
   final int? soldDateMillis;
 
+  /// Sale price when asset was sold
+  @override
+  final double? salePrice;
+
+  /// Currency code for the sale price
+  @override
+  final String? saleCurrencyCode;
+
   /// Optional description/note
   @override
   final String? note;
@@ -393,7 +433,7 @@ class _$AssetDataImpl implements _AssetData {
 
   @override
   String toString() {
-    return 'AssetData(id: $id, name: $name, iconCodePoint: $iconCodePoint, iconFontFamily: $iconFontFamily, iconFontPackage: $iconFontPackage, colorIndex: $colorIndex, status: $status, soldDateMillis: $soldDateMillis, note: $note, purchasePrice: $purchasePrice, purchaseCurrencyCode: $purchaseCurrencyCode, assetCategoryId: $assetCategoryId, sortOrder: $sortOrder, createdAtMillis: $createdAtMillis)';
+    return 'AssetData(id: $id, name: $name, iconCodePoint: $iconCodePoint, iconFontFamily: $iconFontFamily, iconFontPackage: $iconFontPackage, colorIndex: $colorIndex, status: $status, soldDateMillis: $soldDateMillis, salePrice: $salePrice, saleCurrencyCode: $saleCurrencyCode, note: $note, purchasePrice: $purchasePrice, purchaseCurrencyCode: $purchaseCurrencyCode, assetCategoryId: $assetCategoryId, sortOrder: $sortOrder, createdAtMillis: $createdAtMillis)';
   }
 
   @override
@@ -414,6 +454,10 @@ class _$AssetDataImpl implements _AssetData {
             (identical(other.status, status) || other.status == status) &&
             (identical(other.soldDateMillis, soldDateMillis) ||
                 other.soldDateMillis == soldDateMillis) &&
+            (identical(other.salePrice, salePrice) ||
+                other.salePrice == salePrice) &&
+            (identical(other.saleCurrencyCode, saleCurrencyCode) ||
+                other.saleCurrencyCode == saleCurrencyCode) &&
             (identical(other.note, note) || other.note == note) &&
             (identical(other.purchasePrice, purchasePrice) ||
                 other.purchasePrice == purchasePrice) &&
@@ -439,6 +483,8 @@ class _$AssetDataImpl implements _AssetData {
     colorIndex,
     status,
     soldDateMillis,
+    salePrice,
+    saleCurrencyCode,
     note,
     purchasePrice,
     purchaseCurrencyCode,
@@ -471,6 +517,8 @@ abstract class _AssetData implements AssetData {
     required final int colorIndex,
     required final String status,
     final int? soldDateMillis,
+    final double? salePrice,
+    final String? saleCurrencyCode,
     final String? note,
     final double? purchasePrice,
     final String? purchaseCurrencyCode,
@@ -513,6 +561,14 @@ abstract class _AssetData implements AssetData {
   /// When the asset was marked as sold (milliseconds since epoch)
   @override
   int? get soldDateMillis;
+
+  /// Sale price when asset was sold
+  @override
+  double? get salePrice;
+
+  /// Currency code for the sale price
+  @override
+  String? get saleCurrencyCode;
 
   /// Optional description/note
   @override

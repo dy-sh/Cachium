@@ -78,6 +78,20 @@ final assetMonthlySpendingProvider =
       .toList();
 });
 
+/// Cumulative net cost data points for an asset (running total of expenses - income).
+final assetCumulativeCostProvider =
+    Provider.family<List<({DateTime month, double cumulativeCost})>, String>((ref, assetId) {
+  final monthlyData = ref.watch(assetMonthlySpendingProvider(assetId));
+  if (monthlyData.isEmpty) return [];
+
+  final asset = ref.watch(assetByIdProvider(assetId));
+  double running = asset?.purchasePrice ?? 0;
+  return monthlyData.map((d) {
+    running += d.expense - d.income;
+    return (month: d.month, cumulativeCost: running);
+  }).toList();
+});
+
 /// Expense categories breakdown for an asset.
 final assetCategoryBreakdownProvider =
     Provider.family<List<AssetCategoryEntry>, String>((ref, assetId) {
@@ -131,7 +145,7 @@ final assetCostBreakdownProvider =
 
   final netCost = acquisitionCost + runningCosts - revenue;
   final profitLoss = (asset?.status == AssetStatus.sold)
-      ? revenue - acquisitionCost
+      ? revenue - acquisitionCost - runningCosts
       : null;
 
   return (
