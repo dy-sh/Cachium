@@ -63,6 +63,9 @@ mixin _$AssetData {
   /// Optional link to an asset category
   String? get assetCategoryId => throw _privateConstructorUsedError;
 
+  /// When the asset was purchased (milliseconds since epoch)
+  int? get purchaseDateMillis => throw _privateConstructorUsedError;
+
   /// Sort order for display ordering
   int get sortOrder => throw _privateConstructorUsedError;
 
@@ -100,6 +103,7 @@ abstract class $AssetDataCopyWith<$Res> {
     double? purchasePrice,
     String? purchaseCurrencyCode,
     String? assetCategoryId,
+    int? purchaseDateMillis,
     int sortOrder,
     int createdAtMillis,
   });
@@ -134,6 +138,7 @@ class _$AssetDataCopyWithImpl<$Res, $Val extends AssetData>
     Object? purchasePrice = freezed,
     Object? purchaseCurrencyCode = freezed,
     Object? assetCategoryId = freezed,
+    Object? purchaseDateMillis = freezed,
     Object? sortOrder = null,
     Object? createdAtMillis = null,
   }) {
@@ -195,6 +200,10 @@ class _$AssetDataCopyWithImpl<$Res, $Val extends AssetData>
                 ? _value.assetCategoryId
                 : assetCategoryId // ignore: cast_nullable_to_non_nullable
                       as String?,
+            purchaseDateMillis: freezed == purchaseDateMillis
+                ? _value.purchaseDateMillis
+                : purchaseDateMillis // ignore: cast_nullable_to_non_nullable
+                      as int?,
             sortOrder: null == sortOrder
                 ? _value.sortOrder
                 : sortOrder // ignore: cast_nullable_to_non_nullable
@@ -233,6 +242,7 @@ abstract class _$$AssetDataImplCopyWith<$Res>
     double? purchasePrice,
     String? purchaseCurrencyCode,
     String? assetCategoryId,
+    int? purchaseDateMillis,
     int sortOrder,
     int createdAtMillis,
   });
@@ -266,6 +276,7 @@ class __$$AssetDataImplCopyWithImpl<$Res>
     Object? purchasePrice = freezed,
     Object? purchaseCurrencyCode = freezed,
     Object? assetCategoryId = freezed,
+    Object? purchaseDateMillis = freezed,
     Object? sortOrder = null,
     Object? createdAtMillis = null,
   }) {
@@ -327,6 +338,10 @@ class __$$AssetDataImplCopyWithImpl<$Res>
             ? _value.assetCategoryId
             : assetCategoryId // ignore: cast_nullable_to_non_nullable
                   as String?,
+        purchaseDateMillis: freezed == purchaseDateMillis
+            ? _value.purchaseDateMillis
+            : purchaseDateMillis // ignore: cast_nullable_to_non_nullable
+                  as int?,
         sortOrder: null == sortOrder
             ? _value.sortOrder
             : sortOrder // ignore: cast_nullable_to_non_nullable
@@ -358,6 +373,7 @@ class _$AssetDataImpl implements _AssetData {
     this.purchasePrice,
     this.purchaseCurrencyCode,
     this.assetCategoryId,
+    this.purchaseDateMillis,
     this.sortOrder = 0,
     required this.createdAtMillis,
   });
@@ -421,6 +437,10 @@ class _$AssetDataImpl implements _AssetData {
   @override
   final String? assetCategoryId;
 
+  /// When the asset was purchased (milliseconds since epoch)
+  @override
+  final int? purchaseDateMillis;
+
   /// Sort order for display ordering
   @override
   @JsonKey()
@@ -433,7 +453,7 @@ class _$AssetDataImpl implements _AssetData {
 
   @override
   String toString() {
-    return 'AssetData(id: $id, name: $name, iconCodePoint: $iconCodePoint, iconFontFamily: $iconFontFamily, iconFontPackage: $iconFontPackage, colorIndex: $colorIndex, status: $status, soldDateMillis: $soldDateMillis, salePrice: $salePrice, saleCurrencyCode: $saleCurrencyCode, note: $note, purchasePrice: $purchasePrice, purchaseCurrencyCode: $purchaseCurrencyCode, assetCategoryId: $assetCategoryId, sortOrder: $sortOrder, createdAtMillis: $createdAtMillis)';
+    return 'AssetData(id: $id, name: $name, iconCodePoint: $iconCodePoint, iconFontFamily: $iconFontFamily, iconFontPackage: $iconFontPackage, colorIndex: $colorIndex, status: $status, soldDateMillis: $soldDateMillis, salePrice: $salePrice, saleCurrencyCode: $saleCurrencyCode, note: $note, purchasePrice: $purchasePrice, purchaseCurrencyCode: $purchaseCurrencyCode, assetCategoryId: $assetCategoryId, purchaseDateMillis: $purchaseDateMillis, sortOrder: $sortOrder, createdAtMillis: $createdAtMillis)';
   }
 
   @override
@@ -465,6 +485,8 @@ class _$AssetDataImpl implements _AssetData {
                 other.purchaseCurrencyCode == purchaseCurrencyCode) &&
             (identical(other.assetCategoryId, assetCategoryId) ||
                 other.assetCategoryId == assetCategoryId) &&
+            (identical(other.purchaseDateMillis, purchaseDateMillis) ||
+                other.purchaseDateMillis == purchaseDateMillis) &&
             (identical(other.sortOrder, sortOrder) ||
                 other.sortOrder == sortOrder) &&
             (identical(other.createdAtMillis, createdAtMillis) ||
@@ -489,6 +511,7 @@ class _$AssetDataImpl implements _AssetData {
     purchasePrice,
     purchaseCurrencyCode,
     assetCategoryId,
+    purchaseDateMillis,
     sortOrder,
     createdAtMillis,
   );
@@ -523,6 +546,7 @@ abstract class _AssetData implements AssetData {
     final double? purchasePrice,
     final String? purchaseCurrencyCode,
     final String? assetCategoryId,
+    final int? purchaseDateMillis,
     final int sortOrder,
     required final int createdAtMillis,
   }) = _$AssetDataImpl;
@@ -585,6 +609,10 @@ abstract class _AssetData implements AssetData {
   /// Optional link to an asset category
   @override
   String? get assetCategoryId;
+
+  /// When the asset was purchased (milliseconds since epoch)
+  @override
+  int? get purchaseDateMillis;
 
   /// Sort order for display ordering
   @override

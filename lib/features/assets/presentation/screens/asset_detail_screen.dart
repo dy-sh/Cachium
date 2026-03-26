@@ -34,7 +34,7 @@ class AssetDetailScreen extends ConsumerWidget {
       MaterialPageRoute(
         builder: (context) => AssetFormModal(
           asset: asset,
-          onSave: (name, icon, colorIndex, status, note, purchasePrice, purchaseCurrencyCode, assetCategoryId) async {
+          onSave: (name, icon, colorIndex, status, note, purchasePrice, purchaseCurrencyCode, assetCategoryId, purchaseDate) async {
             final updatedAsset = asset.copyWith(
               name: name,
               icon: icon,
@@ -48,6 +48,8 @@ class AssetDetailScreen extends ConsumerWidget {
               clearPurchaseCurrencyCode: purchaseCurrencyCode == null,
               assetCategoryId: assetCategoryId,
               clearAssetCategoryId: assetCategoryId == null,
+              purchaseDate: purchaseDate,
+              clearPurchaseDate: purchaseDate == null,
             );
             await ref.read(assetsProvider.notifier).updateAsset(updatedAsset);
             if (context.mounted) {
@@ -236,7 +238,10 @@ class AssetDetailScreen extends ConsumerWidget {
                         const SizedBox(height: AppSpacing.sm),
                         Text(
                           [
-                            'Added ${DateFormatter.formatRelative(asset.createdAt)}',
+                            if (asset.purchaseDate != null)
+                              'Purchased ${DateFormatter.formatRelative(asset.purchaseDate!)}'
+                            else
+                              'Added ${DateFormatter.formatRelative(asset.createdAt)}',
                             if (asset.soldDate != null)
                               'Sold ${DateFormatter.formatRelative(asset.soldDate!)}',
                           ].join('  \u00B7  '),
@@ -251,31 +256,47 @@ class AssetDetailScreen extends ConsumerWidget {
 
                   const SizedBox(height: AppSpacing.lg),
 
-                  // 2. Cost breakdown
+                  // 2. Info hint when purchase price exists but no transactions
+                  if (asset.purchasePrice != null && asset.purchasePrice! > 0 && transactions.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: AppColors.accentPrimary.withValues(alpha: 0.08),
+                          borderRadius: AppRadius.mdAll,
+                          border: Border.all(color: AppColors.accentPrimary.withValues(alpha: 0.2)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(LucideIcons.info, size: 16, color: AppColors.accentPrimary),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: Text(
+                                'Create a purchase transaction to track this asset\'s cost in your finances.',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: AppColors.accentPrimary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                  // Cost breakdown
                   Row(
                     children: [
                       Expanded(
                         child: _CostCard(
-                          label: 'Acquisition',
-                          amount: costBreakdown.acquisitionCost,
-                          color: AppColors.getTransactionColor('expense', intensity),
-                          currencyCode: ref.watch(mainCurrencyCodeProvider),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: _CostCard(
-                          label: 'Running Costs',
+                          label: 'Total Expenses',
                           amount: costBreakdown.runningCosts,
                           color: AppColors.getTransactionColor('expense', intensity),
                           currencyCode: ref.watch(mainCurrencyCodeProvider),
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Row(
-                    children: [
+                      const SizedBox(width: AppSpacing.sm),
                       Expanded(
                         child: _CostCard(
                           label: 'Revenue',
@@ -284,18 +305,16 @@ class AssetDetailScreen extends ConsumerWidget {
                           currencyCode: ref.watch(mainCurrencyCodeProvider),
                         ),
                       ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: _CostCard(
-                          label: 'Net Cost',
-                          amount: costBreakdown.netCost,
-                          color: costBreakdown.netCost > 0
-                              ? AppColors.getTransactionColor('expense', intensity)
-                              : AppColors.getTransactionColor('income', intensity),
-                          currencyCode: ref.watch(mainCurrencyCodeProvider),
-                        ),
-                      ),
                     ],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  _CostCard(
+                    label: 'Net Cost',
+                    amount: costBreakdown.netCost.abs(),
+                    color: costBreakdown.netCost > 0
+                        ? AppColors.getTransactionColor('expense', intensity)
+                        : AppColors.getTransactionColor('income', intensity),
+                    currencyCode: ref.watch(mainCurrencyCodeProvider),
                   ),
                   if (costBreakdown.profitLoss != null) ...[
                     const SizedBox(height: AppSpacing.sm),

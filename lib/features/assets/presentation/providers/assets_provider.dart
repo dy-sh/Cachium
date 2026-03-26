@@ -31,6 +31,7 @@ class AssetsNotifier extends AsyncNotifier<List<Asset>> {
     double? purchasePrice,
     String? purchaseCurrencyCode,
     String? assetCategoryId,
+    DateTime? purchaseDate,
   }) async {
     final previousState = state;
 
@@ -52,6 +53,7 @@ class AssetsNotifier extends AsyncNotifier<List<Asset>> {
         purchasePrice: purchasePrice,
         purchaseCurrencyCode: purchaseCurrencyCode,
         assetCategoryId: assetCategoryId,
+        purchaseDate: purchaseDate,
         sortOrder: maxSortOrder + 1,
         createdAt: DateTime.now(),
       );
@@ -269,9 +271,9 @@ final assetsForCategoryProvider = Provider.family<List<Asset>, String?>((ref, ca
   return activeAssets.where((a) => usedAssetIds.contains(a.id)).toList();
 });
 
-/// Net cost for an asset: purchase price + total expenses - total income.
+/// Net cost for an asset: total expenses - total income (from linked transactions only).
+/// purchasePrice is display-only metadata and not included in calculations.
 final assetNetCostProvider = Provider.family<double, String>((ref, assetId) {
-  final asset = ref.watch(assetByIdProvider(assetId));
   final transactions = ref.watch(transactionsByAssetProvider(assetId));
   double totalSpent = 0;
   double totalIncome = 0;
@@ -282,7 +284,7 @@ final assetNetCostProvider = Provider.family<double, String>((ref, assetId) {
       totalIncome += tx.effectiveMainCurrencyAmount;
     }
   }
-  return (asset?.purchasePrice ?? 0) + totalSpent - totalIncome;
+  return totalSpent - totalIncome;
 });
 
 /// Count of linked transactions for an asset.

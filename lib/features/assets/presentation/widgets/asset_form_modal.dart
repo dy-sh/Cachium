@@ -7,10 +7,12 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/constants/currencies.dart';
+import '../../../../core/utils/date_formatter.dart';
 import '../../../../design_system/components/buttons/primary_button.dart';
 import '../../../../design_system/components/chips/toggle_chip.dart';
 import '../../../../design_system/components/feedback/confirmation_dialog.dart';
 import '../../../../design_system/components/inputs/currency_picker.dart';
+import '../../../../design_system/components/inputs/date_picker/date_picker.dart';
 import '../../../../design_system/components/inputs/input_field.dart';
 import '../../../../design_system/components/layout/form_header.dart';
 import '../../../settings/data/models/app_settings.dart';
@@ -33,6 +35,7 @@ class AssetFormModal extends ConsumerStatefulWidget {
     double? purchasePrice,
     String? purchaseCurrencyCode,
     String? assetCategoryId,
+    DateTime? purchaseDate,
   ) onSave;
   final VoidCallback? onDelete;
 
@@ -57,6 +60,7 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
   late AssetStatus _selectedStatus;
   String? _selectedAssetCategoryId;
   String? _selectedPurchaseCurrencyCode;
+  DateTime? _selectedPurchaseDate;
   bool _isEditingName = false;
   String _previousName = '';
 
@@ -77,6 +81,7 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
     _selectedColorIndex = widget.asset?.colorIndex ?? 0;
     _selectedStatus = widget.asset?.status ?? AssetStatus.active;
     _selectedAssetCategoryId = widget.asset?.assetCategoryId;
+    _selectedPurchaseDate = widget.asset?.purchaseDate;
 
     if (!_isEditing) {
       _isEditingName = true;
@@ -127,7 +132,8 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
         (_noteController.text.trim()) != (asset.note ?? '') ||
         _parsedPrice != asset.purchasePrice ||
         _selectedPurchaseCurrencyCode != asset.purchaseCurrencyCode ||
-        _selectedAssetCategoryId != asset.assetCategoryId;
+        _selectedAssetCategoryId != asset.assetCategoryId ||
+        _selectedPurchaseDate != asset.purchaseDate;
   }
 
   @override
@@ -378,6 +384,58 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
                     ),
                     const SizedBox(height: AppSpacing.xxl),
 
+                    // Purchase date
+                    Text('Purchase Date (optional)', style: AppTypography.labelMedium),
+                    const SizedBox(height: AppSpacing.sm),
+                    GestureDetector(
+                      onTap: () async {
+                        final date = await showFMDatePicker(
+                          context: context,
+                          initialDate: _selectedPurchaseDate ?? DateTime.now(),
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime.now(),
+                        );
+                        if (date != null) {
+                          setState(() => _selectedPurchaseDate = date);
+                        }
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.md,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: AppRadius.mdAll,
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(LucideIcons.calendar, size: 16, color: AppColors.textSecondary),
+                            const SizedBox(width: AppSpacing.sm),
+                            Text(
+                              _selectedPurchaseDate != null
+                                  ? DateFormatter.formatFull(_selectedPurchaseDate!)
+                                  : 'Not set',
+                              style: AppTypography.input.copyWith(
+                                color: _selectedPurchaseDate != null
+                                    ? AppColors.textPrimary
+                                    : AppColors.textTertiary,
+                              ),
+                            ),
+                            const Spacer(),
+                            if (_selectedPurchaseDate != null)
+                              GestureDetector(
+                                onTap: () => setState(() => _selectedPurchaseDate = null),
+                                child: Icon(LucideIcons.x, size: 16, color: AppColors.textTertiary),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+
                     // Asset category
                     categoriesAsync.when(
                       data: (categories) {
@@ -493,6 +551,7 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
                               _parsedPrice,
                               _parsedPrice != null ? purchaseCurrencyCode : null,
                               _selectedAssetCategoryId,
+                              _selectedPurchaseDate,
                             );
                           }
                         : null,

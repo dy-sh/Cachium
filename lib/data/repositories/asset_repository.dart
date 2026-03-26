@@ -41,6 +41,7 @@ class AssetRepository {
       purchasePrice: asset.purchasePrice,
       purchaseCurrencyCode: asset.purchaseCurrencyCode,
       assetCategoryId: asset.assetCategoryId,
+      purchaseDateMillis: asset.purchaseDate?.millisecondsSinceEpoch,
       sortOrder: asset.sortOrder,
       createdAtMillis: asset.createdAt.millisecondsSinceEpoch,
     );
@@ -70,6 +71,9 @@ class AssetRepository {
       purchasePrice: data.purchasePrice,
       purchaseCurrencyCode: data.purchaseCurrencyCode,
       assetCategoryId: data.assetCategoryId,
+      purchaseDate: data.purchaseDateMillis != null
+          ? DateTime.fromMillisecondsSinceEpoch(data.purchaseDateMillis!)
+          : null,
       sortOrder: data.sortOrder,
       createdAt: DateTime.fromMillisecondsSinceEpoch(data.createdAtMillis),
     );

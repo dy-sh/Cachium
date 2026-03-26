@@ -701,6 +701,7 @@ class SqliteImporter {
             purchasePrice: purchasePriceRaw != null ? (purchasePriceRaw as num).toDouble() : null,
             purchaseCurrencyCode: safeStringOrNull(row['purchase_currency_code'] ?? row['purchaseCurrencyCode']),
             assetCategoryId: safeStringOrNull(row['asset_category_id'] ?? row['assetCategoryId']),
+            purchaseDateMillis: (row['purchase_date_millis'] ?? row['purchaseDateMillis']) as int?,
             sortOrder: sortOrder,
             createdAtMillis: safeInt(row['created_at_millis'] ?? row['createdAtMillis'] ?? createdAt, 'created_at_millis', id),
           );

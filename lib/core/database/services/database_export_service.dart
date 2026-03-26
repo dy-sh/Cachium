@@ -373,6 +373,7 @@ class DatabaseExportService {
         purchase_price REAL,
         purchase_currency_code TEXT,
         asset_category_id TEXT,
+        purchase_date_millis INTEGER,
         created_at_millis INTEGER NOT NULL
       )
     ''');
@@ -786,8 +787,8 @@ class DatabaseExportService {
 
     final stmt = exportDb.prepare(
       '''INSERT INTO assets
-         (id, created_at, sort_order, last_updated_at, is_deleted, name, icon_code_point, icon_font_family, icon_font_package, color_index, status, note, purchase_price, purchase_currency_code, asset_category_id, created_at_millis)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+         (id, created_at, sort_order, last_updated_at, is_deleted, name, icon_code_point, icon_font_family, icon_font_package, color_index, status, note, purchase_price, purchase_currency_code, asset_category_id, purchase_date_millis, created_at_millis)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
     );
 
     for (final row in rows) {
@@ -810,6 +811,7 @@ class DatabaseExportService {
         data.purchasePrice,
         data.purchaseCurrencyCode,
         data.assetCategoryId,
+        data.purchaseDateMillis,
         data.createdAtMillis,
       ]);
     }

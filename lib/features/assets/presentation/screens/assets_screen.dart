@@ -41,7 +41,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => AssetFormModal(
-          onSave: (name, icon, colorIndex, status, note, purchasePrice, purchaseCurrencyCode, assetCategoryId) async {
+          onSave: (name, icon, colorIndex, status, note, purchasePrice, purchaseCurrencyCode, assetCategoryId, purchaseDate) async {
             final assetId = await ref.read(assetsProvider.notifier).addAsset(
               name: name,
               icon: icon,
@@ -50,6 +50,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
               purchasePrice: purchasePrice,
               purchaseCurrencyCode: purchaseCurrencyCode,
               assetCategoryId: assetCategoryId,
+              purchaseDate: purchaseDate,
             );
             if (context.mounted) {
               Navigator.of(context).pop();
@@ -131,7 +132,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
       MaterialPageRoute(
         builder: (context) => AssetFormModal(
           asset: asset,
-          onSave: (name, icon, colorIndex, status, note, purchasePrice, purchaseCurrencyCode, assetCategoryId) async {
+          onSave: (name, icon, colorIndex, status, note, purchasePrice, purchaseCurrencyCode, assetCategoryId, purchaseDate) async {
             final updatedAsset = asset.copyWith(
               name: name,
               icon: icon,
@@ -145,6 +146,8 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
               clearPurchaseCurrencyCode: purchaseCurrencyCode == null,
               assetCategoryId: assetCategoryId,
               clearAssetCategoryId: assetCategoryId == null,
+              purchaseDate: purchaseDate,
+              clearPurchaseDate: purchaseDate == null,
             );
             await ref.read(assetsProvider.notifier).updateAsset(updatedAsset);
             if (context.mounted) {

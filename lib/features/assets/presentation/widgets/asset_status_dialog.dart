@@ -7,7 +7,10 @@ import '../../../../core/constants/currencies.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/utils/date_formatter.dart';
 import '../../../../design_system/components/buttons/primary_button.dart';
+import '../../../../design_system/components/inputs/currency_picker.dart';
+import '../../../../design_system/components/inputs/date_picker/date_picker.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../../design_system/components/feedback/notification.dart';
 import '../../../transactions/presentation/providers/transaction_form_provider.dart';
@@ -48,6 +51,8 @@ class _MarkAsSoldDialog extends ConsumerStatefulWidget {
 class _MarkAsSoldDialogState extends ConsumerState<_MarkAsSoldDialog> {
   final _priceController = TextEditingController();
   bool _isLoading = false;
+  DateTime _selectedSoldDate = DateTime.now();
+  String? _selectedSaleCurrencyCode;
 
   @override
   void dispose() {
@@ -66,13 +71,12 @@ class _MarkAsSoldDialogState extends ConsumerState<_MarkAsSoldDialog> {
     // Capture notifier before async gap
     final assetsNotifier = ref.read(assetsProvider.notifier);
 
-    // Mark as sold (persist sale price on the asset)
-    final mainCurrency = ref.read(mainCurrencyCodeProvider);
+    final saleCurrencyCode = _selectedSaleCurrencyCode ?? ref.read(mainCurrencyCodeProvider);
     final updatedAsset = widget.asset.copyWith(
       status: AssetStatus.sold,
-      soldDate: DateTime.now(),
+      soldDate: _selectedSoldDate,
       salePrice: salePrice,
-      saleCurrencyCode: salePrice != null ? mainCurrency : null,
+      saleCurrencyCode: salePrice != null ? saleCurrencyCode : null,
     );
     await assetsNotifier.updateAsset(updatedAsset);
 
@@ -146,35 +150,112 @@ class _MarkAsSoldDialogState extends ConsumerState<_MarkAsSoldDialog> {
                 ),
               ),
             ],
+            // Sale date picker
             const SizedBox(height: AppSpacing.lg),
-            Text('Sale price (optional)', style: AppTypography.labelSmall),
+            Text('Sale date', style: AppTypography.labelSmall),
             const SizedBox(height: AppSpacing.xs),
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.background,
-                borderRadius: AppRadius.mdAll,
-                border: Border.all(color: AppColors.border),
-              ),
-              child: TextField(
-                controller: _priceController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                style: AppTypography.input,
-                cursorColor: AppColors.textPrimary,
-                decoration: InputDecoration(
-                  hintText: '0.00',
-                  hintStyle: AppTypography.inputHint,
-                  prefixText: '${Currency.symbolFromCode(ref.watch(mainCurrencyCodeProvider))} ',
-                  prefixStyle: AppTypography.input.copyWith(
-                    color: AppColors.textTertiary,
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.md,
-                  ),
+            GestureDetector(
+              onTap: () async {
+                final date = await showFMDatePicker(
+                  context: context,
+                  initialDate: _selectedSoldDate,
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime.now(),
+                );
+                if (date != null) {
+                  setState(() => _selectedSoldDate = date);
+                }
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.md,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: AppRadius.mdAll,
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  children: [
+                    Icon(LucideIcons.calendar, size: 16, color: AppColors.textSecondary),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text(
+                      DateFormatter.formatFull(_selectedSoldDate),
+                      style: AppTypography.input,
+                    ),
+                  ],
                 ),
               ),
             ),
+
+            // Sale price with currency picker
+            const SizedBox(height: AppSpacing.lg),
+            Text('Sale price (optional)', style: AppTypography.labelSmall),
+            const SizedBox(height: AppSpacing.xs),
+            Builder(builder: (context) {
+              final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+              _selectedSaleCurrencyCode ??= mainCurrency;
+              final currencyCode = _selectedSaleCurrencyCode!;
+              final currencySymbol = Currency.symbolFromCode(currencyCode);
+              return Container(
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: AppRadius.mdAll,
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => showCurrencyPickerSheet(
+                        context: context,
+                        selectedCode: currencyCode,
+                        onSelected: (code) => setState(() => _selectedSaleCurrencyCode = code),
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '$currencySymbol $currencyCode',
+                              style: AppTypography.input.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(LucideIcons.chevronDown, size: 14, color: AppColors.textTertiary),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: 1,
+                      height: 24,
+                      color: AppColors.border,
+                    ),
+                    Expanded(
+                      child: TextField(
+                        controller: _priceController,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        style: AppTypography.input,
+                        cursorColor: AppColors.textPrimary,
+                        decoration: InputDecoration(
+                          hintText: '0.00',
+                          hintStyle: AppTypography.inputHint,
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: AppSpacing.md,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
             const SizedBox(height: AppSpacing.xl),
             PrimaryButton(
               label: 'Mark & Create Sale Transaction',

@@ -53,6 +53,9 @@ class AssetData with _$AssetData {
     /// Optional link to an asset category
     String? assetCategoryId,
 
+    /// When the asset was purchased (milliseconds since epoch)
+    int? purchaseDateMillis,
+
     /// Sort order for display ordering
     @Default(0) int sortOrder,
 

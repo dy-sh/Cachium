@@ -47,6 +47,7 @@ class Asset {
   final double? purchasePrice;
   final String? purchaseCurrencyCode;
   final String? assetCategoryId;
+  final DateTime? purchaseDate;
   final int sortOrder;
   final DateTime createdAt;
 
@@ -63,6 +64,7 @@ class Asset {
     this.purchasePrice,
     this.purchaseCurrencyCode,
     this.assetCategoryId,
+    this.purchaseDate,
     this.sortOrder = 0,
     required this.createdAt,
   });
@@ -91,6 +93,8 @@ class Asset {
     bool clearPurchaseCurrencyCode = false,
     String? assetCategoryId,
     bool clearAssetCategoryId = false,
+    DateTime? purchaseDate,
+    bool clearPurchaseDate = false,
     int? sortOrder,
     DateTime? createdAt,
   }) {
@@ -107,6 +111,7 @@ class Asset {
       purchasePrice: clearPurchasePrice ? null : (purchasePrice ?? this.purchasePrice),
       purchaseCurrencyCode: clearPurchaseCurrencyCode ? null : (purchaseCurrencyCode ?? this.purchaseCurrencyCode),
       assetCategoryId: clearAssetCategoryId ? null : (assetCategoryId ?? this.assetCategoryId),
+      purchaseDate: clearPurchaseDate ? null : (purchaseDate ?? this.purchaseDate),
       sortOrder: sortOrder ?? this.sortOrder,
       createdAt: createdAt ?? this.createdAt,
     );

@@ -79,13 +79,13 @@ final assetMonthlySpendingProvider =
 });
 
 /// Cumulative net cost data points for an asset (running total of expenses - income).
+/// purchasePrice is display-only metadata and not included in calculations.
 final assetCumulativeCostProvider =
     Provider.family<List<({DateTime month, double cumulativeCost})>, String>((ref, assetId) {
   final monthlyData = ref.watch(assetMonthlySpendingProvider(assetId));
   if (monthlyData.isEmpty) return [];
 
-  final asset = ref.watch(assetByIdProvider(assetId));
-  double running = asset?.purchasePrice ?? 0;
+  double running = 0;
   return monthlyData.map((d) {
     running += d.expense - d.income;
     return (month: d.month, cumulativeCost: running);
@@ -125,32 +125,42 @@ final assetCategoryBreakdownProvider =
   return entries;
 });
 
-/// Cost breakdown: acquisition vs running vs revenue.
+/// Cost breakdown: total expenses vs revenue vs net cost.
+/// All calculations are driven by linked transactions only.
+/// purchasePrice is display-only metadata shown in the hero card.
+/// When a sold asset has a salePrice but no income transactions, salePrice is
+/// used as revenue fallback.
 final assetCostBreakdownProvider =
     Provider.family<AssetCostBreakdown, String>((ref, assetId) {
   final asset = ref.watch(assetByIdProvider(assetId));
   final transactions = ref.watch(transactionsByAssetProvider(assetId));
 
-  final acquisitionCost = asset?.purchasePrice ?? 0;
-  double runningCosts = 0;
+  double totalExpenses = 0;
   double revenue = 0;
 
   for (final tx in transactions) {
     if (tx.type == TransactionType.expense) {
-      runningCosts += tx.effectiveMainCurrencyAmount;
+      totalExpenses += tx.effectiveMainCurrencyAmount;
     } else if (tx.type == TransactionType.income) {
       revenue += tx.effectiveMainCurrencyAmount;
     }
   }
 
-  final netCost = acquisitionCost + runningCosts - revenue;
+  // Fallback: use stored salePrice as revenue when no income transactions exist
+  if (asset?.status == AssetStatus.sold &&
+      asset?.salePrice != null &&
+      revenue == 0) {
+    revenue = asset!.salePrice!;
+  }
+
+  final netCost = totalExpenses - revenue;
   final profitLoss = (asset?.status == AssetStatus.sold)
-      ? revenue - acquisitionCost - runningCosts
+      ? revenue - totalExpenses
       : null;
 
   return (
-    acquisitionCost: acquisitionCost,
-    runningCosts: runningCosts,
+    acquisitionCost: 0,
+    runningCosts: totalExpenses,
     revenue: revenue,
     netCost: netCost,
     profitLoss: profitLoss,
@@ -163,7 +173,7 @@ final assetStatsProvider =
   final transactions = ref.watch(transactionsByAssetProvider(assetId));
   final asset = ref.watch(assetByIdProvider(assetId));
 
-  double totalExpense = asset?.purchasePrice ?? 0;
+  double totalExpense = 0;
   for (final tx in transactions) {
     if (tx.type == TransactionType.expense) {
       totalExpense += tx.effectiveMainCurrencyAmount;
@@ -173,13 +183,13 @@ final assetStatsProvider =
   final endDate = (asset?.status == AssetStatus.sold && asset?.soldDate != null)
       ? asset!.soldDate!
       : DateTime.now();
-  final createdAt = asset?.createdAt ?? endDate;
-  final timeOwned = endDate.difference(createdAt);
+  final startDate = asset?.purchaseDate ?? asset?.createdAt ?? endDate;
+  final timeOwned = endDate.difference(startDate);
   final daysOwned = timeOwned.inDays.clamp(1, double.maxFinite).toInt();
 
   // Monthly average based on months owned
-  final monthsOwned = ((endDate.year - createdAt.year) * 12 +
-          (endDate.month - createdAt.month))
+  final monthsOwned = ((endDate.year - startDate.year) * 12 +
+          (endDate.month - startDate.month))
       .clamp(1, double.maxFinite)
       .toInt();
   final monthlyAverage = totalExpense / monthsOwned;
