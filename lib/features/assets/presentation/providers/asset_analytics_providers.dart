@@ -136,11 +136,18 @@ final assetCostBreakdownProvider =
   final transactions = ref.watch(transactionsByAssetProvider(assetId));
 
   double totalExpenses = 0;
+  double acquisitionCost = 0;
   double revenue = 0;
+  final assetName = asset?.name.toLowerCase() ?? '';
 
   for (final tx in transactions) {
     if (tx.type == TransactionType.expense) {
       totalExpenses += tx.effectiveMainCurrencyAmount;
+      // Detect acquisition transactions by auto-generated note pattern
+      final note = tx.note?.toLowerCase() ?? '';
+      if (note.startsWith('purchase of ') && assetName.isNotEmpty && note.contains(assetName)) {
+        acquisitionCost += tx.effectiveMainCurrencyAmount;
+      }
     } else if (tx.type == TransactionType.income) {
       revenue += tx.effectiveMainCurrencyAmount;
     }
@@ -153,14 +160,15 @@ final assetCostBreakdownProvider =
     revenue = asset!.salePrice!;
   }
 
+  final runningCosts = totalExpenses - acquisitionCost;
   final netCost = totalExpenses - revenue;
   final profitLoss = (asset?.status == AssetStatus.sold)
       ? revenue - totalExpenses
       : null;
 
   return (
-    acquisitionCost: 0,
-    runningCosts: totalExpenses,
+    acquisitionCost: acquisitionCost,
+    runningCosts: runningCosts,
     revenue: revenue,
     netCost: netCost,
     profitLoss: profitLoss,

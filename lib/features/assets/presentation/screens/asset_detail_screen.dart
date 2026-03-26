@@ -286,35 +286,68 @@ class AssetDetailScreen extends ConsumerWidget {
                     ),
 
                   // Cost breakdown
+                  if (costBreakdown.acquisitionCost > 0) ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _CostCard(
+                            label: 'Acquisition',
+                            amount: costBreakdown.acquisitionCost,
+                            color: AppColors.getTransactionColor('expense', intensity),
+                            currencyCode: ref.watch(mainCurrencyCodeProvider),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: _CostCard(
+                            label: 'Running Costs',
+                            amount: costBreakdown.runningCosts,
+                            color: AppColors.getTransactionColor('expense', intensity),
+                            currencyCode: ref.watch(mainCurrencyCodeProvider),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                  ] else ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _CostCard(
+                            label: 'Total Expenses',
+                            amount: costBreakdown.runningCosts,
+                            color: AppColors.getTransactionColor('expense', intensity),
+                            currencyCode: ref.watch(mainCurrencyCodeProvider),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        const Expanded(child: SizedBox.shrink()),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                  ],
                   Row(
                     children: [
                       Expanded(
                         child: _CostCard(
-                          label: 'Total Expenses',
-                          amount: costBreakdown.runningCosts,
-                          color: AppColors.getTransactionColor('expense', intensity),
+                          label: asset.status == AssetStatus.sold ? 'Sale & Income' : 'Income',
+                          amount: costBreakdown.revenue,
+                          color: AppColors.getTransactionColor('income', intensity),
                           currencyCode: ref.watch(mainCurrencyCodeProvider),
                         ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
                         child: _CostCard(
-                          label: 'Revenue',
-                          amount: costBreakdown.revenue,
-                          color: AppColors.getTransactionColor('income', intensity),
+                          label: 'Net Cost',
+                          amount: costBreakdown.netCost.abs(),
+                          color: costBreakdown.netCost > 0
+                              ? AppColors.getTransactionColor('expense', intensity)
+                              : AppColors.getTransactionColor('income', intensity),
                           currencyCode: ref.watch(mainCurrencyCodeProvider),
                         ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  _CostCard(
-                    label: 'Net Cost',
-                    amount: costBreakdown.netCost.abs(),
-                    color: costBreakdown.netCost > 0
-                        ? AppColors.getTransactionColor('expense', intensity)
-                        : AppColors.getTransactionColor('income', intensity),
-                    currencyCode: ref.watch(mainCurrencyCodeProvider),
                   ),
                   if (costBreakdown.profitLoss != null) ...[
                     const SizedBox(height: AppSpacing.sm),

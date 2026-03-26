@@ -98,11 +98,13 @@ class AssetSection extends ConsumerWidget {
     final globalShowAssets = ref.watch(showAssetSelectorProvider);
     final categoryShowsAssets = ref.watch(categoryShowsAssetsProvider(formState.categoryId));
     final isTransfer = formState.isTransfer;
-    final showAssets = !isTransfer && globalShowAssets && categoryShowsAssets;
+    final showAssets = !isTransfer && globalShowAssets && (categoryShowsAssets || formState.assetId != null);
 
     // Auto-clear asset when category changes to one that doesn't show assets
-    // (skip for editing mode to preserve the linked asset for read-only display)
-    if (!showAssets && formState.assetId != null && !formState.isEditing && !isTransfer) {
+    // (skip for editing mode and when asset was pre-selected before category choice)
+    if (!isTransfer && globalShowAssets && !categoryShowsAssets &&
+        formState.assetId != null && !formState.isEditing &&
+        formState.categoryId != null) {
       Future.microtask(() {
         onClearAsset();
       });

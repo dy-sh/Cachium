@@ -12,6 +12,7 @@ import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../transactions/presentation/providers/transaction_form_provider.dart';
 import '../../data/models/asset.dart';
+import '../providers/asset_analytics_providers.dart';
 import '../providers/asset_categories_provider.dart';
 import '../providers/assets_provider.dart';
 import '../widgets/asset_form_modal.dart';
@@ -409,8 +410,8 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
             child: _AssetCard(
               asset: asset,
               intensity: intensity,
-              onTap: () => _openEditModal(asset),
-              onDetailTap: () => context.push('/asset/${asset.id}'),
+              onTap: () => context.push('/asset/${asset.id}'),
+              onEditTap: () => _openEditModal(asset),
               showDragHandle: true,
             ),
           );
@@ -429,8 +430,8 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
         return _AssetCard(
           asset: asset,
           intensity: intensity,
-          onTap: () => _openEditModal(asset),
-          onDetailTap: () => context.push('/asset/${asset.id}'),
+          onTap: () => context.push('/asset/${asset.id}'),
+          onEditTap: () => _openEditModal(asset),
           showDragHandle: false,
         );
       },
@@ -476,14 +477,14 @@ class _AssetCard extends ConsumerWidget {
   final Asset asset;
   final ColorIntensity intensity;
   final VoidCallback onTap;
-  final VoidCallback onDetailTap;
+  final VoidCallback onEditTap;
   final bool showDragHandle;
 
   const _AssetCard({
     required this.asset,
     required this.intensity,
     required this.onTap,
-    required this.onDetailTap,
+    required this.onEditTap,
     this.showDragHandle = false,
   });
 
@@ -493,6 +494,13 @@ class _AssetCard extends ConsumerWidget {
     final bgOpacity = AppColors.getBgOpacity(intensity);
     final netCost = ref.watch(assetNetCostProvider(asset.id));
     final txCount = ref.watch(assetTransactionCountProvider(asset.id));
+    final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+    final assetCategory = asset.assetCategoryId != null
+        ? ref.watch(assetCategoryByIdProvider(asset.assetCategoryId!))
+        : null;
+    final costBreakdown = asset.status == AssetStatus.sold
+        ? ref.watch(assetCostBreakdownProvider(asset.id))
+        : null;
 
     return GestureDetector(
       onTap: onTap,
@@ -532,28 +540,67 @@ class _AssetCard extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    asset.name,
-                    style: AppTypography.labelMedium,
-                    overflow: TextOverflow.ellipsis,
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          asset.name,
+                          style: AppTypography.labelMedium,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (assetCategory != null) ...[
+                        const SizedBox(width: AppSpacing.xs),
+                        Text(
+                          '\u00B7',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Text(
+                          assetCategory.name,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   const SizedBox(height: 2),
                   Row(
                     children: [
-                      Text(
-                        CurrencyFormatter.format(netCost.abs(), currencyCode: ref.watch(mainCurrencyCodeProvider)),
-                        style: AppTypography.bodySmall.copyWith(
-                          color: netCost > 0
-                              ? AppColors.getTransactionColor('expense', intensity)
-                              : AppColors.getTransactionColor('income', intensity),
+                      if (asset.status == AssetStatus.sold && costBreakdown?.profitLoss != null) ...[
+                        Text(
+                          CurrencyFormatter.format(costBreakdown!.profitLoss!.abs(), currencyCode: mainCurrency),
+                          style: AppTypography.bodySmall.copyWith(
+                            color: costBreakdown.profitLoss! >= 0
+                                ? AppColors.getTransactionColor('income', intensity)
+                                : AppColors.getTransactionColor('expense', intensity),
+                          ),
                         ),
-                      ),
-                      Text(
-                        ' net cost',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textTertiary,
+                        Text(
+                          costBreakdown.profitLoss! >= 0 ? ' profit' : ' loss',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textTertiary,
+                          ),
                         ),
-                      ),
+                      ] else ...[
+                        Text(
+                          CurrencyFormatter.format(netCost.abs(), currencyCode: mainCurrency),
+                          style: AppTypography.bodySmall.copyWith(
+                            color: netCost > 0
+                                ? AppColors.getTransactionColor('expense', intensity)
+                                : AppColors.getTransactionColor('income', intensity),
+                          ),
+                        ),
+                        Text(
+                          ' net cost',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                      ],
                       if (txCount > 0) ...[
                         Text(
                           '  \u00B7  $txCount txn${txCount != 1 ? 's' : ''}',
@@ -567,29 +614,14 @@ class _AssetCard extends ConsumerWidget {
                 ],
               ),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: asset.status.color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                asset.status.displayName,
-                style: AppTypography.labelSmall.copyWith(
-                  color: asset.status.color,
-                  fontSize: 11,
-                ),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
             GestureDetector(
-              onTap: onDetailTap,
+              onTap: onEditTap,
               behavior: HitTestBehavior.opaque,
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                padding: const EdgeInsets.all(AppSpacing.xs),
                 child: Icon(
-                  LucideIcons.chevronRight,
-                  size: 18,
+                  LucideIcons.pencil,
+                  size: 16,
                   color: AppColors.textTertiary,
                 ),
               ),
