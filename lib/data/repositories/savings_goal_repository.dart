@@ -105,23 +105,27 @@ class SavingsGoalRepository {
   Future<List<ui.SavingsGoal>> getAllGoals() async {
     try {
       final rows = await database.getAllSavingsGoals();
-      final goals = <ui.SavingsGoal>[];
       int corruptedCount = 0;
 
-      for (final row in rows) {
-        try {
-          final data = await encryptionService.decryptSavingsGoal(
-            row.encryptedBlob,
-            expectedId: row.id,
-            expectedCreatedAtMillis: row.createdAt,
-          );
-          goals.add(_toGoal(data));
-        } catch (_) {
-          corruptedCount++;
-        }
-      }
+      final results = await Future.wait(
+        rows.map((row) async {
+          try {
+            final data = await encryptionService.decryptSavingsGoal(
+              row.encryptedBlob,
+              expectedId: row.id,
+              expectedCreatedAtMillis: row.createdAt,
+            );
+            return _toGoal(data);
+          } catch (e) {
+            debugPrint('WARNING: Corrupted savings goal row id=${row.id}: $e');
+            corruptedCount++;
+            return null;
+          }
+        }),
+      );
+
       _lastCorruptedCount = corruptedCount;
-      return goals;
+      return results.whereType<ui.SavingsGoal>().toList();
     } catch (e) {
       throw RepositoryException.fetch(entityType: _entityType, cause: e);
     }

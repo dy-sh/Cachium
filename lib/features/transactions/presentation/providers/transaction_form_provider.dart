@@ -117,9 +117,15 @@ class TransactionFormState {
   }
 
   String? get sameAccountError {
-    if (!showValidationErrors || !isTransfer) return null;
+    if (!isTransfer) return null;
+    // Show same-account error immediately (real-time feedback)
+    if (accountId != null &&
+        destinationAccountId != null &&
+        accountId == destinationAccountId) {
+      return 'Source and destination must be different';
+    }
+    if (!showValidationErrors) return null;
     if (destinationAccountId == null) return 'Select a destination account';
-    if (accountId == destinationAccountId) return 'Source and destination must be different';
     return null;
   }
 

@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
@@ -85,21 +87,23 @@ class AttachmentRepository {
     try {
       final rows =
           await database.getAttachmentsByTransactionId(transactionId);
-      final attachments = <ui.Attachment>[];
 
-      for (final row in rows) {
-        try {
-          final data = await encryptionService.decryptAttachment(
-            row.encryptedBlob,
-            expectedId: row.id,
-          );
-          attachments.add(_toAttachment(data));
-        } catch (_) {
-          continue;
-        }
-      }
+      final results = await Future.wait(
+        rows.map((row) async {
+          try {
+            final data = await encryptionService.decryptAttachment(
+              row.encryptedBlob,
+              expectedId: row.id,
+            );
+            return _toAttachment(data);
+          } catch (e) {
+            debugPrint('WARNING: Corrupted attachment row id=${row.id}: $e');
+            return null;
+          }
+        }),
+      );
 
-      return attachments;
+      return results.whereType<ui.Attachment>().toList();
     } catch (e) {
       if (e is RepositoryException) rethrow;
       throw RepositoryException.fetch(entityType: _entityType, cause: e);
@@ -109,21 +113,23 @@ class AttachmentRepository {
   Future<List<ui.Attachment>> getAllAttachments() async {
     try {
       final rows = await database.getAllAttachments();
-      final attachments = <ui.Attachment>[];
 
-      for (final row in rows) {
-        try {
-          final data = await encryptionService.decryptAttachment(
-            row.encryptedBlob,
-            expectedId: row.id,
-          );
-          attachments.add(_toAttachment(data));
-        } catch (_) {
-          continue;
-        }
-      }
+      final results = await Future.wait(
+        rows.map((row) async {
+          try {
+            final data = await encryptionService.decryptAttachment(
+              row.encryptedBlob,
+              expectedId: row.id,
+            );
+            return _toAttachment(data);
+          } catch (e) {
+            debugPrint('WARNING: Corrupted attachment row id=${row.id}: $e');
+            return null;
+          }
+        }),
+      );
 
-      return attachments;
+      return results.whereType<ui.Attachment>().toList();
     } catch (e) {
       if (e is RepositoryException) rethrow;
       throw RepositoryException.fetch(entityType: _entityType, cause: e);
@@ -150,18 +156,21 @@ class AttachmentRepository {
     return database
         .watchAttachmentsByTransactionId(transactionId)
         .asyncMap((rows) async {
-      final attachments = <ui.Attachment>[];
-      for (final row in rows) {
-        try {
-          final data = await encryptionService.decryptAttachment(
-            row.encryptedBlob,
-            expectedId: row.id,
-          );
-          attachments.add(_toAttachment(data));
-        } catch (_) {
-          continue;
-        }
-      }
+      final results = await Future.wait(
+        rows.map((row) async {
+          try {
+            final data = await encryptionService.decryptAttachment(
+              row.encryptedBlob,
+              expectedId: row.id,
+            );
+            return _toAttachment(data);
+          } catch (e) {
+            debugPrint('WARNING: Corrupted attachment row id=${row.id}: $e');
+            return null;
+          }
+        }),
+      );
+      final attachments = results.whereType<ui.Attachment>().toList();
       return attachments;
     });
   }

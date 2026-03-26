@@ -86,16 +86,17 @@ class AssetCategoryRepository {
   Future<List<ui.AssetCategory>> getAllCategories() async {
     try {
       final rows = await database.getAllAssetCategories();
-      final categories = <ui.AssetCategory>[];
 
-      for (final row in rows) {
-        final data = await encryptionService.decryptAssetCategory(
-          row.encryptedBlob,
-          expectedId: row.id,
-          expectedCreatedAtMillis: row.createdAt,
-        );
-        categories.add(_toCategory(data));
-      }
+      final categories = await Future.wait(
+        rows.map((row) async {
+          final data = await encryptionService.decryptAssetCategory(
+            row.encryptedBlob,
+            expectedId: row.id,
+            expectedCreatedAtMillis: row.createdAt,
+          );
+          return _toCategory(data);
+        }),
+      );
 
       return categories;
     } catch (e) {

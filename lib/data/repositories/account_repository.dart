@@ -186,16 +186,17 @@ class AccountRepository {
   Future<List<ui.Account>> getAllAccounts() async {
     try {
       final rows = await database.getAllAccounts();
-      final accounts = <ui.Account>[];
 
-      for (final row in rows) {
-        final data = await encryptionService.decryptAccount(
-          row.encryptedBlob,
-          expectedId: row.id,
-          expectedCreatedAtMillis: row.createdAt,
-        );
-        accounts.add(_toAccount(data));
-      }
+      final accounts = await Future.wait(
+        rows.map((row) async {
+          final data = await encryptionService.decryptAccount(
+            row.encryptedBlob,
+            expectedId: row.id,
+            expectedCreatedAtMillis: row.createdAt,
+          );
+          return _toAccount(data);
+        }),
+      );
 
       return accounts;
     } catch (e) {
@@ -252,25 +253,27 @@ class AccountRepository {
   /// Corrupted rows are silently skipped to maintain stream stability.
   Stream<List<ui.Account>> watchAllAccounts() {
     return database.watchAllAccounts().asyncMap((rows) async {
-      final accounts = <ui.Account>[];
       int corruptedCount = 0;
 
-      for (final row in rows) {
-        try {
-          final data = await encryptionService.decryptAccount(
-            row.encryptedBlob,
-            expectedId: row.id,
-            expectedCreatedAtMillis: row.createdAt,
-          );
-          accounts.add(_toAccount(data));
-        } catch (_) {
-          corruptedCount++;
-          continue;
-        }
-      }
+      final results = await Future.wait(
+        rows.map((row) async {
+          try {
+            final data = await encryptionService.decryptAccount(
+              row.encryptedBlob,
+              expectedId: row.id,
+              expectedCreatedAtMillis: row.createdAt,
+            );
+            return _toAccount(data);
+          } catch (e) {
+            debugPrint('WARNING: Corrupted account row id=${row.id}: $e');
+            corruptedCount++;
+            return null;
+          }
+        }),
+      );
 
       _lastCorruptedCount = corruptedCount;
-      return accounts;
+      return results.whereType<ui.Account>().toList();
     });
   }
 

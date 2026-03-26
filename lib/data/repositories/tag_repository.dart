@@ -102,16 +102,17 @@ class TagRepository {
   Future<List<ui.Tag>> getAllTags() async {
     try {
       final rows = await database.getAllTags();
-      final tags = <ui.Tag>[];
 
-      for (final row in rows) {
-        final data = await encryptionService.decryptTag(
-          row.encryptedBlob,
-          expectedId: row.id,
-          expectedSortOrder: row.sortOrder,
-        );
-        tags.add(_toTag(data));
-      }
+      final tags = await Future.wait(
+        rows.map((row) async {
+          final data = await encryptionService.decryptTag(
+            row.encryptedBlob,
+            expectedId: row.id,
+            expectedSortOrder: row.sortOrder,
+          );
+          return _toTag(data);
+        }),
+      );
 
       return tags;
     } catch (e) {
@@ -159,25 +160,27 @@ class TagRepository {
 
   Stream<List<ui.Tag>> watchAllTags() {
     return database.watchAllTags().asyncMap((rows) async {
-      final tags = <ui.Tag>[];
       int corruptedCount = 0;
 
-      for (final row in rows) {
-        try {
-          final data = await encryptionService.decryptTag(
-            row.encryptedBlob,
-            expectedId: row.id,
-            expectedSortOrder: row.sortOrder,
-          );
-          tags.add(_toTag(data));
-        } catch (_) {
-          corruptedCount++;
-          continue;
-        }
-      }
+      final results = await Future.wait(
+        rows.map((row) async {
+          try {
+            final data = await encryptionService.decryptTag(
+              row.encryptedBlob,
+              expectedId: row.id,
+              expectedSortOrder: row.sortOrder,
+            );
+            return _toTag(data);
+          } catch (e) {
+            debugPrint('WARNING: Corrupted tag row id=${row.id}: $e');
+            corruptedCount++;
+            return null;
+          }
+        }),
+      );
 
       _lastCorruptedCount = corruptedCount;
-      return tags;
+      return results.whereType<ui.Tag>().toList();
     });
   }
 

@@ -211,16 +211,17 @@ class TransactionRepository {
   Future<List<ui.Transaction>> getAllTransactions() async {
     try {
       final rows = await database.getAllTransactions();
-      final transactions = <ui.Transaction>[];
 
-      for (final row in rows) {
-        final data = await encryptionService.decrypt(
-          row.encryptedBlob,
-          expectedId: row.id,
-          expectedDateMillis: row.date,
-        );
-        transactions.add(_toTransaction(data));
-      }
+      final transactions = await Future.wait(
+        rows.map((row) async {
+          final data = await encryptionService.decrypt(
+            row.encryptedBlob,
+            expectedId: row.id,
+            expectedDateMillis: row.date,
+          );
+          return _toTransaction(data);
+        }),
+      );
 
       return transactions;
     } catch (e) {
@@ -235,26 +236,27 @@ class TransactionRepository {
   Future<List<ui.Transaction>> getAllDeletedTransactions() async {
     try {
       final rows = await database.getAllDeletedTransactions();
-      final transactions = <ui.Transaction>[];
-
       int corruptedCount = 0;
-      for (final row in rows) {
-        try {
-          final data = await encryptionService.decrypt(
-            row.encryptedBlob,
-            expectedId: row.id,
-            expectedDateMillis: row.date,
-          );
-          transactions.add(_toTransaction(data));
-        } catch (e) {
-          debugPrint('WARNING: Corrupted deleted transaction row id=${row.id}: $e');
-          corruptedCount++;
-          continue;
-        }
-      }
+
+      final results = await Future.wait(
+        rows.map((row) async {
+          try {
+            final data = await encryptionService.decrypt(
+              row.encryptedBlob,
+              expectedId: row.id,
+              expectedDateMillis: row.date,
+            );
+            return _toTransaction(data);
+          } catch (e) {
+            debugPrint('WARNING: Corrupted deleted transaction row id=${row.id}: $e');
+            corruptedCount++;
+            return null;
+          }
+        }),
+      );
 
       _lastCorruptedCount = corruptedCount;
-      return transactions;
+      return results.whereType<ui.Transaction>().toList();
     } catch (e) {
       if (e is RepositoryException) rethrow;
       throw RepositoryException.fetch(entityType: _entityType, cause: e);
@@ -328,26 +330,27 @@ class TransactionRepository {
   /// Corrupted rows are silently skipped to maintain stream stability.
   Stream<List<ui.Transaction>> watchAllTransactions() {
     return database.watchAllTransactions().asyncMap((rows) async {
-      final transactions = <ui.Transaction>[];
       int corruptedCount = 0;
 
-      for (final row in rows) {
-        try {
-          final data = await encryptionService.decrypt(
-            row.encryptedBlob,
-            expectedId: row.id,
-            expectedDateMillis: row.date,
-          );
-          transactions.add(_toTransaction(data));
-        } catch (e) {
-          debugPrint('WARNING: Corrupted transaction row id=${row.id}: $e');
-          corruptedCount++;
-          continue;
-        }
-      }
+      final results = await Future.wait(
+        rows.map((row) async {
+          try {
+            final data = await encryptionService.decrypt(
+              row.encryptedBlob,
+              expectedId: row.id,
+              expectedDateMillis: row.date,
+            );
+            return _toTransaction(data);
+          } catch (e) {
+            debugPrint('WARNING: Corrupted transaction row id=${row.id}: $e');
+            corruptedCount++;
+            return null;
+          }
+        }),
+      );
 
       _lastCorruptedCount = corruptedCount;
-      return transactions;
+      return results.whereType<ui.Transaction>().toList();
     });
   }
 

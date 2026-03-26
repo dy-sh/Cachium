@@ -1,3 +1,4 @@
+import '../../../../core/exceptions/app_exception.dart';
 import '../../../transactions/data/models/recurring_rule.dart';
 
 /// A bill reminder with due date tracking.
@@ -93,6 +94,26 @@ class Bill {
       reminderDaysBefore: reminderDaysBefore ?? this.reminderDaysBefore,
       createdAt: createdAt ?? this.createdAt,
     );
+  }
+
+  /// Validates critical invariants at save-time.
+  /// Throws [ValidationException] for invalid state.
+  void validate() {
+    if (id.isEmpty) {
+      throw const ValidationException(message: 'Bill ID must not be empty', field: 'id');
+    }
+    if (name.isEmpty) {
+      throw const ValidationException(message: 'Bill name must not be empty', field: 'name');
+    }
+    if (amount < 0) {
+      throw const ValidationException(message: 'Bill amount must be non-negative', field: 'amount');
+    }
+    if (currencyCode.length != 3) {
+      throw const ValidationException(message: 'Currency code must be 3 characters', field: 'currencyCode');
+    }
+    if (reminderDaysBefore < 0) {
+      throw const ValidationException(message: 'Reminder days must be non-negative', field: 'reminderDaysBefore');
+    }
   }
 
   @override

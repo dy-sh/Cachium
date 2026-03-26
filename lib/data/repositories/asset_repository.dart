@@ -122,16 +122,17 @@ class AssetRepository {
   Future<List<ui.Asset>> getAllAssets() async {
     try {
       final rows = await database.getAllAssets();
-      final assets = <ui.Asset>[];
 
-      for (final row in rows) {
-        final data = await encryptionService.decryptAsset(
-          row.encryptedBlob,
-          expectedId: row.id,
-          expectedCreatedAtMillis: row.createdAt,
-        );
-        assets.add(_toAsset(data));
-      }
+      final assets = await Future.wait(
+        rows.map((row) async {
+          final data = await encryptionService.decryptAsset(
+            row.encryptedBlob,
+            expectedId: row.id,
+            expectedCreatedAtMillis: row.createdAt,
+          );
+          return _toAsset(data);
+        }),
+      );
 
       return assets;
     } catch (e) {
@@ -180,25 +181,27 @@ class AssetRepository {
   /// Watch all assets (for reactive UI)
   Stream<List<ui.Asset>> watchAllAssets() {
     return database.watchAllAssets().asyncMap((rows) async {
-      final assets = <ui.Asset>[];
       int corruptedCount = 0;
 
-      for (final row in rows) {
-        try {
-          final data = await encryptionService.decryptAsset(
-            row.encryptedBlob,
-            expectedId: row.id,
-            expectedCreatedAtMillis: row.createdAt,
-          );
-          assets.add(_toAsset(data));
-        } catch (_) {
-          corruptedCount++;
-          continue;
-        }
-      }
+      final results = await Future.wait(
+        rows.map((row) async {
+          try {
+            final data = await encryptionService.decryptAsset(
+              row.encryptedBlob,
+              expectedId: row.id,
+              expectedCreatedAtMillis: row.createdAt,
+            );
+            return _toAsset(data);
+          } catch (e) {
+            debugPrint('WARNING: Corrupted asset row id=${row.id}: $e');
+            corruptedCount++;
+            return null;
+          }
+        }),
+      );
 
       _lastCorruptedCount = corruptedCount;
-      return assets;
+      return results.whereType<ui.Asset>().toList();
     });
   }
 

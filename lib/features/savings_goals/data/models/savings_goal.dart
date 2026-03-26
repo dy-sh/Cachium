@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/exceptions/app_exception.dart';
 import '../../../settings/data/models/app_settings.dart';
 
 class SavingsGoal {
@@ -68,6 +69,26 @@ class SavingsGoal {
       note: clearNote ? null : (note ?? this.note),
       createdAt: createdAt ?? this.createdAt,
     );
+  }
+
+  /// Validates critical invariants at save-time.
+  /// Throws [ValidationException] for invalid state.
+  void validate() {
+    if (id.isEmpty) {
+      throw const ValidationException(message: 'Savings goal ID must not be empty', field: 'id');
+    }
+    if (name.isEmpty) {
+      throw const ValidationException(message: 'Savings goal name must not be empty', field: 'name');
+    }
+    if (targetAmount < 0) {
+      throw const ValidationException(message: 'Target amount must be non-negative', field: 'targetAmount');
+    }
+    if (currentAmount < 0) {
+      throw const ValidationException(message: 'Current amount must be non-negative', field: 'currentAmount');
+    }
+    if (colorIndex < 0) {
+      throw const ValidationException(message: 'Color index must be non-negative', field: 'colorIndex');
+    }
   }
 
   @override

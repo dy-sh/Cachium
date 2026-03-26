@@ -92,16 +92,17 @@ class BudgetRepository {
   Future<List<ui.Budget>> getAllBudgets() async {
     try {
       final rows = await database.getAllBudgets();
-      final budgets = <ui.Budget>[];
 
-      for (final row in rows) {
-        final data = await encryptionService.decryptBudget(
-          row.encryptedBlob,
-          expectedId: row.id,
-          expectedCreatedAtMillis: row.createdAt,
-        );
-        budgets.add(_toBudget(data));
-      }
+      final budgets = await Future.wait(
+        rows.map((row) async {
+          final data = await encryptionService.decryptBudget(
+            row.encryptedBlob,
+            expectedId: row.id,
+            expectedCreatedAtMillis: row.createdAt,
+          );
+          return _toBudget(data);
+        }),
+      );
 
       return budgets;
     } catch (e) {

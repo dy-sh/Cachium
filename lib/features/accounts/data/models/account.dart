@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/exceptions/app_exception.dart';
 import '../../../settings/data/models/app_settings.dart';
 
 enum AccountType {
@@ -141,6 +142,23 @@ class Account {
       createdAt: createdAt ?? this.createdAt,
       sortOrder: sortOrder ?? this.sortOrder,
     );
+  }
+
+  /// Validates critical invariants at save-time.
+  /// Throws [ValidationException] for invalid state.
+  void validate() {
+    if (id.isEmpty) {
+      throw const ValidationException(message: 'Account ID must not be empty', field: 'id');
+    }
+    if (name.isEmpty) {
+      throw const ValidationException(message: 'Account name must not be empty', field: 'name');
+    }
+    if (currencyCode.length != 3) {
+      throw const ValidationException(message: 'Currency code must be 3 characters', field: 'currencyCode');
+    }
+    if (sortOrder < 0) {
+      throw const ValidationException(message: 'Sort order must be non-negative', field: 'sortOrder');
+    }
   }
 
   @override

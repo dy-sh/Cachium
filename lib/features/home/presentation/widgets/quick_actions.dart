@@ -85,12 +85,16 @@ class _QuickActionButtonState extends State<_QuickActionButton>
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: widget.onTap,
-      onTapDown: handleTapDown,
-      onTapUp: handleTapUp,
-      onTapCancel: handleTapCancel,
-      child: buildScaleTransition(
+    return Semantics(
+      button: true,
+      enabled: true,
+      label: widget.label,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        onTapDown: handleTapDown,
+        onTapUp: handleTapUp,
+        onTapCancel: handleTapCancel,
+        child: buildScaleTransition(
         child: Container(
           height: 56,
           decoration: BoxDecoration(
@@ -133,6 +137,7 @@ class _QuickActionButtonState extends State<_QuickActionButton>
             ],
           ),
         ),
+      ),
       ),
     );
   }

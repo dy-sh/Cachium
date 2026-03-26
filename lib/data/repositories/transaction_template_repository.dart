@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
@@ -99,23 +101,27 @@ class TransactionTemplateRepository {
   Future<List<ui.TransactionTemplate>> getAllTemplates() async {
     try {
       final rows = await database.getAllTransactionTemplates();
-      final templates = <ui.TransactionTemplate>[];
       int corruptedCount = 0;
 
-      for (final row in rows) {
-        try {
-          final data = await encryptionService.decryptTransactionTemplate(
-            row.encryptedBlob,
-            expectedId: row.id,
-            expectedCreatedAtMillis: row.createdAt,
-          );
-          templates.add(_toTemplate(data));
-        } catch (_) {
-          corruptedCount++;
-        }
-      }
+      final results = await Future.wait(
+        rows.map((row) async {
+          try {
+            final data = await encryptionService.decryptTransactionTemplate(
+              row.encryptedBlob,
+              expectedId: row.id,
+              expectedCreatedAtMillis: row.createdAt,
+            );
+            return _toTemplate(data);
+          } catch (e) {
+            debugPrint('WARNING: Corrupted template row id=${row.id}: $e');
+            corruptedCount++;
+            return null;
+          }
+        }),
+      );
+
       _lastCorruptedCount = corruptedCount;
-      return templates;
+      return results.whereType<ui.TransactionTemplate>().toList();
     } catch (e) {
       throw RepositoryException.fetch(entityType: _entityType, cause: e);
     }

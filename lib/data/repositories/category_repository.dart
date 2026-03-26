@@ -177,16 +177,17 @@ class CategoryRepository {
   Future<List<ui.Category>> getAllCategories() async {
     try {
       final rows = await database.getAllCategories();
-      final categories = <ui.Category>[];
 
-      for (final row in rows) {
-        final data = await encryptionService.decryptCategory(
-          row.encryptedBlob,
-          expectedId: row.id,
-          expectedSortOrder: row.sortOrder,
-        );
-        categories.add(_toCategory(data));
-      }
+      final categories = await Future.wait(
+        rows.map((row) async {
+          final data = await encryptionService.decryptCategory(
+            row.encryptedBlob,
+            expectedId: row.id,
+            expectedSortOrder: row.sortOrder,
+          );
+          return _toCategory(data);
+        }),
+      );
 
       return categories;
     } catch (e) {
@@ -242,25 +243,27 @@ class CategoryRepository {
   /// Corrupted rows are silently skipped to maintain stream stability.
   Stream<List<ui.Category>> watchAllCategories() {
     return database.watchAllCategories().asyncMap((rows) async {
-      final categories = <ui.Category>[];
       int corruptedCount = 0;
 
-      for (final row in rows) {
-        try {
-          final data = await encryptionService.decryptCategory(
-            row.encryptedBlob,
-            expectedId: row.id,
-            expectedSortOrder: row.sortOrder,
-          );
-          categories.add(_toCategory(data));
-        } catch (_) {
-          corruptedCount++;
-          continue;
-        }
-      }
+      final results = await Future.wait(
+        rows.map((row) async {
+          try {
+            final data = await encryptionService.decryptCategory(
+              row.encryptedBlob,
+              expectedId: row.id,
+              expectedSortOrder: row.sortOrder,
+            );
+            return _toCategory(data);
+          } catch (e) {
+            debugPrint('WARNING: Corrupted category row id=${row.id}: $e');
+            corruptedCount++;
+            return null;
+          }
+        }),
+      );
 
       _lastCorruptedCount = corruptedCount;
-      return categories;
+      return results.whereType<ui.Category>().toList();
     });
   }
 

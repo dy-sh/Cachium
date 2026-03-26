@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
@@ -118,23 +120,27 @@ class RecurringRuleRepository {
   Future<List<ui.RecurringRule>> getAllRules() async {
     try {
       final rows = await database.getAllRecurringRules();
-      final rules = <ui.RecurringRule>[];
-
       int corruptedCount = 0;
-      for (final row in rows) {
-        try {
-          final data = await encryptionService.decryptRecurringRule(
-            row.encryptedBlob,
-            expectedId: row.id,
-            expectedCreatedAtMillis: row.createdAt,
-          );
-          rules.add(_toRule(data));
-        } catch (_) {
-          corruptedCount++;
-        }
-      }
+
+      final results = await Future.wait(
+        rows.map((row) async {
+          try {
+            final data = await encryptionService.decryptRecurringRule(
+              row.encryptedBlob,
+              expectedId: row.id,
+              expectedCreatedAtMillis: row.createdAt,
+            );
+            return _toRule(data);
+          } catch (e) {
+            debugPrint('WARNING: Corrupted recurring rule row id=${row.id}: $e');
+            corruptedCount++;
+            return null;
+          }
+        }),
+      );
+
       _lastCorruptedCount = corruptedCount;
-      return rules;
+      return results.whereType<ui.RecurringRule>().toList();
     } catch (e) {
       throw RepositoryException.fetch(entityType: _entityType, cause: e);
     }
@@ -142,22 +148,27 @@ class RecurringRuleRepository {
 
   Stream<List<ui.RecurringRule>> watchAllRules() {
     return database.watchAllRecurringRules().asyncMap((rows) async {
-      final rules = <ui.RecurringRule>[];
       int corruptedCount = 0;
-      for (final row in rows) {
-        try {
-          final data = await encryptionService.decryptRecurringRule(
-            row.encryptedBlob,
-            expectedId: row.id,
-            expectedCreatedAtMillis: row.createdAt,
-          );
-          rules.add(_toRule(data));
-        } catch (_) {
-          corruptedCount++;
-        }
-      }
+
+      final results = await Future.wait(
+        rows.map((row) async {
+          try {
+            final data = await encryptionService.decryptRecurringRule(
+              row.encryptedBlob,
+              expectedId: row.id,
+              expectedCreatedAtMillis: row.createdAt,
+            );
+            return _toRule(data);
+          } catch (e) {
+            debugPrint('WARNING: Corrupted recurring rule row id=${row.id}: $e');
+            corruptedCount++;
+            return null;
+          }
+        }),
+      );
+
       _lastCorruptedCount = corruptedCount;
-      return rules;
+      return results.whereType<ui.RecurringRule>().toList();
     });
   }
 }

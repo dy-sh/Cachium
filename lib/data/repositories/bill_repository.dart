@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
@@ -110,23 +112,27 @@ class BillRepository {
   Future<List<ui.Bill>> getAllBills() async {
     try {
       final rows = await database.getAllBills();
-      final bills = <ui.Bill>[];
-
       int corruptedCount = 0;
-      for (final row in rows) {
-        try {
-          final data = await encryptionService.decryptBill(
-            row.encryptedBlob,
-            expectedId: row.id,
-            expectedCreatedAtMillis: row.createdAt,
-          );
-          bills.add(_toBill(data));
-        } catch (_) {
-          corruptedCount++;
-        }
-      }
+
+      final results = await Future.wait(
+        rows.map((row) async {
+          try {
+            final data = await encryptionService.decryptBill(
+              row.encryptedBlob,
+              expectedId: row.id,
+              expectedCreatedAtMillis: row.createdAt,
+            );
+            return _toBill(data);
+          } catch (e) {
+            debugPrint('WARNING: Corrupted bill row id=${row.id}: $e');
+            corruptedCount++;
+            return null;
+          }
+        }),
+      );
+
       _lastCorruptedCount = corruptedCount;
-      return bills;
+      return results.whereType<ui.Bill>().toList();
     } catch (e) {
       throw RepositoryException.fetch(entityType: _entityType, cause: e);
     }
@@ -134,22 +140,27 @@ class BillRepository {
 
   Stream<List<ui.Bill>> watchAllBills() {
     return database.watchAllBills().asyncMap((rows) async {
-      final bills = <ui.Bill>[];
       int corruptedCount = 0;
-      for (final row in rows) {
-        try {
-          final data = await encryptionService.decryptBill(
-            row.encryptedBlob,
-            expectedId: row.id,
-            expectedCreatedAtMillis: row.createdAt,
-          );
-          bills.add(_toBill(data));
-        } catch (_) {
-          corruptedCount++;
-        }
-      }
+
+      final results = await Future.wait(
+        rows.map((row) async {
+          try {
+            final data = await encryptionService.decryptBill(
+              row.encryptedBlob,
+              expectedId: row.id,
+              expectedCreatedAtMillis: row.createdAt,
+            );
+            return _toBill(data);
+          } catch (e) {
+            debugPrint('WARNING: Corrupted bill row id=${row.id}: $e');
+            corruptedCount++;
+            return null;
+          }
+        }),
+      );
+
       _lastCorruptedCount = corruptedCount;
-      return bills;
+      return results.whereType<ui.Bill>().toList();
     });
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/exceptions/app_exception.dart';
 import '../../../settings/data/models/app_settings.dart';
 
 enum AssetStatus { active, sold }
@@ -115,6 +116,29 @@ class Asset {
       sortOrder: sortOrder ?? this.sortOrder,
       createdAt: createdAt ?? this.createdAt,
     );
+  }
+
+  /// Validates critical invariants at save-time.
+  /// Throws [ValidationException] for invalid state.
+  void validate() {
+    if (id.isEmpty) {
+      throw const ValidationException(message: 'Asset ID must not be empty', field: 'id');
+    }
+    if (name.isEmpty) {
+      throw const ValidationException(message: 'Asset name must not be empty', field: 'name');
+    }
+    if (colorIndex < 0) {
+      throw const ValidationException(message: 'Color index must be non-negative', field: 'colorIndex');
+    }
+    if (purchasePrice != null && purchasePrice! < 0) {
+      throw const ValidationException(message: 'Purchase price must be non-negative', field: 'purchasePrice');
+    }
+    if (salePrice != null && salePrice! < 0) {
+      throw const ValidationException(message: 'Sale price must be non-negative', field: 'salePrice');
+    }
+    if (sortOrder < 0) {
+      throw const ValidationException(message: 'Sort order must be non-negative', field: 'sortOrder');
+    }
   }
 
   @override

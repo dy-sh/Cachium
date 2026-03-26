@@ -159,45 +159,56 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : RefreshIndicator(
-                    color: AppColors.textPrimary,
-                    backgroundColor: AppColors.surface,
-                    onRefresh: () async {
-                      await ref.read(accountsProvider.notifier).refresh();
-                    },
-                    child: ListView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: EdgeInsets.only(
-                        left: AppSpacing.screenPadding,
-                        right: AppSpacing.screenPadding,
-                        bottom: AppSpacing.bottomNavHeight + AppSpacing.lg,
-                      ),
-                      children: () {
-                        int sectionIndex = 0;
-                        return AccountType.values.map((type) {
-                          final accounts = accountsByType[type] ?? [];
-                          if (accounts.isEmpty) return const SizedBox.shrink();
+                : accountsByType.values.every((list) => list.isEmpty)
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+                        child: EmptyState.centered(
+                          icon: LucideIcons.wallet,
+                          title: 'No accounts yet',
+                          subtitle: 'Add your first account to start tracking your finances',
+                          actionLabel: 'Add Account',
+                          onTap: () => context.push(AppRoutes.accountForm),
+                        ),
+                      )
+                    : RefreshIndicator(
+                        color: AppColors.textPrimary,
+                        backgroundColor: AppColors.surface,
+                        onRefresh: () async {
+                          await ref.read(accountsProvider.notifier).refresh();
+                        },
+                        child: ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: EdgeInsets.only(
+                            left: AppSpacing.screenPadding,
+                            right: AppSpacing.screenPadding,
+                            bottom: AppSpacing.bottomNavHeight + AppSpacing.lg,
+                          ),
+                          children: () {
+                            int sectionIndex = 0;
+                            return AccountType.values.map((type) {
+                              final accounts = accountsByType[type] ?? [];
+                              if (accounts.isEmpty) return const SizedBox.shrink();
 
-                          final currentIndex = sectionIndex;
-                          sectionIndex++;
-                          return StaggeredListItem(
-                            index: currentIndex,
-                            child: _isReorderMode
-                                ? _ReorderableAccountTypeSection(
-                                    type: type,
-                                    accounts: accounts,
-                                    intensity: intensity,
-                                  )
-                                : _AccountTypeSection(
-                                    type: type,
-                                    accounts: accounts,
-                                    intensity: intensity,
-                                  ),
-                          );
-                        }).toList();
-                      }(),
-                    ),
-                  ),
+                              final currentIndex = sectionIndex;
+                              sectionIndex++;
+                              return StaggeredListItem(
+                                index: currentIndex,
+                                child: _isReorderMode
+                                    ? _ReorderableAccountTypeSection(
+                                        type: type,
+                                        accounts: accounts,
+                                        intensity: intensity,
+                                      )
+                                    : _AccountTypeSection(
+                                        type: type,
+                                        accounts: accounts,
+                                        intensity: intensity,
+                                      ),
+                              );
+                            }).toList();
+                          }(),
+                        ),
+                      ),
           ),
         ],
       ),
