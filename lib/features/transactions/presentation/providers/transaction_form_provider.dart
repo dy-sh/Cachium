@@ -40,6 +40,7 @@ class TransactionFormState {
   final String? note;
   final String? merchant;
   final String? assetId;
+  final bool isAcquisitionCost;
   final List<String> tagIds;
   final List<XFile> pendingAttachments;
   final String? editingTransactionId;
@@ -64,6 +65,7 @@ class TransactionFormState {
     this.conversionRate = 1.0,
     this.destinationAmount,
     this.assetId,
+    this.isAcquisitionCost = false,
     this.tagIds = const [],
     this.pendingAttachments = const [],
     required this.date,
@@ -182,6 +184,7 @@ class TransactionFormState {
     bool clearDestinationAmount = false,
     String? assetId,
     bool clearAssetId = false,
+    bool? isAcquisitionCost,
     List<String>? tagIds,
     List<XFile>? pendingAttachments,
     DateTime? date,
@@ -210,6 +213,7 @@ class TransactionFormState {
           ? null
           : (destinationAmount ?? this.destinationAmount),
       assetId: clearAssetId ? null : (assetId ?? this.assetId),
+      isAcquisitionCost: isAcquisitionCost ?? this.isAcquisitionCost,
       tagIds: tagIds ?? this.tagIds,
       pendingAttachments: pendingAttachments ?? this.pendingAttachments,
       date: date ?? this.date,
@@ -439,11 +443,19 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
   }
 
   void setAsset(String? assetId) {
-    state = state.copyWith(assetId: assetId, clearAssetId: assetId == null);
+    state = state.copyWith(
+      assetId: assetId,
+      clearAssetId: assetId == null,
+      isAcquisitionCost: assetId == null ? false : state.isAcquisitionCost,
+    );
+  }
+
+  void setIsAcquisitionCost(bool value) {
+    state = state.copyWith(isAcquisitionCost: value);
   }
 
   void clearAsset() {
-    state = state.copyWith(clearAssetId: true);
+    state = state.copyWith(clearAssetId: true, isAcquisitionCost: false);
   }
 
   /// Trigger validation errors to be shown.
@@ -506,6 +518,7 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
       conversionRate: transaction.conversionRate,
       destinationAmount: transaction.destinationAmount,
       assetId: transaction.assetId,
+      isAcquisitionCost: transaction.isAcquisitionCost,
       date: transaction.date,
       note: transaction.note,
       merchant: transaction.merchant,
@@ -654,6 +667,7 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
           clearDestinationAmount: !isTransfer || savedFormState.destinationAmount == null,
           assetId: savedFormState.assetId,
           clearAssetId: savedFormState.assetId == null,
+          isAcquisitionCost: savedFormState.isAcquisitionCost,
           currencyCode: savedFormState.currencyCode,
           conversionRate: savedFormState.conversionRate,
           mainCurrencyCode: effectiveMainCurrencyCode,
@@ -675,6 +689,7 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
               accountId: savedFormState.accountId!,
               destinationAccountId: savedFormState.destinationAccountId,
               assetId: savedFormState.assetId,
+              isAcquisitionCost: savedFormState.isAcquisitionCost,
               currencyCode: savedFormState.currencyCode,
               conversionRate: savedFormState.conversionRate,
               destinationAmount: savedFormState.destinationAmount,

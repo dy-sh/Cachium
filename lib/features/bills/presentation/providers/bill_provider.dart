@@ -67,6 +67,7 @@ class BillsNotifier extends AsyncNotifier<List<Bill>> {
             type: TransactionType.expense,
             categoryId: bill.categoryId!,
             accountId: bill.accountId!,
+            assetId: bill.assetId,
             currencyCode: bill.currencyCode,
             conversionRate: conversionRate,
             mainCurrencyCode: mainCurrency,
@@ -84,6 +85,7 @@ class BillsNotifier extends AsyncNotifier<List<Bill>> {
       currencyCode: bill.currencyCode,
       categoryId: bill.categoryId,
       accountId: bill.accountId,
+      assetId: bill.assetId,
       dueDate: bill.nextDueDate,
       frequency: bill.frequency,
       isPaid: false,
@@ -115,6 +117,13 @@ final upcomingBillsProvider = Provider<List<Bill>>((ref) {
           b.dueDate.isAfter(now.subtract(const Duration(days: 1))) &&
           b.dueDate.isBefore(thirtyDaysLater))
       .toList()
+    ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+});
+
+/// Provider that returns bills linked to a specific asset.
+final billsByAssetProvider = Provider.family<List<Bill>, String>((ref, assetId) {
+  final bills = ref.watch(billsProvider).valueOrNull ?? [];
+  return bills.where((b) => b.assetId == assetId && !b.isPaid).toList()
     ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
 });
 

@@ -9,11 +9,11 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../design_system/design_system.dart';
+import '../../../bills/presentation/providers/bill_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../../transactions/presentation/providers/transaction_form_provider.dart';
-import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../data/models/asset.dart';
 import '../providers/asset_analytics_providers.dart';
 import '../providers/asset_categories_provider.dart';
@@ -97,7 +97,7 @@ class AssetDetailScreen extends ConsumerWidget {
     }
 
     final assetColor = asset.getColor(intensity);
-    final transactions = ref.watch(transactionsByAssetProvider(assetId));
+    final transactions = ref.watch(filteredTransactionsByAssetProvider(assetId));
     final monthGroups = ref.watch(assetTransactionsByMonthProvider(assetId));
     final bgOpacity = AppColors.getBgOpacity(intensity);
     final costBreakdown = ref.watch(assetCostBreakdownProvider(assetId));
@@ -255,6 +255,10 @@ class AssetDetailScreen extends ConsumerWidget {
                   ),
 
                   const SizedBox(height: AppSpacing.lg),
+
+                  // Time range filter
+                  _TimeRangeSelector(assetId: assetId),
+                  const SizedBox(height: AppSpacing.sm),
 
                   // 2. Info hint when purchase price exists but no transactions
                   if (asset.purchasePrice != null && asset.purchasePrice! > 0 && transactions.isEmpty)
@@ -462,7 +466,10 @@ class AssetDetailScreen extends ConsumerWidget {
                       onPressed: () => showReactivateDialog(context, ref, asset),
                     ),
 
-                  // 5. Spending chart
+                  // 5. Linked Bills
+                  _LinkedBillsSection(assetId: assetId),
+
+                  // 6. Spending chart
                   const SizedBox(height: AppSpacing.lg),
                   AssetSpendingChart(assetId: assetId),
 
@@ -670,6 +677,235 @@ class _AssetTransactionItem extends ConsumerWidget {
               style: AppTypography.moneySmall.copyWith(color: color),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LinkedBillsSection extends ConsumerWidget {
+  final String assetId;
+
+  const _LinkedBillsSection({required this.assetId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bills = ref.watch(billsByAssetProvider(assetId));
+    if (bills.isEmpty) return const SizedBox.shrink();
+
+    final intensity = ref.watch(colorIntensityProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: AppSpacing.lg),
+        Text('Linked Bills', style: AppTypography.h4),
+        const SizedBox(height: AppSpacing.sm),
+        ...bills.map((bill) {
+          final isOverdue = bill.isOverdue;
+          final color = isOverdue
+              ? AppColors.getTransactionColor('expense', intensity)
+              : AppColors.textSecondary;
+
+          return Container(
+            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: AppRadius.mdAll,
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  LucideIcons.receipt,
+                  size: 18,
+                  color: color,
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        bill.name,
+                        style: AppTypography.labelMedium,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${bill.frequency.displayName}  \u00B7  Due ${DateFormatter.formatRelative(bill.dueDate)}',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: isOverdue ? color : AppColors.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  CurrencyFormatter.format(bill.amount, currencyCode: bill.currencyCode),
+                  style: AppTypography.moneySmall.copyWith(
+                    color: AppColors.getTransactionColor('expense', intensity),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+}
+
+enum _TimeRange { allTime, thisYear, last12Months, custom }
+
+class _TimeRangeSelector extends ConsumerStatefulWidget {
+  final String assetId;
+
+  const _TimeRangeSelector({required this.assetId});
+
+  @override
+  ConsumerState<_TimeRangeSelector> createState() => _TimeRangeSelectorState();
+}
+
+class _TimeRangeSelectorState extends ConsumerState<_TimeRangeSelector> {
+  _TimeRange _selected = _TimeRange.allTime;
+
+  @override
+  void initState() {
+    super.initState();
+    // Reset the date range when the screen is first opened
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(assetDetailDateRangeProvider.notifier).state = null;
+    });
+  }
+
+  void _setRange(_TimeRange range) {
+    setState(() => _selected = range);
+    final now = DateTime.now();
+    DateTimeRange? dateRange;
+    switch (range) {
+      case _TimeRange.allTime:
+        dateRange = null;
+      case _TimeRange.thisYear:
+        dateRange = DateTimeRange(
+          start: DateTime(now.year),
+          end: now,
+        );
+      case _TimeRange.last12Months:
+        dateRange = DateTimeRange(
+          start: DateTime(now.year - 1, now.month, now.day),
+          end: now,
+        );
+      case _TimeRange.custom:
+        return; // handled separately
+    }
+    ref.read(assetDetailDateRangeProvider.notifier).state = dateRange;
+  }
+
+  Future<void> _pickCustomRange() async {
+    final now = DateTime.now();
+    final currentRange = ref.read(assetDetailDateRangeProvider);
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2000),
+      lastDate: now,
+      initialDateRange: currentRange ??
+          DateTimeRange(
+            start: DateTime(now.year, now.month - 3, now.day),
+            end: now,
+          ),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+                  surface: AppColors.surface,
+                  onSurface: AppColors.textPrimary,
+                ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() => _selected = _TimeRange.custom);
+      ref.read(assetDetailDateRangeProvider.notifier).state = picked;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 32,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          _RangeChip(
+            label: 'All Time',
+            isSelected: _selected == _TimeRange.allTime,
+            onTap: () => _setRange(_TimeRange.allTime),
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          _RangeChip(
+            label: 'This Year',
+            isSelected: _selected == _TimeRange.thisYear,
+            onTap: () => _setRange(_TimeRange.thisYear),
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          _RangeChip(
+            label: 'Last 12 Months',
+            isSelected: _selected == _TimeRange.last12Months,
+            onTap: () => _setRange(_TimeRange.last12Months),
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          _RangeChip(
+            label: _selected == _TimeRange.custom
+                ? _formatCustomRange(ref.watch(assetDetailDateRangeProvider))
+                : 'Custom',
+            isSelected: _selected == _TimeRange.custom,
+            onTap: _pickCustomRange,
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatCustomRange(DateTimeRange? range) {
+    if (range == null) return 'Custom';
+    return '${DateFormatter.formatShort(range.start)} – ${DateFormatter.formatShort(range.end)}';
+  }
+}
+
+class _RangeChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _RangeChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.accentPrimary.withValues(alpha: 0.15) : AppColors.surface,
+          borderRadius: AppRadius.smAll,
+          border: Border.all(
+            color: isSelected ? AppColors.accentPrimary : AppColors.border,
+          ),
+        ),
+        child: Text(
+          label,
+          style: AppTypography.labelSmall.copyWith(
+            color: isSelected ? AppColors.accentPrimary : AppColors.textSecondary,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          ),
         ),
       ),
     );

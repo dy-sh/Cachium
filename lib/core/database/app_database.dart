@@ -299,7 +299,7 @@ class AppDatabase extends _$AppDatabase {
 
 
   @override
-  int get schemaVersion => 26;
+  int get schemaVersion => 27;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -381,6 +381,13 @@ class AppDatabase extends _$AppDatabase {
           if (from < 26) {
             await m.createTable(assetCategories);
             await _createIndexes(m);
+          }
+
+          if (from < 27) {
+            // Added isAcquisitionCost field to TransactionData (encrypted blob).
+            // No schema change needed — field defaults to false in the DTO.
+            // Legacy note-matching fallback is kept in assetCostBreakdownProvider
+            // for backward compatibility with existing data.
           }
         },
       );

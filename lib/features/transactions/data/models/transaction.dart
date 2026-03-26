@@ -28,6 +28,7 @@ class Transaction {
   final String accountId;
   final String? destinationAccountId; // For transfers: the receiving account
   final String? assetId; // Optional link to an asset
+  final bool isAcquisitionCost; // Whether this is a purchase/sale transaction for an asset
   final String currencyCode;
 
   /// Multiplier: `amount * conversionRate ≈ mainCurrencyAmount`.
@@ -53,6 +54,7 @@ class Transaction {
     required this.accountId,
     this.destinationAccountId,
     this.assetId,
+    this.isAcquisitionCost = false,
     this.currencyCode = 'USD',
     this.conversionRate = 1.0,
     this.destinationAmount,
@@ -122,6 +124,7 @@ class Transaction {
     bool clearDestinationAccountId = false,
     String? assetId,
     bool clearAssetId = false,
+    bool? isAcquisitionCost,
     String? currencyCode,
     double? conversionRate,
     double? destinationAmount,
@@ -146,6 +149,7 @@ class Transaction {
           ? null
           : (destinationAccountId ?? this.destinationAccountId),
       assetId: clearAssetId ? null : (assetId ?? this.assetId),
+      isAcquisitionCost: isAcquisitionCost ?? this.isAcquisitionCost,
       currencyCode: currencyCode ?? this.currencyCode,
       conversionRate: conversionRate ?? this.conversionRate,
       destinationAmount: clearDestinationAmount

@@ -90,6 +90,7 @@ class _MarkAsSoldDialogState extends ConsumerState<_MarkAsSoldDialog> {
         Future.microtask(() {
           final formNotifier = ref.read(transactionFormProvider.notifier);
           formNotifier.setAsset(assetId);
+          formNotifier.setIsAcquisitionCost(true);
           formNotifier.setNote('Sale of $assetName');
           if (salePrice != null && salePrice > 0) {
             formNotifier.setAmount(salePrice);

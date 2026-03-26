@@ -28,6 +28,7 @@ class BillRepository {
       currencyCode: bill.currencyCode,
       categoryId: bill.categoryId,
       accountId: bill.accountId,
+      assetId: bill.assetId,
       dueDateMillis: bill.dueDate.millisecondsSinceEpoch,
       frequency: bill.frequency.name,
       isPaid: bill.isPaid,
@@ -47,6 +48,7 @@ class BillRepository {
       currencyCode: data.currencyCode,
       categoryId: data.categoryId,
       accountId: data.accountId,
+      assetId: data.assetId,
       dueDate: DateTime.fromMillisecondsSinceEpoch(data.dueDateMillis),
       frequency: RecurrenceFrequency.values.firstWhere(
         (e) => e.name == data.frequency,

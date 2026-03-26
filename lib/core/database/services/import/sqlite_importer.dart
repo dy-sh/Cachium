@@ -432,6 +432,7 @@ class SqliteImporter {
           final destAmountRaw = row['destination_amount'] ?? row['destinationAmount'];
           final merchantRaw = row['merchant'];
           final assetIdRaw = row['asset_id'] ?? row['assetId'];
+          final isAcquisitionCostRaw = row['is_acquisition_cost'] ?? row['isAcquisitionCost'];
 
           final data = TransactionData(
             id: id,
@@ -444,6 +445,7 @@ class SqliteImporter {
             note: safeStringOrNull(row['note']),
             merchant: safeStringOrNull(merchantRaw),
             assetId: safeStringOrNull(assetIdRaw),
+            isAcquisitionCost: isAcquisitionCostRaw == 1 || isAcquisitionCostRaw == true,
             currency: safeStringOrNull(row['currency']) ?? 'USD',
             conversionRate: conversionRate,
             mainCurrencyCode: safeStringOrNull(mainCurrencyCodeRaw) ?? 'USD',

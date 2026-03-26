@@ -102,6 +102,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
                   Future.microtask(() {
                     final formNotifier = ref.read(transactionFormProvider.notifier);
                     formNotifier.setAsset(assetId);
+                    formNotifier.setIsAcquisitionCost(true);
                     formNotifier.setNote('Purchase of $assetName');
                     formNotifier.setAmount(purchasePrice);
                   });

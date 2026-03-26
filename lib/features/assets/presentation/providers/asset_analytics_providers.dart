@@ -45,10 +45,25 @@ typedef AssetMonthGroup = ({
   double incomeSubtotal,
 });
 
+/// Selected date range for asset detail screen filtering.
+/// null means "All Time".
+final assetDetailDateRangeProvider = StateProvider<DateTimeRange?>((ref) => null);
+
+/// Asset transactions filtered by the selected date range.
+final filteredTransactionsByAssetProvider =
+    Provider.family<List<Transaction>, String>((ref, assetId) {
+  final transactions = ref.watch(transactionsByAssetProvider(assetId));
+  final range = ref.watch(assetDetailDateRangeProvider);
+  if (range == null) return transactions;
+  return transactions.where((tx) =>
+    !tx.date.isBefore(range.start) && !tx.date.isAfter(range.end),
+  ).toList();
+});
+
 /// Groups an asset's transactions by month with expense/income totals.
 final assetMonthlySpendingProvider =
     Provider.family<List<AssetMonthlyData>, String>((ref, assetId) {
-  final transactions = ref.watch(transactionsByAssetProvider(assetId));
+  final transactions = ref.watch(filteredTransactionsByAssetProvider(assetId));
   if (transactions.isEmpty) return [];
 
   final Map<String, ({double expense, double income, DateTime month})> byMonth = {};
@@ -95,7 +110,7 @@ final assetCumulativeCostProvider =
 /// Expense categories breakdown for an asset.
 final assetCategoryBreakdownProvider =
     Provider.family<List<AssetCategoryEntry>, String>((ref, assetId) {
-  final transactions = ref.watch(transactionsByAssetProvider(assetId));
+  final transactions = ref.watch(filteredTransactionsByAssetProvider(assetId));
   final intensity = ref.watch(colorIntensityProvider);
 
   final expenses = transactions.where((tx) => tx.type == TransactionType.expense).toList();
@@ -133,7 +148,7 @@ final assetCategoryBreakdownProvider =
 final assetCostBreakdownProvider =
     Provider.family<AssetCostBreakdown, String>((ref, assetId) {
   final asset = ref.watch(assetByIdProvider(assetId));
-  final transactions = ref.watch(transactionsByAssetProvider(assetId));
+  final transactions = ref.watch(filteredTransactionsByAssetProvider(assetId));
 
   double totalExpenses = 0;
   double acquisitionCost = 0;
@@ -143,10 +158,14 @@ final assetCostBreakdownProvider =
   for (final tx in transactions) {
     if (tx.type == TransactionType.expense) {
       totalExpenses += tx.effectiveMainCurrencyAmount;
-      // Detect acquisition transactions by auto-generated note pattern
-      final note = tx.note?.toLowerCase() ?? '';
-      if (note.startsWith('purchase of ') && assetName.isNotEmpty && note.contains(assetName)) {
+      // Use explicit flag, with legacy note-matching fallback for old data
+      if (tx.isAcquisitionCost) {
         acquisitionCost += tx.effectiveMainCurrencyAmount;
+      } else if (assetName.isNotEmpty) {
+        final note = tx.note?.toLowerCase() ?? '';
+        if (note.startsWith('purchase of ') && note.contains(assetName)) {
+          acquisitionCost += tx.effectiveMainCurrencyAmount;
+        }
       }
     } else if (tx.type == TransactionType.income) {
       revenue += tx.effectiveMainCurrencyAmount;
@@ -178,7 +197,7 @@ final assetCostBreakdownProvider =
 /// Computed summary statistics for an asset.
 final assetStatsProvider =
     Provider.family<AssetStats, String>((ref, assetId) {
-  final transactions = ref.watch(transactionsByAssetProvider(assetId));
+  final transactions = ref.watch(filteredTransactionsByAssetProvider(assetId));
   final asset = ref.watch(assetByIdProvider(assetId));
 
   double totalExpense = 0;
@@ -214,7 +233,7 @@ final assetStatsProvider =
 /// Transactions grouped by month (descending) with subtotals.
 final assetTransactionsByMonthProvider =
     Provider.family<List<AssetMonthGroup>, String>((ref, assetId) {
-  final transactions = ref.watch(transactionsByAssetProvider(assetId));
+  final transactions = ref.watch(filteredTransactionsByAssetProvider(assetId));
   if (transactions.isEmpty) return [];
 
   final Map<String, List<Transaction>> byMonth = {};

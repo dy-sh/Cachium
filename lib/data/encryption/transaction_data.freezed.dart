@@ -48,6 +48,9 @@ mixin _$TransactionData {
   /// Optional link to an asset
   String? get assetId => throw _privateConstructorUsedError;
 
+  /// Whether this is an acquisition/sale transaction for an asset
+  bool get isAcquisitionCost => throw _privateConstructorUsedError;
+
   /// Currency code (default: USD)
   String get currency => throw _privateConstructorUsedError;
 
@@ -98,6 +101,7 @@ abstract class $TransactionDataCopyWith<$Res> {
     String? merchant,
     String? destinationAccountId,
     String? assetId,
+    bool isAcquisitionCost,
     String currency,
     double conversionRate,
     double? destinationAmount,
@@ -132,6 +136,7 @@ class _$TransactionDataCopyWithImpl<$Res, $Val extends TransactionData>
     Object? merchant = freezed,
     Object? destinationAccountId = freezed,
     Object? assetId = freezed,
+    Object? isAcquisitionCost = null,
     Object? currency = null,
     Object? conversionRate = null,
     Object? destinationAmount = freezed,
@@ -178,6 +183,10 @@ class _$TransactionDataCopyWithImpl<$Res, $Val extends TransactionData>
                 ? _value.assetId
                 : assetId // ignore: cast_nullable_to_non_nullable
                       as String?,
+            isAcquisitionCost: null == isAcquisitionCost
+                ? _value.isAcquisitionCost
+                : isAcquisitionCost // ignore: cast_nullable_to_non_nullable
+                      as bool,
             currency: null == currency
                 ? _value.currency
                 : currency // ignore: cast_nullable_to_non_nullable
@@ -231,6 +240,7 @@ abstract class _$$TransactionDataImplCopyWith<$Res>
     String? merchant,
     String? destinationAccountId,
     String? assetId,
+    bool isAcquisitionCost,
     String currency,
     double conversionRate,
     double? destinationAmount,
@@ -264,6 +274,7 @@ class __$$TransactionDataImplCopyWithImpl<$Res>
     Object? merchant = freezed,
     Object? destinationAccountId = freezed,
     Object? assetId = freezed,
+    Object? isAcquisitionCost = null,
     Object? currency = null,
     Object? conversionRate = null,
     Object? destinationAmount = freezed,
@@ -310,6 +321,10 @@ class __$$TransactionDataImplCopyWithImpl<$Res>
             ? _value.assetId
             : assetId // ignore: cast_nullable_to_non_nullable
                   as String?,
+        isAcquisitionCost: null == isAcquisitionCost
+            ? _value.isAcquisitionCost
+            : isAcquisitionCost // ignore: cast_nullable_to_non_nullable
+                  as bool,
         currency: null == currency
             ? _value.currency
             : currency // ignore: cast_nullable_to_non_nullable
@@ -356,6 +371,7 @@ class _$TransactionDataImpl implements _TransactionData {
     this.merchant,
     this.destinationAccountId,
     this.assetId,
+    this.isAcquisitionCost = false,
     this.currency = 'USD',
     this.conversionRate = 1.0,
     this.destinationAmount,
@@ -404,6 +420,11 @@ class _$TransactionDataImpl implements _TransactionData {
   @override
   final String? assetId;
 
+  /// Whether this is an acquisition/sale transaction for an asset
+  @override
+  @JsonKey()
+  final bool isAcquisitionCost;
+
   /// Currency code (default: USD)
   @override
   @JsonKey()
@@ -439,7 +460,7 @@ class _$TransactionDataImpl implements _TransactionData {
 
   @override
   String toString() {
-    return 'TransactionData(id: $id, amount: $amount, categoryId: $categoryId, accountId: $accountId, type: $type, note: $note, merchant: $merchant, destinationAccountId: $destinationAccountId, assetId: $assetId, currency: $currency, conversionRate: $conversionRate, destinationAmount: $destinationAmount, mainCurrencyCode: $mainCurrencyCode, mainCurrencyAmount: $mainCurrencyAmount, dateMillis: $dateMillis, createdAtMillis: $createdAtMillis)';
+    return 'TransactionData(id: $id, amount: $amount, categoryId: $categoryId, accountId: $accountId, type: $type, note: $note, merchant: $merchant, destinationAccountId: $destinationAccountId, assetId: $assetId, isAcquisitionCost: $isAcquisitionCost, currency: $currency, conversionRate: $conversionRate, destinationAmount: $destinationAmount, mainCurrencyCode: $mainCurrencyCode, mainCurrencyAmount: $mainCurrencyAmount, dateMillis: $dateMillis, createdAtMillis: $createdAtMillis)';
   }
 
   @override
@@ -460,6 +481,8 @@ class _$TransactionDataImpl implements _TransactionData {
             (identical(other.destinationAccountId, destinationAccountId) ||
                 other.destinationAccountId == destinationAccountId) &&
             (identical(other.assetId, assetId) || other.assetId == assetId) &&
+            (identical(other.isAcquisitionCost, isAcquisitionCost) ||
+                other.isAcquisitionCost == isAcquisitionCost) &&
             (identical(other.currency, currency) ||
                 other.currency == currency) &&
             (identical(other.conversionRate, conversionRate) ||
@@ -489,6 +512,7 @@ class _$TransactionDataImpl implements _TransactionData {
     merchant,
     destinationAccountId,
     assetId,
+    isAcquisitionCost,
     currency,
     conversionRate,
     destinationAmount,
@@ -526,6 +550,7 @@ abstract class _TransactionData implements TransactionData {
     final String? merchant,
     final String? destinationAccountId,
     final String? assetId,
+    final bool isAcquisitionCost,
     final String currency,
     final double conversionRate,
     final double? destinationAmount,
@@ -573,6 +598,10 @@ abstract class _TransactionData implements TransactionData {
   /// Optional link to an asset
   @override
   String? get assetId;
+
+  /// Whether this is an acquisition/sale transaction for an asset
+  @override
+  bool get isAcquisitionCost;
 
   /// Currency code (default: USD)
   @override

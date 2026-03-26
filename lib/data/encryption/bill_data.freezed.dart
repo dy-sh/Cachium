@@ -27,6 +27,7 @@ mixin _$BillData {
   String get currencyCode => throw _privateConstructorUsedError;
   String? get categoryId => throw _privateConstructorUsedError;
   String? get accountId => throw _privateConstructorUsedError;
+  String? get assetId => throw _privateConstructorUsedError;
   int get dueDateMillis => throw _privateConstructorUsedError;
   String get frequency => throw _privateConstructorUsedError;
   bool get isPaid => throw _privateConstructorUsedError;
@@ -58,6 +59,7 @@ abstract class $BillDataCopyWith<$Res> {
     String currencyCode,
     String? categoryId,
     String? accountId,
+    String? assetId,
     int dueDateMillis,
     String frequency,
     bool isPaid,
@@ -90,6 +92,7 @@ class _$BillDataCopyWithImpl<$Res, $Val extends BillData>
     Object? currencyCode = null,
     Object? categoryId = freezed,
     Object? accountId = freezed,
+    Object? assetId = freezed,
     Object? dueDateMillis = null,
     Object? frequency = null,
     Object? isPaid = null,
@@ -124,6 +127,10 @@ class _$BillDataCopyWithImpl<$Res, $Val extends BillData>
             accountId: freezed == accountId
                 ? _value.accountId
                 : accountId // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            assetId: freezed == assetId
+                ? _value.assetId
+                : assetId // ignore: cast_nullable_to_non_nullable
                       as String?,
             dueDateMillis: null == dueDateMillis
                 ? _value.dueDateMillis
@@ -179,6 +186,7 @@ abstract class _$$BillDataImplCopyWith<$Res>
     String currencyCode,
     String? categoryId,
     String? accountId,
+    String? assetId,
     int dueDateMillis,
     String frequency,
     bool isPaid,
@@ -210,6 +218,7 @@ class __$$BillDataImplCopyWithImpl<$Res>
     Object? currencyCode = null,
     Object? categoryId = freezed,
     Object? accountId = freezed,
+    Object? assetId = freezed,
     Object? dueDateMillis = null,
     Object? frequency = null,
     Object? isPaid = null,
@@ -244,6 +253,10 @@ class __$$BillDataImplCopyWithImpl<$Res>
         accountId: freezed == accountId
             ? _value.accountId
             : accountId // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        assetId: freezed == assetId
+            ? _value.assetId
+            : assetId // ignore: cast_nullable_to_non_nullable
                   as String?,
         dueDateMillis: null == dueDateMillis
             ? _value.dueDateMillis
@@ -292,6 +305,7 @@ class _$BillDataImpl implements _BillData {
     this.currencyCode = 'USD',
     this.categoryId,
     this.accountId,
+    this.assetId,
     required this.dueDateMillis,
     required this.frequency,
     this.isPaid = false,
@@ -319,6 +333,8 @@ class _$BillDataImpl implements _BillData {
   @override
   final String? accountId;
   @override
+  final String? assetId;
+  @override
   final int dueDateMillis;
   @override
   final String frequency;
@@ -340,7 +356,7 @@ class _$BillDataImpl implements _BillData {
 
   @override
   String toString() {
-    return 'BillData(id: $id, name: $name, amount: $amount, currencyCode: $currencyCode, categoryId: $categoryId, accountId: $accountId, dueDateMillis: $dueDateMillis, frequency: $frequency, isPaid: $isPaid, paidDateMillis: $paidDateMillis, note: $note, reminderEnabled: $reminderEnabled, reminderDaysBefore: $reminderDaysBefore, createdAtMillis: $createdAtMillis)';
+    return 'BillData(id: $id, name: $name, amount: $amount, currencyCode: $currencyCode, categoryId: $categoryId, accountId: $accountId, assetId: $assetId, dueDateMillis: $dueDateMillis, frequency: $frequency, isPaid: $isPaid, paidDateMillis: $paidDateMillis, note: $note, reminderEnabled: $reminderEnabled, reminderDaysBefore: $reminderDaysBefore, createdAtMillis: $createdAtMillis)';
   }
 
   @override
@@ -357,6 +373,7 @@ class _$BillDataImpl implements _BillData {
                 other.categoryId == categoryId) &&
             (identical(other.accountId, accountId) ||
                 other.accountId == accountId) &&
+            (identical(other.assetId, assetId) || other.assetId == assetId) &&
             (identical(other.dueDateMillis, dueDateMillis) ||
                 other.dueDateMillis == dueDateMillis) &&
             (identical(other.frequency, frequency) ||
@@ -383,6 +400,7 @@ class _$BillDataImpl implements _BillData {
     currencyCode,
     categoryId,
     accountId,
+    assetId,
     dueDateMillis,
     frequency,
     isPaid,
@@ -415,6 +433,7 @@ abstract class _BillData implements BillData {
     final String currencyCode,
     final String? categoryId,
     final String? accountId,
+    final String? assetId,
     required final int dueDateMillis,
     required final String frequency,
     final bool isPaid,
@@ -440,6 +459,8 @@ abstract class _BillData implements BillData {
   String? get categoryId;
   @override
   String? get accountId;
+  @override
+  String? get assetId;
   @override
   int get dueDateMillis;
   @override

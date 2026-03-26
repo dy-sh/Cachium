@@ -683,4 +683,20 @@
 - A new "Net Worth History" screen (accessible via "Full History" on the Analytics net worth chart) displays a full-timeline chart with holdings, liabilities, and net worth lines, current net worth with month-over-month trend, and a monthly breakdown list
 - Database schema bumped to v25 with a new NetWorthSnapshots table
 
+#### 66. Asset Acquisition Cost Flag
+- `isAcquisitionCost` boolean field added to the Transaction model to mark transactions auto-created from the asset purchase or sale flow
+- `assetCostBreakdownProvider` uses this flag instead of fragile note string-matching to identify acquisition costs; legacy note-matching retained as a fallback for older records
+- DB schema bumped to v27; Transaction model, TransactionData DTO, repository, form provider, transactions provider, asset analytics providers, and export/import services all updated
+
+#### 67. Asset-Bill Linking
+- Bills can now be linked to an asset via an optional `assetId` field on the Bill model
+- When a linked bill is paid, the auto-created transaction inherits the bill's `assetId`; the next recurring bill also preserves the asset link
+- A "Linked Bills" section on the asset detail screen shows all upcoming bills tied to that asset
+- The bill form screen includes an optional asset selector; `billsByAssetProvider` added for fetching bills filtered by asset
+
+#### 68. Asset Detail Time Range Filtering
+- A time range selector (All Time / This Year / Last 12 Months / Custom) appears below the hero card on the asset detail screen
+- All analytics on the screen — monthly spending, cumulative cost, category breakdown, cost breakdown, stats, and transactions by month — are driven by a new `filteredTransactionsByAssetProvider` that respects the selected date range
+- `assetDetailDateRangeProvider` manages the selected range; the asset list screen continues to use all-time data
+
 ---

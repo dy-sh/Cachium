@@ -38,6 +38,9 @@ class TransactionData with _$TransactionData {
     /// Optional link to an asset
     String? assetId,
 
+    /// Whether this is an acquisition/sale transaction for an asset
+    @Default(false) bool isAcquisitionCost,
+
     /// Currency code (default: USD)
     @Default('USD') String currency,
 

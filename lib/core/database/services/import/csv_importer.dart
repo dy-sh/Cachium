@@ -696,6 +696,10 @@ class CsvImporter {
           final assetIdRaw = (data['asset_id'] ?? data['assetId'])?.toString() ?? '';
           final assetId = (assetIdRaw.isEmpty || assetIdRaw == 'null') ? null : assetIdRaw;
 
+          // Parse is_acquisition_cost
+          final isAcquisitionCostRaw = (data['is_acquisition_cost'] ?? data['isAcquisitionCost'])?.toString() ?? '0';
+          final isAcquisitionCost = isAcquisitionCostRaw == '1' || isAcquisitionCostRaw == 'true';
+
           // Plaintext format, need to encrypt using TransactionData model
           final conversionRateRaw = data['conversion_rate'] ?? data['conversionRate'];
           double conversionRate;
@@ -752,6 +756,7 @@ class CsvImporter {
             note: note,
             merchant: merchant,
             assetId: assetId,
+            isAcquisitionCost: isAcquisitionCost,
             currency: data['currency']?.toString() ?? 'USD',
             conversionRate: conversionRate,
             mainCurrencyCode: mainCurrencyCodeRaw?.toString() ?? 'USD',
@@ -1448,6 +1453,10 @@ class CsvImporter {
           final assetIdRaw2 = (data['asset_id'] ?? data['assetId'])?.toString() ?? '';
           final assetId2 = (assetIdRaw2.isEmpty || assetIdRaw2 == 'null') ? null : assetIdRaw2;
 
+          // Parse is_acquisition_cost
+          final isAcquisitionCostRaw2 = (data['is_acquisition_cost'] ?? data['isAcquisitionCost'])?.toString() ?? '0';
+          final isAcquisitionCost2 = isAcquisitionCostRaw2 == '1' || isAcquisitionCostRaw2 == 'true';
+
           final transactionData = TransactionData(
             id: id,
             amount: amount2,
@@ -1459,6 +1468,7 @@ class CsvImporter {
             note: note,
             merchant: merchant2,
             assetId: assetId2,
+            isAcquisitionCost: isAcquisitionCost2,
             currency: data['currency']?.toString() ?? 'USD',
             conversionRate: conversionRate2,
             mainCurrencyCode: mainCurrencyCodeRaw2?.toString() ?? 'USD',

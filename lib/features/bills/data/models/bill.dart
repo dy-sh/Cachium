@@ -8,6 +8,7 @@ class Bill {
   final String currencyCode;
   final String? categoryId;
   final String? accountId;
+  final String? assetId;
   final DateTime dueDate;
   final RecurrenceFrequency frequency;
   final bool isPaid;
@@ -24,6 +25,7 @@ class Bill {
     this.currencyCode = 'USD',
     this.categoryId,
     this.accountId,
+    this.assetId,
     required this.dueDate,
     this.frequency = RecurrenceFrequency.monthly,
     this.isPaid = false,
@@ -61,6 +63,8 @@ class Bill {
     bool clearCategoryId = false,
     String? accountId,
     bool clearAccountId = false,
+    String? assetId,
+    bool clearAssetId = false,
     DateTime? dueDate,
     RecurrenceFrequency? frequency,
     bool? isPaid,
@@ -79,6 +83,7 @@ class Bill {
       currencyCode: currencyCode ?? this.currencyCode,
       categoryId: clearCategoryId ? null : (categoryId ?? this.categoryId),
       accountId: clearAccountId ? null : (accountId ?? this.accountId),
+      assetId: clearAssetId ? null : (assetId ?? this.assetId),
       dueDate: dueDate ?? this.dueDate,
       frequency: frequency ?? this.frequency,
       isPaid: isPaid ?? this.isPaid,

@@ -291,6 +291,7 @@ class DatabaseExportService {
         destination_amount REAL,
         merchant TEXT,
         asset_id TEXT,
+        is_acquisition_cost INTEGER NOT NULL DEFAULT 0,
         date_millis INTEGER NOT NULL,
         created_at_millis INTEGER NOT NULL
       )
@@ -651,8 +652,8 @@ class DatabaseExportService {
 
     final stmt = exportDb.prepare(
       '''INSERT INTO transactions
-         (id, date, last_updated_at, is_deleted, amount, category_id, account_id, type, note, currency, conversion_rate, main_currency_code, main_currency_amount, destination_account_id, destination_amount, merchant, asset_id, date_millis, created_at_millis)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+         (id, date, last_updated_at, is_deleted, amount, category_id, account_id, type, note, currency, conversion_rate, main_currency_code, main_currency_amount, destination_account_id, destination_amount, merchant, asset_id, is_acquisition_cost, date_millis, created_at_millis)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
     );
 
     for (final row in rows) {
@@ -677,6 +678,7 @@ class DatabaseExportService {
         data.destinationAmount,
         data.merchant,
         data.assetId,
+        data.isAcquisitionCost ? 1 : 0,
         data.dateMillis,
         data.createdAtMillis,
       ]);
@@ -1005,7 +1007,7 @@ class DatabaseExportService {
     } else {
       final rows = await database.select(database.transactions).get();
       csvData.add([
-        'id', 'date', 'last_updated_at', 'is_deleted', 'amount', 'category_id', 'account_id', 'destination_account_id', 'destination_amount', 'type', 'note', 'merchant', 'currency', 'conversion_rate', 'main_currency_code', 'main_currency_amount', 'asset_id', 'date_millis', 'created_at_millis',
+        'id', 'date', 'last_updated_at', 'is_deleted', 'amount', 'category_id', 'account_id', 'destination_account_id', 'destination_amount', 'type', 'note', 'merchant', 'currency', 'conversion_rate', 'main_currency_code', 'main_currency_amount', 'asset_id', 'is_acquisition_cost', 'date_millis', 'created_at_millis',
       ]);
 
       for (final row in rows) {
@@ -1030,6 +1032,7 @@ class DatabaseExportService {
           data.mainCurrencyCode,
           data.mainCurrencyAmount ?? '',
           data.assetId ?? '',
+          data.isAcquisitionCost ? 1 : 0,
           data.dateMillis,
           data.createdAtMillis,
         ]);

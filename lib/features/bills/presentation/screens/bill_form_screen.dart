@@ -15,6 +15,8 @@ import '../../../categories/presentation/providers/categories_provider.dart';
 
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../transactions/data/models/recurring_rule.dart';
+import '../../../assets/presentation/providers/assets_provider.dart';
+import '../../../assets/presentation/widgets/asset_selector.dart';
 import '../../../transactions/presentation/widgets/account_selector.dart';
 import '../../../transactions/presentation/widgets/category_selector.dart';
 import '../../data/models/bill.dart';
@@ -39,6 +41,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
   String _currencyCode = 'USD';
   String? _categoryId;
   String? _accountId;
+  String? _assetId;
   DateTime _dueDate = DateTime.now().add(const Duration(days: 30));
   RecurrenceFrequency _frequency = RecurrenceFrequency.monthly;
   bool _reminderEnabled = true;
@@ -83,6 +86,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
       _currencyCode = bill.currencyCode;
       _categoryId = bill.categoryId;
       _accountId = bill.accountId;
+      _assetId = bill.assetId;
       _dueDate = bill.dueDate;
       _frequency = bill.frequency;
       _reminderEnabled = bill.reminderEnabled;
@@ -256,6 +260,30 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
                         const SizedBox(height: AppSpacing.lg),
                       ],
 
+                      // Asset (optional)
+                      Builder(builder: (context) {
+                        final activeAssets = ref.watch(activeAssetsProvider);
+                        if (activeAssets.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Asset (optional)', style: AppTypography.labelMedium),
+                            const SizedBox(height: AppSpacing.sm),
+                            AssetSelector(
+                              assets: activeAssets,
+                              selectedId: _assetId,
+                              onChanged: (id) {
+                                setState(() => _assetId = id);
+                                _markDirty();
+                              },
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                          ],
+                        );
+                      }),
+
                       // Reminder toggle
                       Surface(
                         padding: const EdgeInsets.all(AppSpacing.md),
@@ -383,6 +411,8 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
           clearCategoryId: _categoryId == null,
           accountId: _accountId,
           clearAccountId: _accountId == null,
+          assetId: _assetId,
+          clearAssetId: _assetId == null,
           dueDate: _dueDate,
           frequency: _frequency,
           note: _noteController.text.trim().isEmpty
@@ -401,6 +431,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
           currencyCode: _currencyCode,
           categoryId: _categoryId,
           accountId: _accountId,
+          assetId: _assetId,
           dueDate: _dueDate,
           frequency: _frequency,
           note: _noteController.text.trim().isEmpty

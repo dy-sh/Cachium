@@ -13,6 +13,7 @@ class BillData with _$BillData {
     @Default('USD') String currencyCode,
     String? categoryId,
     String? accountId,
+    String? assetId,
     required int dueDateMillis,
     required String frequency,
     @Default(false) bool isPaid,

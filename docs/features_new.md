@@ -1,5 +1,10 @@
 # New Features Log
 
+## 2026-03-26
+- **Asset Acquisition Cost Flag**: Adds an `isAcquisitionCost` boolean to the Transaction model to reliably identify transactions auto-created from the asset purchase or sale flow. `assetCostBreakdownProvider` uses this flag instead of fragile note string-matching; legacy note-matching is kept as a fallback for older records. DB schema bumped to v27; Transaction model, DTO, repository, form provider, transactions provider, asset analytics providers, and export/import services all updated.
+- **Asset-Bill Linking**: Bills can now be linked to an asset via an optional `assetId` field. When a linked bill is paid, the auto-created transaction and the next recurring occurrence both inherit the `assetId`. A "Linked Bills" section on the asset detail screen lists upcoming bills tied to the asset; the bill form screen includes an optional asset selector. `billsByAssetProvider` added for fetching bills by asset.
+- **Asset Detail Time Range Filtering**: The asset detail screen gains a time range selector (All Time / This Year / Last 12 Months / Custom) below the hero card. All analytics panels — monthly spending, cumulative cost, category breakdown, cost breakdown, stats, and transactions by month — are filtered through a new `filteredTransactionsByAssetProvider` driven by `assetDetailDateRangeProvider`. The asset list screen continues to show all-time data.
+
 ## 2026-03-20
 - **Auto-Categorization by Merchant**: When creating a new transaction, typing a previously used merchant name automatically suggests the most frequently used category for that merchant. A "Auto-selected from merchant" hint appears below the category field when auto-filled; manual selection overrides it. Configurable via Settings > Transactions > "Auto-categorize by Merchant" (default: on).
 - **Advanced Transaction Filters**: The transactions list gains an expandable filter panel (toggled via a sliders icon next to the search bar) with amount range, date range picker, category multi-select, and account multi-select filters. An active filter count badge shows on the icon and "Clear All Filters" resets everything at once.
