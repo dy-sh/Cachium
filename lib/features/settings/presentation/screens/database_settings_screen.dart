@@ -226,8 +226,8 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
   }
 
   Widget _buildCorruptionInfo() {
-    final status = ref.watch(corruptionStatusProvider);
-    if (!status.hasCorruption) return const SizedBox.shrink();
+    final status = ref.watch(corruptionStatusProvider).valueOrNull;
+    if (status == null || !status.hasCorruption) return const SizedBox.shrink();
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),

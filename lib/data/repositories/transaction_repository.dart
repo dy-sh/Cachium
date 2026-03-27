@@ -5,6 +5,8 @@ import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
 import '../../features/transactions/data/models/transaction.dart' as ui;
 import '../encryption/transaction_data.dart';
+import 'corruption_tracker.dart';
+import 'decryption_cache.dart';
 
 /// Repository for managing encrypted transaction storage.
 ///
@@ -15,14 +17,12 @@ import '../encryption/transaction_data.dart';
 /// - Throws [RepositoryException] for database/encryption failures
 /// - Throws [EntityNotFoundException] when requested entity doesn't exist
 /// - Returns null from getTransaction() if not found (for optional lookups)
-class TransactionRepository {
+class TransactionRepository with CorruptionTracker {
   final db.AppDatabase database;
   final EncryptionService encryptionService;
+  final _decryptionCache = DecryptionCache<ui.Transaction>(maxEntries: 2000);
 
   static const _entityType = 'Transaction';
-
-  int _lastCorruptedCount = 0;
-  int get lastCorruptedCount => _lastCorruptedCount;
 
   TransactionRepository({
     required this.database,
@@ -93,6 +93,7 @@ class TransactionRepository {
         lastUpdatedAt: transaction.createdAt.millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
+      _decryptionCache.invalidate(transaction.id);
     } catch (e) {
       throw RepositoryException.create(entityType: _entityType, cause: e);
     }
@@ -113,6 +114,7 @@ class TransactionRepository {
         lastUpdatedAt: transaction.createdAt.millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
+      _decryptionCache.invalidate(transaction.id);
     } catch (e) {
       throw RepositoryException.create(entityType: _entityType, cause: e);
     }
@@ -165,6 +167,7 @@ class TransactionRepository {
         encryptedBlob: encryptedBlob,
         isDeleted: isDeleted,
       );
+      _decryptionCache.invalidate(transaction.id);
     } catch (e) {
       throw RepositoryException.create(entityType: _entityType, cause: e);
     }
@@ -179,12 +182,16 @@ class TransactionRepository {
     if (row == null) return null;
 
     try {
+      final cached = _decryptionCache.get(row.id, row.encryptedBlob);
+      if (cached != null) return cached;
       final data = await encryptionService.decrypt(
         row.encryptedBlob,
         expectedId: row.id,
         expectedDateMillis: row.date,
       );
-      return _toTransaction(data);
+      final result = _toTransaction(data);
+      _decryptionCache.put(row.id, row.encryptedBlob, result);
+      return result;
     } catch (e) {
       throw RepositoryException.decryption(
         entityType: _entityType,
@@ -217,12 +224,16 @@ class TransactionRepository {
       final results = await Future.wait(
         rows.map((row) async {
           try {
+            final cached = _decryptionCache.get(row.id, row.encryptedBlob);
+            if (cached != null) return cached;
             final data = await encryptionService.decrypt(
               row.encryptedBlob,
               expectedId: row.id,
               expectedDateMillis: row.date,
             );
-            return _toTransaction(data);
+            final result = _toTransaction(data);
+            _decryptionCache.put(row.id, row.encryptedBlob, result);
+            return result;
           } catch (e) {
             debugPrint('WARNING: Corrupted transaction row id=${row.id}: $e');
             corruptedCount++;
@@ -231,7 +242,7 @@ class TransactionRepository {
         }),
       );
 
-      _lastCorruptedCount = corruptedCount;
+      updateCorruptedCount(corruptedCount);
       return results.whereType<ui.Transaction>().toList();
     } catch (e) {
       if (e is RepositoryException) rethrow;
@@ -250,12 +261,16 @@ class TransactionRepository {
       final results = await Future.wait(
         rows.map((row) async {
           try {
+            final cached = _decryptionCache.get(row.id, row.encryptedBlob);
+            if (cached != null) return cached;
             final data = await encryptionService.decrypt(
               row.encryptedBlob,
               expectedId: row.id,
               expectedDateMillis: row.date,
             );
-            return _toTransaction(data);
+            final result = _toTransaction(data);
+            _decryptionCache.put(row.id, row.encryptedBlob, result);
+            return result;
           } catch (e) {
             debugPrint('WARNING: Corrupted deleted transaction row id=${row.id}: $e');
             corruptedCount++;
@@ -264,7 +279,7 @@ class TransactionRepository {
         }),
       );
 
-      _lastCorruptedCount = corruptedCount;
+      updateCorruptedCount(corruptedCount);
       return results.whereType<ui.Transaction>().toList();
     } catch (e) {
       if (e is RepositoryException) rethrow;
@@ -287,6 +302,7 @@ class TransactionRepository {
         lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
+      _decryptionCache.invalidate(transaction.id);
     } catch (e) {
       throw RepositoryException.update(
         entityType: _entityType,
@@ -305,6 +321,7 @@ class TransactionRepository {
         id,
         DateTime.now().millisecondsSinceEpoch,
       );
+      _decryptionCache.invalidate(id);
     } catch (e) {
       throw RepositoryException.delete(
         entityType: _entityType,
@@ -323,6 +340,7 @@ class TransactionRepository {
         id,
         DateTime.now().millisecondsSinceEpoch,
       );
+      _decryptionCache.invalidate(id);
     } catch (e) {
       throw RepositoryException.update(
         entityType: _entityType,
@@ -344,12 +362,16 @@ class TransactionRepository {
       final results = await Future.wait(
         rows.map((row) async {
           try {
+            final cached = _decryptionCache.get(row.id, row.encryptedBlob);
+            if (cached != null) return cached;
             final data = await encryptionService.decrypt(
               row.encryptedBlob,
               expectedId: row.id,
               expectedDateMillis: row.date,
             );
-            return _toTransaction(data);
+            final result = _toTransaction(data);
+            _decryptionCache.put(row.id, row.encryptedBlob, result);
+            return result;
           } catch (e) {
             debugPrint('WARNING: Corrupted transaction row id=${row.id}: $e');
             corruptedCount++;
@@ -358,7 +380,7 @@ class TransactionRepository {
         }),
       );
 
-      _lastCorruptedCount = corruptedCount;
+      updateCorruptedCount(corruptedCount);
       return results.whereType<ui.Transaction>().toList();
     });
   }

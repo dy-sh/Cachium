@@ -197,6 +197,17 @@ class ValidationException extends AppException {
   }
 }
 
+/// Exception thrown when the encryption key in secure storage is corrupted.
+///
+/// This is a fatal error — all encrypted data becomes unreadable if a new
+/// key is generated. The app should surface this to the user rather than
+/// silently replacing the key.
+class EncryptionKeyCorruptedException extends AppException {
+  const EncryptionKeyCorruptedException({
+    required super.message,
+  }) : super(code: 'KEY_CORRUPTED');
+}
+
 /// Exception thrown when an import operation fails.
 class ImportException extends AppException {
   /// The file format that was being imported (e.g., 'sqlite', 'csv')

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app.dart';
 import 'core/database/services/net_worth_snapshot_service.dart';
+import 'core/exceptions/app_exception.dart';
 import 'core/providers/database_providers.dart';
 import 'core/services/notification_service.dart';
 import 'features/settings/presentation/providers/settings_provider.dart';
@@ -32,20 +33,33 @@ void main() async {
   try {
     await container.read(settingsProvider.future);
     await container.read(settingsProvider.notifier).migrateCredentialsIfNeeded();
+  } on EncryptionKeyCorruptedException catch (e) {
+    debugPrint('FATAL: Encryption key corrupted: $e');
+    container.read(encryptionKeyCorruptedProvider.notifier).state = true;
   } catch (e) {
     debugPrint('Credential migration failed: $e');
+    container.read(startupErrorProvider.notifier).state =
+        'Credential migration incomplete. Your PIN/password may need to be re-set.';
   }
 
   // Initialize notification service
   await NotificationService().init();
 
   // Clean up soft-deleted records older than 30 days
-  db.cleanupDeletedRecords();
+  try {
+    db.cleanupDeletedRecords();
+  } catch (e) {
+    debugPrint('Cleanup of deleted records failed: $e');
+  }
 
-  // Take monthly net worth snapshot (non-blocking)
-  NetWorthSnapshotService.takeSnapshotIfNeeded(container);
+  // Take monthly net worth snapshot (non-blocking, errors handled internally)
+  NetWorthSnapshotService.takeSnapshotIfNeeded(container).catchError((e) {
+    debugPrint('Net worth snapshot failed: $e');
+  });
   // Backfill historical snapshots if none exist (async, non-blocking)
-  NetWorthSnapshotService.backfillIfNeeded(container);
+  NetWorthSnapshotService.backfillIfNeeded(container).catchError((e) {
+    debugPrint('Net worth backfill failed: $e');
+  });
 
   runApp(
     UncontrolledProviderScope(

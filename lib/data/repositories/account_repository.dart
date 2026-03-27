@@ -5,6 +5,8 @@ import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
 import '../../features/accounts/data/models/account.dart' as ui;
 import '../encryption/account_data.dart';
+import 'corruption_tracker.dart';
+import 'decryption_cache.dart';
 
 /// Repository for managing encrypted account storage.
 ///
@@ -15,14 +17,12 @@ import '../encryption/account_data.dart';
 /// - Throws [RepositoryException] for database/encryption failures
 /// - Throws [EntityNotFoundException] when requested entity doesn't exist
 /// - Returns null from getAccount() if not found (for optional lookups)
-class AccountRepository {
+class AccountRepository with CorruptionTracker {
   final db.AppDatabase database;
   final EncryptionService encryptionService;
+  final _decryptionCache = DecryptionCache<ui.Account>();
 
   static const _entityType = 'Account';
-
-  int _lastCorruptedCount = 0;
-  int get lastCorruptedCount => _lastCorruptedCount;
 
   AccountRepository({
     required this.database,
@@ -90,6 +90,7 @@ class AccountRepository {
         lastUpdatedAt: account.createdAt.millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
+      _decryptionCache.invalidate(account.id);
     } catch (e) {
       throw RepositoryException.create(entityType: _entityType, cause: e);
     }
@@ -110,6 +111,7 @@ class AccountRepository {
         lastUpdatedAt: account.createdAt.millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
+      _decryptionCache.invalidate(account.id);
     } catch (e) {
       throw RepositoryException.create(entityType: _entityType, cause: e);
     }
@@ -140,6 +142,7 @@ class AccountRepository {
         encryptedBlob: encryptedBlob,
         isDeleted: isDeleted,
       );
+      _decryptionCache.invalidate(account.id);
     } catch (e) {
       throw RepositoryException.create(entityType: _entityType, cause: e);
     }
@@ -154,12 +157,16 @@ class AccountRepository {
     if (row == null) return null;
 
     try {
+      final cached = _decryptionCache.get(row.id, row.encryptedBlob);
+      if (cached != null) return cached;
       final data = await encryptionService.decryptAccount(
         row.encryptedBlob,
         expectedId: row.id,
         expectedCreatedAtMillis: row.createdAt,
       );
-      return _toAccount(data);
+      final result = _toAccount(data);
+      _decryptionCache.put(row.id, row.encryptedBlob, result);
+      return result;
     } catch (e) {
       throw RepositoryException.decryption(
         entityType: _entityType,
@@ -192,12 +199,16 @@ class AccountRepository {
       final results = await Future.wait(
         rows.map((row) async {
           try {
+            final cached = _decryptionCache.get(row.id, row.encryptedBlob);
+            if (cached != null) return cached;
             final data = await encryptionService.decryptAccount(
               row.encryptedBlob,
               expectedId: row.id,
               expectedCreatedAtMillis: row.createdAt,
             );
-            return _toAccount(data);
+            final result = _toAccount(data);
+            _decryptionCache.put(row.id, row.encryptedBlob, result);
+            return result;
           } catch (e) {
             debugPrint('WARNING: Corrupted account row id=${row.id}: $e');
             corruptedCount++;
@@ -206,7 +217,7 @@ class AccountRepository {
         }),
       );
 
-      _lastCorruptedCount = corruptedCount;
+      updateCorruptedCount(corruptedCount);
       return results.whereType<ui.Account>().toList();
     } catch (e) {
       if (e is RepositoryException) rethrow;
@@ -229,6 +240,7 @@ class AccountRepository {
         lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
+      _decryptionCache.invalidate(account.id);
     } catch (e) {
       throw RepositoryException.update(
         entityType: _entityType,
@@ -247,6 +259,7 @@ class AccountRepository {
         id,
         DateTime.now().millisecondsSinceEpoch,
       );
+      _decryptionCache.invalidate(id);
     } catch (e) {
       throw RepositoryException.delete(
         entityType: _entityType,
@@ -268,12 +281,16 @@ class AccountRepository {
       final results = await Future.wait(
         rows.map((row) async {
           try {
+            final cached = _decryptionCache.get(row.id, row.encryptedBlob);
+            if (cached != null) return cached;
             final data = await encryptionService.decryptAccount(
               row.encryptedBlob,
               expectedId: row.id,
               expectedCreatedAtMillis: row.createdAt,
             );
-            return _toAccount(data);
+            final result = _toAccount(data);
+            _decryptionCache.put(row.id, row.encryptedBlob, result);
+            return result;
           } catch (e) {
             debugPrint('WARNING: Corrupted account row id=${row.id}: $e');
             corruptedCount++;
@@ -282,7 +299,7 @@ class AccountRepository {
         }),
       );
 
-      _lastCorruptedCount = corruptedCount;
+      updateCorruptedCount(corruptedCount);
       return results.whereType<ui.Account>().toList();
     });
   }

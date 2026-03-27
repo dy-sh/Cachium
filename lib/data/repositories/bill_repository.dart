@@ -6,16 +6,16 @@ import '../../core/exceptions/app_exception.dart';
 import '../../features/bills/data/models/bill.dart' as ui;
 import '../../features/transactions/data/models/recurring_rule.dart';
 import '../encryption/bill_data.dart';
+import 'corruption_tracker.dart';
+import 'decryption_cache.dart';
 
 /// Repository for managing encrypted bill storage.
-class BillRepository {
+class BillRepository with CorruptionTracker {
   final db.AppDatabase database;
   final EncryptionService encryptionService;
+  final _decryptionCache = DecryptionCache<ui.Bill>();
 
   static const _entityType = 'Bill';
-
-  int _lastCorruptedCount = 0;
-  int get lastCorruptedCount => _lastCorruptedCount;
 
   BillRepository({
     required this.database,
@@ -78,6 +78,7 @@ class BillRepository {
         lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
+      _decryptionCache.invalidate(bill.id);
     } catch (e) {
       throw RepositoryException.create(entityType: _entityType, cause: e);
     }
@@ -93,6 +94,7 @@ class BillRepository {
         lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
+      _decryptionCache.invalidate(bill.id);
     } catch (e) {
       throw RepositoryException.update(entityType: _entityType, cause: e);
     }
@@ -104,6 +106,7 @@ class BillRepository {
         id,
         DateTime.now().millisecondsSinceEpoch,
       );
+      _decryptionCache.invalidate(id);
     } catch (e) {
       throw RepositoryException.delete(entityType: _entityType, cause: e);
     }
@@ -117,12 +120,16 @@ class BillRepository {
       final results = await Future.wait(
         rows.map((row) async {
           try {
+            final cached = _decryptionCache.get(row.id, row.encryptedBlob);
+            if (cached != null) return cached;
             final data = await encryptionService.decryptBill(
               row.encryptedBlob,
               expectedId: row.id,
               expectedCreatedAtMillis: row.createdAt,
             );
-            return _toBill(data);
+            final result = _toBill(data);
+            _decryptionCache.put(row.id, row.encryptedBlob, result);
+            return result;
           } catch (e) {
             debugPrint('WARNING: Corrupted bill row id=${row.id}: $e');
             corruptedCount++;
@@ -131,7 +138,7 @@ class BillRepository {
         }),
       );
 
-      _lastCorruptedCount = corruptedCount;
+      updateCorruptedCount(corruptedCount);
       return results.whereType<ui.Bill>().toList();
     } catch (e) {
       throw RepositoryException.fetch(entityType: _entityType, cause: e);
@@ -145,12 +152,16 @@ class BillRepository {
       final results = await Future.wait(
         rows.map((row) async {
           try {
+            final cached = _decryptionCache.get(row.id, row.encryptedBlob);
+            if (cached != null) return cached;
             final data = await encryptionService.decryptBill(
               row.encryptedBlob,
               expectedId: row.id,
               expectedCreatedAtMillis: row.createdAt,
             );
-            return _toBill(data);
+            final result = _toBill(data);
+            _decryptionCache.put(row.id, row.encryptedBlob, result);
+            return result;
           } catch (e) {
             debugPrint('WARNING: Corrupted bill row id=${row.id}: $e');
             corruptedCount++;
@@ -159,7 +170,7 @@ class BillRepository {
         }),
       );
 
-      _lastCorruptedCount = corruptedCount;
+      updateCorruptedCount(corruptedCount);
       return results.whereType<ui.Bill>().toList();
     });
   }

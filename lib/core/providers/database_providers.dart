@@ -161,3 +161,10 @@ final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
     database: ref.watch(databaseProvider),
   );
 });
+
+/// Startup error message to display to the user (e.g., key corruption, migration failure).
+/// Null means no error.
+final startupErrorProvider = StateProvider<String?>((ref) => null);
+
+/// Whether the encryption key is corrupted (fatal — app cannot decrypt data).
+final encryptionKeyCorruptedProvider = StateProvider<bool>((ref) => false);

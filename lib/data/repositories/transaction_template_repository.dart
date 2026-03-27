@@ -6,15 +6,15 @@ import '../../core/exceptions/app_exception.dart';
 import '../../features/transactions/data/models/transaction.dart' as tx;
 import '../../features/transactions/data/models/transaction_template.dart' as ui;
 import '../encryption/transaction_template_data.dart';
+import 'corruption_tracker.dart';
+import 'decryption_cache.dart';
 
-class TransactionTemplateRepository {
+class TransactionTemplateRepository with CorruptionTracker {
   final db.AppDatabase database;
   final EncryptionService encryptionService;
+  final _decryptionCache = DecryptionCache<ui.TransactionTemplate>();
 
   static const _entityType = 'TransactionTemplate';
-
-  int _lastCorruptedCount = 0;
-  int get lastCorruptedCount => _lastCorruptedCount;
 
   TransactionTemplateRepository({
     required this.database,
@@ -67,6 +67,7 @@ class TransactionTemplateRepository {
         lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
+      _decryptionCache.invalidate(template.id);
     } catch (e) {
       throw RepositoryException.create(entityType: _entityType, cause: e);
     }
@@ -82,6 +83,7 @@ class TransactionTemplateRepository {
         lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
+      _decryptionCache.invalidate(template.id);
     } catch (e) {
       throw RepositoryException.update(entityType: _entityType, cause: e);
     }
@@ -93,6 +95,7 @@ class TransactionTemplateRepository {
         id,
         DateTime.now().millisecondsSinceEpoch,
       );
+      _decryptionCache.invalidate(id);
     } catch (e) {
       throw RepositoryException.delete(entityType: _entityType, cause: e);
     }
@@ -106,12 +109,16 @@ class TransactionTemplateRepository {
       final results = await Future.wait(
         rows.map((row) async {
           try {
+            final cached = _decryptionCache.get(row.id, row.encryptedBlob);
+            if (cached != null) return cached;
             final data = await encryptionService.decryptTransactionTemplate(
               row.encryptedBlob,
               expectedId: row.id,
               expectedCreatedAtMillis: row.createdAt,
             );
-            return _toTemplate(data);
+            final result = _toTemplate(data);
+            _decryptionCache.put(row.id, row.encryptedBlob, result);
+            return result;
           } catch (e) {
             debugPrint('WARNING: Corrupted template row id=${row.id}: $e');
             corruptedCount++;
@@ -120,7 +127,7 @@ class TransactionTemplateRepository {
         }),
       );
 
-      _lastCorruptedCount = corruptedCount;
+      updateCorruptedCount(corruptedCount);
       return results.whereType<ui.TransactionTemplate>().toList();
     } catch (e) {
       throw RepositoryException.fetch(entityType: _entityType, cause: e);

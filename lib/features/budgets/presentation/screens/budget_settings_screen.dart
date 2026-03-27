@@ -364,6 +364,7 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
   final _amountController = TextEditingController();
   String? _selectedCategoryId;
   bool _rolloverEnabled = false;
+  bool _showValidationErrors = false;
 
   @override
   void initState() {
@@ -483,6 +484,14 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
                 },
               ),
             ),
+            if (_showValidationErrors && _selectedCategoryId == null)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.xs),
+                child: Text(
+                  'Select a category',
+                  style: AppTypography.labelSmall.copyWith(color: AppColors.red),
+                ),
+              ),
             const SizedBox(height: AppSpacing.lg),
             // Amount input
             Text('Budget Amount', style: AppTypography.labelLarge),
@@ -511,6 +520,14 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
                 ),
               ),
             ),
+            if (_showValidationErrors && (double.tryParse(_amountController.text) ?? 0) <= 0)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.xs),
+                child: Text(
+                  'Enter an amount greater than zero',
+                  style: AppTypography.labelSmall.copyWith(color: AppColors.red),
+                ),
+              ),
             const SizedBox(height: AppSpacing.md),
             // Rollover toggle
             Row(
@@ -544,9 +561,7 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
               width: double.infinity,
               height: AppSpacing.buttonHeight,
               child: ElevatedButton(
-                onPressed: _selectedCategoryId != null
-                    ? () => _save(context)
-                    : null,
+                onPressed: () => _save(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: accentColor,
                   foregroundColor: AppColors.background,
@@ -571,7 +586,10 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
 
   Future<void> _save(BuildContext context) async {
     final amount = double.tryParse(_amountController.text) ?? 0;
-    if (amount <= 0 || _selectedCategoryId == null) return;
+    if (amount <= 0 || _selectedCategoryId == null) {
+      setState(() => _showValidationErrors = true);
+      return;
+    }
 
     try {
       final notifier = ref.read(budgetsProvider.notifier);

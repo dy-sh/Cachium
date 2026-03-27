@@ -5,6 +5,8 @@ import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
 import '../../features/categories/data/models/category.dart' as ui;
 import '../encryption/category_data.dart';
+import 'corruption_tracker.dart';
+import 'decryption_cache.dart';
 
 /// Repository for managing encrypted category storage.
 ///
@@ -15,14 +17,12 @@ import '../encryption/category_data.dart';
 /// - Throws [RepositoryException] for database/encryption failures
 /// - Throws [EntityNotFoundException] when requested entity doesn't exist
 /// - Returns null from getCategory() if not found (for optional lookups)
-class CategoryRepository {
+class CategoryRepository with CorruptionTracker {
   final db.AppDatabase database;
   final EncryptionService encryptionService;
+  final _decryptionCache = DecryptionCache<ui.Category>();
 
   static const _entityType = 'Category';
-
-  int _lastCorruptedCount = 0;
-  int get lastCorruptedCount => _lastCorruptedCount;
 
   CategoryRepository({
     required this.database,
@@ -82,6 +82,7 @@ class CategoryRepository {
         lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
+      _decryptionCache.invalidate(category.id);
     } catch (e) {
       throw RepositoryException.create(entityType: _entityType, cause: e);
     }
@@ -101,6 +102,7 @@ class CategoryRepository {
         lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
+      _decryptionCache.invalidate(category.id);
     } catch (e) {
       throw RepositoryException.create(entityType: _entityType, cause: e);
     }
@@ -130,6 +132,7 @@ class CategoryRepository {
         encryptedBlob: encryptedBlob,
         isDeleted: isDeleted,
       );
+      _decryptionCache.invalidate(category.id);
     } catch (e) {
       throw RepositoryException.create(entityType: _entityType, cause: e);
     }
@@ -144,12 +147,16 @@ class CategoryRepository {
     if (row == null) return null;
 
     try {
+      final cached = _decryptionCache.get(row.id, row.encryptedBlob);
+      if (cached != null) return cached;
       final data = await encryptionService.decryptCategory(
         row.encryptedBlob,
         expectedId: row.id,
         expectedSortOrder: row.sortOrder,
       );
-      return _toCategory(data);
+      final result = _toCategory(data);
+      _decryptionCache.put(row.id, row.encryptedBlob, result);
+      return result;
     } catch (e) {
       throw RepositoryException.decryption(
         entityType: _entityType,
@@ -182,12 +189,16 @@ class CategoryRepository {
       final results = await Future.wait(
         rows.map((row) async {
           try {
+            final cached = _decryptionCache.get(row.id, row.encryptedBlob);
+            if (cached != null) return cached;
             final data = await encryptionService.decryptCategory(
               row.encryptedBlob,
               expectedId: row.id,
               expectedSortOrder: row.sortOrder,
             );
-            return _toCategory(data);
+            final result = _toCategory(data);
+            _decryptionCache.put(row.id, row.encryptedBlob, result);
+            return result;
           } catch (e) {
             debugPrint('WARNING: Corrupted category row id=${row.id}: $e');
             corruptedCount++;
@@ -196,7 +207,7 @@ class CategoryRepository {
         }),
       );
 
-      _lastCorruptedCount = corruptedCount;
+      updateCorruptedCount(corruptedCount);
       return results.whereType<ui.Category>().toList();
     } catch (e) {
       if (e is RepositoryException) rethrow;
@@ -218,6 +229,7 @@ class CategoryRepository {
         lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
+      _decryptionCache.invalidate(category.id);
     } catch (e) {
       throw RepositoryException.update(
         entityType: _entityType,
@@ -236,6 +248,7 @@ class CategoryRepository {
         id,
         DateTime.now().millisecondsSinceEpoch,
       );
+      _decryptionCache.invalidate(id);
     } catch (e) {
       throw RepositoryException.delete(
         entityType: _entityType,
@@ -256,12 +269,16 @@ class CategoryRepository {
       final results = await Future.wait(
         rows.map((row) async {
           try {
+            final cached = _decryptionCache.get(row.id, row.encryptedBlob);
+            if (cached != null) return cached;
             final data = await encryptionService.decryptCategory(
               row.encryptedBlob,
               expectedId: row.id,
               expectedSortOrder: row.sortOrder,
             );
-            return _toCategory(data);
+            final result = _toCategory(data);
+            _decryptionCache.put(row.id, row.encryptedBlob, result);
+            return result;
           } catch (e) {
             debugPrint('WARNING: Corrupted category row id=${row.id}: $e');
             corruptedCount++;
@@ -270,7 +287,7 @@ class CategoryRepository {
         }),
       );
 
-      _lastCorruptedCount = corruptedCount;
+      updateCorruptedCount(corruptedCount);
       return results.whereType<ui.Category>().toList();
     });
   }

@@ -5,19 +5,19 @@ import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
 import '../../features/assets/data/models/asset.dart' as ui;
 import '../encryption/asset_data.dart';
+import 'corruption_tracker.dart';
+import 'decryption_cache.dart';
 
 /// Repository for managing encrypted asset storage.
 ///
 /// Converts between UI Asset models and encrypted database records.
 /// All sensitive data is encrypted before storage and decrypted on retrieval.
-class AssetRepository {
+class AssetRepository with CorruptionTracker {
   final db.AppDatabase database;
   final EncryptionService encryptionService;
+  final _decryptionCache = DecryptionCache<ui.Asset>();
 
   static const _entityType = 'Asset';
-
-  int _lastCorruptedCount = 0;
-  int get lastCorruptedCount => _lastCorruptedCount;
 
   AssetRepository({
     required this.database,
@@ -92,6 +92,7 @@ class AssetRepository {
         lastUpdatedAt: asset.createdAt.millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
+      _decryptionCache.invalidate(asset.id);
     } catch (e) {
       throw RepositoryException.create(entityType: _entityType, cause: e);
     }
@@ -103,12 +104,16 @@ class AssetRepository {
     if (row == null) return null;
 
     try {
+      final cached = _decryptionCache.get(row.id, row.encryptedBlob);
+      if (cached != null) return cached;
       final data = await encryptionService.decryptAsset(
         row.encryptedBlob,
         expectedId: row.id,
         expectedCreatedAtMillis: row.createdAt,
       );
-      return _toAsset(data);
+      final result = _toAsset(data);
+      _decryptionCache.put(row.id, row.encryptedBlob, result);
+      return result;
     } catch (e) {
       throw RepositoryException.decryption(
         entityType: _entityType,
@@ -127,12 +132,16 @@ class AssetRepository {
       final results = await Future.wait(
         rows.map((row) async {
           try {
+            final cached = _decryptionCache.get(row.id, row.encryptedBlob);
+            if (cached != null) return cached;
             final data = await encryptionService.decryptAsset(
               row.encryptedBlob,
               expectedId: row.id,
               expectedCreatedAtMillis: row.createdAt,
             );
-            return _toAsset(data);
+            final result = _toAsset(data);
+            _decryptionCache.put(row.id, row.encryptedBlob, result);
+            return result;
           } catch (e) {
             debugPrint('WARNING: Corrupted asset row id=${row.id}: $e');
             corruptedCount++;
@@ -141,7 +150,7 @@ class AssetRepository {
         }),
       );
 
-      _lastCorruptedCount = corruptedCount;
+      updateCorruptedCount(corruptedCount);
       return results.whereType<ui.Asset>().toList();
     } catch (e) {
       if (e is RepositoryException) rethrow;
@@ -161,6 +170,7 @@ class AssetRepository {
         lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
+      _decryptionCache.invalidate(asset.id);
     } catch (e) {
       throw RepositoryException.update(
         entityType: _entityType,
@@ -177,6 +187,7 @@ class AssetRepository {
         id,
         DateTime.now().millisecondsSinceEpoch,
       );
+      _decryptionCache.invalidate(id);
     } catch (e) {
       throw RepositoryException.delete(
         entityType: _entityType,
@@ -194,12 +205,16 @@ class AssetRepository {
       final results = await Future.wait(
         rows.map((row) async {
           try {
+            final cached = _decryptionCache.get(row.id, row.encryptedBlob);
+            if (cached != null) return cached;
             final data = await encryptionService.decryptAsset(
               row.encryptedBlob,
               expectedId: row.id,
               expectedCreatedAtMillis: row.createdAt,
             );
-            return _toAsset(data);
+            final result = _toAsset(data);
+            _decryptionCache.put(row.id, row.encryptedBlob, result);
+            return result;
           } catch (e) {
             debugPrint('WARNING: Corrupted asset row id=${row.id}: $e');
             corruptedCount++;
@@ -208,7 +223,7 @@ class AssetRepository {
         }),
       );
 
-      _lastCorruptedCount = corruptedCount;
+      updateCorruptedCount(corruptedCount);
       return results.whereType<ui.Asset>().toList();
     });
   }

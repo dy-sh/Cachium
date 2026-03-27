@@ -6,16 +6,16 @@ import '../../core/exceptions/app_exception.dart';
 import '../../features/transactions/data/models/recurring_rule.dart' as ui;
 import '../../features/transactions/data/models/transaction.dart' as tx;
 import '../encryption/recurring_rule_data.dart';
+import 'corruption_tracker.dart';
+import 'decryption_cache.dart';
 
 /// Repository for managing encrypted recurring rule storage.
-class RecurringRuleRepository {
+class RecurringRuleRepository with CorruptionTracker {
   final db.AppDatabase database;
   final EncryptionService encryptionService;
+  final _decryptionCache = DecryptionCache<ui.RecurringRule>();
 
   static const _entityType = 'RecurringRule';
-
-  int _lastCorruptedCount = 0;
-  int get lastCorruptedCount => _lastCorruptedCount;
 
   RecurringRuleRepository({
     required this.database,
@@ -86,6 +86,7 @@ class RecurringRuleRepository {
         lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
+      _decryptionCache.invalidate(rule.id);
     } catch (e) {
       throw RepositoryException.create(entityType: _entityType, cause: e);
     }
@@ -101,6 +102,7 @@ class RecurringRuleRepository {
         lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
+      _decryptionCache.invalidate(rule.id);
     } catch (e) {
       throw RepositoryException.update(entityType: _entityType, cause: e);
     }
@@ -112,6 +114,7 @@ class RecurringRuleRepository {
         id,
         DateTime.now().millisecondsSinceEpoch,
       );
+      _decryptionCache.invalidate(id);
     } catch (e) {
       throw RepositoryException.delete(entityType: _entityType, cause: e);
     }
@@ -125,12 +128,16 @@ class RecurringRuleRepository {
       final results = await Future.wait(
         rows.map((row) async {
           try {
+            final cached = _decryptionCache.get(row.id, row.encryptedBlob);
+            if (cached != null) return cached;
             final data = await encryptionService.decryptRecurringRule(
               row.encryptedBlob,
               expectedId: row.id,
               expectedCreatedAtMillis: row.createdAt,
             );
-            return _toRule(data);
+            final result = _toRule(data);
+            _decryptionCache.put(row.id, row.encryptedBlob, result);
+            return result;
           } catch (e) {
             debugPrint('WARNING: Corrupted recurring rule row id=${row.id}: $e');
             corruptedCount++;
@@ -139,7 +146,7 @@ class RecurringRuleRepository {
         }),
       );
 
-      _lastCorruptedCount = corruptedCount;
+      updateCorruptedCount(corruptedCount);
       return results.whereType<ui.RecurringRule>().toList();
     } catch (e) {
       throw RepositoryException.fetch(entityType: _entityType, cause: e);
@@ -153,12 +160,16 @@ class RecurringRuleRepository {
       final results = await Future.wait(
         rows.map((row) async {
           try {
+            final cached = _decryptionCache.get(row.id, row.encryptedBlob);
+            if (cached != null) return cached;
             final data = await encryptionService.decryptRecurringRule(
               row.encryptedBlob,
               expectedId: row.id,
               expectedCreatedAtMillis: row.createdAt,
             );
-            return _toRule(data);
+            final result = _toRule(data);
+            _decryptionCache.put(row.id, row.encryptedBlob, result);
+            return result;
           } catch (e) {
             debugPrint('WARNING: Corrupted recurring rule row id=${row.id}: $e');
             corruptedCount++;
@@ -167,7 +178,7 @@ class RecurringRuleRepository {
         }),
       );
 
-      _lastCorruptedCount = corruptedCount;
+      updateCorruptedCount(corruptedCount);
       return results.whereType<ui.RecurringRule>().toList();
     });
   }

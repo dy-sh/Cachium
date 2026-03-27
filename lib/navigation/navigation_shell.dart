@@ -60,8 +60,9 @@ class _NavigationShellState extends ConsumerState<NavigationShell> {
     if (_checkedCorruption) return;
     _checkedCorruption = true;
 
-    final status = ref.read(corruptionStatusProvider);
-    if (status.hasCorruption && mounted) {
+    final statusAsync = ref.read(corruptionStatusProvider);
+    final status = statusAsync.valueOrNull;
+    if (status != null && status.hasCorruption && mounted) {
       context.showWarningNotification(
         '${status.total} corrupted database record${status.total == 1 ? '' : 's'} detected. '
         'Check Settings > Database for details.',

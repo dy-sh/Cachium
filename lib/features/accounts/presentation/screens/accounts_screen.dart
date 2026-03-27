@@ -34,6 +34,8 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
     final mainCurrency = ref.watch(mainCurrencyCodeProvider);
     final accountsByType = ref.watch(accountsByTypeProvider);
     final intensity = ref.watch(colorIntensityProvider);
+    final cardStyle = ref.watch(accountCardStyleProvider);
+    final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
     final isLoading = accountsAsync.isLoading;
 
     return SafeArea(
@@ -153,7 +155,35 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
               ),
             ),
           ),
-          const SizedBox(height: AppSpacing.lg),
+          // Exchange rate staleness indicator
+          if (!isLoading) Builder(builder: (context) {
+            final ratesStale = ref.watch(exchangeRatesStaleProvider);
+            final hasMultipleCurrencies = accountsAsync.valueOrNull
+                ?.any((a) => a.currencyCode != mainCurrency) ?? false;
+            if (!ratesStale || !hasMultipleCurrencies) return const SizedBox(height: AppSpacing.lg);
+            final rateAge = ref.watch(exchangeRateAgeProvider);
+            return Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.screenPadding,
+                vertical: AppSpacing.sm,
+              ),
+              child: GestureDetector(
+                onTap: () => ref.read(exchangeRatesProvider.notifier).refresh(),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(LucideIcons.alertCircle, size: 12, color: AppColors.textTertiary),
+                    const SizedBox(width: AppSpacing.xs),
+                    Text(
+                      rateAge != null ? '$rateAge — tap to refresh' : 'Rates unavailable — tap to refresh',
+                      style: AppTypography.labelSmall.copyWith(color: AppColors.textTertiary),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+          if (isLoading) const SizedBox(height: AppSpacing.lg),
 
           // Accounts list
           Expanded(
@@ -207,6 +237,9 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                                         type: type,
                                         accounts: accounts,
                                         intensity: intensity,
+                                        cardStyle: cardStyle,
+                                        mainCurrency: mainCurrency,
+                                        rates: rates,
                                       ),
                               );
                             }).toList();
@@ -224,11 +257,17 @@ class _AccountTypeSection extends StatelessWidget {
   final AccountType type;
   final List<Account> accounts;
   final ColorIntensity intensity;
+  final AccountCardStyle cardStyle;
+  final String mainCurrency;
+  final Map<String, double> rates;
 
   const _AccountTypeSection({
     required this.type,
     required this.accounts,
     required this.intensity,
+    required this.cardStyle,
+    required this.mainCurrency,
+    required this.rates,
   });
 
   @override
@@ -248,7 +287,13 @@ class _AccountTypeSection extends StatelessWidget {
         Wrap(
           spacing: AppSpacing.sm,
           runSpacing: AppSpacing.sm,
-          children: accounts.map((account) => _AccountCard(account: account, intensity: intensity)).toList(),
+          children: accounts.map((account) => _AccountCard(
+            account: account,
+            intensity: intensity,
+            cardStyle: cardStyle,
+            mainCurrency: mainCurrency,
+            rates: rates,
+          )).toList(),
         ),
         const SizedBox(height: AppSpacing.lg),
       ],
@@ -360,10 +405,16 @@ class _ReorderableAccountTypeSection extends ConsumerWidget {
 class _AccountCard extends ConsumerWidget {
   final Account account;
   final ColorIntensity intensity;
+  final AccountCardStyle cardStyle;
+  final String mainCurrency;
+  final Map<String, double> rates;
 
   const _AccountCard({
     required this.account,
     required this.intensity,
+    required this.cardStyle,
+    required this.mainCurrency,
+    required this.rates,
   });
 
   String _accountSubtitle(WidgetRef ref) {
@@ -379,7 +430,6 @@ class _AccountCard extends ConsumerWidget {
     final accountColor = account.getColorWithIntensity(intensity);
     final expenseColor = AppColors.getTransactionColor('expense', intensity);
     final bgOpacity = AppColors.getBgOpacity(intensity);
-    final cardStyle = ref.watch(accountCardStyleProvider);
 
     // Opacity multipliers based on card style
     final gradientStart = cardStyle == AccountCardStyle.bright ? 0.6 : 0.35;
@@ -393,7 +443,7 @@ class _AccountCard extends ConsumerWidget {
       onTap: () => context.push('/account/${account.id}'),
       child: Container(
       width: 180,
-      height: account.currencyCode != ref.watch(mainCurrencyCodeProvider) ? 84 : 72,
+      height: account.currencyCode != mainCurrency ? 84 : 72,
       clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
         borderRadius: AppRadius.lgAll,
@@ -489,10 +539,8 @@ class _AccountCard extends ConsumerWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                if (account.currencyCode != ref.watch(mainCurrencyCodeProvider))
+                if (account.currencyCode != mainCurrency)
                   Builder(builder: (context) {
-                    final mainCurrency = ref.watch(mainCurrencyCodeProvider);
-                    final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
                     final converted = convertToMainCurrency(account.balance, account.currencyCode, mainCurrency, rates);
                     return Text(
                       '\u2248 ${CurrencyFormatter.format(converted, currencyCode: mainCurrency)}',

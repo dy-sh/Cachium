@@ -5,15 +5,15 @@ import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
 import '../../features/budgets/data/models/budget.dart' as ui;
 import '../encryption/budget_data.dart';
+import 'corruption_tracker.dart';
+import 'decryption_cache.dart';
 
-class BudgetRepository {
+class BudgetRepository with CorruptionTracker {
   final db.AppDatabase database;
   final EncryptionService encryptionService;
+  final _decryptionCache = DecryptionCache<ui.Budget>();
 
   static const _entityType = 'Budget';
-
-  int _lastCorruptedCount = 0;
-  int get lastCorruptedCount => _lastCorruptedCount;
 
   BudgetRepository({
     required this.database,
@@ -56,6 +56,7 @@ class BudgetRepository {
         lastUpdatedAt: budget.createdAt.millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
+      _decryptionCache.invalidate(budget.id);
     } catch (e) {
       throw RepositoryException.create(entityType: _entityType, cause: e);
     }
@@ -72,6 +73,7 @@ class BudgetRepository {
         lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
+      _decryptionCache.invalidate(budget.id);
     } catch (e) {
       throw RepositoryException.update(
         entityType: _entityType,
@@ -87,6 +89,7 @@ class BudgetRepository {
         id,
         DateTime.now().millisecondsSinceEpoch,
       );
+      _decryptionCache.invalidate(id);
     } catch (e) {
       throw RepositoryException.delete(
         entityType: _entityType,
@@ -104,12 +107,16 @@ class BudgetRepository {
       final results = await Future.wait(
         rows.map((row) async {
           try {
+            final cached = _decryptionCache.get(row.id, row.encryptedBlob);
+            if (cached != null) return cached;
             final data = await encryptionService.decryptBudget(
               row.encryptedBlob,
               expectedId: row.id,
               expectedCreatedAtMillis: row.createdAt,
             );
-            return _toBudget(data);
+            final result = _toBudget(data);
+            _decryptionCache.put(row.id, row.encryptedBlob, result);
+            return result;
           } catch (e) {
             debugPrint('WARNING: Corrupted budget row id=${row.id}: $e');
             corruptedCount++;
@@ -118,7 +125,7 @@ class BudgetRepository {
         }),
       );
 
-      _lastCorruptedCount = corruptedCount;
+      updateCorruptedCount(corruptedCount);
       return results.whereType<ui.Budget>().toList();
     } catch (e) {
       if (e is RepositoryException) rethrow;

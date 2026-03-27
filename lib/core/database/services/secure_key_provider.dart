@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../../exceptions/app_exception.dart';
 import 'key_provider.dart';
 
 /// Secure key provider that stores the encryption key in platform-specific
@@ -24,10 +25,16 @@ class SecureKeyProvider implements KeyProvider {
     if (existing != null) {
       final decoded = base64Decode(existing);
       if (decoded.length == 32) return decoded;
-      // Key is corrupted — fall through to generate a new one
+      // Key exists but is corrupted — do NOT silently regenerate,
+      // as that would make all encrypted data permanently unreadable.
+      throw EncryptionKeyCorruptedException(
+        message: 'Stored encryption key is corrupted '
+            '(${decoded.length} bytes, expected 32). '
+            'Encrypted data may be unrecoverable.',
+      );
     }
 
-    // Generate a new 32-byte key using secure random
+    // Generate a new 32-byte key only on first use
     final key = Uint8List(32);
     final random = Random.secure();
     for (int i = 0; i < 32; i++) {

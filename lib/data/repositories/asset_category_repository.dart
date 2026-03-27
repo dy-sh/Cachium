@@ -5,16 +5,16 @@ import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
 import '../../features/assets/data/models/asset_category.dart' as ui;
 import '../encryption/asset_category_data.dart';
+import 'corruption_tracker.dart';
+import 'decryption_cache.dart';
 
 /// Repository for managing encrypted asset category storage.
-class AssetCategoryRepository {
+class AssetCategoryRepository with CorruptionTracker {
   final db.AppDatabase database;
   final EncryptionService encryptionService;
+  final _decryptionCache = DecryptionCache<ui.AssetCategory>();
 
   static const _entityType = 'AssetCategory';
-
-  int _lastCorruptedCount = 0;
-  int get lastCorruptedCount => _lastCorruptedCount;
 
   AssetCategoryRepository({
     required this.database,
@@ -61,6 +61,7 @@ class AssetCategoryRepository {
         lastUpdatedAt: category.createdAt.millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
+      _decryptionCache.invalidate(category.id);
     } catch (e) {
       throw RepositoryException.create(entityType: _entityType, cause: e);
     }
@@ -71,12 +72,16 @@ class AssetCategoryRepository {
     if (row == null) return null;
 
     try {
+      final cached = _decryptionCache.get(row.id, row.encryptedBlob);
+      if (cached != null) return cached;
       final data = await encryptionService.decryptAssetCategory(
         row.encryptedBlob,
         expectedId: row.id,
         expectedCreatedAtMillis: row.createdAt,
       );
-      return _toCategory(data);
+      final result = _toCategory(data);
+      _decryptionCache.put(row.id, row.encryptedBlob, result);
+      return result;
     } catch (e) {
       throw RepositoryException.decryption(
         entityType: _entityType,
@@ -94,12 +99,16 @@ class AssetCategoryRepository {
       final results = await Future.wait(
         rows.map((row) async {
           try {
+            final cached = _decryptionCache.get(row.id, row.encryptedBlob);
+            if (cached != null) return cached;
             final data = await encryptionService.decryptAssetCategory(
               row.encryptedBlob,
               expectedId: row.id,
               expectedCreatedAtMillis: row.createdAt,
             );
-            return _toCategory(data);
+            final result = _toCategory(data);
+            _decryptionCache.put(row.id, row.encryptedBlob, result);
+            return result;
           } catch (e) {
             debugPrint('WARNING: Corrupted asset category row id=${row.id}: $e');
             corruptedCount++;
@@ -108,7 +117,7 @@ class AssetCategoryRepository {
         }),
       );
 
-      _lastCorruptedCount = corruptedCount;
+      updateCorruptedCount(corruptedCount);
       return results.whereType<ui.AssetCategory>().toList();
     } catch (e) {
       if (e is RepositoryException) rethrow;
@@ -127,6 +136,7 @@ class AssetCategoryRepository {
         lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
         encryptedBlob: encryptedBlob,
       );
+      _decryptionCache.invalidate(category.id);
     } catch (e) {
       throw RepositoryException.update(
         entityType: _entityType,
@@ -142,6 +152,7 @@ class AssetCategoryRepository {
         id,
         DateTime.now().millisecondsSinceEpoch,
       );
+      _decryptionCache.invalidate(id);
     } catch (e) {
       throw RepositoryException.delete(
         entityType: _entityType,

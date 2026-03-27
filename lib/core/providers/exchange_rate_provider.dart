@@ -159,6 +159,24 @@ final exchangeRatesStaleProvider = Provider<bool>((ref) {
   return (now - lastFetch) > 24 * 60 * 60 * 1000;
 });
 
+/// Human-readable age of the last exchange rate fetch.
+/// Returns null if rates have never been fetched.
+final exchangeRateAgeProvider = Provider<String?>((ref) {
+  final settings = ref.watch(settingsProvider).valueOrNull;
+  if (settings == null) return null;
+
+  final lastFetch = settings.lastRateFetchTimestamp;
+  if (lastFetch == null) return null;
+
+  final age = DateTime.now().difference(
+    DateTime.fromMillisecondsSinceEpoch(lastFetch),
+  );
+  if (age.inMinutes < 1) return 'Updated just now';
+  if (age.inMinutes < 60) return 'Updated ${age.inMinutes}m ago';
+  if (age.inHours < 24) return 'Updated ${age.inHours}h ago';
+  return 'Updated ${age.inDays}d ago';
+});
+
 /// Maximum reasonable exchange rate to guard against corrupt data.
 const _maxReasonableRate = 1000000.0;
 

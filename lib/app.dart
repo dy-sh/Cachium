@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/constants/app_colors.dart';
+import 'core/providers/database_providers.dart';
 import 'core/services/notification_service.dart';
 import 'features/settings/data/models/app_settings.dart';
 import 'features/settings/presentation/providers/app_lock_provider.dart';
@@ -133,6 +134,12 @@ class _AppGateState extends ConsumerState<_AppGate> with WidgetsBindingObserver 
     final themeMode = ref.watch(themeModeProvider);
     final platformBrightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
     CachiumApp.applyThemeMode(themeMode, platformBrightness);
+
+    // Fatal: encryption key corrupted — cannot decrypt any data
+    final keyCorrupted = ref.watch(encryptionKeyCorruptedProvider);
+    if (keyCorrupted) {
+      return _wrapInApp(const _EncryptionErrorScreen());
+    }
 
     final shouldShowWelcomeAsync = ref.watch(shouldShowWelcomeProvider);
     final isResetting = ref.watch(isResettingDatabaseProvider);
@@ -264,6 +271,56 @@ class _MainAppState extends ConsumerState<_MainApp> {
       debugShowCheckedModeBanner: false,
       routerConfig: router,
       theme: CachiumApp.currentTheme,
+    );
+  }
+}
+
+/// Fatal error screen shown when the encryption key is corrupted.
+class _EncryptionErrorScreen extends StatelessWidget {
+  const _EncryptionErrorScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: AppColors.red,
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Encryption Key Error',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'The encryption key stored on this device is corrupted. '
+                'Your data cannot be decrypted.\n\n'
+                'If you have a backup, you can restore it after resetting the app. '
+                'Otherwise, please contact support.',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

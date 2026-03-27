@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -379,34 +380,55 @@ class _TransactionItem extends ConsumerWidget {
     }
 
     // Normal mode: swipe-left to delete, swipe-right to duplicate, tap to edit, long-press to select
-    return Dismissible(
+    return Semantics(
+      customSemanticsActions: {
+        const CustomSemanticsAction(label: 'Duplicate transaction'): () {
+          // Triggered by accessibility services
+        },
+        const CustomSemanticsAction(label: 'Delete transaction'): () {
+          final tx = transaction;
+          ref.read(transactionsProvider.notifier).deleteTransaction(tx.id);
+          context.showUndoNotification(
+            'Transaction deleted',
+            () => ref.read(transactionsProvider.notifier).restoreTransaction(tx),
+          );
+        },
+      },
+      onLongPressHint: 'Select for bulk actions',
+      child: Dismissible(
       key: ValueKey(transaction.id),
-      background: Container(
-        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-        padding: const EdgeInsets.only(left: AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: AppColors.cyan.withValues(alpha: 0.15),
-          borderRadius: AppRadius.mdAll,
-        ),
-        alignment: Alignment.centerLeft,
-        child: Icon(
-          LucideIcons.copy,
-          color: AppColors.cyan,
-          size: 22,
+      background: Semantics(
+        label: 'Swipe right to duplicate',
+        child: Container(
+          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+          padding: const EdgeInsets.only(left: AppSpacing.lg),
+          decoration: BoxDecoration(
+            color: AppColors.cyan.withValues(alpha: 0.15),
+            borderRadius: AppRadius.mdAll,
+          ),
+          alignment: Alignment.centerLeft,
+          child: Icon(
+            LucideIcons.copy,
+            color: AppColors.cyan,
+            size: 22,
+          ),
         ),
       ),
-      secondaryBackground: Container(
-        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-        padding: const EdgeInsets.only(right: AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: AppColors.red.withValues(alpha: 0.15),
-          borderRadius: AppRadius.mdAll,
-        ),
-        alignment: Alignment.centerRight,
-        child: Icon(
-          LucideIcons.trash2,
-          color: AppColors.red,
-          size: 22,
+      secondaryBackground: Semantics(
+        label: 'Swipe left to delete',
+        child: Container(
+          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+          padding: const EdgeInsets.only(right: AppSpacing.lg),
+          decoration: BoxDecoration(
+            color: AppColors.red.withValues(alpha: 0.15),
+            borderRadius: AppRadius.mdAll,
+          ),
+          alignment: Alignment.centerRight,
+          child: Icon(
+            LucideIcons.trash2,
+            color: AppColors.red,
+            size: 22,
+          ),
         ),
       ),
       confirmDismiss: (direction) async {
@@ -462,6 +484,7 @@ class _TransactionItem extends ConsumerWidget {
         },
         child: itemContent,
       ),
+    ),
     );
   }
 }

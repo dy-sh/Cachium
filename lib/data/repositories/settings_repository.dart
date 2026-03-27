@@ -214,31 +214,48 @@ class SettingsRepository {
 
     if (dbPin == null && dbPassword == null) return;
 
-    try {
-      // Only migrate if secure storage doesn't already have values
-      final existingPin = await _secureStorage.read(key: _pinKey);
-      final existingPassword = await _secureStorage.read(key: _passwordKey);
+    // Only migrate if secure storage doesn't already have values
+    final existingPin = await _secureStorage.read(key: _pinKey);
+    final existingPassword = await _secureStorage.read(key: _passwordKey);
 
-      if (dbPin != null && existingPin == null) {
+    bool pinMigrated = dbPin == null || existingPin != null;
+    bool passwordMigrated = dbPassword == null || existingPassword != null;
+
+    if (dbPin != null && existingPin == null) {
+      try {
         await _secureStorage.write(key: _pinKey, value: dbPin);
+        pinMigrated = true;
+      } catch (e) {
+        debugPrint('SettingsRepository: PIN migration to secure storage failed: $e');
       }
-      if (dbPassword != null && existingPassword == null) {
+    }
+
+    if (dbPassword != null && existingPassword == null) {
+      try {
         await _secureStorage.write(key: _passwordKey, value: dbPassword);
+        passwordMigrated = true;
+      } catch (e) {
+        debugPrint('SettingsRepository: password migration to secure storage failed: $e');
       }
+    }
 
-      // Clear credentials from DB only after secure storage writes succeeded
-      json.remove('appPinCode');
-      json.remove('appPassword');
-      final cleanJsonData = jsonEncode(json);
-      await database.upsertSettings(
-        id: settingsId,
-        lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
-        jsonData: cleanJsonData,
-      );
+    // Only clear from DB the credentials that were successfully written
+    if (pinMigrated) json.remove('appPinCode');
+    if (passwordMigrated) json.remove('appPassword');
 
-      debugPrint('SettingsRepository: migrated credentials from DB to secure storage');
-    } catch (e) {
-      debugPrint('SettingsRepository: credential migration failed: $e');
+    if (pinMigrated || passwordMigrated) {
+      try {
+        final cleanJsonData = jsonEncode(json);
+        await database.upsertSettings(
+          id: settingsId,
+          lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
+          jsonData: cleanJsonData,
+        );
+        debugPrint('SettingsRepository: migrated credentials from DB to secure storage');
+      } catch (e) {
+        // DB update failed — credentials are duplicated but safe. Will retry next launch.
+        debugPrint('SettingsRepository: DB cleanup after migration failed: $e');
+      }
     }
   }
 
