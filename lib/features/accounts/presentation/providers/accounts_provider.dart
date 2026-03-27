@@ -7,6 +7,7 @@ import '../../../../core/exceptions/app_exception.dart';
 import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/providers/database_providers.dart';
 import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/providers/optimistic_notifier.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../../savings_goals/presentation/providers/savings_goals_provider.dart';
@@ -21,7 +22,8 @@ import '../../data/models/account.dart';
 /// - build() lets exceptions propagate to set AsyncValue.error()
 /// - Mutation methods catch exceptions and set state to AsyncValue.error()
 /// - RepositoryException provides detailed error context
-class AccountsNotifier extends AsyncNotifier<List<Account>> {
+class AccountsNotifier extends AsyncNotifier<List<Account>>
+    with OptimisticAsyncNotifier<Account> {
   final _uuid = const Uuid();
 
   @override
@@ -42,89 +44,47 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
     String currencyCode = 'USD',
     Color? customColor,
   }) async {
-    final previousState = state;
+    final account = Account(
+      id: _uuid.v4(),
+      name: name,
+      type: type,
+      balance: initialBalance,
+      initialBalance: initialBalance,
+      currencyCode: currencyCode,
+      customColor: customColor,
+      createdAt: DateTime.now(),
+    );
 
-    try {
-      final repo = ref.read(accountRepositoryProvider);
+    await runOptimistic(
+      update: (accounts) => [account, ...accounts],
+      action: () => ref.read(accountRepositoryProvider).createAccount(account),
+      onError: (e) => RepositoryException.create(entityType: 'Account', cause: e),
+    );
 
-      final account = Account(
-        id: _uuid.v4(),
-        name: name,
-        type: type,
-        balance: initialBalance,
-        initialBalance: initialBalance,
-        currencyCode: currencyCode,
-        customColor: customColor,
-        createdAt: DateTime.now(),
-      );
-
-      // Optimistically update local state
-      state = state.whenData((accounts) => [account, ...accounts]);
-
-      // Save to encrypted database
-      await repo.createAccount(account);
-
-      return account.id;
-    } catch (e, st) {
-      // Revert to previous state on error
-      state = previousState;
-      // Re-throw for caller to handle (e.g., show error UI)
-      Error.throwWithStackTrace(
-        e is AppException ? e : RepositoryException.create(entityType: 'Account', cause: e),
-        st,
-      );
-    }
+    return account.id;
   }
 
   /// Update an existing account.
   ///
   /// Throws [RepositoryException] on failure.
   Future<void> updateAccount(Account account) async {
-    final previousState = state;
-
-    try {
-      final repo = ref.read(accountRepositoryProvider);
-
-      // Optimistically update local state
-      state = state.whenData(
-        (accounts) =>
-            accounts.map((a) => a.id == account.id ? account : a).toList(),
-      );
-
-      // Update in encrypted database
-      await repo.updateAccount(account);
-    } catch (e, st) {
-      state = previousState;
-      Error.throwWithStackTrace(
-        e is AppException ? e : RepositoryException.update(entityType: 'Account', entityId: account.id, cause: e),
-        st,
-      );
-    }
+    await runOptimistic(
+      update: (accounts) =>
+          accounts.map((a) => a.id == account.id ? account : a).toList(),
+      action: () => ref.read(accountRepositoryProvider).updateAccount(account),
+      onError: (e) => RepositoryException.update(entityType: 'Account', entityId: account.id, cause: e),
+    );
   }
 
   /// Delete an account.
   ///
   /// Throws [RepositoryException] on failure.
   Future<void> deleteAccount(String id) async {
-    final previousState = state;
-
-    try {
-      final repo = ref.read(accountRepositoryProvider);
-
-      // Optimistically update local state
-      state = state.whenData(
-        (accounts) => accounts.where((a) => a.id != id).toList(),
-      );
-
-      // Soft delete in database
-      await repo.deleteAccount(id);
-    } catch (e, st) {
-      state = previousState;
-      Error.throwWithStackTrace(
-        e is AppException ? e : RepositoryException.delete(entityType: 'Account', entityId: id, cause: e),
-        st,
-      );
-    }
+    await runOptimistic(
+      update: (accounts) => accounts.where((a) => a.id != id).toList(),
+      action: () => ref.read(accountRepositoryProvider).deleteAccount(id),
+      onError: (e) => RepositoryException.delete(entityType: 'Account', entityId: id, cause: e),
+    );
   }
 
   /// Delete account along with all its transactions (in a single transaction)

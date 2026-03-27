@@ -177,19 +177,27 @@ class CategoryRepository {
   Future<List<ui.Category>> getAllCategories() async {
     try {
       final rows = await database.getAllCategories();
+      int corruptedCount = 0;
 
-      final categories = await Future.wait(
+      final results = await Future.wait(
         rows.map((row) async {
-          final data = await encryptionService.decryptCategory(
-            row.encryptedBlob,
-            expectedId: row.id,
-            expectedSortOrder: row.sortOrder,
-          );
-          return _toCategory(data);
+          try {
+            final data = await encryptionService.decryptCategory(
+              row.encryptedBlob,
+              expectedId: row.id,
+              expectedSortOrder: row.sortOrder,
+            );
+            return _toCategory(data);
+          } catch (e) {
+            debugPrint('WARNING: Corrupted category row id=${row.id}: $e');
+            corruptedCount++;
+            return null;
+          }
         }),
       );
 
-      return categories;
+      _lastCorruptedCount = corruptedCount;
+      return results.whereType<ui.Category>().toList();
     } catch (e) {
       if (e is RepositoryException) rethrow;
       throw RepositoryException.fetch(entityType: _entityType, cause: e);

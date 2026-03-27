@@ -211,19 +211,27 @@ class TransactionRepository {
   Future<List<ui.Transaction>> getAllTransactions() async {
     try {
       final rows = await database.getAllTransactions();
+      int corruptedCount = 0;
 
-      final transactions = await Future.wait(
+      final results = await Future.wait(
         rows.map((row) async {
-          final data = await encryptionService.decrypt(
-            row.encryptedBlob,
-            expectedId: row.id,
-            expectedDateMillis: row.date,
-          );
-          return _toTransaction(data);
+          try {
+            final data = await encryptionService.decrypt(
+              row.encryptedBlob,
+              expectedId: row.id,
+              expectedDateMillis: row.date,
+            );
+            return _toTransaction(data);
+          } catch (e) {
+            debugPrint('WARNING: Corrupted transaction row id=${row.id}: $e');
+            corruptedCount++;
+            return null;
+          }
         }),
       );
 
-      return transactions;
+      _lastCorruptedCount = corruptedCount;
+      return results.whereType<ui.Transaction>().toList();
     } catch (e) {
       if (e is RepositoryException) rethrow;
       throw RepositoryException.fetch(entityType: _entityType, cause: e);

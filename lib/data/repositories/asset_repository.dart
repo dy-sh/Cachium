@@ -122,19 +122,27 @@ class AssetRepository {
   Future<List<ui.Asset>> getAllAssets() async {
     try {
       final rows = await database.getAllAssets();
+      int corruptedCount = 0;
 
-      final assets = await Future.wait(
+      final results = await Future.wait(
         rows.map((row) async {
-          final data = await encryptionService.decryptAsset(
-            row.encryptedBlob,
-            expectedId: row.id,
-            expectedCreatedAtMillis: row.createdAt,
-          );
-          return _toAsset(data);
+          try {
+            final data = await encryptionService.decryptAsset(
+              row.encryptedBlob,
+              expectedId: row.id,
+              expectedCreatedAtMillis: row.createdAt,
+            );
+            return _toAsset(data);
+          } catch (e) {
+            debugPrint('WARNING: Corrupted asset row id=${row.id}: $e');
+            corruptedCount++;
+            return null;
+          }
         }),
       );
 
-      return assets;
+      _lastCorruptedCount = corruptedCount;
+      return results.whereType<ui.Asset>().toList();
     } catch (e) {
       if (e is RepositoryException) rethrow;
       throw RepositoryException.fetch(entityType: _entityType, cause: e);

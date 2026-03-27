@@ -13,6 +13,9 @@ class AssetCategoryRepository {
 
   static const _entityType = 'AssetCategory';
 
+  int _lastCorruptedCount = 0;
+  int get lastCorruptedCount => _lastCorruptedCount;
+
   AssetCategoryRepository({
     required this.database,
     required this.encryptionService,
@@ -86,19 +89,27 @@ class AssetCategoryRepository {
   Future<List<ui.AssetCategory>> getAllCategories() async {
     try {
       final rows = await database.getAllAssetCategories();
+      int corruptedCount = 0;
 
-      final categories = await Future.wait(
+      final results = await Future.wait(
         rows.map((row) async {
-          final data = await encryptionService.decryptAssetCategory(
-            row.encryptedBlob,
-            expectedId: row.id,
-            expectedCreatedAtMillis: row.createdAt,
-          );
-          return _toCategory(data);
+          try {
+            final data = await encryptionService.decryptAssetCategory(
+              row.encryptedBlob,
+              expectedId: row.id,
+              expectedCreatedAtMillis: row.createdAt,
+            );
+            return _toCategory(data);
+          } catch (e) {
+            debugPrint('WARNING: Corrupted asset category row id=${row.id}: $e');
+            corruptedCount++;
+            return null;
+          }
         }),
       );
 
-      return categories;
+      _lastCorruptedCount = corruptedCount;
+      return results.whereType<ui.AssetCategory>().toList();
     } catch (e) {
       if (e is RepositoryException) rethrow;
       throw RepositoryException.fetch(entityType: _entityType, cause: e);

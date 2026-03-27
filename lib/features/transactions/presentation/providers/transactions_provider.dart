@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/exceptions/app_exception.dart';
 import '../../../../core/providers/database_providers.dart';
 import '../../../../core/providers/exchange_rate_provider.dart';
+import '../../../../core/utils/balance_calculation.dart';
 import '../../../../core/utils/currency_conversion.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
@@ -88,12 +89,8 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
       await repo.createTransaction(transaction);
 
       // Update account balances
-      if (type == TransactionType.transfer && destinationAccountId != null) {
-        await ref.read(accountsProvider.notifier).updateBalance(accountId, -amount);
-        await ref.read(accountsProvider.notifier).updateBalance(destinationAccountId, destinationAmount ?? amount);
-      } else {
-        final balanceChange = type == TransactionType.income ? amount : -amount;
-        await ref.read(accountsProvider.notifier).updateBalance(accountId, balanceChange);
+      for (final entry in transactionDeltas(transaction).entries) {
+        await ref.read(accountsProvider.notifier).updateBalance(entry.key, entry.value);
       }
     });
 
@@ -136,35 +133,13 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     // Wrap in database transaction to prevent locking issues
     await db.transaction(() async {
       // Reverse original balance effects
-      if (originalTransaction.type == TransactionType.transfer) {
-        await ref.read(accountsProvider.notifier).updateBalance(
-              originalTransaction.accountId, originalTransaction.amount);
-        if (originalTransaction.destinationAccountId != null) {
-          await ref.read(accountsProvider.notifier).updateBalance(
-                originalTransaction.destinationAccountId!, -(originalTransaction.destinationAmount ?? originalTransaction.amount));
-        }
-      } else {
-        final reverseChange = originalTransaction.type == TransactionType.income
-            ? -originalTransaction.amount
-            : originalTransaction.amount;
-        await ref.read(accountsProvider.notifier).updateBalance(
-              originalTransaction.accountId, reverseChange);
+      for (final entry in reverseTransactionDeltas(originalTransaction).entries) {
+        await ref.read(accountsProvider.notifier).updateBalance(entry.key, entry.value);
       }
 
       // Apply new balance effects
-      if (transaction.type == TransactionType.transfer) {
-        await ref.read(accountsProvider.notifier).updateBalance(
-              transaction.accountId, -transaction.amount);
-        if (transaction.destinationAccountId != null) {
-          await ref.read(accountsProvider.notifier).updateBalance(
-                transaction.destinationAccountId!, transaction.destinationAmount ?? transaction.amount);
-        }
-      } else {
-        final newChange = transaction.type == TransactionType.income
-            ? transaction.amount
-            : -transaction.amount;
-        await ref.read(accountsProvider.notifier).updateBalance(
-              transaction.accountId, newChange);
+      for (final entry in transactionDeltas(transaction).entries) {
+        await ref.read(accountsProvider.notifier).updateBalance(entry.key, entry.value);
       }
 
       // Update in encrypted database
@@ -200,21 +175,8 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
       await repo.deleteTransaction(id);
 
       // Reverse the balance change
-      if (transaction.type == TransactionType.transfer) {
-        // Reverse transfer: credit source, debit destination
-        await ref.read(accountsProvider.notifier).updateBalance(
-              transaction.accountId, transaction.amount);
-        if (transaction.destinationAccountId != null) {
-          await ref.read(accountsProvider.notifier).updateBalance(
-                transaction.destinationAccountId!, -(transaction.destinationAmount ?? transaction.amount));
-        }
-      } else {
-        final balanceChange =
-            transaction.type == TransactionType.income ? -transaction.amount : transaction.amount;
-        await ref.read(accountsProvider.notifier).updateBalance(
-              transaction.accountId,
-              balanceChange,
-            );
+      for (final entry in reverseTransactionDeltas(transaction).entries) {
+        await ref.read(accountsProvider.notifier).updateBalance(entry.key, entry.value);
       }
     });
 
@@ -255,20 +217,8 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
       await repo.restoreTransaction(transaction.id);
 
       // Re-apply the balance change to the account
-      if (transaction.type == TransactionType.transfer) {
-        await ref.read(accountsProvider.notifier).updateBalance(
-              transaction.accountId, -transaction.amount);
-        if (transaction.destinationAccountId != null) {
-          await ref.read(accountsProvider.notifier).updateBalance(
-                transaction.destinationAccountId!, transaction.destinationAmount ?? transaction.amount);
-        }
-      } else {
-        final balanceChange =
-            transaction.type == TransactionType.income ? transaction.amount : -transaction.amount;
-        await ref.read(accountsProvider.notifier).updateBalance(
-              transaction.accountId,
-              balanceChange,
-            );
+      for (final entry in transactionDeltas(transaction).entries) {
+        await ref.read(accountsProvider.notifier).updateBalance(entry.key, entry.value);
       }
     });
 
@@ -302,20 +252,8 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
         await repo.deleteTransaction(id);
 
         // Reverse the balance change
-        if (transaction.type == TransactionType.transfer) {
-          await ref.read(accountsProvider.notifier).updateBalance(
-                transaction.accountId, transaction.amount);
-          if (transaction.destinationAccountId != null) {
-            await ref.read(accountsProvider.notifier).updateBalance(
-                  transaction.destinationAccountId!, -(transaction.destinationAmount ?? transaction.amount));
-          }
-        } else {
-          final balanceChange =
-              transaction.type == TransactionType.income ? -transaction.amount : transaction.amount;
-          await ref.read(accountsProvider.notifier).updateBalance(
-                transaction.accountId,
-                balanceChange,
-              );
+        for (final entry in reverseTransactionDeltas(transaction).entries) {
+          await ref.read(accountsProvider.notifier).updateBalance(entry.key, entry.value);
         }
       }
     });
@@ -360,20 +298,8 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
         await repo.restoreTransaction(transaction.id);
 
         // Re-apply the balance change
-        if (transaction.type == TransactionType.transfer) {
-          await ref.read(accountsProvider.notifier).updateBalance(
-                transaction.accountId, -transaction.amount);
-          if (transaction.destinationAccountId != null) {
-            await ref.read(accountsProvider.notifier).updateBalance(
-                  transaction.destinationAccountId!, transaction.destinationAmount ?? transaction.amount);
-          }
-        } else {
-          final balanceChange =
-              transaction.type == TransactionType.income ? transaction.amount : -transaction.amount;
-          await ref.read(accountsProvider.notifier).updateBalance(
-                transaction.accountId,
-                balanceChange,
-              );
+        for (final entry in transactionDeltas(transaction).entries) {
+          await ref.read(accountsProvider.notifier).updateBalance(entry.key, entry.value);
         }
       }
     });
@@ -598,21 +524,8 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
         await repo.deleteTransaction(tx.id);
 
         // Reverse the balance change
-        if (tx.type == TransactionType.transfer) {
-          // Reverse transfer: credit source, debit destination
-          await ref.read(accountsProvider.notifier).updateBalance(
-                tx.accountId, tx.amount);
-          if (tx.destinationAccountId != null) {
-            await ref.read(accountsProvider.notifier).updateBalance(
-                  tx.destinationAccountId!, -(tx.destinationAmount ?? tx.amount));
-          }
-        } else {
-          final balanceChange =
-              tx.type == TransactionType.income ? -tx.amount : tx.amount;
-          await ref.read(accountsProvider.notifier).updateBalance(
-                tx.accountId,
-                balanceChange,
-              );
+        for (final entry in reverseTransactionDeltas(tx).entries) {
+          await ref.read(accountsProvider.notifier).updateBalance(entry.key, entry.value);
         }
       }
     });

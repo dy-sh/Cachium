@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/exceptions/app_exception.dart';
 import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/providers/database_providers.dart';
+import '../../../../core/providers/optimistic_notifier.dart';
 import '../../../budgets/presentation/providers/budget_provider.dart';
 import '../../../transactions/presentation/providers/recurring_rules_provider.dart';
 import '../../../transactions/presentation/providers/transaction_templates_provider.dart';
@@ -9,7 +10,8 @@ import '../../../transactions/presentation/providers/transactions_provider.dart'
 import '../../data/models/category.dart';
 import '../../data/models/category_tree_node.dart';
 
-class CategoriesNotifier extends AsyncNotifier<List<Category>> {
+class CategoriesNotifier extends AsyncNotifier<List<Category>>
+    with OptimisticAsyncNotifier<Category> {
   @override
   Future<List<Category>> build() async {
     final repo = ref.watch(categoryRepositoryProvider);
@@ -17,75 +19,34 @@ class CategoriesNotifier extends AsyncNotifier<List<Category>> {
   }
 
   Future<void> addCategory(Category category) async {
-    final previousState = state;
-
-    try {
-      final repo = ref.read(categoryRepositoryProvider);
-
-      // Optimistically update local state
-      state = state.whenData((categories) => [...categories, category]);
-
-      // Save to encrypted database
-      await repo.createCategory(category);
-    } catch (e, st) {
-      // Revert to previous state on error
-      state = previousState;
-      Error.throwWithStackTrace(
-        e is AppException ? e : RepositoryException.create(entityType: 'Category', cause: e),
-        st,
-      );
-    }
+    await runOptimistic(
+      update: (categories) => [...categories, category],
+      action: () => ref.read(categoryRepositoryProvider).createCategory(category),
+      onError: (e) => RepositoryException.create(entityType: 'Category', cause: e),
+    );
   }
 
   Future<void> updateCategory(Category category) async {
-    final previousState = state;
-
-    try {
-      final repo = ref.read(categoryRepositoryProvider);
-
-      // Optimistically update local state
-      state = state.whenData(
-        (categories) =>
-            categories.map((c) => c.id == category.id ? category : c).toList(),
-      );
-
-      // Update in encrypted database
-      await repo.updateCategory(category);
-    } catch (e, st) {
-      state = previousState;
-      Error.throwWithStackTrace(
-        e is AppException ? e : RepositoryException.update(entityType: 'Category', entityId: category.id, cause: e),
-        st,
-      );
-    }
+    await runOptimistic(
+      update: (categories) =>
+          categories.map((c) => c.id == category.id ? category : c).toList(),
+      action: () => ref.read(categoryRepositoryProvider).updateCategory(category),
+      onError: (e) => RepositoryException.update(entityType: 'Category', entityId: category.id, cause: e),
+    );
   }
 
   Future<void> deleteCategory(String id) async {
-    final previousState = state;
+    // Safety guard: prevent orphaning transactions (must run before optimistic update)
+    _assertNoCategoryTransactions({id});
 
-    try {
-      // Safety guard: prevent orphaning transactions
-      _assertNoCategoryTransactions({id});
-
-      final repo = ref.read(categoryRepositoryProvider);
-
-      // Optimistically update local state
-      state = state.whenData(
-        (categories) => categories.where((c) => c.id != id).toList(),
-      );
-
-      // Soft delete in database
-      await repo.deleteCategory(id);
-
-      // Clean up recurring rules and templates referencing this category
-      await _cleanupReferencesForCategories({id});
-    } catch (e, st) {
-      state = previousState;
-      Error.throwWithStackTrace(
-        e is AppException ? e : RepositoryException.delete(entityType: 'Category', entityId: id, cause: e),
-        st,
-      );
-    }
+    await runOptimistic(
+      update: (categories) => categories.where((c) => c.id != id).toList(),
+      action: () async {
+        await ref.read(categoryRepositoryProvider).deleteCategory(id);
+        await _cleanupReferencesForCategories({id});
+      },
+      onError: (e) => RepositoryException.delete(entityType: 'Category', entityId: id, cause: e),
+    );
   }
 
   Future<void> updateParent(String categoryId, String? newParentId) async {

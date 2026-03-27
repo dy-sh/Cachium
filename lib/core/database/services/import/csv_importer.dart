@@ -631,6 +631,7 @@ class CsvImporter {
     final headers = rows.first.map((e) => e.toString()).toList();
     final hasEncryptedBlob = headers.contains('encrypted_blob') || headers.contains('encryptedBlob');
 
+    await database.transaction(() async {
     for (int i = 1; i < rows.length; i++) {
       try {
         final row = rows[i];
@@ -784,6 +785,7 @@ class CsvImporter {
         errors.add('Failed to import transaction row $i: $e');
       }
     }
+    }); // end database.transaction
 
     return count;
   }
@@ -798,6 +800,7 @@ class CsvImporter {
     final headers = rows.first.map((e) => e.toString()).toList();
     final hasEncryptedBlob = headers.contains('encrypted_blob') || headers.contains('encryptedBlob');
 
+    await database.transaction(() async {
     for (int i = 1; i < rows.length; i++) {
       try {
         final row = rows[i];
@@ -859,6 +862,7 @@ class CsvImporter {
         errors.add('Failed to import account row $i: $e');
       }
     }
+    }); // end database.transaction
 
     return count;
   }
@@ -873,6 +877,7 @@ class CsvImporter {
     final headers = rows.first.map((e) => e.toString()).toList();
     final hasEncryptedBlob = headers.contains('encrypted_blob') || headers.contains('encryptedBlob');
 
+    await database.transaction(() async {
     for (int i = 1; i < rows.length; i++) {
       try {
         final row = rows[i];
@@ -929,6 +934,7 @@ class CsvImporter {
         errors.add('Failed to import category row $i: $e');
       }
     }
+    }); // end database.transaction
 
     return count;
   }
@@ -942,6 +948,7 @@ class CsvImporter {
 
     final headers = rows.first.map((e) => e.toString()).toList();
 
+    await database.transaction(() async {
     for (int i = 1; i < rows.length; i++) {
       try {
         final row = rows[i];
@@ -967,6 +974,7 @@ class CsvImporter {
         errors.add('Failed to import settings row $i: $e');
       }
     }
+    }); // end database.transaction
 
     return count;
   }
@@ -981,6 +989,7 @@ class CsvImporter {
     final headers = rows.first.map((e) => e.toString()).toList();
     final hasEncryptedBlob = headers.contains('encrypted_blob') || headers.contains('encryptedBlob');
 
+    await database.transaction(() async {
     for (int i = 1; i < rows.length; i++) {
       try {
         final row = rows[i];
@@ -1026,6 +1035,7 @@ class CsvImporter {
         errors.add('Failed to import budget row $i: $e');
       }
     }
+    }); // end database.transaction
 
     return count;
   }
@@ -1040,6 +1050,7 @@ class CsvImporter {
     final headers = rows.first.map((e) => e.toString()).toList();
     final hasEncryptedBlob = headers.contains('encrypted_blob') || headers.contains('encryptedBlob');
 
+    await database.transaction(() async {
     for (int i = 1; i < rows.length; i++) {
       try {
         final row = rows[i];
@@ -1095,6 +1106,7 @@ class CsvImporter {
         errors.add('Failed to import asset row $i: $e');
       }
     }
+    }); // end database.transaction
 
     return count;
   }
@@ -1109,6 +1121,7 @@ class CsvImporter {
     final headers = rows.first.map((e) => e.toString()).toList();
     final hasEncryptedBlob = headers.contains('encrypted_blob') || headers.contains('encryptedBlob');
 
+    await database.transaction(() async {
     for (int i = 1; i < rows.length; i++) {
       try {
         final row = rows[i];
@@ -1174,6 +1187,7 @@ class CsvImporter {
         errors.add('Failed to import recurring rule row $i: $e');
       }
     }
+    }); // end database.transaction
 
     return count;
   }
@@ -1188,6 +1202,7 @@ class CsvImporter {
     final headers = rows.first.map((e) => e.toString()).toList();
     final hasEncryptedBlob = headers.contains('encrypted_blob') || headers.contains('encryptedBlob');
 
+    await database.transaction(() async {
     for (int i = 1; i < rows.length; i++) {
       try {
         final row = rows[i];
@@ -1245,6 +1260,7 @@ class CsvImporter {
         errors.add('Failed to import savings goal row $i: $e');
       }
     }
+    }); // end database.transaction
 
     return count;
   }
@@ -1259,6 +1275,7 @@ class CsvImporter {
     final headers = rows.first.map((e) => e.toString()).toList();
     final hasEncryptedBlob = headers.contains('encrypted_blob') || headers.contains('encryptedBlob');
 
+    await database.transaction(() async {
     for (int i = 1; i < rows.length; i++) {
       try {
         final row = rows[i];
@@ -1317,6 +1334,7 @@ class CsvImporter {
         errors.add('Failed to import template row $i: $e');
       }
     }
+    }); // end database.transaction
 
     return count;
   }
@@ -1338,6 +1356,7 @@ class CsvImporter {
     final headers = rows.first.map((e) => e.toString()).toList();
     final hasEncryptedBlob = headers.contains('encrypted_blob') || headers.contains('encryptedBlob');
 
+    await database.transaction(() async {
     for (int i = 1; i < rows.length; i++) {
       try {
         final row = rows[i];
@@ -1493,6 +1512,7 @@ class CsvImporter {
         errors.add('Failed to import transaction row $i: $e');
       }
     }
+    }); // end database.transaction
 
     return (imported: imported, skipped: skipped);
   }
@@ -1512,6 +1532,7 @@ class CsvImporter {
     final headers = rows.first.map((e) => e.toString()).toList();
     final hasEncryptedBlob = headers.contains('encrypted_blob') || headers.contains('encryptedBlob');
 
+    await database.transaction(() async {
     for (int i = 1; i < rows.length; i++) {
       try {
         final row = rows[i];
@@ -1573,6 +1594,7 @@ class CsvImporter {
         errors.add('Failed to import account row $i: $e');
       }
     }
+    }); // end database.transaction
 
     return (imported: imported, skipped: skipped);
   }
@@ -1592,6 +1614,7 @@ class CsvImporter {
     final headers = rows.first.map((e) => e.toString()).toList();
     final hasEncryptedBlob = headers.contains('encrypted_blob') || headers.contains('encryptedBlob');
 
+    await database.transaction(() async {
     for (int i = 1; i < rows.length; i++) {
       try {
         final row = rows[i];
@@ -1653,6 +1676,7 @@ class CsvImporter {
         errors.add('Failed to import category row $i: $e');
       }
     }
+    }); // end database.transaction
 
     return (imported: imported, skipped: skipped);
   }

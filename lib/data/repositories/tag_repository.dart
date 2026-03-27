@@ -102,19 +102,27 @@ class TagRepository {
   Future<List<ui.Tag>> getAllTags() async {
     try {
       final rows = await database.getAllTags();
+      int corruptedCount = 0;
 
-      final tags = await Future.wait(
+      final results = await Future.wait(
         rows.map((row) async {
-          final data = await encryptionService.decryptTag(
-            row.encryptedBlob,
-            expectedId: row.id,
-            expectedSortOrder: row.sortOrder,
-          );
-          return _toTag(data);
+          try {
+            final data = await encryptionService.decryptTag(
+              row.encryptedBlob,
+              expectedId: row.id,
+              expectedSortOrder: row.sortOrder,
+            );
+            return _toTag(data);
+          } catch (e) {
+            debugPrint('WARNING: Corrupted tag row id=${row.id}: $e');
+            corruptedCount++;
+            return null;
+          }
         }),
       );
 
-      return tags;
+      _lastCorruptedCount = corruptedCount;
+      return results.whereType<ui.Tag>().toList();
     } catch (e) {
       if (e is RepositoryException) rethrow;
       throw RepositoryException.fetch(entityType: _entityType, cause: e);

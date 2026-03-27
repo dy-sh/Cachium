@@ -73,7 +73,10 @@ class Transaction {
             'Main currency amount must be non-negative'),
         assert(currencyCode.length == 3, 'Currency code must be 3 characters'),
         assert(mainCurrencyCode.length == 3,
-            'Main currency code must be 3 characters');
+            'Main currency code must be 3 characters'),
+        assert(date.year >= 2000, 'Transaction date must not be before year 2000'),
+        assert(!date.isAfter(DateTime.now().add(const Duration(days: 1))),
+            'Transaction date must not be more than 1 day in the future');
 
   bool get isTransfer => type == TransactionType.transfer;
 
@@ -111,6 +114,12 @@ class Transaction {
     }
     if (accountId.isEmpty) {
       throw ValidationException(message: 'Account ID must not be empty', field: 'accountId');
+    }
+    if (date.year < 2000) {
+      throw ValidationException(message: 'Transaction date must not be before year 2000', field: 'date');
+    }
+    if (date.isAfter(DateTime.now().add(const Duration(days: 1)))) {
+      throw ValidationException(message: 'Transaction date must not be more than 1 day in the future', field: 'date');
     }
   }
 

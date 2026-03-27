@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
@@ -9,6 +11,9 @@ class BudgetRepository {
   final EncryptionService encryptionService;
 
   static const _entityType = 'Budget';
+
+  int _lastCorruptedCount = 0;
+  int get lastCorruptedCount => _lastCorruptedCount;
 
   BudgetRepository({
     required this.database,
@@ -92,19 +97,27 @@ class BudgetRepository {
   Future<List<ui.Budget>> getAllBudgets() async {
     try {
       final rows = await database.getAllBudgets();
+      int corruptedCount = 0;
 
-      final budgets = await Future.wait(
+      final results = await Future.wait(
         rows.map((row) async {
-          final data = await encryptionService.decryptBudget(
-            row.encryptedBlob,
-            expectedId: row.id,
-            expectedCreatedAtMillis: row.createdAt,
-          );
-          return _toBudget(data);
+          try {
+            final data = await encryptionService.decryptBudget(
+              row.encryptedBlob,
+              expectedId: row.id,
+              expectedCreatedAtMillis: row.createdAt,
+            );
+            return _toBudget(data);
+          } catch (e) {
+            debugPrint('WARNING: Corrupted budget row id=${row.id}: $e');
+            corruptedCount++;
+            return null;
+          }
         }),
       );
 
-      return budgets;
+      _lastCorruptedCount = corruptedCount;
+      return results.whereType<ui.Budget>().toList();
     } catch (e) {
       if (e is RepositoryException) rethrow;
       throw RepositoryException.fetch(entityType: _entityType, cause: e);

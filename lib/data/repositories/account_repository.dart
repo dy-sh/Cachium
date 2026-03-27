@@ -186,19 +186,27 @@ class AccountRepository {
   Future<List<ui.Account>> getAllAccounts() async {
     try {
       final rows = await database.getAllAccounts();
+      int corruptedCount = 0;
 
-      final accounts = await Future.wait(
+      final results = await Future.wait(
         rows.map((row) async {
-          final data = await encryptionService.decryptAccount(
-            row.encryptedBlob,
-            expectedId: row.id,
-            expectedCreatedAtMillis: row.createdAt,
-          );
-          return _toAccount(data);
+          try {
+            final data = await encryptionService.decryptAccount(
+              row.encryptedBlob,
+              expectedId: row.id,
+              expectedCreatedAtMillis: row.createdAt,
+            );
+            return _toAccount(data);
+          } catch (e) {
+            debugPrint('WARNING: Corrupted account row id=${row.id}: $e');
+            corruptedCount++;
+            return null;
+          }
         }),
       );
 
-      return accounts;
+      _lastCorruptedCount = corruptedCount;
+      return results.whereType<ui.Account>().toList();
     } catch (e) {
       if (e is RepositoryException) rethrow;
       throw RepositoryException.fetch(entityType: _entityType, cause: e);
