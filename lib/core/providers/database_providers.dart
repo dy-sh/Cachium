@@ -16,13 +16,8 @@ import '../../data/repositories/transaction_repository.dart';
 import '../../data/repositories/transaction_template_repository.dart';
 import '../database/app_database.dart';
 import '../database/services/encryption_service.dart';
-import '../database/services/key_migration_service.dart';
 import '../database/services/key_provider.dart';
 import '../database/services/secure_key_provider.dart';
-
-/// Holds the result of key migration performed at startup.
-/// Null means migration hasn't run yet or wasn't needed.
-final keyMigrationStatusProvider = StateProvider<KeyMigrationResult?>((ref) => null);
 
 /// Provider for the encryption key source.
 ///

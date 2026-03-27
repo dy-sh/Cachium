@@ -4,8 +4,6 @@ import 'dart:typed_data';
 ///
 /// Use [SecureKeyProvider] for production, which stores keys in
 /// platform-specific secure storage (Keychain on iOS, Keystore on Android).
-/// [LegacyKeyProvider] in key_migration_service.dart handles migration
-/// from the old hardcoded key.
 abstract class KeyProvider {
   /// Returns the 32-byte AES-256 encryption key.
   ///

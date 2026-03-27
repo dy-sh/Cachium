@@ -141,17 +141,17 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
       final accountRepo = ref.read(accountRepositoryProvider);
       final transactionRepo = ref.read(transactionRepositoryProvider);
 
-      // Use already-loaded state instead of re-fetching from DB
-      final allTransactions = ref.read(transactionsProvider).valueOrNull ?? [];
+      // Await loaded state to avoid silently skipping related data
+      final allTransactions = await ref.read(transactionsProvider.future);
       final outgoingTransactions =
           allTransactions.where((t) => t.accountId == accountId).toList();
       final incomingTransfers = allTransactions.where(
         (t) => t.destinationAccountId == accountId && t.accountId != accountId,
       ).toList();
 
-      // Capture related provider state before entering transaction
-      final rules = ref.read(recurringRulesProvider).valueOrNull ?? [];
-      final templates = ref.read(transactionTemplatesProvider).valueOrNull ?? [];
+      // Await related provider state before entering transaction
+      final rules = await ref.read(recurringRulesProvider.future);
+      final templates = await ref.read(transactionTemplatesProvider.future);
 
       // Optimistically update local state
       state = state.whenData(
@@ -232,8 +232,8 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
       final targetAccount =
           accounts.firstWhere((a) => a.id == targetAccountId);
 
-      // Use already-loaded state instead of re-fetching from DB
-      final allTransactions = ref.read(transactionsProvider).valueOrNull ?? [];
+      // Await loaded state to avoid silently skipping related data
+      final allTransactions = await ref.read(transactionsProvider.future);
       final transactionsToMove =
           allTransactions.where((t) => t.accountId == sourceAccountId).toList();
       final incomingTransfers = allTransactions.where(
@@ -265,9 +265,9 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
             .toList();
       });
 
-      // Capture related provider state before entering transaction
-      final rules = ref.read(recurringRulesProvider).valueOrNull ?? [];
-      final templates = ref.read(transactionTemplatesProvider).valueOrNull ?? [];
+      // Await related provider state before entering transaction
+      final rules = await ref.read(recurringRulesProvider.future);
+      final templates = await ref.read(transactionTemplatesProvider.future);
 
       // Wrap in transaction to prevent locking
       await db.transaction(() async {
@@ -333,7 +333,13 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
 
     try {
       final currentState = state.valueOrNull;
-      if (currentState == null) return;
+      if (currentState == null) {
+        throw RepositoryException.update(
+          entityType: 'Account',
+          entityId: accountId,
+          cause: StateError('Accounts not loaded — cannot update balance'),
+        );
+      }
 
       final accountIndex =
           currentState.indexWhere((a) => a.id == accountId);
@@ -369,7 +375,7 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
 
   /// Clear linkedAccountId on savings goals that reference the given account.
   Future<void> _clearLinkedAccountOnGoals(String accountId) async {
-    final goals = ref.read(savingsGoalsProvider).valueOrNull ?? [];
+    final goals = await ref.read(savingsGoalsProvider.future);
     for (final goal in goals) {
       if (goal.linkedAccountId == accountId) {
         await ref.read(savingsGoalsProvider.notifier).updateGoal(

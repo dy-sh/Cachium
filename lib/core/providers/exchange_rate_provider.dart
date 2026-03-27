@@ -54,8 +54,17 @@ class ExchangeRatesNotifier extends AsyncNotifier<Map<String, double>> {
 
     try {
       final rates = await service.fetchRates(mainCurrency);
-      _cacheRates(rates);
-      return rates;
+      // Validate fetched rates before caching
+      final validatedRates = <String, double>{};
+      for (final entry in rates.entries) {
+        if (isValidExchangeRate(entry.value)) {
+          validatedRates[entry.key] = entry.value;
+        } else {
+          debugPrint('ExchangeRates: rejected invalid rate for ${entry.key}: ${entry.value}');
+        }
+      }
+      _cacheRates(validatedRates);
+      return validatedRates;
     } catch (e) {
       debugPrint('ExchangeRates: failed to fetch rates: $e');
       // Return cached rates if available
@@ -108,7 +117,7 @@ double convertToMainCurrency(
   if (fromCurrency == mainCurrency) return amount;
 
   final fromRate = rates[fromCurrency];
-  if (fromRate == null) return amount;
+  if (fromRate == null || fromRate <= 0 || !fromRate.isFinite) return amount;
 
   return roundCurrency(amount / fromRate);
 }

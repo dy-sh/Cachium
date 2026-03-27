@@ -38,8 +38,8 @@ class AppColors {
   static const Color textSecondaryLight = Color(0xFF6A6A6A);
   static Color get textSecondary => isDarkMode ? textSecondaryDark : textSecondaryLight;
 
-  static const Color textTertiaryDark = Color(0xFF787878);
-  static const Color textTertiaryLight = Color(0xFF9A9A9A);
+  static const Color textTertiaryDark = Color(0xFF8A8A8A);
+  static const Color textTertiaryLight = Color(0xFF767676);
   static Color get textTertiary => isDarkMode ? textTertiaryDark : textTertiaryLight;
 
   // Accent colors
