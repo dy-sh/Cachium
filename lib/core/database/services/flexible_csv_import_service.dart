@@ -431,7 +431,15 @@ class FlexibleCsvImportService {
         if (cleaned.startsWith('(') && cleaned.endsWith(')')) {
           cleaned = '-${cleaned.substring(1, cleaned.length - 1)}';
         }
-        return double.parse(cleaned);
+        final parsed = double.parse(cleaned);
+        if (!parsed.isFinite) {
+          throw FormatException('Amount must be a finite number, got: $trimmed');
+        }
+        // Cap at a reasonable maximum (100 trillion) to prevent overflow issues
+        if (parsed.abs() > 1e14) {
+          throw FormatException('Amount exceeds maximum allowed value: $trimmed');
+        }
+        return parsed;
 
       case FieldType.int_:
         // Handle both integer and code point formats

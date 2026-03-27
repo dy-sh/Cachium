@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/settings/data/models/app_settings.dart';
@@ -37,7 +38,9 @@ class ExchangeRatesNotifier extends AsyncNotifier<Map<String, double>> {
           (k, v) => MapEntry(k, (v as num).toDouble()),
         );
         service.setCachedRates(cached, mainCurrency);
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('ExchangeRates: failed to load cached rates: $e');
+      }
     }
 
     // Check if rates are stale (>24h) or fresh enough to skip fetch
@@ -53,7 +56,8 @@ class ExchangeRatesNotifier extends AsyncNotifier<Map<String, double>> {
       final rates = await service.fetchRates(mainCurrency);
       _cacheRates(rates);
       return rates;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('ExchangeRates: failed to fetch rates: $e');
       // Return cached rates if available
       if (service.cachedRates.isNotEmpty) {
         return service.cachedRates;
@@ -70,7 +74,9 @@ class ExchangeRatesNotifier extends AsyncNotifier<Map<String, double>> {
       ref.read(settingsProvider.notifier).setLastRateFetchTimestamp(
         DateTime.now().millisecondsSinceEpoch,
       );
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('ExchangeRates: failed to cache rates: $e');
+    }
   }
 
   Future<void> refresh() async {

@@ -7,7 +7,8 @@ part 'settings_data.g.dart';
 ///
 /// This model represents the data that gets serialized to JSON and stored
 /// in the database. Settings are not encrypted as they don't contain
-/// sensitive financial data.
+/// sensitive financial data. Security credentials (PIN/password hashes)
+/// are stored in platform secure storage, not in this model.
 @freezed
 class SettingsData with _$SettingsData {
   const factory SettingsData({
@@ -101,10 +102,14 @@ class SettingsData with _$SettingsData {
     /// Whether app lock (biometric/PIN) is enabled
     @Default(false) bool appLockEnabled,
 
-    /// App PIN code (stored as plaintext 4-8 digit string)
+    /// App PIN code hash — legacy field kept for backward-compatible JSON parsing.
+    /// Credentials are now stored in platform secure storage, not the database.
+    /// This field is always null in new data; non-null values trigger migration.
     String? appPinCode,
 
-    /// App password (stored as plaintext string)
+    /// App password hash — legacy field kept for backward-compatible JSON parsing.
+    /// Credentials are now stored in platform secure storage, not the database.
+    /// This field is always null in new data; non-null values trigger migration.
     String? appPassword,
 
     /// Auto-lock timeout: 'immediate', 'after30Seconds', 'after1Minute', 'after5Minutes', 'after15Minutes', 'never'

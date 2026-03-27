@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
@@ -572,8 +573,8 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
       final repo = ref.read(tagRepositoryProvider);
       final tagIds = await repo.getTagIdsForTransaction(transactionId);
       state = state.copyWith(tagIds: tagIds, originalTagIds: tagIds);
-    } catch (_) {
-      // Silently fail — tags are optional
+    } catch (e) {
+      debugPrint('TransactionForm: failed to load tags: $e');
     }
   }
 

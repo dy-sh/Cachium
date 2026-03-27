@@ -971,14 +971,28 @@ class DatabaseExportService {
     );
 
     for (final row in rows) {
+      // Strip any credentials from exported settings JSON
+      final sanitizedJson = _stripCredentialsFromSettingsJson(row.jsonData);
       stmt.execute([
         row.id,
         row.lastUpdatedAt,
-        row.jsonData,
+        sanitizedJson,
       ]);
     }
 
     stmt.dispose();
+  }
+
+  /// Remove appPinCode/appPassword from settings JSON to prevent credential leaks in exports.
+  String _stripCredentialsFromSettingsJson(String jsonData) {
+    try {
+      final json = jsonDecode(jsonData) as Map<String, dynamic>;
+      json.remove('appPinCode');
+      json.remove('appPassword');
+      return jsonEncode(json);
+    } catch (_) {
+      return jsonData;
+    }
   }
 
   Future<void> _exportSettingsPlaintext(sql.Database exportDb) async {
@@ -1148,10 +1162,12 @@ class DatabaseExportService {
     csvData.add(['id', 'last_updated_at', 'json_data']);
 
     for (final row in rows) {
+      // Strip any credentials from exported settings JSON
+      final sanitizedJson = _stripCredentialsFromSettingsJson(row.jsonData);
       csvData.add([
         row.id,
         row.lastUpdatedAt,
-        row.jsonData,
+        sanitizedJson,
       ]);
     }
 

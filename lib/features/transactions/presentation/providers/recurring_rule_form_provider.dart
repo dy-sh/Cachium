@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/database_providers.dart';
 import '../../data/models/recurring_rule.dart';
@@ -224,8 +225,8 @@ class RecurringRuleFormNotifier
       if (account != null) {
         state = state.copyWith(currencyCode: account.currencyCode);
       }
-    } catch (_) {
-      // Non-fatal: keep default currency
+    } catch (e) {
+      debugPrint('RecurringRuleForm: failed to load account currency: $e');
     }
   }
 

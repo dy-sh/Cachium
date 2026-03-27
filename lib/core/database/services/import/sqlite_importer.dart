@@ -106,19 +106,23 @@ class SqliteImporter {
   }
 
   /// Clear all existing data and import from a SQLite database file.
+  /// The delete operations are wrapped in a transaction to prevent partial
+  /// data loss if the app crashes mid-operation.
   Future<ImportResult> clearAndImportFromSqlite(String path) async {
-    // Clear all existing data first
-    await database.deleteAllTransactions();
-    await database.deleteAllAccounts();
-    await database.deleteAllCategories();
-    await database.deleteAllSettings();
-    await database.deleteAllBudgets();
-    await database.deleteAllAssets();
-    await database.deleteAllRecurringRules();
-    await database.deleteAllSavingsGoals();
-    await database.deleteAllTransactionTemplates();
+    // Clear all existing data in a single transaction
+    await database.transaction(() async {
+      await database.deleteAllTransactions();
+      await database.deleteAllAccounts();
+      await database.deleteAllCategories();
+      await database.deleteAllSettings();
+      await database.deleteAllBudgets();
+      await database.deleteAllAssets();
+      await database.deleteAllRecurringRules();
+      await database.deleteAllSavingsGoals();
+      await database.deleteAllTransactionTemplates();
+    });
 
-    // Then import from the file
+    // Then import from the file (uses its own transaction internally)
     return importFromSqlite(path);
   }
 
