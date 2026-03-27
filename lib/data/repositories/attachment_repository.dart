@@ -71,6 +71,7 @@ class AttachmentRepository {
       final data = await encryptionService.decryptAttachment(
         row.encryptedBlob,
         expectedId: row.id,
+        expectedCreatedAtMillis: row.createdAt,
       );
       return _toAttachment(data);
     } catch (e) {
@@ -94,6 +95,7 @@ class AttachmentRepository {
             final data = await encryptionService.decryptAttachment(
               row.encryptedBlob,
               expectedId: row.id,
+              expectedCreatedAtMillis: row.createdAt,
             );
             return _toAttachment(data);
           } catch (e) {
@@ -120,6 +122,7 @@ class AttachmentRepository {
             final data = await encryptionService.decryptAttachment(
               row.encryptedBlob,
               expectedId: row.id,
+              expectedCreatedAtMillis: row.createdAt,
             );
             return _toAttachment(data);
           } catch (e) {
@@ -162,6 +165,7 @@ class AttachmentRepository {
             final data = await encryptionService.decryptAttachment(
               row.encryptedBlob,
               expectedId: row.id,
+              expectedCreatedAtMillis: row.createdAt,
             );
             return _toAttachment(data);
           } catch (e) {

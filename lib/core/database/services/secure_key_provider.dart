@@ -22,7 +22,9 @@ class SecureKeyProvider implements KeyProvider {
   Future<Uint8List> getKey() async {
     final existing = await _storage.read(key: _storageKey);
     if (existing != null) {
-      return base64Decode(existing);
+      final decoded = base64Decode(existing);
+      if (decoded.length == 32) return decoded;
+      // Key is corrupted — fall through to generate a new one
     }
 
     // Generate a new 32-byte key using secure random

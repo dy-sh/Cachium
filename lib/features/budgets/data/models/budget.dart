@@ -1,3 +1,5 @@
+import '../../../../core/exceptions/app_exception.dart';
+
 class Budget {
   final String id;
   final String categoryId;
@@ -38,6 +40,29 @@ class Budget {
       rolloverEnabled: rolloverEnabled ?? this.rolloverEnabled,
       createdAt: createdAt ?? this.createdAt,
     );
+  }
+
+  void validate() {
+    if (id.isEmpty) {
+      throw const ValidationException(
+          message: 'Budget ID must not be empty', field: 'id');
+    }
+    if (categoryId.isEmpty) {
+      throw const ValidationException(
+          message: 'Category ID must not be empty', field: 'categoryId');
+    }
+    if (amount < 0) {
+      throw const ValidationException(
+          message: 'Budget amount must be non-negative', field: 'amount');
+    }
+    if (year < 2000 || year > 2100) {
+      throw const ValidationException(
+          message: 'Year must be between 2000 and 2100', field: 'year');
+    }
+    if (month < 1 || month > 12) {
+      throw const ValidationException(
+          message: 'Month must be between 1 and 12', field: 'month');
+    }
   }
 
   @override

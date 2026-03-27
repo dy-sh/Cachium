@@ -46,6 +46,7 @@ class BudgetRepository {
 
   Future<void> createBudget(ui.Budget budget) async {
     try {
+      budget.validate();
       final data = _toData(budget);
       final encryptedBlob = await encryptionService.encryptBudget(data);
 
@@ -62,6 +63,7 @@ class BudgetRepository {
 
   Future<void> updateBudget(ui.Budget budget) async {
     try {
+      budget.validate();
       final data = _toData(budget);
       final encryptedBlob = await encryptionService.encryptBudget(data);
 

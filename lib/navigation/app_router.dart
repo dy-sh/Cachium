@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../core/animations/page_transitions.dart';
@@ -549,5 +550,34 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
     ],
+    errorBuilder: (context, state) => _NotFoundScreen(path: state.uri.toString()),
   );
 });
+
+class _NotFoundScreen extends StatelessWidget {
+  final String path;
+  const _NotFoundScreen({required this.path});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Colors.grey),
+            const SizedBox(height: 16),
+            const Text('Page not found', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            Text(path, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+            const SizedBox(height: 24),
+            TextButton(
+              onPressed: () => GoRouter.of(context).go(AppRoutes.home),
+              child: const Text('Go Home'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

@@ -79,6 +79,7 @@ class AccountRepository {
   /// Throws [RepositoryException] if encryption or database operation fails.
   Future<void> createAccount(ui.Account account) async {
     try {
+      account.validate();
       final data = _toData(account);
       final encryptedBlob = await encryptionService.encryptAccount(data);
 
@@ -218,6 +219,7 @@ class AccountRepository {
   /// Throws [RepositoryException] if encryption or database operation fails.
   Future<void> updateAccount(ui.Account account) async {
     try {
+      account.validate();
       final data = _toData(account);
       final encryptedBlob = await encryptionService.encryptAccount(data);
 

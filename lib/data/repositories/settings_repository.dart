@@ -214,28 +214,32 @@ class SettingsRepository {
 
     if (dbPin == null && dbPassword == null) return;
 
-    // Only migrate if secure storage doesn't already have values
-    final existingPin = await _secureStorage.read(key: _pinKey);
-    final existingPassword = await _secureStorage.read(key: _passwordKey);
+    try {
+      // Only migrate if secure storage doesn't already have values
+      final existingPin = await _secureStorage.read(key: _pinKey);
+      final existingPassword = await _secureStorage.read(key: _passwordKey);
 
-    if (dbPin != null && existingPin == null) {
-      await _secureStorage.write(key: _pinKey, value: dbPin);
+      if (dbPin != null && existingPin == null) {
+        await _secureStorage.write(key: _pinKey, value: dbPin);
+      }
+      if (dbPassword != null && existingPassword == null) {
+        await _secureStorage.write(key: _passwordKey, value: dbPassword);
+      }
+
+      // Clear credentials from DB only after secure storage writes succeeded
+      json.remove('appPinCode');
+      json.remove('appPassword');
+      final cleanJsonData = jsonEncode(json);
+      await database.upsertSettings(
+        id: settingsId,
+        lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
+        jsonData: cleanJsonData,
+      );
+
+      debugPrint('SettingsRepository: migrated credentials from DB to secure storage');
+    } catch (e) {
+      debugPrint('SettingsRepository: credential migration failed: $e');
     }
-    if (dbPassword != null && existingPassword == null) {
-      await _secureStorage.write(key: _passwordKey, value: dbPassword);
-    }
-
-    // Clear credentials from DB by re-saving without them
-    json.remove('appPinCode');
-    json.remove('appPassword');
-    final cleanJsonData = jsonEncode(json);
-    await database.upsertSettings(
-      id: settingsId,
-      lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
-      jsonData: cleanJsonData,
-    );
-
-    debugPrint('SettingsRepository: migrated credentials from DB to secure storage');
   }
 
   /// Save credentials to secure storage.

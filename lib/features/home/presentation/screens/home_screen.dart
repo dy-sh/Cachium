@@ -32,15 +32,16 @@ class HomeScreen extends ConsumerWidget {
     final showRecentTransactions = ref.watch(homeShowRecentTransactionsProvider);
     final showBudgetProgress = ref.watch(homeShowBudgetProgressProvider);
 
-    // Bills data
-    final upcomingBills = ref.watch(upcomingBillsProvider);
-    final overdueBills = ref.watch(overdueBillsProvider);
-    final hasBills = upcomingBills.isNotEmpty || overdueBills.isNotEmpty;
+    // Bills data — only watch emptiness for visibility
+    final hasUpcomingBills = ref.watch(upcomingBillsProvider.select((b) => b.isNotEmpty));
+    final hasOverdueBills = ref.watch(overdueBillsProvider.select((b) => b.isNotEmpty));
+    final hasBills = hasUpcomingBills || hasOverdueBills;
 
-    // Budget progress data
+    // Budget progress data — only watch emptiness for visibility
     final now = DateTime.now();
-    final budgetProgress = ref.watch(
-      budgetProgressProvider((year: now.year, month: now.month)),
+    final hasBudgetProgress = ref.watch(
+      budgetProgressProvider((year: now.year, month: now.month))
+          .select((list) => list.isNotEmpty),
     );
 
     // Map section IDs to visibility and builder
@@ -49,7 +50,7 @@ class HomeScreen extends ConsumerWidget {
       'totalBalance': showTotalBalance,
       'quickActions': showQuickActions,
       'billsDue': hasBills,
-      'budgetProgress': showBudgetProgress && budgetProgress.isNotEmpty,
+      'budgetProgress': showBudgetProgress && hasBudgetProgress,
       'recentTransactions': showRecentTransactions,
     };
 

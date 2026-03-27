@@ -159,6 +159,9 @@ class AccountsNotifier extends AsyncNotifier<List<Account>>
         // Delete the account
         await accountRepo.deleteAccount(accountId);
       });
+
+      // Refresh dependent providers after successful operation
+      ref.invalidate(transactionsProvider);
     } catch (e, st) {
       state = previousState;
       Error.throwWithStackTrace(
@@ -276,6 +279,9 @@ class AccountsNotifier extends AsyncNotifier<List<Account>>
         // Delete the source account
         await accountRepo.deleteAccount(sourceAccountId);
       });
+
+      // Refresh dependent providers after successful operation
+      ref.invalidate(transactionsProvider);
     } catch (e, st) {
       state = previousState;
       Error.throwWithStackTrace(
@@ -315,15 +321,14 @@ class AccountsNotifier extends AsyncNotifier<List<Account>>
       final updatedAccount =
           account.copyWith(balance: account.balance + amount);
 
-      // Optimistically update local state
+      // Update in database first, then update local state
+      final repo = ref.read(accountRepositoryProvider);
+      await repo.updateAccount(updatedAccount);
+
       state = state.whenData(
         (accounts) =>
             accounts.map((a) => a.id == accountId ? updatedAccount : a).toList(),
       );
-
-      // Update in database
-      final repo = ref.read(accountRepositoryProvider);
-      await repo.updateAccount(updatedAccount);
     } catch (e, st) {
       state = previousState;
       Error.throwWithStackTrace(

@@ -7,6 +7,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../design_system/components/feedback/notification.dart';
 import '../../../../design_system/components/layout/page_layout.dart';
 import '../../../categories/data/models/category.dart';
 import '../../../settings/data/models/app_settings.dart';
@@ -572,26 +573,32 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
     final amount = double.tryParse(_amountController.text) ?? 0;
     if (amount <= 0 || _selectedCategoryId == null) return;
 
-    final notifier = ref.read(budgetsProvider.notifier);
+    try {
+      final notifier = ref.read(budgetsProvider.notifier);
 
-    if (widget.editBudget != null) {
-      await notifier.updateBudget(widget.editBudget!.copyWith(
-        categoryId: _selectedCategoryId,
-        amount: amount,
-        rolloverEnabled: _rolloverEnabled,
-      ));
-    } else {
-      await notifier.addBudget(Budget(
-        id: const Uuid().v4(),
-        categoryId: _selectedCategoryId!,
-        amount: amount,
-        year: widget.year,
-        month: widget.month,
-        rolloverEnabled: _rolloverEnabled,
-        createdAt: DateTime.now(),
-      ));
+      if (widget.editBudget != null) {
+        await notifier.updateBudget(widget.editBudget!.copyWith(
+          categoryId: _selectedCategoryId,
+          amount: amount,
+          rolloverEnabled: _rolloverEnabled,
+        ));
+      } else {
+        await notifier.addBudget(Budget(
+          id: const Uuid().v4(),
+          categoryId: _selectedCategoryId!,
+          amount: amount,
+          year: widget.year,
+          month: widget.month,
+          rolloverEnabled: _rolloverEnabled,
+          createdAt: DateTime.now(),
+        ));
+      }
+
+      if (context.mounted) Navigator.of(context).pop();
+    } catch (e) {
+      if (context.mounted) {
+        context.showErrorNotification('Failed to save budget: ${e.toString()}');
+      }
     }
-
-    if (context.mounted) Navigator.of(context).pop();
   }
 }

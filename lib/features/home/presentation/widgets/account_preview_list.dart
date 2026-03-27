@@ -8,6 +8,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/providers/exchange_rate_provider.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../../design_system/animations/shimmer_loading.dart';
 import '../../../../design_system/components/feedback/empty_state.dart';
 import '../../../accounts/data/models/account.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
@@ -35,16 +36,12 @@ class _AccountPreviewListState extends ConsumerState<AccountPreviewList> {
     final showBalances = !balancesHidden || _balancesRevealed;
 
     return accountsAsync.when(
-      loading: () => SizedBox(
-        height: 72,
-        child: Center(
-          child: SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: AppColors.textTertiary,
-            ),
+      loading: () => Column(
+        children: List.generate(
+          3,
+          (_) => const Padding(
+            padding: EdgeInsets.only(bottom: AppSpacing.sm),
+            child: ShimmerAccountCard(),
           ),
         ),
       ),

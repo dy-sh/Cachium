@@ -531,6 +531,7 @@ class _SaveBar extends StatelessWidget {
           ),
           child: PrimaryButton(
             label: isEditing ? 'Save Changes' : 'Save Transaction',
+            isLoading: isSaving,
             onPressed: !isSaving ? onSave : null,
           ),
         ),

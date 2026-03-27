@@ -55,7 +55,12 @@ double convertedAmount(
     return roundCurrency(tx.amount / fromRate);
   }
 
-  // Fallback to stored conversion rate
+  // Fallback to stored conversion rate (live rate unavailable)
+  assert(() {
+    // ignore: avoid_print
+    print('currency_conversion: using stored rate for ${tx.currencyCode} (no live rate available)');
+    return true;
+  }());
   return roundCurrency(tx.amount * tx.conversionRate);
 }
 

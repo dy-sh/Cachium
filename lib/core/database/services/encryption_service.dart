@@ -440,6 +440,7 @@ class EncryptionService {
   Future<AttachmentData> decryptAttachment(
     Uint8List encryptedBlob, {
     required String expectedId,
+    required int expectedCreatedAtMillis,
   }) async {
     final json = await decryptJson(encryptedBlob);
     final data = AttachmentData.fromJson(json);
@@ -450,6 +451,15 @@ class EncryptionService {
         fieldName: 'id',
         expectedValue: expectedId,
         actualValue: data.id,
+      );
+    }
+
+    if (data.createdAtMillis != expectedCreatedAtMillis) {
+      throw SecurityException(
+        rowId: expectedId,
+        fieldName: 'createdAtMillis',
+        expectedValue: expectedCreatedAtMillis.toString(),
+        actualValue: data.createdAtMillis.toString(),
       );
     }
 

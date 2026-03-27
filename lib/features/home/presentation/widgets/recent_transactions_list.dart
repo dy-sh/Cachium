@@ -9,6 +9,7 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../core/providers/exchange_rate_provider.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
+import '../../../../design_system/animations/shimmer_loading.dart';
 import '../../../../design_system/components/feedback/empty_state.dart';
 import '../../../../design_system/components/feedback/notification.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
@@ -25,19 +26,8 @@ class RecentTransactionsList extends ConsumerWidget {
     final transactionsAsync = ref.watch(recentTransactionsProvider);
 
     return transactionsAsync.when(
-      loading: () => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-        child: Container(
-          padding: const EdgeInsets.all(AppSpacing.xxl),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: AppRadius.mdAll,
-            border: Border.all(color: AppColors.border),
-          ),
-          child: const Center(
-            child: CircularProgressIndicator(),
-          ),
-        ),
+      loading: () => Column(
+        children: List.generate(4, (_) => const ShimmerTransactionItem()),
       ),
       error: (error, stack) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),

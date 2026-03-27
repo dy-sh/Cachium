@@ -93,11 +93,15 @@ class CredentialHasher {
     );
     final candidateHash = await derived.extractBytes();
 
-    if (candidateHash.length != expectedHash.length) return false;
-    // Constant-time comparison
-    var result = 0;
-    for (var i = 0; i < candidateHash.length; i++) {
-      result |= candidateHash[i] ^ expectedHash[i];
+    // Constant-time comparison (no early return on length mismatch)
+    var result = candidateHash.length ^ expectedHash.length;
+    final maxLen = candidateHash.length > expectedHash.length
+        ? candidateHash.length
+        : expectedHash.length;
+    for (var i = 0; i < maxLen; i++) {
+      final a = i < candidateHash.length ? candidateHash[i] : 0;
+      final b = i < expectedHash.length ? expectedHash[i] : 0;
+      result |= a ^ b;
     }
     return result == 0;
   }
@@ -106,11 +110,15 @@ class CredentialHasher {
     final saltedInput = utf8.encode('cachium_app_lock_$credential');
     final digest = await _sha256.hash(saltedInput);
     final candidateHash = '$_sha256Prefix${base64Encode(digest.bytes)}';
-    // Constant-time comparison to prevent timing attacks
-    if (candidateHash.length != storedValue.length) return false;
-    var result = 0;
-    for (var i = 0; i < candidateHash.length; i++) {
-      result |= candidateHash.codeUnitAt(i) ^ storedValue.codeUnitAt(i);
+    // Constant-time comparison (no early return on length mismatch)
+    var result = candidateHash.length ^ storedValue.length;
+    final maxLen = candidateHash.length > storedValue.length
+        ? candidateHash.length
+        : storedValue.length;
+    for (var i = 0; i < maxLen; i++) {
+      final a = i < candidateHash.length ? candidateHash.codeUnitAt(i) : 0;
+      final b = i < storedValue.length ? storedValue.codeUnitAt(i) : 0;
+      result |= a ^ b;
     }
     return result == 0;
   }

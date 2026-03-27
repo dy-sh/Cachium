@@ -98,6 +98,22 @@ void main() {
       expect(verified, isTrue);
     });
 
+    test('verify rejects wrong credential with same-format PBKDF2 hash', () async {
+      // Tests constant-time comparison with valid but non-matching hashes
+      final hash1 = await CredentialHasher.hash('1234');
+      final hash2 = await CredentialHasher.hash('5678');
+      // Verify the wrong credential against a valid hash
+      final result = await CredentialHasher.verify('5678', hash1);
+      expect(result, isFalse);
+      // Also verify cross-hash doesn't match
+      final parts1 = hash1.split(':');
+      final parts2 = hash2.split(':');
+      // Use salt from hash1 but hash portion from hash2
+      final mixed = '${parts1[0]}:${parts1[1]}:${parts1[2]}:${parts2[3]}';
+      final mixedResult = await CredentialHasher.verify('1234', mixed);
+      expect(mixedResult, isFalse);
+    });
+
     test('verify rejects malformed PBKDF2 strings', () async {
       // Missing parts
       final result1 = await CredentialHasher.verify('test', 'pbkdf2:invalid');

@@ -28,6 +28,7 @@ class AccountFormScreen extends ConsumerStatefulWidget {
 
 class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
   bool _initialized = false;
+  bool _isSaving = false;
   late TextEditingController _nameController;
   late TextEditingController _balanceController;
   late TextEditingController _initialBalanceController;
@@ -161,8 +162,10 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
               ),
               child: PrimaryButton(
                 label: isEditing ? 'Save Changes' : 'Create Account',
-                onPressed: formState.isValid && !isDuplicateName
+                isLoading: _isSaving,
+                onPressed: formState.isValid && !isDuplicateName && !_isSaving
                     ? () async {
+                        setState(() => _isSaving = true);
                         try {
                           // Get custom color if set
                           final intensity = ref.read(colorIntensityProvider);
@@ -220,6 +223,8 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                           if (context.mounted) {
                             context.showErrorNotification('Failed to save account: ${e.toString()}');
                           }
+                        } finally {
+                          if (mounted) setState(() => _isSaving = false);
                         }
                       }
                     : null,
