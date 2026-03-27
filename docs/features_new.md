@@ -1,5 +1,15 @@
 # New Features Log
 
+## 2026-03-27
+- **Export Credential Sanitization**: Database exports (SQLite and CSV) now strip `appPinCode` and `appPassword` from the settings JSON before writing, preventing credential leaks in exported files.
+- **Parallel Decryption in Repositories**: All encrypted-blob repositories (accounts, assets, asset categories, attachments, bills, budgets, categories, recurring rules, savings goals, tags, transactions, transaction templates) now decrypt rows concurrently via `Future.wait` instead of sequential loops, improving load times for large datasets.
+- **OptimisticAsyncNotifier Mixin**: A reusable `OptimisticAsyncNotifier<T>` mixin extracted into `lib/core/providers/optimistic_notifier.dart` provides `runOptimistic()` for consistent optimistic-update-with-rollback across all entity providers. Includes unit tests.
+- **CSV Import Amount Hardening**: The flexible CSV importer now validates that parsed amounts are finite and rejects values exceeding 1e14, preventing overflow and NaN issues during import.
+- **SQLite Import Atomic Delete**: `clearAndImportFromSqlite` now wraps all delete operations in a single database transaction, preventing partial data loss if the app crashes mid-clear.
+- **Encryption Service Test Suite**: New test file (`test/core/database/services/encryption_service_test.dart`) covers JSON round-trips, empty payloads, Unicode, large objects, wrong-key rejection, and tamper detection.
+- **EmptyState Accessibility**: The compact `EmptyState` widget now wraps its content in a `Semantics` widget with button role and label for screen reader support.
+- **Legacy Key Migration Removal**: Removed `KeyMigrationService` and related database helpers (`hasTransactions`, `hasAccounts`, etc.) that handled the one-time migration from the legacy mock encryption key. The migration is considered complete.
+
 ## 2026-03-26
 - **Asset ROI Calculation**: Sold assets now display a return on investment percentage (net proceeds vs. total cost) on both the asset detail screen and asset list cards.
 - **Portfolio Summary Card**: The assets list screen shows a summary card with total purchase value, net cost, and monthly average for the active tab, and total P&L with best/worst performer for the sold tab.
