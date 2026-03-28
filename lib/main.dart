@@ -31,6 +31,14 @@ void main() async {
   // Pre-warm the database connection
   final db = container.read(databaseProvider);
 
+  // Pre-warm the encryption key (must happen on main isolate
+  // before any background isolate tries to use it)
+  try {
+    await container.read(keyProviderProvider).getKey();
+  } catch (_) {
+    debugPrint('Encryption key pre-warm failed');
+  }
+
   // Migrate plaintext/SHA-256 credentials to PBKDF2 hashing
   try {
     await container.read(settingsProvider.future);

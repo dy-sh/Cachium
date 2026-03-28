@@ -13,6 +13,7 @@ class SecureKeyProvider implements KeyProvider {
   static const _storageKey = 'cachium_encryption_key';
 
   final FlutterSecureStorage _storage;
+  Uint8List? _cachedKey;
 
   SecureKeyProvider({FlutterSecureStorage? storage})
       : _storage = storage ?? const FlutterSecureStorage(
@@ -22,10 +23,15 @@ class SecureKeyProvider implements KeyProvider {
 
   @override
   Future<Uint8List> getKey() async {
+    if (_cachedKey != null) return _cachedKey!;
+
     final existing = await _storage.read(key: _storageKey);
     if (existing != null) {
       final decoded = base64Decode(existing);
-      if (decoded.length == 32) return decoded;
+      if (decoded.length == 32) {
+        _cachedKey = decoded;
+        return decoded;
+      }
       // Key exists but is corrupted — do NOT silently regenerate,
       // as that would make all encrypted data permanently unreadable.
       throw EncryptionKeyCorruptedException(
@@ -44,6 +50,7 @@ class SecureKeyProvider implements KeyProvider {
 
     // Store base64-encoded
     await _storage.write(key: _storageKey, value: base64Encode(key));
+    _cachedKey = key;
     return key;
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/repositories/account_repository.dart';
@@ -16,15 +18,20 @@ import '../../data/repositories/transaction_repository.dart';
 import '../../data/repositories/transaction_template_repository.dart';
 import '../database/app_database.dart';
 import '../database/services/encryption_service.dart';
+import '../database/services/file_key_provider.dart';
 import '../database/services/key_provider.dart';
 import '../database/services/secure_key_provider.dart';
 
 /// Provider for the encryption key source.
 ///
-/// Uses SecureKeyProvider backed by platform-specific secure storage
-/// (Keychain on iOS, Keystore on Android).
+/// Uses SecureKeyProvider (Keychain/Keystore) on iOS/Android.
+/// Falls back to FileKeyProvider on desktop platforms where
+/// secure storage may not work (e.g. macOS debug builds).
 final keyProviderProvider = Provider<KeyProvider>((ref) {
-  return SecureKeyProvider();
+  if (Platform.isIOS || Platform.isAndroid) {
+    return SecureKeyProvider();
+  }
+  return FileKeyProvider();
 });
 
 /// Provider for the encryption service.

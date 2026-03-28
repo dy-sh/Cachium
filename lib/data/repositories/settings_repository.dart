@@ -273,15 +273,19 @@ class SettingsRepository {
 
   /// Save credentials to secure storage.
   Future<void> _saveCredentials(String? pin, String? password) async {
-    if (pin != null) {
-      await _secureStorage.write(key: _pinKey, value: pin);
-    } else {
-      await _secureStorage.delete(key: _pinKey);
-    }
-    if (password != null) {
-      await _secureStorage.write(key: _passwordKey, value: password);
-    } else {
-      await _secureStorage.delete(key: _passwordKey);
+    try {
+      if (pin != null) {
+        await _secureStorage.write(key: _pinKey, value: pin);
+      } else {
+        await _secureStorage.delete(key: _pinKey);
+      }
+      if (password != null) {
+        await _secureStorage.write(key: _passwordKey, value: password);
+      } else {
+        await _secureStorage.delete(key: _passwordKey);
+      }
+    } catch (_) {
+      debugPrint('SettingsRepository: Failed to save credentials to secure storage');
     }
   }
 
