@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:csv/csv.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:drift/drift.dart';
 
 import '../../../../data/encryption/account_data.dart';
@@ -32,20 +32,19 @@ class CsvImporter {
 
   /// Pick and import CSV files.
   Future<ImportResult?> pickAndImportCsv() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['csv'],
-      allowMultiple: true,
+    const csvTypeGroup = XTypeGroup(
+      label: 'CSV files',
+      extensions: ['csv'],
+    );
+    final files = await openFiles(
+      acceptedTypeGroups: const [csvTypeGroup],
     );
 
-    if (result == null || result.files.isEmpty) {
+    if (files.isEmpty) {
       return null;
     }
 
-    final paths = result.files
-        .where((f) => f.path != null)
-        .map((f) => f.path!)
-        .toList();
+    final paths = files.map((f) => f.path).toList();
 
     if (paths.isEmpty) {
       return null;
@@ -114,20 +113,19 @@ class CsvImporter {
   /// Pick CSV files and return their paths.
   /// Returns FilePickResult with paths, error, or cancelled state.
   Future<FilePickResult> pickCsvFiles() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['csv'],
-      allowMultiple: true,
+    const csvTypeGroup = XTypeGroup(
+      label: 'CSV files',
+      extensions: ['csv'],
+    );
+    final files = await openFiles(
+      acceptedTypeGroups: const [csvTypeGroup],
     );
 
-    if (result == null || result.files.isEmpty) {
+    if (files.isEmpty) {
       return const FilePickResult.success(null); // Cancelled
     }
 
-    final paths = result.files
-        .where((f) => f.path != null)
-        .map((f) => f.path!)
-        .toList();
+    final paths = files.map((f) => f.path).toList();
 
     if (paths.isEmpty) {
       return const FilePickResult.error('Could not access selected files');

@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:drift/drift.dart';
 import 'package:sqlite3/sqlite3.dart' as sql;
 
@@ -33,21 +33,17 @@ class SqliteImporter {
   /// Pick a SQLite database file and return its path.
   /// Returns FilePickResult with path, error, or cancelled state.
   Future<FilePickResult> pickSqliteFile() async {
-    // Use FileType.any because iOS/macOS doesn't properly support
+    // Use any type because iOS/macOS doesn't properly support
     // filtering for .db files. We validate the file after selection.
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.any,
-      allowMultiple: false,
+    final file = await openFile(
+      acceptedTypeGroups: const [XTypeGroup(label: 'All files')],
     );
 
-    if (result == null || result.files.isEmpty) {
+    if (file == null) {
       return const FilePickResult.success(null); // Cancelled
     }
 
-    final path = result.files.first.path;
-    if (path == null) {
-      return const FilePickResult.error('Could not access selected file');
-    }
+    final path = file.path;
 
     // Validate file extension
     final extension = path.split('.').last.toLowerCase();

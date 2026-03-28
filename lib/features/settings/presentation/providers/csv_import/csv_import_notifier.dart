@@ -1,4 +1,4 @@
-import 'package:file_picker/file_picker.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/database/services/flexible_csv_import_service.dart';
@@ -38,25 +38,20 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
     state = state.copyWith(isLoading: true, clearError: true);
 
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['csv'],
-        allowMultiple: false,
+      const csvTypeGroup = XTypeGroup(
+        label: 'CSV files',
+        extensions: ['csv'],
+      );
+      final file = await openFile(
+        acceptedTypeGroups: const [csvTypeGroup],
       );
 
-      if (result == null || result.files.isEmpty) {
+      if (file == null) {
         state = state.copyWith(isLoading: false);
         return false;
       }
 
-      final path = result.files.first.path;
-      if (path == null) {
-        state = state.copyWith(
-          isLoading: false,
-          error: 'Could not access selected file',
-        );
-        return false;
-      }
+      final path = file.path;
 
       final parsed = await _service.loadCsvFile(path);
       if (parsed == null) {

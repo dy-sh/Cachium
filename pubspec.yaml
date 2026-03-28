@@ -58,7 +58,7 @@ dependencies:
 
   # File operations
   share_plus: ^7.2.1
-  file_picker: ^6.1.1
+  file_selector: ^1.0.3
   csv: ^5.1.1
 
   # Security
