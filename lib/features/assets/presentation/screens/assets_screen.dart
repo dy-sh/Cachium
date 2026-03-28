@@ -346,6 +346,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
 
     if (canReorder) {
       return ReorderableListView.builder(
+        buildDefaultDragHandles: false,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
         proxyDecorator: (child, index, animation) {
           return AnimatedBuilder(
@@ -380,6 +381,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
               onTap: () => context.push(AppRoutes.assetDetailPath(asset.id)),
               onEditTap: () => _openEditModal(asset),
               showDragHandle: true,
+              index: index,
             ),
           );
         },
@@ -612,6 +614,7 @@ class _AssetCard extends ConsumerWidget {
   final VoidCallback onTap;
   final VoidCallback onEditTap;
   final bool showDragHandle;
+  final int index;
 
   const _AssetCard({
     required this.asset,
@@ -619,6 +622,7 @@ class _AssetCard extends ConsumerWidget {
     required this.onTap,
     required this.onEditTap,
     this.showDragHandle = false,
+    this.index = 0,
   });
 
   String _formatAge(DateTime start, DateTime end) {
@@ -672,10 +676,13 @@ class _AssetCard extends ConsumerWidget {
         child: Row(
           children: [
             if (showDragHandle) ...[
-              Icon(
-                LucideIcons.gripVertical,
-                size: 16,
-                color: AppColors.textTertiary,
+              ReorderableDragStartListener(
+                index: index,
+                child: Icon(
+                  LucideIcons.gripVertical,
+                  size: 16,
+                  color: AppColors.textTertiary,
+                ),
               ),
               const SizedBox(width: AppSpacing.sm),
             ],
