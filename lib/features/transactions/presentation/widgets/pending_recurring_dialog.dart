@@ -276,7 +276,7 @@ class _PendingRecurringDialogState
           .read(recurringRulesProvider.notifier)
           .generatePendingTransactions(ruleIds: selectedIds);
 
-      if (context.mounted) {
+      if (mounted) {
         Navigator.of(context).pop(true);
         context.showSuccessNotification(
           '$count transaction${count == 1 ? '' : 's'} added',
@@ -285,9 +285,7 @@ class _PendingRecurringDialogState
     } catch (_) {
       if (mounted) {
         setState(() => _isGenerating = false);
-        if (context.mounted) {
-          context.showErrorNotification('Failed to generate transactions');
-        }
+        context.showErrorNotification('Failed to generate transactions');
       }
     }
   }

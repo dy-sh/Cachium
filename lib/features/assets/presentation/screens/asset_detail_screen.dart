@@ -700,14 +700,12 @@ class _Section extends StatefulWidget {
   final String title;
   final IconData icon;
   final bool visible;
-  final bool initiallyExpanded;
   final Widget child;
 
   const _Section({
     required this.title,
     required this.icon,
     this.visible = true,
-    this.initiallyExpanded = true,
     required this.child,
   });
 
@@ -721,7 +719,7 @@ class _SectionState extends State<_Section> {
   @override
   void initState() {
     super.initState();
-    _expanded = widget.initiallyExpanded;
+    _expanded = true;
   }
 
   @override

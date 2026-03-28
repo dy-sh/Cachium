@@ -432,14 +432,12 @@ class _DetailRow extends StatelessWidget {
   final String label;
   final String value;
   final Color? valueColor;
-  final bool isLast;
 
   const _DetailRow({
     required this.icon,
     required this.label,
     required this.value,
     this.valueColor,
-    this.isLast = false,
   });
 
   @override
@@ -450,14 +448,12 @@ class _DetailRow extends StatelessWidget {
         vertical: AppSpacing.md + 2,
       ),
       decoration: BoxDecoration(
-        border: isLast
-            ? null
-            : Border(
-                bottom: BorderSide(
-                  color: AppColors.border.withValues(alpha: 0.5),
-                  width: 1,
-                ),
-              ),
+        border: Border(
+          bottom: BorderSide(
+            color: AppColors.border.withValues(alpha: 0.5),
+            width: 1,
+          ),
+        ),
       ),
       child: Row(
         children: [

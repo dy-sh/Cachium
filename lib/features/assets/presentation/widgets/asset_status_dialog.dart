@@ -335,7 +335,7 @@ class _ReactivateDialogState extends ConsumerState<_ReactivateDialog> {
     );
     await ref.read(assetsProvider.notifier).updateAsset(updatedAsset);
 
-    if (context.mounted) {
+    if (mounted) {
       Navigator.of(context).pop();
       context.showSuccessNotification('Asset reactivated');
     }
