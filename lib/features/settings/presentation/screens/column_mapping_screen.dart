@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -422,7 +424,7 @@ class ColumnMappingScreen extends ConsumerWidget {
                       .read(flexibleCsvImportProvider.notifier)
                       .generatePreview();
                   if (success && context.mounted) {
-                    context.push(AppRoutes.csvImportPreview);
+                    unawaited(context.push(AppRoutes.csvImportPreview));
                   } else if (!success && context.mounted) {
                     final error = ref.read(flexibleCsvImportProvider).error;
                     if (error != null) {

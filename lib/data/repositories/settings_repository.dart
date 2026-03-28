@@ -225,8 +225,8 @@ class SettingsRepository {
       try {
         await _secureStorage.write(key: _pinKey, value: dbPin);
         pinMigrated = true;
-      } catch (e) {
-        debugPrint('SettingsRepository: PIN migration to secure storage failed: $e');
+      } catch (_) {
+        debugPrint('SettingsRepository: PIN migration to secure storage failed');
       }
     }
 
@@ -234,8 +234,8 @@ class SettingsRepository {
       try {
         await _secureStorage.write(key: _passwordKey, value: dbPassword);
         passwordMigrated = true;
-      } catch (e) {
-        debugPrint('SettingsRepository: password migration to secure storage failed: $e');
+      } catch (_) {
+        debugPrint('SettingsRepository: password migration to secure storage failed');
       }
     }
 
@@ -252,9 +252,9 @@ class SettingsRepository {
           jsonData: cleanJsonData,
         );
         debugPrint('SettingsRepository: migrated credentials from DB to secure storage');
-      } catch (e) {
+      } catch (_) {
         // DB update failed — credentials are duplicated but safe. Will retry next launch.
-        debugPrint('SettingsRepository: DB cleanup after migration failed: $e');
+        debugPrint('SettingsRepository: DB cleanup after migration failed');
       }
     }
   }

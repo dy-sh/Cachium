@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -166,7 +168,7 @@ class _RecurringRuleCard extends ConsumerWidget {
             color: AppColors.surface,
             onSelected: (value) async {
               if (value == 'edit') {
-                context.push(AppRoutes.recurringRuleEditPath(rule.id));
+                unawaited(context.push(AppRoutes.recurringRuleEditPath(rule.id)));
               } else if (value == 'toggle') {
                 await ref
                     .read(recurringRulesProvider.notifier)

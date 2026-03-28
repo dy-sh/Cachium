@@ -41,7 +41,9 @@ class NetWorthSnapshotRepository {
     try {
       final decoded = jsonDecode(row.perAccountBalancesJson) as Map<String, dynamic>;
       balances = decoded.map((k, v) => MapEntry(k, (v as num).toDouble()));
-    } catch (_) {}
+    } catch (_) {
+      // Malformed JSON — use empty balances map
+    }
 
     return NetWorthSnapshot(
       id: row.id,

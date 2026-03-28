@@ -254,7 +254,7 @@ class DatabaseManagementNotifier extends Notifier<AsyncValue<void>> {
 
       // Reset settings if requested
       if (resetSettings) {
-        ref.read(settingsProvider.notifier).reset();
+        await ref.read(settingsProvider.notifier).reset();
       }
 
       // Invalidate all related providers to refresh UI

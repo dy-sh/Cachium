@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -28,7 +30,7 @@ class NetWorthSnapshotService {
 
       final mainCurrency = container.read(mainCurrencyCodeProvider);
 
-      _takeSnapshot(repo, accounts, mainCurrency, monthStart);
+      unawaited(_takeSnapshot(repo, accounts, mainCurrency, monthStart));
     } catch (e) {
       debugPrint('NetWorthSnapshotService.takeSnapshotIfNeeded failed: $e');
     }

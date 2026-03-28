@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/database_providers.dart';
 import '../../../../core/utils/credential_hasher.dart';
@@ -320,248 +319,76 @@ final settingsProvider = AsyncNotifierProvider<SettingsNotifier, AppSettings>(()
   return SettingsNotifier();
 });
 
-// Convenience providers
-final themeModeProvider = Provider<ThemeModeOption>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.themeMode ?? ThemeModeOption.dark;
-});
+// Helper to reduce boilerplate in convenience providers.
+// Falls back to AppSettings defaults when settings haven't loaded yet.
+Provider<T> _setting<T>(T Function(AppSettings) select, T fallback) {
+  return Provider<T>((ref) {
+    final settings = ref.watch(settingsProvider).valueOrNull;
+    return settings != null ? select(settings) : fallback;
+  });
+}
 
-final colorIntensityProvider = Provider<ColorIntensity>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.colorIntensity ?? ColorIntensity.prism;
-});
+// Convenience providers — Appearance
+final themeModeProvider = _setting((s) => s.themeMode, ThemeModeOption.dark);
+final colorIntensityProvider = _setting((s) => s.colorIntensity, ColorIntensity.prism);
+final accentColorProvider = _setting((s) => s.accentColor, const AppSettings().accentColor);
+final accountCardStyleProvider = _setting((s) => s.accountCardStyle, AccountCardStyle.dim);
+final tabTransitionsEnabledProvider = _setting((s) => s.tabTransitionsEnabled, true);
+final formAnimationsEnabledProvider = _setting((s) => s.formAnimationsEnabled, true);
+final balanceCountersEnabledProvider = _setting((s) => s.balanceCountersEnabled, true);
 
-final accentColorProvider = Provider<Color>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.accentColor ?? const AppSettings().accentColor;
-});
+// Convenience providers — Formats
+final dateFormatProvider = _setting((s) => s.dateFormat, DateFormatOption.mmddyyyy);
+final mainCurrencyCodeProvider = _setting((s) => s.mainCurrencyCode, 'USD');
+final exchangeRateApiOptionProvider = _setting((s) => s.exchangeRateApiOption, ExchangeRateApiOption.frankfurter);
+final firstDayOfWeekProvider = _setting((s) => s.firstDayOfWeek, FirstDayOfWeek.sunday);
 
-final accountCardStyleProvider = Provider<AccountCardStyle>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.accountCardStyle ?? AccountCardStyle.dim;
-});
+// Convenience providers — Preferences
+final hapticEnabledProvider = _setting((s) => s.hapticFeedbackEnabled, true);
+final startScreenProvider = _setting((s) => s.startScreen, StartScreen.home);
+final lastUsedAccountIdProvider = _setting((s) => s.lastUsedAccountId, null);
 
-final dateFormatProvider = Provider<DateFormatOption>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.dateFormat ?? DateFormatOption.mmddyyyy;
-});
+// Convenience providers — Onboarding
+final onboardingCompletedProvider = _setting((s) => s.onboardingCompleted, false);
+final tutorialCompletedProvider = _setting((s) => s.tutorialCompleted, false);
 
-final mainCurrencyCodeProvider = Provider<String>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.mainCurrencyCode ?? 'USD';
-});
+// Convenience providers — Transactions
+final autoCategorizeByMerchantProvider = _setting((s) => s.autoCategorizeByMerchant, true);
+final selectLastCategoryProvider = _setting((s) => s.selectLastCategory, false);
+final selectLastAccountProvider = _setting((s) => s.selectLastAccount, true);
+final accountsFoldedCountProvider = _setting((s) => s.accountsFoldedCount, 3);
+final categoriesFoldedCountProvider = _setting((s) => s.categoriesFoldedCount, 5);
+final categorySortOptionProvider = _setting((s) => s.categorySortOption, CategorySortOption.lastUsed);
+final showAddAccountButtonProvider = _setting((s) => s.showAddAccountButton, true);
+final showAddCategoryButtonProvider = _setting((s) => s.showAddCategoryButton, true);
+final defaultTransactionTypeProvider = _setting((s) => s.defaultTransactionType, TransactionType.expense);
+final allowZeroAmountProvider = _setting((s) => s.allowZeroAmount, true);
+final lastUsedIncomeCategoryIdProvider = _setting((s) => s.lastUsedIncomeCategoryId, null);
+final lastUsedExpenseCategoryIdProvider = _setting((s) => s.lastUsedExpenseCategoryId, null);
+final transactionAmountSizeProvider = _setting((s) => s.transactionAmountSize, AmountDisplaySize.large);
+final allowSelectParentCategoryProvider = _setting((s) => s.allowSelectParentCategory, true);
 
-final exchangeRateApiOptionProvider = Provider<ExchangeRateApiOption>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.exchangeRateApiOption ?? ExchangeRateApiOption.frankfurter;
-});
+// Convenience providers — Home Page
+final homeShowAccountsListProvider = _setting((s) => s.homeShowAccountsList, true);
+final homeShowTotalBalanceProvider = _setting((s) => s.homeShowTotalBalance, true);
+final homeShowQuickActionsProvider = _setting((s) => s.homeShowQuickActions, true);
+final homeShowRecentTransactionsProvider = _setting((s) => s.homeShowRecentTransactions, true);
+final homeShowBudgetProgressProvider = _setting((s) => s.homeShowBudgetProgress, true);
+final homeAccountsTextSizeProvider = _setting((s) => s.homeAccountsTextSize, AmountDisplaySize.large);
+final homeTotalBalanceTextSizeProvider = _setting((s) => s.homeTotalBalanceTextSize, AmountDisplaySize.large);
+final homeBalancesHiddenByDefaultProvider = _setting((s) => s.homeBalancesHiddenByDefault, false);
+final homeSectionOrderProvider = _setting((s) => s.homeSectionOrder,
+    const ['accounts', 'totalBalance', 'quickActions', 'budgetProgress', 'recentTransactions']);
 
-final firstDayOfWeekProvider = Provider<FirstDayOfWeek>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.firstDayOfWeek ?? FirstDayOfWeek.sunday;
-});
+// Convenience providers — Assets
+final assetsFoldedCountProvider = _setting((s) => s.assetsFoldedCount, 5);
+final showAddAssetButtonProvider = _setting((s) => s.showAddAssetButton, true);
+final assetSortOptionProvider = _setting((s) => s.assetSortOption, AssetSortOption.lastUsed);
+final showAssetSelectorProvider = _setting((s) => s.showAssetSelector, true);
 
-final hapticEnabledProvider = Provider<bool>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.hapticFeedbackEnabled ?? true;
-});
-
-final tabTransitionsEnabledProvider = Provider<bool>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.tabTransitionsEnabled ?? true;
-});
-
-final formAnimationsEnabledProvider = Provider<bool>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.formAnimationsEnabled ?? true;
-});
-
-final balanceCountersEnabledProvider = Provider<bool>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.balanceCountersEnabled ?? true;
-});
-
-final startScreenProvider = Provider<StartScreen>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.startScreen ?? StartScreen.home;
-});
-
-final lastUsedAccountIdProvider = Provider<String?>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.lastUsedAccountId;
-});
-
-final onboardingCompletedProvider = Provider<bool>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.onboardingCompleted ?? false;
-});
-
-final tutorialCompletedProvider = Provider<bool>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.tutorialCompleted ?? false;
-});
-
-// Transaction settings providers
-final autoCategorizeByMerchantProvider = Provider<bool>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.autoCategorizeByMerchant ?? true;
-});
-
-final selectLastCategoryProvider = Provider<bool>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.selectLastCategory ?? false;
-});
-
-final selectLastAccountProvider = Provider<bool>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.selectLastAccount ?? true;
-});
-
-final accountsFoldedCountProvider = Provider<int>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.accountsFoldedCount ?? 3;
-});
-
-final categoriesFoldedCountProvider = Provider<int>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.categoriesFoldedCount ?? 5;
-});
-
-final categorySortOptionProvider = Provider<CategorySortOption>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.categorySortOption ?? CategorySortOption.lastUsed;
-});
-
-final showAddAccountButtonProvider = Provider<bool>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.showAddAccountButton ?? true;
-});
-
-final showAddCategoryButtonProvider = Provider<bool>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.showAddCategoryButton ?? true;
-});
-
-final defaultTransactionTypeProvider = Provider<TransactionType>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.defaultTransactionType ?? TransactionType.expense;
-});
-
-final allowZeroAmountProvider = Provider<bool>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.allowZeroAmount ?? true;
-});
-
-final lastUsedIncomeCategoryIdProvider = Provider<String?>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.lastUsedIncomeCategoryId;
-});
-
-final lastUsedExpenseCategoryIdProvider = Provider<String?>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.lastUsedExpenseCategoryId;
-});
-
-final transactionAmountSizeProvider = Provider<AmountDisplaySize>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.transactionAmountSize ?? AmountDisplaySize.large;
-});
-
-final allowSelectParentCategoryProvider = Provider<bool>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.allowSelectParentCategory ?? true;
-});
-
-// Home Page providers
-final homeShowAccountsListProvider = Provider<bool>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.homeShowAccountsList ?? true;
-});
-
-final homeShowTotalBalanceProvider = Provider<bool>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.homeShowTotalBalance ?? true;
-});
-
-final homeShowQuickActionsProvider = Provider<bool>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.homeShowQuickActions ?? true;
-});
-
-final homeShowRecentTransactionsProvider = Provider<bool>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.homeShowRecentTransactions ?? true;
-});
-
-final homeAccountsTextSizeProvider = Provider<AmountDisplaySize>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.homeAccountsTextSize ?? AmountDisplaySize.large;
-});
-
-final homeTotalBalanceTextSizeProvider = Provider<AmountDisplaySize>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.homeTotalBalanceTextSize ?? AmountDisplaySize.large;
-});
-
-final homeBalancesHiddenByDefaultProvider = Provider<bool>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.homeBalancesHiddenByDefault ?? false;
-});
-
-// Asset settings providers
-final assetsFoldedCountProvider = Provider<int>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.assetsFoldedCount ?? 5;
-});
-
-final showAddAssetButtonProvider = Provider<bool>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.showAddAssetButton ?? true;
-});
-
-final assetSortOptionProvider = Provider<AssetSortOption>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.assetSortOption ?? AssetSortOption.lastUsed;
-});
-
-final showAssetSelectorProvider = Provider<bool>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.showAssetSelector ?? true;
-});
-
-// Security providers
-final appLockEnabledProvider = Provider<bool>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.appLockEnabled ?? false;
-});
-
-final appPinCodeProvider = Provider<String?>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.appPinCode;
-});
-
-final appPasswordProvider = Provider<String?>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.appPassword;
-});
-
-final autoLockTimeoutProvider = Provider<AutoLockTimeout>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.autoLockTimeout ?? AutoLockTimeout.immediate;
-});
-
-final biometricUnlockEnabledProvider = Provider<bool>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.biometricUnlockEnabled ?? true;
-});
-
-final homeShowBudgetProgressProvider = Provider<bool>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.homeShowBudgetProgress ?? true;
-});
-
-final homeSectionOrderProvider = Provider<List<String>>((ref) {
-  final settingsAsync = ref.watch(settingsProvider);
-  return settingsAsync.valueOrNull?.homeSectionOrder ??
-      const ['accounts', 'totalBalance', 'quickActions', 'budgetProgress', 'recentTransactions'];
-});
+// Convenience providers — Security
+final appLockEnabledProvider = _setting((s) => s.appLockEnabled, false);
+final appPinCodeProvider = _setting((s) => s.appPinCode, null);
+final appPasswordProvider = _setting((s) => s.appPassword, null);
+final autoLockTimeoutProvider = _setting((s) => s.autoLockTimeout, AutoLockTimeout.immediate);
+final biometricUnlockEnabledProvider = _setting((s) => s.biometricUnlockEnabled, true);

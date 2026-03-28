@@ -773,9 +773,9 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
       }
 
       // Save last used account and category after successful save
-      ref.read(settingsProvider.notifier).setLastUsedAccountId(savedFormState.accountId);
+      await ref.read(settingsProvider.notifier).setLastUsedAccountId(savedFormState.accountId);
       if (!isTransfer) {
-        ref.read(settingsProvider.notifier).setLastUsedCategoryId(
+        await ref.read(settingsProvider.notifier).setLastUsedCategoryId(
           savedFormState.type,
           savedFormState.categoryId,
         );

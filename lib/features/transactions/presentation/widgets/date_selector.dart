@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/animations/haptic_helper.dart';
@@ -59,7 +61,7 @@ class DateSelector extends StatelessWidget {
   }
 
   Future<void> _showCustomDatePicker(BuildContext context) async {
-    HapticHelper.lightImpact();
+    unawaited(HapticHelper.lightImpact());
     final picked = await showFMDatePicker(
       context: context,
       initialDate: date,
@@ -82,7 +84,7 @@ class DateSelector extends StatelessWidget {
   }
 
   Future<void> _showTimePicker(BuildContext context) async {
-    HapticHelper.lightImpact();
+    unawaited(HapticHelper.lightImpact());
     final picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(date),

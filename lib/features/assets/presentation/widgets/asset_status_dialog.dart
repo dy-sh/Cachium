@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -88,15 +90,15 @@ class _MarkAsSoldDialogState extends ConsumerState<_MarkAsSoldDialog> {
     if (createTransaction) {
       // Navigate to transaction form pre-filled with sale details
       if (context.mounted) {
-        context.push('${AppRoutes.transactionForm}?type=income');
-        Future.microtask(() {
+        unawaited(context.push('${AppRoutes.transactionForm}?type=income'));
+        unawaited(Future.microtask(() {
           final formNotifier = ref.read(transactionFormProvider.notifier);
           formNotifier.setAsset(assetId);
           formNotifier.setNote('Sale of $assetName');
           if (salePrice != null && salePrice > 0) {
             formNotifier.setAmount(salePrice);
           }
-        });
+        }));
         context.showSuccessNotification('Asset marked as sold');
       }
     } else {

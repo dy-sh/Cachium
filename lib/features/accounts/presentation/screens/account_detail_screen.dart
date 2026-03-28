@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -88,7 +90,7 @@ class AccountDetailScreen extends ConsumerWidget {
                 color: AppColors.surface,
                 onSelected: (value) async {
                   if (value == 'edit') {
-                    context.push(AppRoutes.accountEditPath(account.id));
+                    unawaited(context.push(AppRoutes.accountEditPath(account.id)));
                   } else if (value == 'duplicate') {
                     await ref.read(accountsProvider.notifier).addAccount(
                           name: '${account.name} (Copy)',

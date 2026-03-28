@@ -57,14 +57,18 @@ class AttachmentFileService {
   Future<void> deleteFiles(String filePath, String? thumbnailPath) async {
     try {
       final file = File(filePath);
-      if (await file.exists()) await file.delete();
-    } catch (_) {}
+      if (file.existsSync()) await file.delete();
+    } catch (_) {
+      // Best-effort deletion — file may already be gone
+    }
 
     if (thumbnailPath != null) {
       try {
         final thumb = File(thumbnailPath);
-        if (await thumb.exists()) await thumb.delete();
-      } catch (_) {}
+        if (thumb.existsSync()) await thumb.delete();
+      } catch (_) {
+        // Best-effort deletion — thumbnail may already be gone
+      }
     }
   }
 

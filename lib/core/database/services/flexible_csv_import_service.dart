@@ -468,10 +468,12 @@ class FlexibleCsvImportService {
 
   /// Parse a date/time string to DateTime.
   DateTime _parseDateTime(String value) {
-    // Try ISO 8601 first
+    // Try ISO 8601 first, fall through on failure
     try {
       return DateTime.parse(value);
-    } catch (_) {}
+    } catch (_) {
+      // Not ISO 8601 format, try other formats below
+    }
 
     // Try milliseconds since epoch
     final asInt = int.tryParse(value);
@@ -501,7 +503,9 @@ class FlexibleCsvImportService {
     for (final format in formats) {
       try {
         return DateFormat(format).parse(value);
-      } catch (_) {}
+      } catch (_) {
+        // Format didn't match, try next
+      }
     }
 
     throw FormatException('Could not parse date: $value');

@@ -456,6 +456,8 @@ class AppDatabase extends _$AppDatabase {
         setup: (database) {
           // Enable WAL mode for concurrent reads/writes
           database.execute('PRAGMA journal_mode=WAL');
+          // Enforce foreign key constraints at the database level
+          database.execute('PRAGMA foreign_keys=ON');
           // Set busy timeout to 5 seconds to wait for locks instead of failing immediately
           database.execute('PRAGMA busy_timeout=5000');
         },

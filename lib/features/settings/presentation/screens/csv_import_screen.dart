@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -162,7 +164,7 @@ class _CsvImportScreenState extends ConsumerState<CsvImportScreen> {
     setState(() => _loadingType = null);
 
     if (success && context.mounted) {
-      context.push(AppRoutes.csvImportMapping);
+      unawaited(context.push(AppRoutes.csvImportMapping));
     } else if (!success && context.mounted) {
       final error = ref.read(flexibleCsvImportProvider).error;
       if (error != null) {

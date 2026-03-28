@@ -210,7 +210,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     if (matched) {
       // Transparently upgrade to PBKDF2 if needed
       if (CredentialHasher.needsUpgrade(storedPin)) {
-        ref.read(settingsProvider.notifier).upgradeCredentialIfNeeded(rawPin: rawPin);
+        unawaited(ref.read(settingsProvider.notifier).upgradeCredentialIfNeeded(rawPin: rawPin));
       }
       _unlock();
     } else if (_enteredPin.length >= _maxPinLength) {
@@ -249,7 +249,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     if (matched) {
       // Transparently upgrade to PBKDF2 if needed
       if (CredentialHasher.needsUpgrade(storedPassword)) {
-        ref.read(settingsProvider.notifier).upgradeCredentialIfNeeded(rawPassword: rawPassword);
+        unawaited(ref.read(settingsProvider.notifier).upgradeCredentialIfNeeded(rawPassword: rawPassword));
       }
       _unlock();
     } else {

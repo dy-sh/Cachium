@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -68,9 +70,9 @@ class SecuritySection extends ConsumerWidget {
                 final authenticated = await service.authenticate();
                 if (!authenticated) return;
               }
-              ref.read(settingsProvider.notifier).setAppLockEnabled(true);
+              unawaited(ref.read(settingsProvider.notifier).setAppLockEnabled(true));
             } else {
-              ref.read(settingsProvider.notifier).setAppLockEnabled(false);
+              unawaited(ref.read(settingsProvider.notifier).setAppLockEnabled(false));
             }
           },
         ),
