@@ -11,7 +11,6 @@ import 'features/settings/presentation/providers/app_lock_provider.dart';
 import 'features/settings/presentation/providers/database_management_providers.dart';
 import 'features/settings/presentation/providers/settings_provider.dart';
 import 'features/settings/presentation/screens/lock_screen.dart';
-import 'features/welcome/presentation/screens/tutorial_screen.dart';
 import 'features/welcome/presentation/screens/welcome_screen.dart';
 import 'navigation/app_router.dart';
 
@@ -143,7 +142,6 @@ class _AppGateState extends ConsumerState<_AppGate> with WidgetsBindingObserver 
 
     final shouldShowWelcomeAsync = ref.watch(shouldShowWelcomeProvider);
     final isResetting = ref.watch(isResettingDatabaseProvider);
-    final tutorialCompleted = ref.watch(tutorialCompletedProvider);
 
     // During reset, directly show welcome screen
     if (isResetting) {
@@ -155,7 +153,6 @@ class _AppGateState extends ConsumerState<_AppGate> with WidgetsBindingObserver 
       return shouldShowWelcomeAsync.when(
         data: (showWelcome) {
           if (showWelcome) return _wrapInApp(const WelcomeScreen());
-          if (!tutorialCompleted) return _buildTutorial();
           return const _LockGate();
         },
         loading: () => _wrapInApp(
@@ -177,22 +174,7 @@ class _AppGateState extends ConsumerState<_AppGate> with WidgetsBindingObserver 
       return _wrapInApp(const WelcomeScreen());
     }
 
-    // Show tutorial if not yet completed
-    if (!tutorialCompleted) {
-      return _buildTutorial();
-    }
-
     return const _LockGate();
-  }
-
-  Widget _buildTutorial() {
-    return _wrapInApp(
-      TutorialScreen(
-        onComplete: () {
-          ref.invalidate(settingsProvider);
-        },
-      ),
-    );
   }
 
   /// Wraps a pre-router screen in a simple MaterialApp.
