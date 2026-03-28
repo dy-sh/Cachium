@@ -196,12 +196,16 @@ class SettingsRepository {
     var settings = _toSettings(data);
 
     // Merge credentials from secure storage
-    final pin = await _secureStorage.read(key: _pinKey);
-    final password = await _secureStorage.read(key: _passwordKey);
-    settings = settings.copyWith(
-      appPinCode: pin,
-      appPassword: password,
-    );
+    try {
+      final pin = await _secureStorage.read(key: _pinKey);
+      final password = await _secureStorage.read(key: _passwordKey);
+      settings = settings.copyWith(
+        appPinCode: pin,
+        appPassword: password,
+      );
+    } catch (_) {
+      debugPrint('SettingsRepository: Failed to read credentials from secure storage');
+    }
 
     return settings;
   }
@@ -215,8 +219,15 @@ class SettingsRepository {
     if (dbPin == null && dbPassword == null) return;
 
     // Only migrate if secure storage doesn't already have values
-    final existingPin = await _secureStorage.read(key: _pinKey);
-    final existingPassword = await _secureStorage.read(key: _passwordKey);
+    String? existingPin;
+    String? existingPassword;
+    try {
+      existingPin = await _secureStorage.read(key: _pinKey);
+      existingPassword = await _secureStorage.read(key: _passwordKey);
+    } catch (_) {
+      debugPrint('SettingsRepository: Failed to read existing credentials during migration');
+      return;
+    }
 
     bool pinMigrated = dbPin == null || existingPin != null;
     bool passwordMigrated = dbPassword == null || existingPassword != null;
