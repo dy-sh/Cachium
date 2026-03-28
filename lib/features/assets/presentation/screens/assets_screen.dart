@@ -329,7 +329,11 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
     };
 
     if (_selectedCategoryFilter != null) {
-      filtered = filtered.where((a) => a.assetCategoryId == _selectedCategoryFilter).toList();
+      if (_selectedCategoryFilter == '') {
+        filtered = filtered.where((a) => a.assetCategoryId == null).toList();
+      } else {
+        filtered = filtered.where((a) => a.assetCategoryId == _selectedCategoryFilter).toList();
+      }
     }
 
     if (_searchQuery.isNotEmpty) {

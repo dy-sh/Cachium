@@ -7,16 +7,21 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/providers/database_providers.dart';
-import '../../../../data/demo/demo_data.dart';
 import '../../../../design_system/design_system.dart';
 import '../../../../navigation/app_router.dart';
 import '../../../accounts/data/models/account.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
+import '../../../assets/presentation/providers/asset_categories_provider.dart';
 import '../../../assets/presentation/providers/assets_provider.dart';
+import '../../../bills/presentation/providers/bill_provider.dart';
+import '../../../budgets/presentation/providers/budget_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
+import '../../../savings_goals/presentation/providers/savings_goals_provider.dart';
 import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/database_management_providers.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
+import '../../../tags/presentation/providers/tags_provider.dart';
+import '../../../transactions/presentation/providers/transaction_templates_provider.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../widgets/welcome_option_card.dart';
 
@@ -54,6 +59,22 @@ class WelcomeScreen extends ConsumerStatefulWidget {
 class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   WelcomeOption? _loadingOption;
 
+  void _invalidateAllProviders(WidgetRef ref) {
+    ref.invalidate(accountsProvider);
+    ref.invalidate(transactionsProvider);
+    ref.invalidate(categoriesProvider);
+    ref.invalidate(assetsProvider);
+    ref.invalidate(assetCategoriesProvider);
+    ref.invalidate(billsProvider);
+    ref.invalidate(budgetsProvider);
+    ref.invalidate(transactionTemplatesProvider);
+    ref.invalidate(savingsGoalsProvider);
+    ref.invalidate(tagsProvider);
+    ref.invalidate(settingsProvider);
+    ref.invalidate(databaseMetricsProvider);
+    ref.invalidate(databaseConsistencyProvider);
+  }
+
   Future<void> _handleImportFromBackup() async {
     if (_loadingOption != null) return;
 
@@ -65,10 +86,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     ref.read(isResettingDatabaseProvider.notifier).state = false;
 
     // Invalidate data providers
-    ref.invalidate(accountsProvider);
-    ref.invalidate(categoriesProvider);
-    ref.invalidate(transactionsProvider);
-    ref.invalidate(databaseMetricsProvider);
+    _invalidateAllProviders(ref);
     ref.invalidate(shouldShowWelcomeProvider);
 
     // Navigate to database settings in import-only mode
@@ -85,46 +103,26 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     });
 
     try {
-      final db = ref.read(databaseProvider);
-      final accountRepo = ref.read(accountRepositoryProvider);
-      final categoryRepo = ref.read(categoryRepositoryProvider);
-      final transactionRepo = ref.read(transactionRepositoryProvider);
-      final assetRepo = ref.read(assetRepositoryProvider);
+      switch (option) {
+        case WelcomeOption.demo:
+          await ref.read(databaseManagementProvider.notifier).createDemoDatabase();
+          break;
 
-      // Wrap all database operations in a transaction to prevent locking
-      await db.transaction(() async {
-        switch (option) {
-          case WelcomeOption.demo:
-            // Seed accounts
-            for (final account in DemoData.accounts) {
-              await accountRepo.upsertAccount(account);
-            }
-            // Seed default categories
-            await categoryRepo.seedDefaultCategories();
-            // Seed assets
-            for (final asset in DemoData.assets) {
-              await assetRepo.upsertAsset(asset);
-            }
-            // Seed transactions
-            for (final transaction in DemoData.transactions) {
-              await transactionRepo.upsertTransaction(transaction);
-            }
-            break;
-
-          case WelcomeOption.defaultCategories:
-            // Seed default accounts (Cash and Credit Card)
+        case WelcomeOption.defaultCategories:
+          final db = ref.read(databaseProvider);
+          final accountRepo = ref.read(accountRepositoryProvider);
+          final categoryRepo = ref.read(categoryRepositoryProvider);
+          await db.transaction(() async {
             for (final account in DefaultAccounts.all) {
               await accountRepo.upsertAccount(account);
             }
-            // Seed default categories
             await categoryRepo.seedDefaultCategories();
-            break;
+          });
+          break;
 
-          case WelcomeOption.empty:
-            // Do nothing - start with empty database
-            break;
-        }
-      });
+        case WelcomeOption.empty:
+          break;
+      }
 
       // Mark onboarding as completed
       await ref.read(settingsProvider.notifier).setOnboardingCompleted(true);
@@ -136,11 +134,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       ref.read(isResettingDatabaseProvider.notifier).state = false;
 
       // Invalidate all data providers to reload from database
-      ref.invalidate(accountsProvider);
-      ref.invalidate(categoriesProvider);
-      ref.invalidate(transactionsProvider);
-      ref.invalidate(assetsProvider);
-      ref.invalidate(databaseMetricsProvider);
+      _invalidateAllProviders(ref);
       ref.invalidate(shouldShowWelcomeProvider);
 
       // Invalidate router to create fresh instance starting at home
