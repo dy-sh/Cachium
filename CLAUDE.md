@@ -22,6 +22,8 @@ flutter pub get          # Install deps
 flutter run              # Debug mode
 flutter analyze          # Lint
 flutter test             # Tests
+./run.sh                 # Run on macOS with log output to /tmp/cachium_log.txt
+run.bat                  # Run on Windows with log output to C:\Temp\cachium_log.txt
 ```
 
 ## Architecture
