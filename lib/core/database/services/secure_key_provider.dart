@@ -17,6 +17,7 @@ class SecureKeyProvider implements KeyProvider {
   SecureKeyProvider({FlutterSecureStorage? storage})
       : _storage = storage ?? const FlutterSecureStorage(
           aOptions: AndroidOptions(encryptedSharedPreferences: true),
+          mOptions: MacOsOptions(),
         );
 
   @override

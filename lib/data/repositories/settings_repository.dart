@@ -31,6 +31,7 @@ class SettingsRepository {
   }) : _secureStorage = secureStorage ??
             const FlutterSecureStorage(
               aOptions: AndroidOptions(encryptedSharedPreferences: true),
+              mOptions: MacOsOptions(),
             );
 
   /// Convert UI AppSettings to internal SettingsData for storage
