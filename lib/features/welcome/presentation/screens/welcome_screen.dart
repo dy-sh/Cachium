@@ -103,7 +103,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
             await categoryRepo.seedDefaultCategories();
             // Seed assets
             for (final asset in DemoData.assets) {
-              await assetRepo.createAsset(asset);
+              await assetRepo.upsertAsset(asset);
             }
             // Seed transactions
             for (final transaction in DemoData.transactions) {

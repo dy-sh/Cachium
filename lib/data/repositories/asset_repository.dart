@@ -98,6 +98,25 @@ class AssetRepository with CorruptionTracker {
     }
   }
 
+  /// Create or update an asset (encrypt and upsert)
+  Future<void> upsertAsset(ui.Asset asset) async {
+    try {
+      final data = _toData(asset);
+      final encryptedBlob = await encryptionService.encryptAsset(data);
+
+      await database.upsertAsset(
+        id: asset.id,
+        createdAt: asset.createdAt.millisecondsSinceEpoch,
+        sortOrder: asset.sortOrder,
+        lastUpdatedAt: asset.createdAt.millisecondsSinceEpoch,
+        encryptedBlob: encryptedBlob,
+      );
+      _decryptionCache.invalidate(asset.id);
+    } catch (e) {
+      throw RepositoryException.create(entityType: _entityType, cause: e);
+    }
+  }
+
   /// Get a single asset by ID (fetch, decrypt, verify)
   Future<ui.Asset?> getAsset(String id) async {
     final row = await database.getAsset(id);

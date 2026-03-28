@@ -295,7 +295,7 @@ class DatabaseManagementNotifier extends Notifier<AsyncValue<void>> {
 
         // Seed assets
         for (final asset in DemoData.assets) {
-          await assetRepo.createAsset(asset);
+          await assetRepo.upsertAsset(asset);
         }
 
         // Seed transactions (use upsert to handle duplicates)
