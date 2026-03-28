@@ -307,6 +307,15 @@ class AppDatabase extends _$AppDatabase {
           await m.createAll();
           await _createIndexes(m);
         },
+        onUpgrade: (Migrator m, int from, int to) async {
+          // App is not released — destructive migration is safe.
+          // Drop all tables and recreate from scratch.
+          for (final table in allTables) {
+            await m.deleteTable(table.actualTableName);
+          }
+          await m.createAll();
+          await _createIndexes(m);
+        },
       );
 
   /// Create performance indexes on commonly queried columns.
