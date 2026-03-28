@@ -276,16 +276,29 @@ class DatabaseManagementNotifier extends Notifier<AsyncValue<void>> {
       final categoryRepo = ref.read(categoryRepositoryProvider);
       final transactionRepo = ref.read(transactionRepositoryProvider);
       final assetRepo = ref.read(assetRepositoryProvider);
+      final assetCategoryRepo = ref.read(assetCategoryRepositoryProvider);
+      final billRepo = ref.read(billRepositoryProvider);
+      final budgetRepo = ref.read(budgetRepositoryProvider);
+      final templateRepo = ref.read(transactionTemplateRepositoryProvider);
+      final savingsGoalRepo = ref.read(savingsGoalRepositoryProvider);
+      final tagRepo = ref.read(tagRepositoryProvider);
 
       // Wrap all database operations in a transaction to prevent locking
       await db.transaction(() async {
         // Delete existing data first
         await db.deleteAllTransactions();
+        await db.deleteAllTransactionTags();
         await db.deleteAllAccounts();
         await db.deleteAllCategories();
         await db.deleteAllAssets();
+        await db.deleteAllAssetCategories();
+        await db.deleteAllBills();
+        await db.deleteAllBudgets();
+        await db.deleteAllTransactionTemplates();
+        await db.deleteAllSavingsGoals();
+        await db.deleteAllTags();
 
-        // Seed accounts (use upsert to handle duplicates)
+        // Seed accounts
         for (final account in DemoData.accounts) {
           await accountRepo.upsertAccount(account);
         }
@@ -293,14 +306,50 @@ class DatabaseManagementNotifier extends Notifier<AsyncValue<void>> {
         // Seed categories (default categories - uses upsert internally)
         await categoryRepo.seedDefaultCategories();
 
+        // Seed asset categories
+        for (final category in DemoData.assetCategories) {
+          await assetCategoryRepo.createCategory(category);
+        }
+
         // Seed assets
         for (final asset in DemoData.assets) {
           await assetRepo.upsertAsset(asset);
         }
 
-        // Seed transactions (use upsert to handle duplicates)
-        for (final transaction in DemoData.transactions) {
+        // Seed tags
+        for (final tag in DemoData.tags) {
+          await tagRepo.upsertTag(tag);
+        }
+
+        // Seed transactions (triggers tag assignment map population)
+        final transactions = DemoData.transactions;
+        for (final transaction in transactions) {
           await transactionRepo.upsertTransaction(transaction);
+        }
+
+        // Seed transaction-tag assignments
+        for (final entry in DemoData.transactionTagAssignments.entries) {
+          await db.setTagsForTransaction(entry.key, entry.value);
+        }
+
+        // Seed bills
+        for (final bill in DemoData.bills) {
+          await billRepo.createBill(bill);
+        }
+
+        // Seed budgets
+        for (final budget in DemoData.budgets) {
+          await budgetRepo.createBudget(budget);
+        }
+
+        // Seed transaction templates
+        for (final template in DemoData.transactionTemplates) {
+          await templateRepo.createTemplate(template);
+        }
+
+        // Seed savings goals
+        for (final goal in DemoData.savingsGoals) {
+          await savingsGoalRepo.createGoal(goal);
         }
       });
 

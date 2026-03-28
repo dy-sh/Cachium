@@ -1153,6 +1153,8 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> deleteAllAssets() => assetDao.deleteAll();
 
+  Future<void> deleteAllAssetCategories() => assetCategoryDao.deleteAll();
+
   Future<void> deleteAllSettings() => settingsDao.deleteAll();
 
   /// Permanently deletes soft-deleted records older than the given threshold.
@@ -1215,6 +1217,7 @@ class AppDatabase extends _$AppDatabase {
       await deleteAllCategories();
       await deleteAllBudgets();
       await deleteAllAssets();
+      await deleteAllAssetCategories();
       await deleteAllRecurringRules();
       await deleteAllSavingsGoals();
       await deleteAllTransactionTemplates();
