@@ -67,12 +67,16 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _ensureInitialized();
+    if (!_initialized) {
+      _initialized = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _ensureInitialized();
+      });
+    }
   }
 
   void _ensureInitialized() {
-    if (_initialized) return;
-
     if (widget.transactionId != null) {
       // Edit mode
       final transaction = ref.read(transactionByIdProvider(widget.transactionId!));
@@ -80,7 +84,6 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
         ref.read(transactionFormProvider.notifier).initForEdit(transaction);
         _noteController.text = transaction.note ?? '';
         _merchantController.text = transaction.merchant ?? '';
-        _initialized = true;
       }
     } else if (widget.initialType != null) {
       // New transaction with specific type — reset account-applied flag
@@ -97,7 +100,6 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
       ref.read(transactionFormProvider.notifier).reset();
       ref.read(transactionFormProvider.notifier).setType(type);
       ref.read(transactionFormProvider.notifier).applyLastUsedAccountIfNeeded();
-      _initialized = true;
     }
   }
 
