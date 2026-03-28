@@ -372,17 +372,8 @@ class DatabaseManagementNotifier extends Notifier<AsyncValue<void>> {
       final db = ref.read(databaseProvider);
       final settingsRepo = ref.read(settingsRepositoryProvider);
 
-      // Wrap all database operations in a single transaction
-      await db.transaction(() async {
-        // Delete all entity data
-        await db.deleteAllTransactions();
-        await db.deleteAllAccounts();
-        await db.deleteAllCategories();
-
-        if (resetSettings) {
-          await db.deleteAllSettings();
-        }
-      });
+      // Delete all entity data
+      await db.deleteAllData(includeSettings: resetSettings);
 
       // Save settings with onboardingCompleted = false
       // Do this outside the transaction to avoid conflicts
