@@ -24,6 +24,7 @@ import '../utils/asset_edit_helper.dart';
 import '../widgets/asset_link_transactions_sheet.dart';
 import '../widgets/asset_spending_chart.dart';
 import '../widgets/asset_stats_cards.dart';
+import '../../../../navigation/app_router.dart';
 import '../widgets/asset_status_dialog.dart';
 
 class AssetDetailScreen extends ConsumerWidget {
@@ -37,7 +38,7 @@ class AssetDetailScreen extends ConsumerWidget {
       ref,
       asset,
       onDeleted: () => context.pop(),
-      onDuplicated: (newId) => context.push('/asset/$newId'),
+      onDuplicated: (newId) => context.push(AppRoutes.assetDetailPath(newId)),
     );
   }
 
@@ -502,7 +503,7 @@ class AssetDetailScreen extends ConsumerWidget {
                         Expanded(
                           child: GestureDetector(
                             onTap: () {
-                              context.push('/transaction/new?type=expense');
+                              context.push('${AppRoutes.transactionForm}?type=expense');
                               Future.microtask(() {
                                 final formNotifier = ref.read(transactionFormProvider.notifier);
                                 formNotifier.setAsset(assetId);
@@ -538,7 +539,7 @@ class AssetDetailScreen extends ConsumerWidget {
                         Expanded(
                           child: GestureDetector(
                             onTap: () {
-                              context.push('/transaction/new?type=income');
+                              context.push('${AppRoutes.transactionForm}?type=income');
                               Future.microtask(() {
                                 final formNotifier = ref.read(transactionFormProvider.notifier);
                                 formNotifier.setAsset(assetId);
@@ -671,7 +672,7 @@ class AssetDetailScreen extends ConsumerWidget {
                     monthGroups: monthGroups,
                     onAddFirstTransaction: asset.status == AssetStatus.active
                         ? () {
-                            context.push('/transaction/new?type=expense');
+                            context.push('${AppRoutes.transactionForm}?type=expense');
                             Future.microtask(() {
                               final formNotifier = ref.read(transactionFormProvider.notifier);
                               formNotifier.setAsset(assetId);
@@ -1127,7 +1128,7 @@ class _AssetTransactionItem extends ConsumerWidget {
     final categoryColor = category?.getColor(intensity) ?? AppColors.textSecondary;
 
     return GestureDetector(
-      onTap: () => context.push('/transaction/${transaction.id}'),
+      onTap: () => context.push(AppRoutes.transactionDetailPath(transaction.id)),
       onLongPressStart: (details) => _showActionMenu(context, ref, details.globalPosition),
       child: Container(
         margin: const EdgeInsets.only(bottom: AppSpacing.sm),

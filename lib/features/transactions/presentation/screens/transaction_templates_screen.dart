@@ -12,6 +12,7 @@ import '../../../../core/utils/formatting_providers.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/transaction.dart';
+import '../../../../navigation/app_router.dart';
 import '../../data/models/transaction_template.dart';
 import '../providers/transaction_templates_provider.dart';
 
@@ -31,7 +32,7 @@ class TransactionTemplatesScreen extends ConsumerWidget {
               title: 'Transaction Templates',
               actions: [
                 CircularButton(
-                  onTap: () => context.push('/settings/templates/new'),
+                  onTap: () => context.push(AppRoutes.transactionTemplateForm),
                   icon: LucideIcons.plus,
                   size: AppSpacing.settingsBackButtonSize,
                 ),
@@ -103,7 +104,7 @@ class _TemplateCard extends ConsumerWidget {
 
     return GestureDetector(
       onTap: () =>
-          context.push('/settings/templates/${template.id}/edit'),
+          context.push(AppRoutes.transactionTemplateEditPath(template.id)),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.cardPadding),
         decoration: BoxDecoration(

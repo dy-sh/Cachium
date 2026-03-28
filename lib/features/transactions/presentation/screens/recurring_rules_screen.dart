@@ -11,6 +11,7 @@ import '../../../../design_system/design_system.dart';
 import '../../../../core/utils/formatting_providers.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
+import '../../../../navigation/app_router.dart';
 import '../../data/models/recurring_rule.dart';
 import '../../data/models/transaction.dart';
 import '../providers/recurring_rules_provider.dart';
@@ -31,7 +32,7 @@ class RecurringRulesScreen extends ConsumerWidget {
               title: 'Recurring Transactions',
               actions: [
                 CircularButton(
-                  onTap: () => context.push('/settings/recurring/new'),
+                  onTap: () => context.push(AppRoutes.recurringRuleForm),
                   icon: LucideIcons.plus,
                   size: AppSpacing.settingsBackButtonSize,
                 ),
@@ -99,7 +100,7 @@ class _RecurringRuleCard extends ConsumerWidget {
         : AppColors.getTransactionColor('expense', intensity);
 
     return GestureDetector(
-      onTap: () => context.push('/settings/recurring/${rule.id}/edit'),
+      onTap: () => context.push(AppRoutes.recurringRuleEditPath(rule.id)),
       child: Container(
       padding: const EdgeInsets.all(AppSpacing.cardPadding),
       decoration: BoxDecoration(
@@ -165,7 +166,7 @@ class _RecurringRuleCard extends ConsumerWidget {
             color: AppColors.surface,
             onSelected: (value) async {
               if (value == 'edit') {
-                context.push('/settings/recurring/${rule.id}/edit');
+                context.push(AppRoutes.recurringRuleEditPath(rule.id));
               } else if (value == 'toggle') {
                 await ref
                     .read(recurringRulesProvider.notifier)

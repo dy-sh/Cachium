@@ -16,6 +16,7 @@ import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
+import '../../../../navigation/app_router.dart';
 import '../../data/models/account.dart';
 import '../providers/accounts_provider.dart';
 
@@ -87,7 +88,7 @@ class AccountDetailScreen extends ConsumerWidget {
                 color: AppColors.surface,
                 onSelected: (value) async {
                   if (value == 'edit') {
-                    context.push('/account/${account.id}/edit');
+                    context.push(AppRoutes.accountEditPath(account.id));
                   } else if (value == 'duplicate') {
                     await ref.read(accountsProvider.notifier).addAccount(
                           name: '${account.name} (Copy)',
@@ -402,7 +403,7 @@ class _AccountTransactionItem extends ConsumerWidget {
     }
 
     return GestureDetector(
-      onTap: () => context.push('/transaction/${transaction.id}'),
+      onTap: () => context.push(AppRoutes.transactionDetailPath(transaction.id)),
       child: Container(
         margin: const EdgeInsets.only(bottom: AppSpacing.sm),
         padding: const EdgeInsets.all(AppSpacing.md),

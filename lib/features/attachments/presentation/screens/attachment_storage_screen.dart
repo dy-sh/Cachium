@@ -5,7 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
-import '../../../../design_system/components/layout/form_header.dart';
+import '../../../../design_system/design_system.dart';
 import '../providers/attachments_provider.dart';
 
 class AttachmentStorageScreen extends ConsumerWidget {
@@ -62,7 +62,7 @@ class AttachmentStorageScreen extends ConsumerWidget {
                         ),
                       ),
                       loading: () => const SizedBox.shrink(),
-                      error: (_, __) => const SizedBox.shrink(),
+                      error: (_, __) => const ErrorPlaceholder(),
                     ),
                   ],
                 ),

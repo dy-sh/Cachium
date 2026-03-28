@@ -11,6 +11,7 @@ import '../../../../design_system/components/buttons/primary_button.dart';
 import '../../../../design_system/components/feedback/confirmation_dialog.dart';
 import '../../../../design_system/components/feedback/notification.dart';
 import '../../../../design_system/components/layout/form_header.dart';
+import '../../../../design_system/components/layout/unsaved_work_pop_scope.dart';
 import '../../../../design_system/components/chips/toggle_chip.dart';
 import '../../../../design_system/components/inputs/input_field.dart';
 import '../../../accounts/presentation/screens/account_form_screen.dart';
@@ -129,22 +130,8 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
 
     final isEditing = formState.isEditing;
 
-    return PopScope(
-      canPop: !_hasUnsavedWork(formState),
-      onPopInvokedWithResult: (didPop, _) async {
-        if (didPop) return;
-        final shouldDiscard = await showConfirmationDialog(
-          context: context,
-          title: 'Discard changes?',
-          message: 'You have unsaved changes. Are you sure you want to go back?',
-          confirmLabel: 'Discard',
-          cancelLabel: 'Keep Editing',
-          isDestructive: true,
-        );
-        if (shouldDiscard && context.mounted) {
-          context.pop();
-        }
-      },
+    return UnsavedWorkPopScope(
+      hasUnsavedWork: _hasUnsavedWork(formState),
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: SafeArea(

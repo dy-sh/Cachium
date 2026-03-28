@@ -117,14 +117,14 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
                             description: 'Database file format',
                             icon: LucideIcons.database,
                             iconColor: AppColors.getAccentColor(17, intensity), // blue - database
-                            onTap: () => context.push('/settings/database/export-sqlite'),
+                            onTap: () => context.push(AppRoutes.exportSqlite),
                           ),
                           SettingsTile(
                             title: 'Export CSV',
                             description: 'Spreadsheet format',
                             icon: LucideIcons.fileSpreadsheet,
                             iconColor: AppColors.getAccentColor(13, intensity), // cyan - spreadsheet
-                            onTap: () => context.push('/settings/database/export-csv'),
+                            onTap: () => context.push(AppRoutes.exportCsv),
                           ),
                         ],
                       ),

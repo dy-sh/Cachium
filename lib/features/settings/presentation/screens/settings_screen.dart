@@ -10,6 +10,7 @@ import '../../../../design_system/design_system.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../providers/settings_provider.dart';
 import '../widgets/reset_settings_dialog.dart';
+import '../../../../navigation/app_router.dart';
 import '../widgets/settings_section.dart';
 import '../widgets/settings_tile.dart';
 
@@ -66,70 +67,70 @@ class SettingsScreen extends ConsumerWidget {
                             : 'Manage transaction categories',
                         icon: LucideIcons.tags,
                         iconColor: AppColors.getAccentColor(1, intensity), // Cyan
-                        onTap: () => context.push('/settings/categories'),
+                        onTap: () => context.push(AppRoutes.categoryManagement),
                       ),
                       SettingsTile(
                         title: 'Tags',
                         description: 'Label transactions for quick filtering',
                         icon: LucideIcons.tag,
                         iconColor: AppColors.getAccentColor(15, intensity),
-                        onTap: () => context.push('/settings/tags'),
+                        onTap: () => context.push(AppRoutes.tagManagement),
                       ),
                       SettingsTile(
                         title: 'Assets',
                         description: 'Track physical assets & costs',
                         icon: LucideIcons.box,
                         iconColor: AppColors.getAccentColor(5, intensity), // Teal
-                        onTap: () => context.push('/settings/assets'),
+                        onTap: () => context.push(AppRoutes.assets),
                       ),
                       SettingsTile(
                         title: 'Savings Goals',
                         description: 'Track progress towards targets',
                         icon: LucideIcons.piggyBank,
                         iconColor: AppColors.getAccentColor(11, intensity), // Yellow
-                        onTap: () => context.push('/settings/savings-goals'),
+                        onTap: () => context.push(AppRoutes.savingsGoals),
                       ),
                       SettingsTile(
                         title: 'Bills & Reminders',
                         description: 'Track due dates, never miss a payment',
                         icon: LucideIcons.bellRing,
                         iconColor: AppColors.getAccentColor(17, intensity),
-                        onTap: () => context.push('/settings/bills'),
+                        onTap: () => context.push(AppRoutes.bills),
                       ),
                       SettingsTile(
                         title: 'Recurring Transactions',
                         description: 'Manage auto-generated transactions',
                         icon: LucideIcons.repeat,
                         iconColor: AppColors.getAccentColor(7, intensity), // Green
-                        onTap: () => context.push('/settings/recurring'),
+                        onTap: () => context.push(AppRoutes.recurringRules),
                       ),
                       SettingsTile(
                         title: 'Transaction Templates',
                         description: 'Quick-fill presets for transactions',
                         icon: LucideIcons.fileText,
                         iconColor: AppColors.getAccentColor(3, intensity), // Blue
-                        onTap: () => context.push('/settings/templates'),
+                        onTap: () => context.push(AppRoutes.transactionTemplates),
                       ),
                       SettingsTile(
                         title: 'Deleted Transactions',
                         description: 'View and restore deleted items',
                         icon: LucideIcons.trash2,
                         iconColor: AppColors.getAccentColor(9, intensity), // Rose
-                        onTap: () => context.push('/transactions/deleted'),
+                        onTap: () => context.push(AppRoutes.deletedTransactions),
                       ),
                       SettingsTile(
                         title: 'Database',
                         description: 'Export, import, manage data',
                         icon: LucideIcons.database,
                         iconColor: AppColors.getAccentColor(3, intensity), // Blue
-                        onTap: () => context.push('/settings/database'),
+                        onTap: () => context.push(AppRoutes.databaseSettings),
                       ),
                       SettingsTile(
                         title: 'Storage',
                         description: 'Attachment files & space',
                         icon: LucideIcons.hardDrive,
                         iconColor: AppColors.getAccentColor(19, intensity),
-                        onTap: () => context.push('/settings/storage'),
+                        onTap: () => context.push(AppRoutes.attachmentStorage),
                       ),
                     ],
                   ),
@@ -147,42 +148,42 @@ class SettingsScreen extends ConsumerWidget {
                         description: 'Budget alerts, reminders, summaries',
                         icon: LucideIcons.bell,
                         iconColor: AppColors.getAccentColor(17, intensity),
-                        onTap: () => context.push('/settings/notifications'),
+                        onTap: () => context.push(AppRoutes.notificationSettings),
                       ),
                       SettingsTile(
                         title: 'Appearance',
                         description: 'Colors, intensity, animations',
                         icon: LucideIcons.palette,
                         iconColor: AppColors.getAccentColor(13, intensity), // Purple
-                        onTap: () => context.push('/settings/appearance'),
+                        onTap: () => context.push(AppRoutes.appearanceSettings),
                       ),
                       SettingsTile(
                         title: 'Formats',
                         description: 'Date, currency, calendar',
                         icon: LucideIcons.calendar,
                         iconColor: AppColors.getAccentColor(11, intensity), // Yellow
-                        onTap: () => context.push('/settings/formats'),
+                        onTap: () => context.push(AppRoutes.formatsSettings),
                       ),
                       SettingsTile(
                         title: 'Preferences',
                         description: 'Haptics, start screen',
                         icon: LucideIcons.settings,
                         iconColor: AppColors.getAccentColor(7, intensity), // Green
-                        onTap: () => context.push('/settings/preferences'),
+                        onTap: () => context.push(AppRoutes.preferencesSettings),
                       ),
                       SettingsTile(
                         title: 'Transactions',
                         description: 'Defaults, validation, display',
                         icon: LucideIcons.receipt,
                         iconColor: AppColors.getAccentColor(5, intensity), // Teal
-                        onTap: () => context.push('/settings/transactions'),
+                        onTap: () => context.push(AppRoutes.transactionsSettings),
                       ),
                       SettingsTile(
                         title: 'Home Page',
                         description: 'Visibility, privacy, layout',
                         icon: LucideIcons.home,
                         iconColor: AppColors.getAccentColor(9, intensity), // Rose
-                        onTap: () => context.push('/settings/home'),
+                        onTap: () => context.push(AppRoutes.homeSettings),
                       ),
                       SettingsTile(
                         title: 'Reset to Defaults',
@@ -207,7 +208,7 @@ class SettingsScreen extends ConsumerWidget {
                         description: 'App version',
                         icon: LucideIcons.info,
                         iconColor: AppColors.getAccentColor(0, intensity), // White
-                        onTap: () => context.push('/settings/about'),
+                        onTap: () => context.push(AppRoutes.aboutSettings),
                       ),
                     ],
                   ),

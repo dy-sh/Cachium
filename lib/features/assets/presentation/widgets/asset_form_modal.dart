@@ -9,13 +9,7 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../core/constants/currencies.dart';
 import '../../../../core/utils/currency_conversion.dart';
 import '../../../../core/utils/date_formatter.dart';
-import '../../../../design_system/components/buttons/primary_button.dart';
-import '../../../../design_system/components/chips/toggle_chip.dart';
-import '../../../../design_system/components/feedback/confirmation_dialog.dart';
-import '../../../../design_system/components/inputs/currency_picker.dart';
-import '../../../../design_system/components/inputs/date_picker/date_picker.dart';
-import '../../../../design_system/components/inputs/input_field.dart';
-import '../../../../design_system/components/layout/form_header.dart';
+import '../../../../design_system/design_system.dart';
 import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../settings/presentation/widgets/color_picker_grid.dart';
@@ -170,21 +164,8 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
       assetNameExistsProvider((name: assetName, excludeId: widget.asset?.id)),
     );
 
-    return PopScope(
-      canPop: !_hasChanges,
-      onPopInvokedWithResult: (didPop, _) async {
-        if (didPop) return;
-        final confirmed = await showConfirmationDialog(
-          context: context,
-          title: 'Discard changes?',
-          message: 'You have unsaved changes that will be lost.',
-          confirmLabel: 'Discard',
-          isDestructive: true,
-        );
-        if (confirmed == true && context.mounted) {
-          Navigator.pop(context);
-        }
-      },
+    return UnsavedWorkPopScope(
+      hasUnsavedWork: _hasChanges,
       child: Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -502,7 +483,7 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
                         );
                       },
                       loading: () => const SizedBox.shrink(),
-                      error: (_, __) => const SizedBox.shrink(),
+                      error: (_, __) => const ErrorPlaceholder(),
                     ),
 
                     // Status toggle (edit mode only)

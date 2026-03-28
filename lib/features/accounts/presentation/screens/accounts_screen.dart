@@ -440,7 +440,7 @@ class _AccountCard extends ConsumerWidget {
     final shadowOffset = cardStyle == AccountCardStyle.bright ? 4.0 : 2.0;
 
     return GestureDetector(
-      onTap: () => context.push('/account/${account.id}'),
+      onTap: () => context.push(AppRoutes.accountDetailPath(account.id)),
       child: Container(
       width: 180,
       height: account.currencyCode != mainCurrency ? 84 : 72,

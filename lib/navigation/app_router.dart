@@ -100,6 +100,18 @@ class AppRoutes {
   static const assetCompare = '/assets/compare';
   static const calendar = '/calendar';
   static const netWorthHistory = '/analytics/net-worth-history';
+
+  // Path helpers for parameterized routes
+  static String transactionDetailPath(String id) => '/transaction/$id';
+  static String transactionEditPath(String id) => '/transaction/$id/edit';
+  static String accountDetailPath(String id) => '/account/$id';
+  static String accountEditPath(String id) => '/account/$id/edit';
+  static String assetDetailPath(String id) => '/asset/$id';
+  static String attachmentViewerPath(String id) => '/transaction/$id/attachments';
+  static String recurringRuleEditPath(String id) => '/settings/recurring/$id/edit';
+  static String transactionTemplateEditPath(String id) => '/settings/templates/$id/edit';
+  static String tagEditPath(String id) => '/settings/tags/$id/edit';
+  static String billEditPath(String id) => '/bill/$id/edit';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {

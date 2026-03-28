@@ -27,6 +27,7 @@ export 'components/chips/toggle_chip.dart';
 // Feedback
 export 'components/feedback/confirmation_dialog.dart';
 export 'components/feedback/empty_state.dart';
+export 'components/feedback/error_placeholder.dart';
 export 'components/feedback/help_icon.dart';
 export 'components/feedback/loading_indicator.dart';
 export 'components/feedback/notification.dart';
@@ -42,6 +43,7 @@ export 'components/inputs/input_field.dart';
 export 'components/layout/bottom_nav_bar.dart';
 export 'components/layout/form_header.dart';
 export 'components/layout/page_layout.dart';
+export 'components/layout/unsaved_work_pop_scope.dart';
 export 'components/layout/screen_header.dart';
 export 'components/layout/settings_header.dart';
 

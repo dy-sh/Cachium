@@ -17,6 +17,7 @@ import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/transaction.dart';
+import '../../../../navigation/app_router.dart';
 import '../providers/transaction_selection_provider.dart';
 import '../providers/transactions_provider.dart';
 
@@ -477,7 +478,7 @@ class _TransactionItem extends ConsumerWidget {
         );
       },
       child: GestureDetector(
-        onTap: () => context.push('/transaction/${transaction.id}'),
+        onTap: () => context.push(AppRoutes.transactionDetailPath(transaction.id)),
         onLongPress: () {
           ref.read(transactionSelectionModeProvider.notifier).state = true;
           ref.read(selectedTransactionIdsProvider.notifier).state = {transaction.id};

@@ -122,21 +122,8 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
     final allowSelectParentCategory =
         ref.watch(allowSelectParentCategoryProvider);
 
-    return PopScope(
-      canPop: !_hasUnsavedChanges,
-      onPopInvokedWithResult: (didPop, _) async {
-        if (didPop) return;
-        final confirmed = await showConfirmationDialog(
-          context: context,
-          title: 'Discard changes?',
-          message: 'You have unsaved changes that will be lost.',
-          confirmLabel: 'Discard',
-          isDestructive: true,
-        );
-        if (confirmed == true && context.mounted) {
-          context.pop();
-        }
-      },
+    return UnsavedWorkPopScope(
+      hasUnsavedWork: _hasUnsavedChanges,
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: SafeArea(

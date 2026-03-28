@@ -10,6 +10,7 @@ import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../design_system/components/buttons/icon_btn.dart';
 import '../../../../design_system/components/feedback/notification.dart';
 import '../../../../design_system/components/layout/form_header.dart';
+import '../../../../navigation/app_router.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/tag.dart';
 import '../providers/tags_provider.dart';
@@ -38,7 +39,7 @@ class _TagManagementScreenState extends ConsumerState<TagManagementScreen> {
               onClose: () => context.pop(),
               trailing: IconBtn(
                 icon: LucideIcons.plus,
-                onPressed: () => context.push('/settings/tags/new'),
+                onPressed: () => context.push(AppRoutes.tagForm),
               ),
             ),
             Expanded(
@@ -111,7 +112,7 @@ class _TagManagementScreenState extends ConsumerState<TagManagementScreen> {
                                   icon: LucideIcons.pencil,
                                   size: 16,
                                   onPressed: () => context
-                                      .push('/settings/tags/${tag.id}/edit'),
+                                      .push(AppRoutes.tagEditPath(tag.id)),
                                 ),
                                 const SizedBox(width: AppSpacing.xs),
                                 Icon(

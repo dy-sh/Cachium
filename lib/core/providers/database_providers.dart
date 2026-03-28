@@ -48,78 +48,96 @@ final databaseProvider = Provider<AppDatabase>((ref) {
 ///
 /// Combines database operations with encryption/decryption.
 final transactionRepositoryProvider = Provider<TransactionRepository>((ref) {
-  return TransactionRepository(
+  final repo = TransactionRepository(
     database: ref.watch(databaseProvider),
     encryptionService: ref.watch(encryptionServiceProvider),
   );
+  ref.onDispose(() => repo.disposeCorruptionTracker());
+  return repo;
 });
 
 /// Provider for the account repository.
 ///
 /// Combines database operations with encryption/decryption.
 final accountRepositoryProvider = Provider<AccountRepository>((ref) {
-  return AccountRepository(
+  final repo = AccountRepository(
     database: ref.watch(databaseProvider),
     encryptionService: ref.watch(encryptionServiceProvider),
   );
+  ref.onDispose(() => repo.disposeCorruptionTracker());
+  return repo;
 });
 
 /// Provider for the category repository.
 ///
 /// Combines database operations with encryption/decryption.
 final categoryRepositoryProvider = Provider<CategoryRepository>((ref) {
-  return CategoryRepository(
+  final repo = CategoryRepository(
     database: ref.watch(databaseProvider),
     encryptionService: ref.watch(encryptionServiceProvider),
   );
+  ref.onDispose(() => repo.disposeCorruptionTracker());
+  return repo;
 });
 
 /// Provider for the budget repository.
 final budgetRepositoryProvider = Provider<BudgetRepository>((ref) {
-  return BudgetRepository(
+  final repo = BudgetRepository(
     database: ref.watch(databaseProvider),
     encryptionService: ref.watch(encryptionServiceProvider),
   );
+  ref.onDispose(() => repo.disposeCorruptionTracker());
+  return repo;
 });
 
 /// Provider for the asset repository.
 final assetRepositoryProvider = Provider<AssetRepository>((ref) {
-  return AssetRepository(
+  final repo = AssetRepository(
     database: ref.watch(databaseProvider),
     encryptionService: ref.watch(encryptionServiceProvider),
   );
+  ref.onDispose(() => repo.disposeCorruptionTracker());
+  return repo;
 });
 
 /// Provider for the asset category repository.
 final assetCategoryRepositoryProvider = Provider<AssetCategoryRepository>((ref) {
-  return AssetCategoryRepository(
+  final repo = AssetCategoryRepository(
     database: ref.watch(databaseProvider),
     encryptionService: ref.watch(encryptionServiceProvider),
   );
+  ref.onDispose(() => repo.disposeCorruptionTracker());
+  return repo;
 });
 
 /// Provider for the recurring rule repository.
 final recurringRuleRepositoryProvider = Provider<RecurringRuleRepository>((ref) {
-  return RecurringRuleRepository(
+  final repo = RecurringRuleRepository(
     database: ref.watch(databaseProvider),
     encryptionService: ref.watch(encryptionServiceProvider),
   );
+  ref.onDispose(() => repo.disposeCorruptionTracker());
+  return repo;
 });
 
 /// Provider for the savings goal repository.
 final savingsGoalRepositoryProvider = Provider<SavingsGoalRepository>((ref) {
-  return SavingsGoalRepository(
+  final repo = SavingsGoalRepository(
     database: ref.watch(databaseProvider),
     encryptionService: ref.watch(encryptionServiceProvider),
   );
+  ref.onDispose(() => repo.disposeCorruptionTracker());
+  return repo;
 });
 
 /// Provider for the transaction template repository.
 final transactionTemplateRepositoryProvider = Provider<TransactionTemplateRepository>((ref) {
-  return TransactionTemplateRepository(
+  final repo = TransactionTemplateRepository(
     database: ref.watch(databaseProvider),
     encryptionService: ref.watch(encryptionServiceProvider),
   );
+  ref.onDispose(() => repo.disposeCorruptionTracker());
+  return repo;
 });
 
 /// Provider for the attachment repository.
@@ -132,18 +150,22 @@ final attachmentRepositoryProvider = Provider<AttachmentRepository>((ref) {
 
 /// Provider for the bill repository.
 final billRepositoryProvider = Provider<BillRepository>((ref) {
-  return BillRepository(
+  final repo = BillRepository(
     database: ref.watch(databaseProvider),
     encryptionService: ref.watch(encryptionServiceProvider),
   );
+  ref.onDispose(() => repo.disposeCorruptionTracker());
+  return repo;
 });
 
 /// Provider for the tag repository.
 final tagRepositoryProvider = Provider<TagRepository>((ref) {
-  return TagRepository(
+  final repo = TagRepository(
     database: ref.watch(databaseProvider),
     encryptionService: ref.watch(encryptionServiceProvider),
   );
+  ref.onDispose(() => repo.disposeCorruptionTracker());
+  return repo;
 });
 
 /// Provider for the net worth snapshot repository.

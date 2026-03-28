@@ -5,6 +5,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
+import '../../../../../design_system/design_system.dart';
 import '../../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../../settings/presentation/providers/settings_provider.dart';
 import '../../providers/analytics_filter_provider.dart';
@@ -65,7 +66,7 @@ class AccountFilterChips extends ConsumerWidget {
         );
       },
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, __) => const ErrorPlaceholder(),
     );
   }
 }

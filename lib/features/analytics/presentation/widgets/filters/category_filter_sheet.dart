@@ -5,6 +5,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
+import '../../../../../design_system/design_system.dart';
 import '../../../../categories/data/models/category.dart';
 import '../../../../settings/data/models/app_settings.dart';
 import '../../../../categories/presentation/providers/categories_provider.dart';
@@ -140,7 +141,7 @@ class _CategoryFilterSheetState extends ConsumerState<CategoryFilterSheet> {
               loading: () => const Center(
                 child: CircularProgressIndicator(),
               ),
-              error: (_, __) => const SizedBox.shrink(),
+              error: (_, __) => const ErrorPlaceholder(),
             ),
           ),
           // Done button

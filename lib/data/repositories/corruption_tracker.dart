@@ -18,4 +18,10 @@ mixin CorruptionTracker {
       _corruptionController.add(count);
     }
   }
+
+  /// Closes the corruption stream controller.
+  /// Call when the repository is being disposed.
+  void disposeCorruptionTracker() {
+    _corruptionController.close();
+  }
 }

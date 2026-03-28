@@ -16,6 +16,7 @@ import '../../../../design_system/components/feedback/notification.dart';
 import '../../../../design_system/components/inputs/amount_input.dart';
 import '../../../../design_system/components/inputs/input_field.dart';
 import '../../../../design_system/components/layout/form_header.dart';
+import '../../../../design_system/components/layout/unsaved_work_pop_scope.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
@@ -109,21 +110,8 @@ class _TransactionTemplateFormScreenState
         ? formState.hasChanges
         : (formState.name.isNotEmpty || formState.amount != null);
 
-    return PopScope(
-      canPop: !hasUnsavedWork,
-      onPopInvokedWithResult: (didPop, _) async {
-        if (didPop) return;
-        final confirmed = await showConfirmationDialog(
-          context: context,
-          title: 'Discard changes?',
-          message: 'You have unsaved changes that will be lost.',
-          confirmLabel: 'Discard',
-          isDestructive: true,
-        );
-        if (confirmed == true && context.mounted) {
-          context.pop();
-        }
-      },
+    return UnsavedWorkPopScope(
+      hasUnsavedWork: hasUnsavedWork,
       child: Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(

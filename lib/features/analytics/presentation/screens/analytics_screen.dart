@@ -9,6 +9,7 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/components/layout/page_layout.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../navigation/app_router.dart';
 import '../providers/analytics_filter_provider.dart';
 import '../../../analytics/data/models/chart_drill_down.dart';
 import '../providers/drill_down_provider.dart';
@@ -84,7 +85,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
     ref.listen<ChartDrillDown?>(drillDownProvider, (_, drillDown) {
       if (drillDown != null) {
         final params = drillDown.toQueryParameters();
-        context.push('/transactions', extra: params);
+        context.push(AppRoutes.transactions, extra: params);
         // Reset after navigation
         ref.read(drillDownProvider.notifier).state = null;
       }

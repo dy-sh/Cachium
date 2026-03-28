@@ -13,6 +13,7 @@ import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
+import '../../../../navigation/app_router.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../providers/calendar_screen_provider.dart';
 
@@ -476,7 +477,7 @@ class _TransactionTile extends ConsumerWidget {
     final sign = isIncome ? '+' : '-';
 
     return GestureDetector(
-      onTap: () => context.push('/transaction/${transaction.id}'),
+      onTap: () => context.push(AppRoutes.transactionDetailPath(transaction.id)),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
         child: Row(

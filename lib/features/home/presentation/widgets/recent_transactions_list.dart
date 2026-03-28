@@ -15,6 +15,7 @@ import '../../../../design_system/components/feedback/notification.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
+import '../../../../navigation/app_router.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 
@@ -57,7 +58,7 @@ class RecentTransactionsList extends ConsumerWidget {
               title: 'No transactions yet',
               subtitle: 'Tap to add your first transaction',
               actionLabel: 'Add Transaction',
-              onTap: () => context.push('/transaction/new'),
+              onTap: () => context.push(AppRoutes.transactionForm),
             ),
           );
         }
@@ -119,7 +120,7 @@ class _TransactionItem extends ConsumerWidget {
         );
       },
       child: GestureDetector(
-        onTap: () => context.push('/transaction/${transaction.id}'),
+        onTap: () => context.push(AppRoutes.transactionDetailPath(transaction.id)),
         child: Container(
           margin: const EdgeInsets.only(bottom: AppSpacing.sm),
           padding: const EdgeInsets.all(AppSpacing.md),

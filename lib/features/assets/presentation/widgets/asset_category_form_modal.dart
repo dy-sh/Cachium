@@ -10,6 +10,7 @@ import '../../../../design_system/components/buttons/primary_button.dart';
 import '../../../../design_system/components/feedback/confirmation_dialog.dart';
 import '../../../../design_system/components/inputs/input_field.dart';
 import '../../../../design_system/components/layout/form_header.dart';
+import '../../../../design_system/components/layout/unsaved_work_pop_scope.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../settings/presentation/widgets/color_picker_grid.dart';
 import '../../../settings/presentation/widgets/icon_picker_grid.dart';
@@ -74,21 +75,8 @@ class _AssetCategoryFormModalState extends ConsumerState<AssetCategoryFormModal>
       assetCategoryNameExistsProvider((name: categoryName, excludeId: widget.category?.id)),
     );
 
-    return PopScope(
-      canPop: !_hasChanges,
-      onPopInvokedWithResult: (didPop, _) async {
-        if (didPop) return;
-        final confirmed = await showConfirmationDialog(
-          context: context,
-          title: 'Discard changes?',
-          message: 'You have unsaved changes that will be lost.',
-          confirmLabel: 'Discard',
-          isDestructive: true,
-        );
-        if (confirmed == true && context.mounted) {
-          Navigator.pop(context);
-        }
-      },
+    return UnsavedWorkPopScope(
+      hasUnsavedWork: _hasChanges,
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: SafeArea(

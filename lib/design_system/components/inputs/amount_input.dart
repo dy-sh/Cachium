@@ -74,7 +74,7 @@ class _FMAmountInputState extends ConsumerState<AmountInput> {
     if (!_focusNode.hasFocus) {
       // Evaluate expression on blur
       final result = _evaluateExpression(_controller.text);
-      if (result != null && result > 0) {
+      if (result != null && result >= 0) {
         final text = _controller.text;
         // Only replace if the text contains operators (is an expression)
         if (text.contains('+') || text.contains('-') || text.contains('*') || text.contains('/')) {
@@ -208,6 +208,7 @@ class _AmountExpressionFormatter extends TextInputFormatter {
     TextEditingValue newValue,
   ) {
     if (newValue.text.isEmpty) return newValue;
+    if (newValue.text.length > 50) return oldValue;
     if (_validChars.hasMatch(newValue.text)) return newValue;
     return oldValue;
   }
@@ -287,7 +288,7 @@ double? _evaluateExpression(String input) {
       }
     }
 
-    return result > 0 ? result : null;
+    return result;
   } catch (_) {
     return null;
   }

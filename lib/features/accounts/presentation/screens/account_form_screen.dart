@@ -81,22 +81,8 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
       accountNameExistsProvider((name: accountName, excludeId: formState.editingAccountId)),
     );
 
-    return PopScope(
-      canPop: !_hasUnsavedWork(formState),
-      onPopInvokedWithResult: (didPop, _) async {
-        if (didPop) return;
-        final shouldDiscard = await showConfirmationDialog(
-          context: context,
-          title: 'Discard changes?',
-          message: 'You have unsaved changes. Are you sure you want to go back?',
-          confirmLabel: 'Discard',
-          cancelLabel: 'Keep Editing',
-          isDestructive: true,
-        );
-        if (shouldDiscard && context.mounted) {
-          context.pop();
-        }
-      },
+    return UnsavedWorkPopScope(
+      hasUnsavedWork: _hasUnsavedWork(formState),
       child: Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(

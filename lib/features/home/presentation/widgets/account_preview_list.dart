@@ -12,6 +12,7 @@ import '../../../../design_system/animations/shimmer_loading.dart';
 import '../../../../design_system/components/feedback/empty_state.dart';
 import '../../../accounts/data/models/account.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
+import '../../../../navigation/app_router.dart';
 import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 
@@ -66,7 +67,7 @@ class _AccountPreviewListState extends ConsumerState<AccountPreviewList> {
                 icon: LucideIcons.wallet,
                 title: 'No accounts yet',
                 subtitle: 'Add your first account to start tracking',
-                onTap: () => context.push('/account/new'),
+                onTap: () => context.push(AppRoutes.accountForm),
               ),
             )
           : SizedBox(
@@ -84,7 +85,7 @@ class _AccountPreviewListState extends ConsumerState<AccountPreviewList> {
               showBalance: showBalances,
               onTap: balancesHidden && !_balancesRevealed
                   ? () => setState(() => _balancesRevealed = true)
-                  : () => context.push('/account/${accounts[index].id}'),
+                  : () => context.push(AppRoutes.accountDetailPath(accounts[index].id)),
             );
           },
         ),

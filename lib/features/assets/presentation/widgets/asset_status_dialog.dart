@@ -14,6 +14,7 @@ import '../../../../design_system/components/inputs/currency_picker.dart';
 import '../../../../design_system/components/inputs/date_picker/date_picker.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../../design_system/components/feedback/notification.dart';
+import '../../../../navigation/app_router.dart';
 import '../../../transactions/presentation/providers/transaction_form_provider.dart';
 import '../../data/models/asset.dart';
 import '../providers/assets_provider.dart';
@@ -87,7 +88,7 @@ class _MarkAsSoldDialogState extends ConsumerState<_MarkAsSoldDialog> {
     if (createTransaction) {
       // Navigate to transaction form pre-filled with sale details
       if (context.mounted) {
-        context.push('/transaction/new?type=income');
+        context.push('${AppRoutes.transactionForm}?type=income');
         Future.microtask(() {
           final formNotifier = ref.read(transactionFormProvider.notifier);
           formNotifier.setAsset(assetId);

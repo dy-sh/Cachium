@@ -16,6 +16,7 @@ import '../../data/models/asset.dart';
 import '../providers/asset_analytics_providers.dart';
 import '../providers/asset_categories_provider.dart';
 import '../providers/assets_provider.dart';
+import '../../../../navigation/app_router.dart';
 import '../utils/asset_edit_helper.dart';
 import '../widgets/asset_form_modal.dart';
 
@@ -100,7 +101,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
                 icon: LucideIcons.plus,
                 onPressed: () {
                   Navigator.of(dialogContext).pop();
-                  context.push('/transaction/new?type=expense');
+                  context.push('${AppRoutes.transactionForm}?type=expense');
                   Future.microtask(() {
                     final formNotifier = ref.read(transactionFormProvider.notifier);
                     formNotifier.setAsset(assetId);
@@ -164,7 +165,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
                   // Compare button (visible when 2+ active assets)
                   if (activeAssets.length >= 2)
                     GestureDetector(
-                      onTap: () => context.push('/assets/compare'),
+                      onTap: () => context.push(AppRoutes.assetCompare),
                       child: Container(
                         width: 40,
                         height: 40,
@@ -183,7 +184,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
                   if (activeAssets.length >= 2)
                     const SizedBox(width: AppSpacing.sm),
                   GestureDetector(
-                    onTap: () => context.push('/settings/assets/categories'),
+                    onTap: () => context.push(AppRoutes.assetCategories),
                     child: Container(
                       width: 40,
                       height: 40,
@@ -270,7 +271,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
                 );
               },
               loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
+              error: (_, __) => const ErrorPlaceholder(),
             ),
 
             // Search bar
@@ -376,7 +377,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
             child: _AssetCard(
               asset: asset,
               intensity: intensity,
-              onTap: () => context.push('/asset/${asset.id}'),
+              onTap: () => context.push(AppRoutes.assetDetailPath(asset.id)),
               onEditTap: () => _openEditModal(asset),
               showDragHandle: true,
             ),
@@ -396,7 +397,7 @@ class _AssetsScreenState extends ConsumerState<AssetsScreen> {
         return _AssetCard(
           asset: asset,
           intensity: intensity,
-          onTap: () => context.push('/asset/${asset.id}'),
+          onTap: () => context.push(AppRoutes.assetDetailPath(asset.id)),
           onEditTap: () => _openEditModal(asset),
           showDragHandle: false,
         );

@@ -13,6 +13,7 @@ import '../../../../design_system/components/feedback/confirmation_dialog.dart';
 import '../../../../design_system/components/feedback/notification.dart';
 import '../../../../design_system/components/inputs/input_field.dart';
 import '../../../../design_system/components/layout/form_header.dart';
+import '../../../../design_system/components/layout/unsaved_work_pop_scope.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../settings/presentation/widgets/color_picker_grid.dart';
 import '../../../settings/presentation/widgets/icon_picker_grid.dart';
@@ -164,21 +165,8 @@ class _TagFormScreenState extends ConsumerState<TagFormScreen> {
     final selectedColor =
         accentColors[_selectedColorIndex.clamp(0, accentColors.length - 1)];
 
-    return PopScope(
-      canPop: !_hasChanges,
-      onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) return;
-        final shouldPop = await showConfirmationDialog(
-          context: context,
-          title: 'Discard changes?',
-          message: 'You have unsaved changes.',
-          confirmLabel: 'Discard',
-          isDestructive: true,
-        );
-        if (shouldPop == true && context.mounted) {
-          context.pop();
-        }
-      },
+    return UnsavedWorkPopScope(
+      hasUnsavedWork: _hasChanges,
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: SafeArea(

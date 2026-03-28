@@ -22,6 +22,7 @@ import '../../../attachments/presentation/widgets/attachment_thumbnail.dart';
 import '../../../tags/presentation/providers/tags_provider.dart';
 import '../../../tags/presentation/providers/transaction_tags_provider.dart';
 import '../../../tags/presentation/widgets/tag_chip.dart';
+import '../../../../navigation/app_router.dart';
 import '../providers/transactions_provider.dart';
 
 class TransactionDetailScreen extends ConsumerWidget {
@@ -82,7 +83,7 @@ class TransactionDetailScreen extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   GestureDetector(
-                    onTap: () => context.push('/transaction/${transaction.id}/edit'),
+                    onTap: () => context.push(AppRoutes.transactionEditPath(transaction.id)),
                     child: Container(
                       padding: const EdgeInsets.all(AppSpacing.sm),
                       decoration: BoxDecoration(
@@ -248,7 +249,7 @@ class TransactionDetailScreen extends ConsumerWidget {
                             ),
                           if (asset != null)
                             GestureDetector(
-                              onTap: () => context.push('/asset/${asset.id}'),
+                              onTap: () => context.push(AppRoutes.assetDetailPath(asset.id)),
                               child: _DetailRow(
                                 icon: LucideIcons.box,
                                 label: 'Asset',
@@ -386,7 +387,7 @@ class TransactionDetailScreen extends ConsumerWidget {
                                   return AttachmentThumbnail(
                                     attachment: attachments[index],
                                     onTap: () => context.push(
-                                      '/transaction/${transaction.id}/attachments?index=$index',
+                                      '${AppRoutes.attachmentViewerPath(transaction.id)}?index=$index',
                                     ),
                                   );
                                 },

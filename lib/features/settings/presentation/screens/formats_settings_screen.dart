@@ -10,6 +10,7 @@ import '../../../../design_system/design_system.dart';
 import '../../../../core/constants/currencies.dart';
 import '../../../../core/providers/exchange_rate_provider.dart';
 import '../../data/models/app_settings.dart';
+import '../../../../navigation/app_router.dart';
 import '../providers/settings_provider.dart';
 import '../widgets/settings_section.dart';
 import '../widgets/settings_tile.dart';
@@ -100,7 +101,7 @@ class FormatsSettingsScreen extends ConsumerWidget {
               ),
             ),
             GestureDetector(
-              onTap: () => context.push('/settings/formats/manual-rates'),
+              onTap: () => context.push(AppRoutes.manualRates),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
