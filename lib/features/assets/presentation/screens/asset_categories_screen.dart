@@ -121,6 +121,7 @@ class AssetCategoriesScreen extends ConsumerWidget {
                     );
                   }
                   return ReorderableListView.builder(
+                    buildDefaultDragHandles: false,
                     padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
                     proxyDecorator: (child, index, animation) {
                       return AnimatedBuilder(
@@ -144,6 +145,7 @@ class AssetCategoriesScreen extends ConsumerWidget {
                       return KeyedSubtree(
                         key: ValueKey(category.id),
                         child: _CategoryCard(
+                          index: index,
                           category: category,
                           intensity: intensity,
                           onTap: () => _openEditModal(context, ref, category),
@@ -166,11 +168,13 @@ class AssetCategoriesScreen extends ConsumerWidget {
 }
 
 class _CategoryCard extends StatelessWidget {
+  final int index;
   final AssetCategory category;
   final ColorIntensity intensity;
   final VoidCallback onTap;
 
   const _CategoryCard({
+    required this.index,
     required this.category,
     required this.intensity,
     required this.onTap,
@@ -193,10 +197,13 @@ class _CategoryCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(
-              LucideIcons.gripVertical,
-              size: 16,
-              color: AppColors.textTertiary,
+            ReorderableDragStartListener(
+              index: index,
+              child: Icon(
+                LucideIcons.gripVertical,
+                size: 16,
+                color: AppColors.textTertiary,
+              ),
             ),
             const SizedBox(width: AppSpacing.sm),
             Container(

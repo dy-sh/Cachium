@@ -327,6 +327,7 @@ class _ReorderableAccountTypeSection extends ConsumerWidget {
           ),
         ),
         ReorderableListView.builder(
+          buildDefaultDragHandles: false,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           proxyDecorator: (child, index, animation) {
@@ -355,10 +356,13 @@ class _ReorderableAccountTypeSection extends ConsumerWidget {
               ),
               child: Row(
                 children: [
-                  Icon(
-                    LucideIcons.gripVertical,
-                    size: 18,
-                    color: AppColors.textTertiary,
+                  ReorderableDragStartListener(
+                    index: index,
+                    child: Icon(
+                      LucideIcons.gripVertical,
+                      size: 18,
+                      color: AppColors.textTertiary,
+                    ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Container(

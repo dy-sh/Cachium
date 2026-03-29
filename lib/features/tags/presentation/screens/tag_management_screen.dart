@@ -69,6 +69,7 @@ class _TagManagementScreenState extends ConsumerState<TagManagementScreen> {
                       ),
                     )
                   : ReorderableListView.builder(
+                      buildDefaultDragHandles: false,
                       padding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.screenPadding),
                       itemCount: tags.length,
@@ -115,10 +116,13 @@ class _TagManagementScreenState extends ConsumerState<TagManagementScreen> {
                                       .push(AppRoutes.tagEditPath(tag.id)),
                                 ),
                                 const SizedBox(width: AppSpacing.xs),
-                                Icon(
-                                  LucideIcons.gripVertical,
-                                  size: 18,
-                                  color: AppColors.textTertiary,
+                                ReorderableDragStartListener(
+                                  index: index,
+                                  child: Icon(
+                                    LucideIcons.gripVertical,
+                                    size: 18,
+                                    color: AppColors.textTertiary,
+                                  ),
                                 ),
                               ],
                             ),
