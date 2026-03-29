@@ -111,10 +111,14 @@ mixin _$SettingsData {
   /// Whether app lock (biometric/PIN) is enabled
   bool get appLockEnabled => throw _privateConstructorUsedError;
 
-  /// App PIN code (stored as plaintext 4-8 digit string)
+  /// App PIN code hash — legacy field kept for backward-compatible JSON parsing.
+  /// Credentials are now stored in platform secure storage, not the database.
+  /// This field is always null in new data; non-null values trigger migration.
   String? get appPinCode => throw _privateConstructorUsedError;
 
-  /// App password (stored as plaintext string)
+  /// App password hash — legacy field kept for backward-compatible JSON parsing.
+  /// Credentials are now stored in platform secure storage, not the database.
+  /// This field is always null in new data; non-null values trigger migration.
   String? get appPassword => throw _privateConstructorUsedError;
 
   /// Auto-lock timeout: 'immediate', 'after30Seconds', 'after1Minute', 'after5Minutes', 'after15Minutes', 'never'
@@ -966,11 +970,15 @@ class _$SettingsDataImpl implements _SettingsData {
   @JsonKey()
   final bool appLockEnabled;
 
-  /// App PIN code (stored as plaintext 4-8 digit string)
+  /// App PIN code hash — legacy field kept for backward-compatible JSON parsing.
+  /// Credentials are now stored in platform secure storage, not the database.
+  /// This field is always null in new data; non-null values trigger migration.
   @override
   final String? appPinCode;
 
-  /// App password (stored as plaintext string)
+  /// App password hash — legacy field kept for backward-compatible JSON parsing.
+  /// Credentials are now stored in platform secure storage, not the database.
+  /// This field is always null in new data; non-null values trigger migration.
   @override
   final String? appPassword;
 
@@ -1411,11 +1419,15 @@ abstract class _SettingsData implements SettingsData {
   @override
   bool get appLockEnabled;
 
-  /// App PIN code (stored as plaintext 4-8 digit string)
+  /// App PIN code hash — legacy field kept for backward-compatible JSON parsing.
+  /// Credentials are now stored in platform secure storage, not the database.
+  /// This field is always null in new data; non-null values trigger migration.
   @override
   String? get appPinCode;
 
-  /// App password (stored as plaintext string)
+  /// App password hash — legacy field kept for backward-compatible JSON parsing.
+  /// Credentials are now stored in platform secure storage, not the database.
+  /// This field is always null in new data; non-null values trigger migration.
   @override
   String? get appPassword;
 

@@ -485,7 +485,7 @@ class _TransactionTypeSelector extends ConsumerWidget {
   }
 }
 
-class _SaveBar extends StatelessWidget {
+class _SaveBar extends ConsumerWidget {
   final TransactionFormState formState;
   final bool isSaving;
   final VoidCallback onSave;
@@ -497,7 +497,7 @@ class _SaveBar extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isEditing = formState.isEditing;
     return ClipRect(
       child: BackdropFilter(
@@ -521,7 +521,15 @@ class _SaveBar extends StatelessWidget {
           child: PrimaryButton(
             label: isEditing ? 'Save Changes' : 'Save Transaction',
             isLoading: isSaving,
-            onPressed: !isSaving ? onSave : null,
+            onPressed: !isSaving
+                ? () {
+                    // Trigger validation display before attempting save
+                    if (!formState.isValid) {
+                      ref.read(transactionFormProvider.notifier).validate();
+                    }
+                    onSave();
+                  }
+                : null,
           ),
         ),
       ),

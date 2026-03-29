@@ -78,8 +78,15 @@ class CredentialHasher {
     final iterations = int.tryParse(parts[0]);
     if (iterations == null) return false;
 
-    final salt = base64Decode(parts[1]);
-    final expectedHash = base64Decode(parts[2]);
+    final List<int> salt;
+    final List<int> expectedHash;
+    try {
+      salt = base64Decode(parts[1]);
+      expectedHash = base64Decode(parts[2]);
+    } catch (_) {
+      // Corrupted base64 in stored hash — reject rather than crash
+      return false;
+    }
 
     final pbkdf2 = Pbkdf2(
       macAlgorithm: Hmac.sha256(),

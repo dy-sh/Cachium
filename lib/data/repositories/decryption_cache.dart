@@ -44,18 +44,22 @@ class DecryptionCache<T> {
   /// Clear all cached entries.
   void clear() => _cache.clear();
 
-  /// Cheap fingerprint: length + first 16 bytes + last 16 bytes.
-  /// Since AES-GCM uses a random nonce per encryption, any change to the
-  /// plaintext or re-encryption produces a different blob.
+  /// Fingerprint: length + first 32 bytes (covers the AES-GCM nonce/IV)
+  /// + last 16 bytes (covers the auth tag). Since AES-GCM uses a random
+  /// nonce per encryption, any change to the plaintext or re-encryption
+  /// produces a different blob. Using more bytes reduces collision risk.
   int _fingerprint(Uint8List blob) {
     if (blob.isEmpty) return 0;
     int hash = blob.length;
-    final end = blob.length < 32 ? blob.length : 16;
-    for (int i = 0; i < end; i++) {
+    // Hash the first 32 bytes (nonce + early ciphertext)
+    final headEnd = blob.length < 32 ? blob.length : 32;
+    for (int i = 0; i < headEnd; i++) {
       hash = hash * 31 + blob[i];
     }
+    // Hash the last 16 bytes (auth tag region)
     if (blob.length > 32) {
-      for (int i = blob.length - 16; i < blob.length; i++) {
+      final tailStart = blob.length - 16;
+      for (int i = tailStart; i < blob.length; i++) {
         hash = hash * 31 + blob[i];
       }
     }

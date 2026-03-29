@@ -13,7 +13,11 @@ const _uuid = Uuid();
 final recurringTransactionsProvider = Provider<RecurringSummary>((ref) {
   final transactionsAsync = ref.watch(transactionsProvider);
   final mainCurrency = ref.watch(mainCurrencyCodeProvider);
-  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
+  // Use .select() to only rebuild when the resolved rates map changes,
+  // not on every AsyncValue state transition (loading → data with same map).
+  final rates = ref.watch(
+    exchangeRatesProvider.select((v) => v.valueOrNull),
+  ) ?? {};
   final transactions = transactionsAsync.valueOrNull;
 
   if (transactions == null || transactions.length < 3) {

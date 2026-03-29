@@ -204,9 +204,12 @@ class Tags extends Table {
 /// Junction table for transaction-tag relationships.
 ///
 /// Plaintext — only stores opaque UUIDs.
+/// Foreign keys cascade deletes so orphaned rows are impossible.
 class TransactionTags extends Table {
-  TextColumn get transactionId => text()();
-  TextColumn get tagId => text()();
+  TextColumn get transactionId =>
+      text().references(Transactions, #id, onDelete: KeyAction.cascade)();
+  TextColumn get tagId =>
+      text().references(Tags, #id, onDelete: KeyAction.cascade)();
 
   @override
   Set<Column> get primaryKey => {transactionId, tagId};
@@ -216,7 +219,8 @@ class TransactionTags extends Table {
 @DataClassName('AttachmentRow')
 class Attachments extends Table {
   TextColumn get id => text()();
-  TextColumn get transactionId => text()();
+  TextColumn get transactionId =>
+      text().references(Transactions, #id, onDelete: KeyAction.cascade)();
   IntColumn get createdAt => integer()();
   IntColumn get lastUpdatedAt => integer()();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
@@ -299,7 +303,7 @@ class AppDatabase extends _$AppDatabase {
 
 
   @override
-  int get schemaVersion => 28;
+  int get schemaVersion => 29;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(

@@ -35,8 +35,13 @@ void main() async {
   // before any background isolate tries to use it)
   try {
     await container.read(keyProviderProvider).getKey();
-  } catch (_) {
-    debugPrint('Encryption key pre-warm failed');
+  } on EncryptionKeyCorruptedException catch (_) {
+    debugPrint('FATAL: Encryption key corrupted during pre-warm');
+    container.read(encryptionKeyCorruptedProvider.notifier).state = true;
+  } catch (e) {
+    debugPrint('Encryption key pre-warm failed: $e');
+    container.read(startupErrorProvider.notifier).state =
+        'Encryption initialization failed. Some features may not work correctly.';
   }
 
   // Migrate plaintext/SHA-256 credentials to PBKDF2 hashing

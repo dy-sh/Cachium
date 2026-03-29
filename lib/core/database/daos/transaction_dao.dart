@@ -91,12 +91,18 @@ class TransactionDao extends DatabaseAccessor<AppDatabase>
         .getSingleOrNull();
   }
 
-  /// Get all non-deleted transactions ordered by date descending
-  Future<List<Transaction>> getAll() async {
-    return (select(transactions)
-          ..where((t) => t.isDeleted.equals(false))
-          ..orderBy([(t) => OrderingTerm.desc(t.date)]))
-        .get();
+  /// Get all non-deleted transactions ordered by date descending.
+  ///
+  /// When [limit] is provided, returns at most that many rows (useful for
+  /// dashboard or initial page loads). Pass [offset] to paginate.
+  Future<List<Transaction>> getAll({int? limit, int? offset}) async {
+    final query = select(transactions)
+      ..where((t) => t.isDeleted.equals(false))
+      ..orderBy([(t) => OrderingTerm.desc(t.date)]);
+    if (limit != null) {
+      query.limit(limit, offset: offset);
+    }
+    return query.get();
   }
 
   /// Watch all non-deleted transactions (for reactive UI)

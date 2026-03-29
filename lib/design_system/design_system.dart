@@ -25,6 +25,7 @@ export 'components/chips/selection_chip.dart';
 export 'components/chips/toggle_chip.dart';
 
 // Feedback
+export 'components/feedback/async_value_builder.dart';
 export 'components/feedback/confirmation_dialog.dart';
 export 'components/feedback/empty_state.dart';
 export 'components/feedback/error_placeholder.dart';

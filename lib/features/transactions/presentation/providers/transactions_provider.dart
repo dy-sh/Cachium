@@ -706,14 +706,15 @@ final transactionDateBoundsProvider = Provider<({DateTime? earliest, DateTime? l
 
 final transactionSearchQueryProvider = StateProvider<String>((ref) => '');
 
-final transactionByIdProvider = Provider.family<Transaction?, String>((ref, id) {
+/// Indexed map of all transactions by ID for O(1) lookups.
+final transactionMapProvider = Provider<Map<String, Transaction>>((ref) {
   final transactions = ref.watch(transactionsProvider).valueOrNull;
-  if (transactions == null) return null;
-  try {
-    return transactions.firstWhere((t) => t.id == id);
-  } catch (_) {
-    return null;
-  }
+  if (transactions == null) return {};
+  return {for (final t in transactions) t.id: t};
+});
+
+final transactionByIdProvider = Provider.family<Transaction?, String>((ref, id) {
+  return ref.watch(transactionMapProvider)[id];
 });
 
 final transactionsByAccountProvider = Provider.family<List<Transaction>, String>((ref, accountId) {

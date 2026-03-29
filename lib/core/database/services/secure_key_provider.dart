@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
@@ -14,6 +15,7 @@ class SecureKeyProvider implements KeyProvider {
 
   final FlutterSecureStorage _storage;
   Uint8List? _cachedKey;
+  Future<Uint8List>? _pendingGetKey;
 
   SecureKeyProvider({FlutterSecureStorage? storage})
       : _storage = storage ?? const FlutterSecureStorage(
@@ -25,6 +27,19 @@ class SecureKeyProvider implements KeyProvider {
   Future<Uint8List> getKey() async {
     if (_cachedKey != null) return _cachedKey!;
 
+    // Prevent concurrent key generation — if another call is already
+    // in progress, wait for it instead of racing to generate a second key.
+    if (_pendingGetKey != null) return _pendingGetKey!;
+
+    _pendingGetKey = _loadOrGenerateKey();
+    try {
+      return await _pendingGetKey!;
+    } finally {
+      _pendingGetKey = null;
+    }
+  }
+
+  Future<Uint8List> _loadOrGenerateKey() async {
     final existing = await _storage.read(key: _storageKey);
     if (existing != null) {
       final decoded = base64Decode(existing);
@@ -50,6 +65,17 @@ class SecureKeyProvider implements KeyProvider {
 
     // Store base64-encoded
     await _storage.write(key: _storageKey, value: base64Encode(key));
+
+    // Re-read to confirm we won the race (another isolate may have written first)
+    final confirmed = await _storage.read(key: _storageKey);
+    if (confirmed != null) {
+      final confirmedKey = base64Decode(confirmed);
+      if (confirmedKey.length == 32) {
+        _cachedKey = confirmedKey;
+        return confirmedKey;
+      }
+    }
+
     _cachedKey = key;
     return key;
   }

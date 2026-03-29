@@ -61,6 +61,10 @@ double convertedAmount(
     print('currency_conversion: using stored rate for ${tx.currencyCode} (no live rate available)');
     return true;
   }());
+  if (tx.conversionRate <= 0 || !tx.conversionRate.isFinite) {
+    // Invalid stored rate — return amount as-is rather than producing NaN/Infinity
+    return tx.amount;
+  }
   return roundCurrency(tx.amount * tx.conversionRate);
 }
 

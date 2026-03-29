@@ -5,9 +5,42 @@ import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../data/models/date_range_preset.dart';
 import '../../data/models/income_expense_summary.dart';
+import '../../../transactions/presentation/providers/transactions_provider.dart';
 import 'analytics_filter_provider.dart';
 import 'filtered_transactions_provider.dart';
-import '../../../transactions/presentation/providers/transactions_provider.dart';
+
+/// Previous-period transactions filtered with the same account/category
+/// constraints as the current analytics filter, but shifted to the prior
+/// period. Separated to avoid watching `transactionsProvider` directly
+/// (which would cause cascade rebuilds of 40+ downstream providers).
+final _previousPeriodTransactionsProvider = Provider<List<Transaction>>((ref) {
+  ref.keepAlive();
+
+  final filter = ref.watch(analyticsFilterProvider);
+
+  // Read the full transaction list using .select() to only rebuild when
+  // the resolved list changes, not on every AsyncValue state transition.
+  final allTransactions = ref.watch(
+    transactionsProvider.select((asyncValue) => asyncValue.valueOrNull),
+  );
+  if (allTransactions == null) return [];
+
+  final currentRange = filter.dateRange;
+  final dayCount = currentRange.dayCount;
+  final previousEnd = currentRange.start.subtract(const Duration(days: 1));
+  final previousStart = previousEnd.subtract(Duration(days: dayCount - 1));
+  final previousRange = DateRange(
+    start: DateTime(previousStart.year, previousStart.month, previousStart.day),
+    end: DateTime(previousEnd.year, previousEnd.month, previousEnd.day, 23, 59, 59),
+  );
+
+  return allTransactions.where((tx) {
+    if (!previousRange.contains(tx.date)) return false;
+    if (filter.hasAccountFilter && !filter.selectedAccountIds.contains(tx.accountId)) return false;
+    if (filter.hasCategoryFilter && !filter.selectedCategoryIds.contains(tx.categoryId)) return false;
+    return true;
+  }).toList();
+});
 
 final incomeExpenseSummaryProvider = Provider<IncomeExpenseSummary>((ref) {
   // Keep alive to cache summary across analytics tab switches.
@@ -15,9 +48,12 @@ final incomeExpenseSummaryProvider = Provider<IncomeExpenseSummary>((ref) {
 
   final transactions = ref.watch(filteredAnalyticsTransactionsProvider);
   final filter = ref.watch(analyticsFilterProvider);
-  final allTransactionsAsync = ref.watch(transactionsProvider);
   final mainCurrency = ref.watch(mainCurrencyCodeProvider);
-  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
+  // Use .select() to only rebuild when the resolved rates map changes,
+  // not on every AsyncValue state transition.
+  final rates = ref.watch(
+    exchangeRatesProvider.select((v) => v.valueOrNull),
+  ) ?? {};
 
   double totalIncome = 0;
   double totalExpense = 0;
@@ -34,31 +70,16 @@ final incomeExpenseSummaryProvider = Provider<IncomeExpenseSummary>((ref) {
     }
   }
 
-  // Compute previous period
+  // Compute previous period from dedicated provider
   double previousTotalIncome = 0;
   double previousTotalExpense = 0;
 
-  final allTransactions = allTransactionsAsync.valueOrNull;
-  if (allTransactions != null) {
-    final currentRange = filter.dateRange;
-    final dayCount = currentRange.dayCount;
-    final previousEnd = currentRange.start.subtract(const Duration(days: 1));
-    final previousStart = previousEnd.subtract(Duration(days: dayCount - 1));
-    final previousRange = DateRange(
-      start: DateTime(previousStart.year, previousStart.month, previousStart.day),
-      end: DateTime(previousEnd.year, previousEnd.month, previousEnd.day, 23, 59, 59),
-    );
-
-    for (final tx in allTransactions) {
-      if (!previousRange.contains(tx.date)) continue;
-      if (filter.hasAccountFilter && !filter.selectedAccountIds.contains(tx.accountId)) continue;
-      if (filter.hasCategoryFilter && !filter.selectedCategoryIds.contains(tx.categoryId)) continue;
-
-      if (tx.type == TransactionType.income) {
-        previousTotalIncome += convertedAmount(tx, rates, mainCurrency);
-      } else {
-        previousTotalExpense += convertedAmount(tx, rates, mainCurrency);
-      }
+  final previousTransactions = ref.watch(_previousPeriodTransactionsProvider);
+  for (final tx in previousTransactions) {
+    if (tx.type == TransactionType.income) {
+      previousTotalIncome += convertedAmount(tx, rates, mainCurrency);
+    } else {
+      previousTotalExpense += convertedAmount(tx, rates, mainCurrency);
     }
   }
 
@@ -82,7 +103,9 @@ final periodSummariesProvider = Provider<List<PeriodSummary>>((ref) {
   final transactions = ref.watch(filteredAnalyticsTransactionsProvider);
   final filter = ref.watch(analyticsFilterProvider);
   final mainCurrency = ref.watch(mainCurrencyCodeProvider);
-  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
+  final rates = ref.watch(
+    exchangeRatesProvider.select((v) => v.valueOrNull),
+  ) ?? {};
 
   if (transactions.isEmpty) return [];
 
