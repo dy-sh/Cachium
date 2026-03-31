@@ -6,6 +6,7 @@ import '../../../../core/providers/exchange_rate_provider.dart';
 import '../../../../core/utils/balance_calculation.dart';
 import '../../../../core/utils/currency_conversion.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
+import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/advanced_transaction_filter.dart';
 import '../../data/models/transaction.dart';
@@ -38,6 +39,14 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
   }) async {
     if (conversionRate <= 0 || !conversionRate.isFinite) {
       throw ValidationException.outOfRange('conversionRate', min: 0);
+    }
+
+    // Validate referenced entities exist
+    if (ref.read(accountByIdProvider(accountId)) == null) {
+      throw EntityNotFoundException(entityType: 'Account', entityId: accountId);
+    }
+    if (ref.read(categoryByIdProvider(categoryId)) == null) {
+      throw EntityNotFoundException(entityType: 'Category', entityId: categoryId);
     }
 
     final repo = ref.read(transactionRepositoryProvider);
@@ -99,6 +108,14 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
   }
 
   Future<void> updateTransaction(Transaction transaction) async {
+    // Validate referenced entities exist
+    if (ref.read(accountByIdProvider(transaction.accountId)) == null) {
+      throw EntityNotFoundException(entityType: 'Account', entityId: transaction.accountId);
+    }
+    if (ref.read(categoryByIdProvider(transaction.categoryId)) == null) {
+      throw EntityNotFoundException(entityType: 'Category', entityId: transaction.categoryId);
+    }
+
     final repo = ref.read(transactionRepositoryProvider);
     final db = ref.read(databaseProvider);
 
@@ -173,6 +190,10 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     await db.transaction(() async {
       // Soft delete in database
       await repo.deleteTransaction(id);
+
+      // Clean up related attachments and tag associations
+      await ref.read(attachmentRepositoryProvider).deleteAttachmentsForTransaction(id);
+      await ref.read(tagRepositoryProvider).removeTagsForTransaction(id);
 
       // Reverse the balance change
       for (final entry in reverseTransactionDeltas(transaction).entries) {
@@ -250,6 +271,10 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
         }
         final transaction = currentState[batchIndex];
         await repo.deleteTransaction(id);
+
+        // Clean up related attachments and tag associations
+        await ref.read(attachmentRepositoryProvider).deleteAttachmentsForTransaction(id);
+        await ref.read(tagRepositoryProvider).removeTagsForTransaction(id);
 
         // Reverse the balance change
         for (final entry in reverseTransactionDeltas(transaction).entries) {
@@ -445,6 +470,8 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
       // Delete source transactions and reverse their balance effects
       for (final tx in sourceTransactions) {
         await repo.deleteTransaction(tx.id);
+        await ref.read(attachmentRepositoryProvider).deleteAttachmentsForTransaction(tx.id);
+        await ref.read(tagRepositoryProvider).removeTagsForTransaction(tx.id);
 
         // Reverse the balance change on linked accounts
         if (tx.type == TransactionType.transfer && tx.destinationAccountId != null &&
@@ -461,6 +488,8 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
         await ref.read(accountsProvider.notifier).updateBalance(
               tx.accountId, tx.amount);
         await repo.deleteTransaction(tx.id);
+        await ref.read(attachmentRepositoryProvider).deleteAttachmentsForTransaction(tx.id);
+        await ref.read(tagRepositoryProvider).removeTagsForTransaction(tx.id);
       }
     });
 
@@ -522,6 +551,8 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
       // Delete each transaction and reverse its balance effect
       for (final tx in transactionsToDelete) {
         await repo.deleteTransaction(tx.id);
+        await ref.read(attachmentRepositoryProvider).deleteAttachmentsForTransaction(tx.id);
+        await ref.read(tagRepositoryProvider).removeTagsForTransaction(tx.id);
 
         // Reverse the balance change
         for (final entry in reverseTransactionDeltas(tx).entries) {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,6 +26,7 @@ import '../../data/models/account.dart';
 class AccountsNotifier extends AsyncNotifier<List<Account>>
     with OptimisticAsyncNotifier<Account> {
   final _uuid = const Uuid();
+  final Map<String, Future<void>> _balanceLocks = {};
 
   @override
   Future<List<Account>> build() async {
@@ -293,8 +295,16 @@ class AccountsNotifier extends AsyncNotifier<List<Account>>
 
   /// Update an account's balance by a delta amount.
   ///
+  /// Uses a per-account lock to serialize concurrent updates and prevent
+  /// read-modify-write races on the same account.
   /// Throws [RepositoryException] on failure.
   Future<void> updateBalance(String accountId, double amount) async {
+    // Chain behind any pending update for the same account
+    final previous = _balanceLocks[accountId] ?? Future.value();
+    final completer = Completer<void>();
+    _balanceLocks[accountId] = completer.future;
+    await previous;
+
     final previousState = state;
 
     try {
@@ -335,6 +345,12 @@ class AccountsNotifier extends AsyncNotifier<List<Account>>
         e is AppException ? e : RepositoryException.update(entityType: 'Account', entityId: accountId, cause: e),
         st,
       );
+    } finally {
+      completer.complete();
+      if (identical(_balanceLocks[accountId], completer.future)) {
+        // ignore: unawaited_futures
+        _balanceLocks.remove(accountId);
+      }
     }
   }
 

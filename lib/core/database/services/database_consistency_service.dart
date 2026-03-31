@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../../../data/repositories/account_repository.dart';
 import '../../../data/repositories/budget_repository.dart';
 import '../../../data/repositories/category_repository.dart';
@@ -155,5 +157,34 @@ class DatabaseConsistencyService {
       rulesWithInvalidReferences: rulesWithInvalidReferences,
       templatesWithInvalidReferences: templatesWithInvalidReferences,
     );
+  }
+
+  /// Detects and fixes account balance inconsistencies.
+  ///
+  /// Compares each account's stored balance against the expected value
+  /// (initialBalance + sum of transaction deltas) and corrects mismatches.
+  /// Returns the number of accounts that were fixed.
+  Future<int> autoFixBalances() async {
+    final transactions = await transactionRepository.getAllTransactions();
+    final accounts = await accountRepository.getAllAccounts();
+    final accountDeltas = calculateAccountDeltas(transactions);
+
+    int fixedCount = 0;
+    for (final account in accounts) {
+      final transactionDelta = accountDeltas[account.id] ?? 0;
+      final expectedBalance = account.initialBalance + transactionDelta;
+      if ((account.balance - expectedBalance).abs() > 0.001) {
+        debugPrint(
+          'Balance fix: ${account.name} '
+          '${account.balance} -> $expectedBalance '
+          '(delta: ${expectedBalance - account.balance})',
+        );
+        await accountRepository.updateAccount(
+          account.copyWith(balance: expectedBalance),
+        );
+        fixedCount++;
+      }
+    }
+    return fixedCount;
   }
 }

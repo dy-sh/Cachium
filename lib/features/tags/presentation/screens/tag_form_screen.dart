@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/exceptions/app_exception.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -128,7 +129,9 @@ class _TagFormScreenState extends ConsumerState<TagFormScreen> {
       }
     } catch (e) {
       if (mounted) {
-        context.showErrorNotification('Failed to save tag');
+        context.showErrorNotification(
+          e is AppException ? e.userMessage : 'Failed to save tag',
+        );
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -153,7 +156,9 @@ class _TagFormScreenState extends ConsumerState<TagFormScreen> {
       }
     } catch (e) {
       if (mounted) {
-        context.showErrorNotification('Failed to delete tag');
+        context.showErrorNotification(
+          e is AppException ? e.userMessage : 'Failed to delete tag',
+        );
       }
     }
   }

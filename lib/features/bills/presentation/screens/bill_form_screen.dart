@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/exceptions/app_exception.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -49,6 +50,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
 
   bool _initialized = false;
   bool _hasUnsavedChanges = false;
+  bool _isSaving = false;
 
   bool get _isEditing => widget.billId != null;
 
@@ -380,9 +382,11 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
   }
 
   bool get _canSave =>
-      _nameController.text.trim().isNotEmpty && _amount > 0;
+      _nameController.text.trim().isNotEmpty && _amount > 0 && !_isSaving;
 
   Future<void> _save(BuildContext context) async {
+    if (_isSaving) return;
+    setState(() => _isSaving = true);
     try {
       final now = DateTime.now();
 
@@ -439,8 +443,12 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
       }
     } catch (e) {
       if (context.mounted) {
-        context.showErrorNotification('Failed to save bill');
+        context.showErrorNotification(
+          e is AppException ? e.userMessage : 'Failed to save bill',
+        );
       }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -463,7 +471,9 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
         }
       } catch (e) {
         if (context.mounted) {
-          context.showErrorNotification('Failed to delete bill');
+          context.showErrorNotification(
+            e is AppException ? e.userMessage : 'Failed to delete bill',
+          );
         }
       }
     }

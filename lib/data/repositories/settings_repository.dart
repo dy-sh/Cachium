@@ -206,6 +206,9 @@ class SettingsRepository {
       );
     } catch (_) {
       debugPrint('SettingsRepository: Failed to read credentials from secure storage');
+      if (settings.appLockEnabled) {
+        settings = settings.copyWith(credentialReadFailed: true);
+      }
     }
 
     return settings;

@@ -12,8 +12,11 @@ import '../../../../core/utils/date_formatter.dart';
 import '../../../../design_system/animations/shimmer_loading.dart';
 import '../../../../design_system/components/feedback/empty_state.dart';
 import '../../../../design_system/components/feedback/notification.dart';
+import '../../../accounts/data/models/account.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
+import '../../../categories/data/models/category.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
+import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../../../navigation/app_router.dart';
 import '../../../transactions/data/models/transaction.dart';
@@ -40,11 +43,26 @@ class RecentTransactionsList extends ConsumerWidget {
             border: Border.all(color: AppColors.border),
           ),
           child: Center(
-            child: Text(
-              'Error loading transactions',
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Error loading transactions',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                GestureDetector(
+                  onTap: () => ref.invalidate(recentTransactionsProvider),
+                  child: Text(
+                    'Try again',
+                    style: AppTypography.labelMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -63,10 +81,25 @@ class RecentTransactionsList extends ConsumerWidget {
           );
         }
 
+        // Hoist lookups to parent — single watch per map instead of N watches per item
+        final categoryMap = ref.watch(categoryMapProvider);
+        final accountMap = ref.watch(accountMapProvider);
+        final intensity = ref.watch(colorIntensityProvider);
+        final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+        final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
+
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
           child: Column(
-            children: transactions.map((tx) => _TransactionItem(transaction: tx)).toList(),
+            children: transactions.map((tx) => _TransactionItem(
+              transaction: tx,
+              category: categoryMap[tx.categoryId],
+              account: accountMap[tx.accountId],
+              destAccount: tx.destinationAccountId != null ? accountMap[tx.destinationAccountId!] : null,
+              intensity: intensity,
+              mainCurrency: mainCurrency,
+              rates: rates,
+            )).toList(),
           ),
         );
       },
@@ -76,17 +109,25 @@ class RecentTransactionsList extends ConsumerWidget {
 
 class _TransactionItem extends ConsumerWidget {
   final Transaction transaction;
+  final Category? category;
+  final Account? account;
+  final Account? destAccount;
+  final ColorIntensity intensity;
+  final String mainCurrency;
+  final Map<String, double> rates;
 
-  const _TransactionItem({required this.transaction});
+  const _TransactionItem({
+    required this.transaction,
+    required this.category,
+    required this.account,
+    required this.destAccount,
+    required this.intensity,
+    required this.mainCurrency,
+    required this.rates,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final category = ref.watch(categoryByIdProvider(transaction.categoryId));
-    final account = ref.watch(accountByIdProvider(transaction.accountId));
-    final destAccount = transaction.destinationAccountId != null
-        ? ref.watch(accountByIdProvider(transaction.destinationAccountId!))
-        : null;
-    final intensity = ref.watch(colorIntensityProvider);
     final isTransfer = transaction.type == TransactionType.transfer;
     final color = AppColors.getTransactionColor(transaction.type.name, intensity);
     final bgOpacity = AppColors.getBgOpacity(intensity);
@@ -194,7 +235,6 @@ class _TransactionItem extends ConsumerWidget {
                 ),
               ),
               Builder(builder: (context) {
-                final mainCurrency = ref.watch(mainCurrencyCodeProvider);
                 final isForeign = transaction.currencyCode != mainCurrency;
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -206,7 +246,6 @@ class _TransactionItem extends ConsumerWidget {
                       style: AppTypography.moneySmall.copyWith(color: color),
                     ),
                     if (isForeign) Builder(builder: (context) {
-                      final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
                       final converted = convertToMainCurrency(transaction.amount, transaction.currencyCode, mainCurrency, rates);
                       return Text(
                         '\u2248 ${CurrencyFormatter.format(converted, currencyCode: mainCurrency)}',

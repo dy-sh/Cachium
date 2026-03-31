@@ -66,34 +66,40 @@ class CsvImporter {
     int recurringRulesImported = 0;
     int savingsGoalsImported = 0;
     int templatesImported = 0;
+    int transactionsSkippedFromValidation = 0;
 
-    for (final path in paths) {
-      final fileName = path.split('/').last.toLowerCase();
+    // Wrap all imports, validation, and reconciliation in a single transaction.
+    // If any step fails, everything rolls back to prevent inconsistent state.
+    // Inner database.transaction() calls become savepoints within this outer transaction.
+    await database.transaction(() async {
+      for (final path in paths) {
+        final fileName = path.split('/').last.toLowerCase();
 
-      if (fileName.startsWith('transaction_template') || fileName.contains('_transaction_template')) {
-        templatesImported += await _importTransactionTemplatesFromCsv(path, errors);
-      } else if (fileName.startsWith('transaction') || fileName.contains('_transaction')) {
-        transactionsImported += await _importTransactionsFromCsv(path, errors);
-      } else if (fileName.contains('account')) {
-        accountsImported += await _importAccountsFromCsv(path, errors);
-      } else if (fileName.contains('categor')) {
-        categoriesImported += await _importCategoriesFromCsv(path, errors);
-      } else if (fileName.contains('settings')) {
-        settingsImported += await _importSettingsFromCsv(path, errors);
-      } else if (fileName.contains('budget')) {
-        budgetsImported += await _importBudgetsFromCsv(path, errors);
-      } else if (fileName.contains('asset')) {
-        assetsImported += await _importAssetsFromCsv(path, errors);
-      } else if (fileName.contains('recurring')) {
-        recurringRulesImported += await _importRecurringRulesFromCsv(path, errors);
-      } else if (fileName.contains('savings') || fileName.contains('goal')) {
-        savingsGoalsImported += await _importSavingsGoalsFromCsv(path, errors);
+        if (fileName.startsWith('transaction_template') || fileName.contains('_transaction_template')) {
+          templatesImported += await _importTransactionTemplatesFromCsv(path, errors);
+        } else if (fileName.startsWith('transaction') || fileName.contains('_transaction')) {
+          transactionsImported += await _importTransactionsFromCsv(path, errors);
+        } else if (fileName.contains('account')) {
+          accountsImported += await _importAccountsFromCsv(path, errors);
+        } else if (fileName.contains('categor')) {
+          categoriesImported += await _importCategoriesFromCsv(path, errors);
+        } else if (fileName.contains('settings')) {
+          settingsImported += await _importSettingsFromCsv(path, errors);
+        } else if (fileName.contains('budget')) {
+          budgetsImported += await _importBudgetsFromCsv(path, errors);
+        } else if (fileName.contains('asset')) {
+          assetsImported += await _importAssetsFromCsv(path, errors);
+        } else if (fileName.contains('recurring')) {
+          recurringRulesImported += await _importRecurringRulesFromCsv(path, errors);
+        } else if (fileName.contains('savings') || fileName.contains('goal')) {
+          savingsGoalsImported += await _importSavingsGoalsFromCsv(path, errors);
+        }
       }
-    }
 
-    // Validate foreign key references and reconcile balances
-    final transactionsSkippedFromValidation = await _validateForeignKeys(errors);
-    await _reconcileAccountBalances(errors);
+      // Validate foreign key references and reconcile balances within the transaction
+      transactionsSkippedFromValidation = await _validateForeignKeys(errors);
+      await _reconcileAccountBalances(errors);
+    });
 
     return ImportResult(
       transactionsImported: transactionsImported - transactionsSkippedFromValidation,

@@ -18,6 +18,9 @@ abstract class AppException implements Exception {
     this.cause,
   });
 
+  /// User-friendly error message suitable for display in notifications.
+  String get userMessage => message;
+
   @override
   String toString() => '$runtimeType: $message${code != null ? ' (code: $code)' : ''}';
 }
@@ -39,6 +42,20 @@ class RepositoryException extends AppException {
     this.entityType,
     this.operation,
   });
+
+  @override
+  String get userMessage {
+    final entity = entityType ?? 'data';
+    return switch (code) {
+      'CREATE_FAILED' => 'Could not save $entity. Please try again.',
+      'UPDATE_FAILED' => 'Could not update $entity. Please try again.',
+      'DELETE_FAILED' => 'Could not delete $entity. Please try again.',
+      'FETCH_FAILED' => 'Could not load $entity. Pull to refresh or try again.',
+      'DECRYPTION_FAILED' => 'Could not read $entity. The data may be corrupted.',
+      'ENCRYPTION_FAILED' => 'Could not encrypt $entity. Please try again.',
+      _ => message,
+    };
+  }
 
   factory RepositoryException.create({
     required String entityType,
@@ -138,6 +155,9 @@ class EntityNotFoundException extends AppException {
           message: '$entityType not found: $entityId',
           code: 'NOT_FOUND',
         );
+
+  @override
+  String get userMessage => '$entityType no longer exists. It may have been deleted.';
 }
 
 /// Exception thrown when validation fails.

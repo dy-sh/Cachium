@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/exceptions/app_exception.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
@@ -365,6 +366,7 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
   String? _selectedCategoryId;
   bool _rolloverEnabled = false;
   bool _showValidationErrors = false;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -590,6 +592,8 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
       setState(() => _showValidationErrors = true);
       return;
     }
+    if (_isSaving) return;
+    setState(() => _isSaving = true);
 
     try {
       final notifier = ref.read(budgetsProvider.notifier);
@@ -615,8 +619,12 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
       if (context.mounted) Navigator.of(context).pop();
     } catch (e) {
       if (context.mounted) {
-        context.showErrorNotification('Failed to save budget: ${e.toString()}');
+        context.showErrorNotification(
+          e is AppException ? e.userMessage : 'Failed to save budget',
+        );
       }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 }

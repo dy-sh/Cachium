@@ -139,6 +139,21 @@ class AttachmentRepository {
     }
   }
 
+  Future<void> deleteAttachmentsForTransaction(String transactionId) async {
+    try {
+      await database.softDeleteAttachmentsByTransactionId(
+        transactionId,
+        DateTime.now().millisecondsSinceEpoch,
+      );
+    } catch (e) {
+      throw RepositoryException.delete(
+        entityType: _entityType,
+        entityId: transactionId,
+        cause: e,
+      );
+    }
+  }
+
   Future<void> deleteAttachment(String id) async {
     try {
       await database.softDeleteAttachment(

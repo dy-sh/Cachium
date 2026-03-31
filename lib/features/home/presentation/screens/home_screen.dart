@@ -25,12 +25,13 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final sectionOrder = ref.watch(homeSectionOrderProvider);
-    final showAccountsList = ref.watch(homeShowAccountsListProvider);
-    final showTotalBalance = ref.watch(homeShowTotalBalanceProvider);
-    final showQuickActions = ref.watch(homeShowQuickActionsProvider);
-    final showRecentTransactions = ref.watch(homeShowRecentTransactionsProvider);
-    final showBudgetProgress = ref.watch(homeShowBudgetProgressProvider);
+    final config = ref.watch(homeConfigProvider);
+    final sectionOrder = config.sectionOrder;
+    final showAccountsList = config.showAccountsList;
+    final showTotalBalance = config.showTotalBalance;
+    final showQuickActions = config.showQuickActions;
+    final showRecentTransactions = config.showRecentTransactions;
+    final showBudgetProgress = config.showBudgetProgress;
 
     // Bills data — only watch emptiness for visibility
     final hasUpcomingBills = ref.watch(upcomingBillsProvider.select((b) => b.isNotEmpty));

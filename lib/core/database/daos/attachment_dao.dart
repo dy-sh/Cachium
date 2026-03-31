@@ -81,6 +81,19 @@ class AttachmentDao extends DatabaseAccessor<AppDatabase>
         .get();
   }
 
+  Future<void> softDeleteByTransactionId(
+      String transactionId, int lastUpdatedAt) async {
+    await (update(attachments)
+          ..where((a) => a.transactionId.equals(transactionId))
+          ..where((a) => a.isDeleted.equals(false)))
+        .write(
+      AttachmentsCompanion(
+        isDeleted: const Value(true),
+        lastUpdatedAt: Value(lastUpdatedAt),
+      ),
+    );
+  }
+
   Future<void> deleteAll() async {
     await delete(attachments).go();
   }

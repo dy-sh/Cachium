@@ -22,6 +22,8 @@ List<CategoryBreakdown> _buildBreakdowns({
 }) {
   if (transactions.isEmpty) return [];
 
+  final categoryMap = {for (final c in categories) c.id: c};
+
   final Map<String, double> categoryTotals = {};
   final Map<String, int> categoryCounts = {};
 
@@ -37,15 +39,12 @@ List<CategoryBreakdown> _buildBreakdowns({
   final breakdowns = <CategoryBreakdown>[];
 
   for (final entry in categoryTotals.entries) {
-    final category = categories.firstWhere(
-      (c) => c.id == entry.key,
-      orElse: () => Category(
-        id: entry.key,
-        name: 'Unknown',
-        icon: Icons.category,
-        colorIndex: 0,
-        type: fallbackType,
-      ),
+    final category = categoryMap[entry.key] ?? Category(
+      id: entry.key,
+      name: 'Unknown',
+      icon: Icons.category,
+      colorIndex: 0,
+      type: fallbackType,
     );
 
     breakdowns.add(CategoryBreakdown(

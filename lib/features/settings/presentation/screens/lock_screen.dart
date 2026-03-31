@@ -109,6 +109,17 @@ class _LockScreenState extends ConsumerState<LockScreen> {
   }
 
   void _initMode() {
+    // Check if credentials could not be read from secure storage
+    final settings = ref.read(settingsProvider).valueOrNull;
+    if (settings?.credentialReadFailed == true) {
+      setState(() {
+        _mode = _UnlockMode.pin;
+        _errorMessage = 'Could not read security credentials. '
+            'Please go to Settings > Security to re-set your PIN or password.';
+      });
+      return;
+    }
+
     final hasPin = ref.read(appPinCodeProvider) != null;
     final hasPassword = ref.read(appPasswordProvider) != null;
     final biometricAsync = ref.read(biometricAvailableProvider);

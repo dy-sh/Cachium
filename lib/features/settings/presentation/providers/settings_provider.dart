@@ -380,6 +380,68 @@ final homeBalancesHiddenByDefaultProvider = _setting((s) => s.homeBalancesHidden
 final homeSectionOrderProvider = _setting((s) => s.homeSectionOrder,
     const ['accounts', 'totalBalance', 'quickActions', 'budgetProgress', 'recentTransactions']);
 
+/// Consolidated home screen configuration to reduce individual provider watches.
+class HomeConfig {
+  final List<String> sectionOrder;
+  final bool showAccountsList;
+  final bool showTotalBalance;
+  final bool showQuickActions;
+  final bool showRecentTransactions;
+  final bool showBudgetProgress;
+
+  const HomeConfig({
+    this.sectionOrder = const ['accounts', 'totalBalance', 'quickActions', 'budgetProgress', 'recentTransactions'],
+    this.showAccountsList = true,
+    this.showTotalBalance = true,
+    this.showQuickActions = true,
+    this.showRecentTransactions = true,
+    this.showBudgetProgress = true,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is HomeConfig &&
+          runtimeType == other.runtimeType &&
+          _listEquals(sectionOrder, other.sectionOrder) &&
+          showAccountsList == other.showAccountsList &&
+          showTotalBalance == other.showTotalBalance &&
+          showQuickActions == other.showQuickActions &&
+          showRecentTransactions == other.showRecentTransactions &&
+          showBudgetProgress == other.showBudgetProgress;
+
+  @override
+  int get hashCode => Object.hash(
+        Object.hashAll(sectionOrder),
+        showAccountsList,
+        showTotalBalance,
+        showQuickActions,
+        showRecentTransactions,
+        showBudgetProgress,
+      );
+
+  static bool _listEquals<T>(List<T> a, List<T> b) {
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+}
+
+final homeConfigProvider = Provider<HomeConfig>((ref) {
+  final s = ref.watch(settingsProvider).valueOrNull;
+  if (s == null) return const HomeConfig();
+  return HomeConfig(
+    sectionOrder: s.homeSectionOrder,
+    showAccountsList: s.homeShowAccountsList,
+    showTotalBalance: s.homeShowTotalBalance,
+    showQuickActions: s.homeShowQuickActions,
+    showRecentTransactions: s.homeShowRecentTransactions,
+    showBudgetProgress: s.homeShowBudgetProgress,
+  );
+});
+
 // Convenience providers — Assets
 final assetsFoldedCountProvider = _setting((s) => s.assetsFoldedCount, 5);
 final showAddAssetButtonProvider = _setting((s) => s.showAddAssetButton, true);

@@ -650,12 +650,19 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
         return const SaveResult(success: false, message: 'Destination account no longer exists');
       }
       if (srcAcct != null &&
-          srcAcct.currencyCode != dstAcct.currencyCode &&
-          savedFormState.destinationAmount == null) {
-        return const SaveResult(
-          success: false,
-          message: 'Destination amount is required for cross-currency transfers',
-        );
+          srcAcct.currencyCode != dstAcct.currencyCode) {
+        if (savedFormState.destinationAmount == null) {
+          return const SaveResult(
+            success: false,
+            message: 'Destination amount is required for cross-currency transfers',
+          );
+        }
+        if (savedFormState.destinationAmount! <= 0) {
+          return const SaveResult(
+            success: false,
+            message: 'Destination amount must be greater than zero',
+          );
+        }
       }
     }
 

@@ -992,6 +992,9 @@ class AppDatabase extends _$AppDatabase {
   Future<void> removeAllTagsForTag(String tagId) =>
       transactionTagDao.removeAllForTag(tagId);
 
+  Future<void> removeAllTagsForTransaction(String transactionId) =>
+      transactionTagDao.removeAllForTransaction(transactionId);
+
   Future<void> deleteAllTransactionTags() => transactionTagDao.deleteAll();
 
   // CRUD operations for attachments (delegates to AttachmentDao)
@@ -1024,6 +1027,10 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> softDeleteAttachment(String id, int lastUpdatedAt) =>
       attachmentDao.softDelete(id, lastUpdatedAt);
+
+  Future<void> softDeleteAttachmentsByTransactionId(
+          String transactionId, int lastUpdatedAt) =>
+      attachmentDao.softDeleteByTransactionId(transactionId, lastUpdatedAt);
 
   Future<AttachmentRow?> getAttachment(String id) => attachmentDao.getById(id);
 

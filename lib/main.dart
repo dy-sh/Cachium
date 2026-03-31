@@ -1,13 +1,16 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app.dart';
 import 'core/database/services/net_worth_snapshot_service.dart';
+import 'core/error/error_screen.dart';
 import 'core/exceptions/app_exception.dart';
 import 'core/providers/database_providers.dart';
 import 'core/services/notification_service.dart';
+import 'features/settings/presentation/providers/database_management_providers.dart';
 import 'features/settings/presentation/providers/settings_provider.dart';
 
 void main() async {
@@ -24,6 +27,17 @@ void main() async {
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
+
+  // Set up global error handling
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint('FlutterError: ${details.exceptionAsString()}');
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('Unhandled error: $error\n$stack');
+    return true;
+  };
+  ErrorWidget.builder = (details) => ErrorScreen(details: details);
 
   // Create a provider container to pre-warm the database
   final container = ProviderContainer();
@@ -66,6 +80,15 @@ void main() async {
   } catch (_) {
     debugPrint('Cleanup of deleted records failed');
   }
+
+  // Auto-fix account balance inconsistencies (non-blocking)
+  unawaited(
+    container.read(databaseConsistencyServiceProvider).autoFixBalances().then((count) {
+      if (count > 0) debugPrint('Auto-fixed $count account balance(s)');
+    }).catchError((_) {
+      debugPrint('Balance consistency check failed');
+    }),
+  );
 
   // Take monthly net worth snapshot (non-blocking, errors handled internally)
   unawaited(NetWorthSnapshotService.takeSnapshotIfNeeded(container).catchError((_) {

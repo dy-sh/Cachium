@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/exceptions/app_exception.dart';
 import '../../../../core/providers/exchange_rate_provider.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../design_system/components/buttons/icon_btn.dart';
@@ -369,7 +370,9 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
       await notifier.deleteTransaction(tx.id);
     } catch (e) {
       if (context.mounted) {
-        context.showErrorNotification('Failed to delete transaction: ${e.toString()}');
+        context.showErrorNotification(
+          e is AppException ? e.userMessage : 'Failed to delete transaction',
+        );
       }
       return;
     }

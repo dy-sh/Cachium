@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/exceptions/app_exception.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../design_system/design_system.dart';
@@ -207,7 +208,9 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
                           }
                         } catch (e) {
                           if (context.mounted) {
-                            context.showErrorNotification('Failed to save account: ${e.toString()}');
+                            context.showErrorNotification(
+                              e is AppException ? e.userMessage : 'Failed to save account',
+                            );
                           }
                         } finally {
                           if (mounted) setState(() => _isSaving = false);

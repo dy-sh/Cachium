@@ -230,6 +230,7 @@ class AppSettings {
   final String? appPinCode;
   final String? appPassword;
   final AutoLockTimeout autoLockTimeout;
+  final bool credentialReadFailed;
   final bool biometricUnlockEnabled;
 
   // Notifications
@@ -295,6 +296,7 @@ class AppSettings {
     this.appPinCode,
     this.appPassword,
     this.autoLockTimeout = AutoLockTimeout.immediate,
+    this.credentialReadFailed = false,
     this.biometricUnlockEnabled = true,
     this.notificationsEnabled = false,
     this.budgetAlertThresholds = const [75, 90, 100],
@@ -362,6 +364,7 @@ class AppSettings {
     String? appPassword,
     bool clearAppPassword = false,
     AutoLockTimeout? autoLockTimeout,
+    bool? credentialReadFailed,
     bool? biometricUnlockEnabled,
     bool? notificationsEnabled,
     List<int>? budgetAlertThresholds,
@@ -421,6 +424,7 @@ class AppSettings {
       appPinCode: clearAppPinCode ? null : (appPinCode ?? this.appPinCode),
       appPassword: clearAppPassword ? null : (appPassword ?? this.appPassword),
       autoLockTimeout: autoLockTimeout ?? this.autoLockTimeout,
+      credentialReadFailed: credentialReadFailed ?? this.credentialReadFailed,
       biometricUnlockEnabled: biometricUnlockEnabled ?? this.biometricUnlockEnabled,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       budgetAlertThresholds: budgetAlertThresholds ?? this.budgetAlertThresholds,

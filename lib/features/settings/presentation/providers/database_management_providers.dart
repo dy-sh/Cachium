@@ -510,11 +510,13 @@ class RecalculateBalancesNotifier extends Notifier<AsyncValue<RecalculatePreview
 
     try {
       final accountRepo = ref.read(accountRepositoryProvider);
+      final allAccounts = await accountRepo.getAllAccounts();
+      final accountMap = {for (final a in allAccounts) a.id: a};
       int updatedCount = 0;
 
       for (final change in preview.changedAccounts) {
-        final account = (await accountRepo.getAllAccounts())
-            .firstWhere((a) => a.id == change.accountId);
+        final account = accountMap[change.accountId];
+        if (account == null) continue;
         final updatedAccount = account.copyWith(balance: change.newBalance);
         await accountRepo.updateAccount(updatedAccount);
         updatedCount++;

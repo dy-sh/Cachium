@@ -109,11 +109,25 @@ class Transaction {
     if (id.isEmpty) {
       throw ValidationException(message: 'Transaction ID must not be empty', field: 'id');
     }
-    if (categoryId.isEmpty) {
+    if (type != TransactionType.transfer && categoryId.isEmpty) {
       throw ValidationException(message: 'Category ID must not be empty', field: 'categoryId');
     }
     if (accountId.isEmpty) {
       throw ValidationException(message: 'Account ID must not be empty', field: 'accountId');
+    }
+    if (type == TransactionType.transfer) {
+      if (destinationAccountId == null || destinationAccountId!.isEmpty) {
+        throw ValidationException(
+          message: 'Transfer must have a destination account',
+          field: 'destinationAccountId',
+        );
+      }
+      if (destinationAccountId == accountId) {
+        throw ValidationException(
+          message: 'Transfer source and destination accounts must differ',
+          field: 'destinationAccountId',
+        );
+      }
     }
     if (date.year < 2000) {
       throw ValidationException(message: 'Transaction date must not be before year 2000', field: 'date');

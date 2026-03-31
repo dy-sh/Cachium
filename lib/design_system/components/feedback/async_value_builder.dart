@@ -32,6 +32,10 @@ class AsyncValueBuilder<T> extends StatelessWidget {
   /// Optional error widget override. Defaults to [ErrorPlaceholder].
   final Widget Function(Object error, StackTrace stack)? error;
 
+  /// Optional retry callback. When provided and no custom [error] builder
+  /// is set, the default [ErrorPlaceholder] will show a "Try again" button.
+  final VoidCallback? onRetry;
+
   /// Optional predicate to determine if the data is "empty".
   /// When true and [emptyBuilder] is provided, shows the empty state instead.
   final bool Function(T data)? empty;
@@ -48,6 +52,7 @@ class AsyncValueBuilder<T> extends StatelessWidget {
     required this.data,
     this.loading,
     this.error,
+    this.onRetry,
     this.empty,
     this.emptyBuilder,
     this.skipLoadingOnRefresh = true,
@@ -64,8 +69,9 @@ class AsyncValueBuilder<T> extends StatelessWidget {
         return data(d);
       },
       loading: () => loading ?? const Center(child: LoadingIndicator()),
-      error: (e, st) =>
-          error != null ? error!(e, st) : ErrorPlaceholder(message: e.toString()),
+      error: (e, st) => error != null
+          ? error!(e, st)
+          : ErrorPlaceholder(message: e.toString(), onRetry: onRetry),
     );
   }
 }

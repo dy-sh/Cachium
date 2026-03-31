@@ -224,4 +224,8 @@ class TagRepository with CorruptionTracker {
   Future<List<String>> getTransactionIdsForTag(String tagId) async {
     return database.getTransactionIdsForTag(tagId);
   }
+
+  Future<void> removeTagsForTransaction(String transactionId) async {
+    await database.removeAllTagsForTransaction(transactionId);
+  }
 }
