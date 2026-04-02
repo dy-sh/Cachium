@@ -186,10 +186,13 @@ class _FMAmountInputState extends ConsumerState<AmountInput> {
         if (_previewResult != null && _isFocused)
           Padding(
             padding: const EdgeInsets.only(top: AppSpacing.xs),
-            child: Text(
-              '= ${Currency.symbolFromCode(widget.currencyCode ?? 'USD')}${_previewResult!.toStringAsFixed(2)}',
-              style: AppTypography.bodySmall.copyWith(
-                color: prefixColor.withValues(alpha: 0.7),
+            child: Semantics(
+              label: 'Expression result: ${_previewResult!.toStringAsFixed(2)}',
+              child: Text(
+                '= ${Currency.symbolFromCode(widget.currencyCode ?? 'USD')}${_previewResult!.toStringAsFixed(2)}',
+                style: AppTypography.bodySmall.copyWith(
+                  color: prefixColor.withValues(alpha: 0.7),
+                ),
               ),
             ),
           ),

@@ -205,7 +205,7 @@ class SettingsRepository {
         appPassword: password,
       );
     } catch (_) {
-      debugPrint('SettingsRepository: Failed to read credentials from secure storage');
+      if (kDebugMode) debugPrint('SettingsRepository: Failed to read credentials from secure storage');
       if (settings.appLockEnabled) {
         settings = settings.copyWith(credentialReadFailed: true);
       }
@@ -229,7 +229,7 @@ class SettingsRepository {
       existingPin = await _secureStorage.read(key: _pinKey);
       existingPassword = await _secureStorage.read(key: _passwordKey);
     } catch (_) {
-      debugPrint('SettingsRepository: Failed to read existing credentials during migration');
+      if (kDebugMode) debugPrint('SettingsRepository: Failed to read existing credentials during migration');
       return;
     }
 
@@ -241,7 +241,7 @@ class SettingsRepository {
         await _secureStorage.write(key: _pinKey, value: dbPin);
         pinMigrated = true;
       } catch (_) {
-        debugPrint('SettingsRepository: PIN migration to secure storage failed');
+        if (kDebugMode) debugPrint('SettingsRepository: PIN migration to secure storage failed');
       }
     }
 
@@ -250,7 +250,7 @@ class SettingsRepository {
         await _secureStorage.write(key: _passwordKey, value: dbPassword);
         passwordMigrated = true;
       } catch (_) {
-        debugPrint('SettingsRepository: password migration to secure storage failed');
+        if (kDebugMode) debugPrint('SettingsRepository: password migration to secure storage failed');
       }
     }
 
@@ -266,10 +266,10 @@ class SettingsRepository {
           lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
           jsonData: cleanJsonData,
         );
-        debugPrint('SettingsRepository: migrated credentials from DB to secure storage');
+        if (kDebugMode) debugPrint('SettingsRepository: migrated credentials from DB to secure storage');
       } catch (_) {
         // DB update failed — credentials are duplicated but safe. Will retry next launch.
-        debugPrint('SettingsRepository: DB cleanup after migration failed');
+        if (kDebugMode) debugPrint('SettingsRepository: DB cleanup after migration failed');
       }
     }
   }
@@ -288,7 +288,7 @@ class SettingsRepository {
         await _secureStorage.delete(key: _passwordKey);
       }
     } catch (_) {
-      debugPrint('SettingsRepository: Failed to save credentials to secure storage');
+      if (kDebugMode) debugPrint('SettingsRepository: Failed to save credentials to secure storage');
     }
   }
 

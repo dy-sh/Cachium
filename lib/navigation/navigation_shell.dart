@@ -51,8 +51,9 @@ class _NavigationShellState extends ConsumerState<NavigationShell> {
           pendingRules: pendingRules,
         );
       }
-    } catch (_) {
+    } catch (e) {
       // Non-fatal: recurring check failure shouldn't block the app
+      debugPrint('NavigationShell: recurring rules check failed: $e');
     }
   }
 

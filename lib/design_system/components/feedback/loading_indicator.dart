@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 
@@ -79,18 +81,8 @@ class _FMLoadingIndicatorState extends State<LoadingIndicator>
   }
 
   double _pulse(double progress) {
-    // Creates a smooth pulse effect
-    // Each dot pulses up and down in a wave pattern
-    const cycles = 1.0;
-    final value = progress * cycles * 2 * 3.14159;
-    return (1 + _sin(value)) / 2;
-  }
-
-  double _sin(double x) {
-    // Simple sine approximation
-    x = x % (2 * 3.14159);
-    if (x > 3.14159) x -= 2 * 3.14159;
-    return x - (x * x * x) / 6 + (x * x * x * x * x) / 120;
+    final value = progress * 2 * math.pi;
+    return (1 + math.sin(value)) / 2;
   }
 }
 
@@ -113,6 +105,7 @@ class _FMLoadingDotsState extends State<LoadingDots>
     with TickerProviderStateMixin {
   late List<AnimationController> _controllers;
   late List<Animation<double>> _animations;
+  bool _disposed = false;
 
   @override
   void initState() {
@@ -142,7 +135,7 @@ class _FMLoadingDotsState extends State<LoadingDots>
     // Start animations with stagger
     for (int i = 0; i < _controllers.length; i++) {
       Future.delayed(Duration(milliseconds: i * 150), () {
-        if (mounted) {
+        if (mounted && !_disposed) {
           _controllers[i].repeat();
         }
       });
@@ -151,6 +144,7 @@ class _FMLoadingDotsState extends State<LoadingDots>
 
   @override
   void dispose() {
+    _disposed = true;
     for (final controller in _controllers) {
       controller.dispose();
     }

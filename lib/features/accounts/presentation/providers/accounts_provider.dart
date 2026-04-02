@@ -195,7 +195,14 @@ class AccountsNotifier extends AsyncNotifier<List<Account>>
       if (accounts == null) return;
 
       final targetAccount =
-          accounts.firstWhere((a) => a.id == targetAccountId);
+          accounts.where((a) => a.id == targetAccountId).firstOrNull;
+      if (targetAccount == null) {
+        throw RepositoryException.update(
+          entityType: 'Account',
+          entityId: targetAccountId,
+          cause: StateError('Target account $targetAccountId not found'),
+        );
+      }
 
       // Await loaded state to avoid silently skipping related data
       final allTransactions = await ref.read(transactionsProvider.future);

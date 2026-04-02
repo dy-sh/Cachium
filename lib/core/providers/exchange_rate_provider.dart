@@ -67,11 +67,13 @@ class ExchangeRatesNotifier extends AsyncNotifier<Map<String, double>> {
       return validatedRates;
     } catch (e) {
       debugPrint('ExchangeRates: failed to fetch rates: $e');
-      // Return cached rates if available
+      // Return cached rates if available, but log the staleness
       if (service.cachedRates.isNotEmpty) {
+        debugPrint('ExchangeRates: using cached rates as fallback');
         return service.cachedRates;
       }
       // Return minimal map with just the main currency
+      debugPrint('ExchangeRates: no cached rates available, using fallback {$mainCurrency: 1.0}');
       return {mainCurrency: 1.0};
     }
   }
@@ -96,7 +98,8 @@ class ExchangeRatesNotifier extends AsyncNotifier<Map<String, double>> {
       final rates = await service.fetchRates(mainCurrency);
       _cacheRates(rates);
       state = AsyncData(rates);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('ExchangeRates: refresh failed: $e');
       // Keep current state on refresh failure
     }
   }

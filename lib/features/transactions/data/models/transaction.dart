@@ -135,6 +135,12 @@ class Transaction {
     if (date.isAfter(DateTime.now().add(const Duration(days: 1)))) {
       throw ValidationException(message: 'Transaction date must not be more than 1 day in the future', field: 'date');
     }
+    if (note != null && note!.length > 1000) {
+      throw ValidationException(message: 'Note must be 1000 characters or fewer', field: 'note');
+    }
+    if (merchant != null && merchant!.length > 200) {
+      throw ValidationException(message: 'Merchant must be 200 characters or fewer', field: 'merchant');
+    }
   }
 
   Transaction copyWith({

@@ -77,21 +77,6 @@ class AppColors {
   static const Color fuchsia = Color(0xFFD47BA6);       // 315° - fuchsia
   static const Color rose = Color(0xFFD47B8A);          // 330° - rose
   static const Color pink = Color(0xFFD47B7B);          // 345° - pink (wraps to red-ish)
-  // Legacy aliases for compatibility
-  static const Color coral = vermilion;
-  static const Color gold = amber;
-  static const Color teal = jade;
-  static const Color skyBlue = sky;
-  static const Color cornflower = cerulean;
-  static const Color royalBlue = blue;
-  static const Color dodgerBlue = azure;
-  static const Color deepSkyBlue = cyan;
-  static const Color lightGreen = lime;
-  static const Color salmon = vermilion;
-  static const Color lightGold = amber;
-  static const Color lightPurple = violet;
-  static const Color lightOrange = vermilion;
-  static const Color lightPink = rose;
 
   // Prism versions (vivid) - 23 distinct colors at 15° spacing
   static const Color redPrism = Color(0xFFE64545);           // 0°
@@ -118,21 +103,6 @@ class AppColors {
   static const Color fuchsiaPrism = Color(0xFFE6459B);       // 315°
   static const Color rosePrism = Color(0xFFE64563);          // 330°
   static const Color pinkPrism = Color(0xFFE64552);          // 345°
-  // Legacy aliases
-  static const Color coralPrism = vermilionPrism;
-  static const Color goldPrism = amberPrism;
-  static const Color tealPrism = jadePrism;
-  static const Color skyBluePrism = skyPrism;
-  static const Color cornflowerPrism = ceruleanPrism;
-  static const Color royalBluePrism = bluePrism;
-  static const Color dodgerBluePrism = azurePrism;
-  static const Color deepSkyBluePrism = cyanPrism;
-  static const Color lightGreenPrism = limePrism;
-  static const Color salmonPrism = vermilionPrism;
-  static const Color lightGoldPrism = amberPrism;
-  static const Color lightPurplePrism = violetPrism;
-  static const Color lightOrangePrism = vermilionPrism;
-  static const Color lightPinkPrism = rosePrism;
 
   // Neon versions (ultra-saturated, electric) - 23 distinct colors at 15° spacing
   static const Color redNeon = Color(0xFFFF0000);            // 0°
@@ -159,22 +129,6 @@ class AppColors {
   static const Color fuchsiaNeon = Color(0xFFFF0080);        // 315°
   static const Color roseNeon = Color(0xFFFF0040);           // 330°
   static const Color pinkNeon = Color(0xFFFF0020);           // 345°
-  // Legacy aliases
-  static const Color coralNeon = vermilionNeon;
-  static const Color goldNeon = amberNeon;
-  static const Color tealNeon = jadeNeon;
-  static const Color skyBlueNeon = skyNeon;
-  static const Color cornflowerNeon = ceruleanNeon;
-  static const Color royalBlueNeon = blueNeon;
-  static const Color dodgerBlueNeon = azureNeon;
-  static const Color deepSkyBlueNeon = cyanNeon;
-  static const Color lightGreenNeon = limeNeon;
-  static const Color salmonNeon = vermilionNeon;
-  static const Color lightGoldNeon = amberNeon;
-  static const Color lightPurpleNeon = violetNeon;
-  static const Color lightOrangeNeon = vermilionNeon;
-  static const Color lightPinkNeon = roseNeon;
-
 
   // Accent color options - Zen (24 colors: white + 23 colors at 15° spacing)
   static const List<Color> accentOptionsZen = [
@@ -292,23 +246,23 @@ class AppColors {
 
   // Category colors - dim (base palette) - 18 colors matching accent options
   static const List<Color> categoryColorsZen = [
-    cyan, skyBlue, cornflower, royalBlue, dodgerBlue, deepSkyBlue,
-    green, lightGreen, red, salmon, yellow, lightGold,
-    purple, lightPurple, orange, lightOrange, pink, lightPink,
+    cyan, sky, cerulean, blue, azure, cyan,
+    green, lime, red, vermilion, yellow, amber,
+    purple, violet, orange, vermilion, pink, rose,
   ];
 
   // Category colors - bright (more saturated)
   static const List<Color> categoryColorsPrism = [
-    cyanPrism, skyBluePrism, cornflowerPrism, royalBluePrism, dodgerBluePrism, deepSkyBluePrism,
-    greenPrism, lightGreenPrism, redPrism, salmonPrism, yellowPrism, lightGoldPrism,
-    purplePrism, lightPurplePrism, orangePrism, lightOrangePrism, pinkPrism, lightPinkPrism,
+    cyanPrism, skyPrism, ceruleanPrism, bluePrism, azurePrism, cyanPrism,
+    greenPrism, limePrism, redPrism, vermilionPrism, yellowPrism, amberPrism,
+    purplePrism, violetPrism, orangePrism, vermilionPrism, pinkPrism, rosePrism,
   ];
 
   // Category colors - neon (ultra-saturated)
   static const List<Color> categoryColorsNeon = [
-    cyanNeon, skyBlueNeon, cornflowerNeon, royalBlueNeon, dodgerBlueNeon, deepSkyBlueNeon,
-    greenNeon, lightGreenNeon, redNeon, salmonNeon, yellowNeon, lightGoldNeon,
-    purpleNeon, lightPurpleNeon, orangeNeon, lightOrangeNeon, pinkNeon, lightPinkNeon,
+    cyanNeon, skyNeon, ceruleanNeon, blueNeon, azureNeon, cyanNeon,
+    greenNeon, limeNeon, redNeon, vermilionNeon, yellowNeon, amberNeon,
+    purpleNeon, violetNeon, orangeNeon, vermilionNeon, pinkNeon, roseNeon,
   ];
 
   // Legacy accessor

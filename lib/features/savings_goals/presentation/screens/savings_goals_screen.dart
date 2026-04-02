@@ -299,12 +299,37 @@ class _SavingsGoalCard extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (sheetContext) => Padding(
+      builder: (sheetContext) => _ContributeSheetContent(
+        controller: controller,
+        goal: goal,
+        ref: ref,
+        parentContext: context,
+      ),
+    ).whenComplete(() => controller.dispose());
+  }
+}
+
+class _ContributeSheetContent extends StatelessWidget {
+  final TextEditingController controller;
+  final SavingsGoal goal;
+  final WidgetRef ref;
+  final BuildContext parentContext;
+
+  const _ContributeSheetContent({
+    required this.controller,
+    required this.goal,
+    required this.ref,
+    required this.parentContext,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
         padding: EdgeInsets.only(
           left: AppSpacing.screenPadding,
           right: AppSpacing.screenPadding,
           top: AppSpacing.lg,
-          bottom: MediaQuery.of(sheetContext).viewInsets.bottom + AppSpacing.lg,
+          bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -356,13 +381,13 @@ class _SavingsGoalCard extends ConsumerWidget {
                         .read(savingsGoalsProvider.notifier)
                         .contribute(goal.id, amount);
 
-                    if (context.mounted) {
-                      Navigator.pop(sheetContext);
-                      context.showSuccessNotification('Added to savings goal');
+                    if (parentContext.mounted) {
+                      Navigator.pop(context);
+                      parentContext.showSuccessNotification('Added to savings goal');
                     }
                   } catch (e) {
-                    if (context.mounted) {
-                      context.showErrorNotification('Failed to add savings: ${e.toString()}');
+                    if (parentContext.mounted) {
+                      parentContext.showErrorNotification('Failed to add savings: ${e.toString()}');
                     }
                   }
                 },
@@ -371,8 +396,7 @@ class _SavingsGoalCard extends ConsumerWidget {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 }
 

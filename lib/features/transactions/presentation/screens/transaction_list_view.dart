@@ -122,7 +122,7 @@ class _TransactionListViewState extends ConsumerState<TransactionListView> {
           }
 
           final child = _TransactionGroupWidget(group: widget.groups[index]);
-          if (widget.isInitialLoad) {
+          if (widget.isInitialLoad && index < 15) {
             return StaggeredListItem(
               index: index,
               child: child,
