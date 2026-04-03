@@ -77,7 +77,7 @@ final tagMapProvider = Provider<Map<String, Tag>>((ref) {
   return {for (final t in tags) t.id: t};
 });
 
-final tagByIdProvider = Provider.family<Tag?, String>((ref, id) {
+final tagByIdProvider = Provider.autoDispose.family<Tag?, String>((ref, id) {
   return ref.watch(tagMapProvider)[id];
 });
 

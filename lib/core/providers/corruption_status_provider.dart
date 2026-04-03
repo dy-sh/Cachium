@@ -46,6 +46,8 @@ class CorruptionStatus {
 ///
 /// Listens to each repository's corruption stream so the UI updates
 /// whenever new corruption is detected (not just on first load).
+/// Events are debounced by 100ms to avoid rapid rebuilds during startup
+/// when multiple repositories report corruption counts simultaneously.
 final corruptionStatusProvider = StreamProvider<CorruptionStatus>((ref) {
   final repos = [
     ref.watch(transactionRepositoryProvider),
@@ -74,11 +76,15 @@ final corruptionStatusProvider = StreamProvider<CorruptionStatus>((ref) {
 
   // Merge all corruption streams into one, rebuilding status on any change
   final controller = StreamController<CorruptionStatus>();
+  Timer? debounceTimer;
 
   final subscriptions = <StreamSubscription<int>>[];
   for (final repo in repos) {
     subscriptions.add(repo.corruptionCountStream.listen((_) {
-      controller.add(buildStatus());
+      debounceTimer?.cancel();
+      debounceTimer = Timer(const Duration(milliseconds: 100), () {
+        controller.add(buildStatus());
+      });
     }));
   }
 
@@ -86,6 +92,7 @@ final corruptionStatusProvider = StreamProvider<CorruptionStatus>((ref) {
   controller.add(buildStatus());
 
   ref.onDispose(() {
+    debounceTimer?.cancel();
     for (final sub in subscriptions) {
       sub.cancel();
     }

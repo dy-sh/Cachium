@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
+import '../../core/utils/decrypt_batch.dart';
 import '../../features/budgets/data/models/budget.dart' as ui;
 import '../encryption/budget_data.dart';
 import 'corruption_tracker.dart';
@@ -104,8 +105,8 @@ class BudgetRepository with CorruptionTracker {
       final rows = await database.getAllBudgets();
       int corruptedCount = 0;
 
-      final results = await Future.wait(
-        rows.map((row) async {
+      final results = await decryptBatch(
+        rows.map((row) => () async {
           try {
             final cached = _decryptionCache.get(row.id, row.encryptedBlob);
             if (cached != null) return cached;

@@ -64,7 +64,7 @@ class HelpIcon extends StatelessWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.textTertiary.withValues(alpha: 0.3),
+                    color: AppColors.textTertiary.withValues(alpha: AppColors.opacityMedium),
                     borderRadius: AppRadius.button,
                   ),
                 ),

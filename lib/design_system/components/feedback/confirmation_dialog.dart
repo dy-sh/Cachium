@@ -99,7 +99,7 @@ class _ConfirmationDialogState extends State<ConfirmationDialog> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: _accentColor.withValues(alpha: 0.1),
+                    color: _accentColor.withValues(alpha: AppColors.opacitySubtle),
                     borderRadius: AppRadius.iconButton,
                   ),
                   child: Icon(

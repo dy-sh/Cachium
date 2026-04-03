@@ -434,22 +434,20 @@ class _DayDetail extends ConsumerWidget {
               ),
             )
           else
-            Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                padding: const EdgeInsets.only(
-                  bottom: AppSpacing.md,
-                  left: AppSpacing.screenPadding,
-                  right: AppSpacing.screenPadding,
-                ),
-                itemCount: transactions.length,
-                itemBuilder: (context, index) {
+            Padding(
+              padding: const EdgeInsets.only(
+                bottom: AppSpacing.md,
+                left: AppSpacing.screenPadding,
+                right: AppSpacing.screenPadding,
+              ),
+              child: Column(
+                children: List.generate(transactions.length, (index) {
                   final tx = transactions[index];
                   return _TransactionTile(
                     transaction: tx,
                     mainCurrency: mainCurrency,
                   );
-                },
+                }),
               ),
             ),
         ],

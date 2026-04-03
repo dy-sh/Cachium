@@ -404,7 +404,7 @@ class _DateRangePickerModalState extends ConsumerState<DateRangePickerModal> {
           decoration: BoxDecoration(
             color: canConfirm || _showMonthYearPicker
                 ? accentColor
-                : accentColor.withValues(alpha: 0.3),
+                : accentColor.withValues(alpha: AppColors.opacityMedium),
             borderRadius: AppRadius.button,
           ),
           child: Center(
@@ -419,7 +419,7 @@ class _DateRangePickerModalState extends ConsumerState<DateRangePickerModal> {
               style: AppTypography.button.copyWith(
                 color: canConfirm || _showMonthYearPicker
                     ? AppColors.background
-                    : AppColors.background.withValues(alpha: 0.5),
+                    : AppColors.background.withValues(alpha: AppColors.opacityStrong),
               ),
             ),
           ),
@@ -541,7 +541,7 @@ class _RangeDayCell extends StatelessWidget {
   Widget build(BuildContext context) {
     final isSelected = isStart || isEnd;
     final textColor = isDisabled
-        ? AppColors.textTertiary.withValues(alpha: 0.5)
+        ? AppColors.textTertiary.withValues(alpha: AppColors.opacityStrong)
         : isSelected
             ? AppColors.background
             : isInRange
@@ -559,7 +559,7 @@ class _RangeDayCell extends StatelessWidget {
           color: isSelected
               ? accentColor
               : isInRange
-                  ? accentColor.withValues(alpha: 0.1)
+                  ? accentColor.withValues(alpha: AppColors.opacitySubtle)
                   : Colors.transparent,
           shape: BoxShape.circle,
           border: isToday && !isSelected && !isInRange

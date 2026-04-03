@@ -491,27 +491,32 @@ final accountMapProvider = Provider<Map<String, Account>>((ref) {
   return {for (final a in accounts) a.id: a};
 });
 
-final accountByIdProvider = Provider.family<Account?, String>((ref, id) {
+final accountByIdProvider = Provider.autoDispose.family<Account?, String>((ref, id) {
   return ref.watch(accountMapProvider)[id];
+});
+
+/// Maps each account ID to its most recent transaction date.
+/// Only rebuilds when the account-to-date mapping actually changes,
+/// not on every transaction field change.
+final _transactionAccountUsageProvider = Provider<Map<String, DateTime>>((ref) {
+  final transactions = ref.watch(transactionsProvider).valueOrNull;
+  if (transactions == null) return {};
+  final map = <String, DateTime>{};
+  for (final tx in transactions) {
+    final current = map[tx.accountId];
+    if (current == null || tx.createdAt.isAfter(current)) {
+      map[tx.accountId] = tx.createdAt;
+    }
+  }
+  return map;
 });
 
 /// Returns account IDs sorted by most recent transaction usage.
 /// Accounts without transactions appear last, sorted by creation date.
 final recentlyUsedAccountIdsProvider = Provider<List<String>>((ref) {
-  final transactions = ref.watch(transactionsProvider).valueOrNull;
+  final lastUsedMap = ref.watch(_transactionAccountUsageProvider);
   final accounts = ref.watch(accountsProvider).valueOrNull;
   if (accounts == null || accounts.isEmpty) return [];
-
-  // Get most recent transaction date per account
-  final Map<String, DateTime> lastUsedMap = {};
-  if (transactions != null) {
-    for (final tx in transactions) {
-      final current = lastUsedMap[tx.accountId];
-      if (current == null || tx.createdAt.isAfter(current)) {
-        lastUsedMap[tx.accountId] = tx.createdAt;
-      }
-    }
-  }
 
   // Sort accounts: recently used first, then by account creation date
   final sortedAccounts = List<Account>.from(accounts);

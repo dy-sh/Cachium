@@ -51,6 +51,12 @@ class AppColors {
   static const Color selectionGlowLight = Color(0x33000000);
   static Color get selectionGlow => isDarkMode ? selectionGlowDark : selectionGlowLight;
 
+  // Semantic opacity levels for consistent transparency across the app
+  static const double opacitySubtle = 0.1;
+  static const double opacityLight = 0.15;
+  static const double opacityMedium = 0.3;
+  static const double opacityStrong = 0.5;
+
   // Base color palette (zen - softer, muted but visible)
   // 23 distinct colors evenly spaced 15° apart on the color wheel
   static const Color red = Color(0xFFD47B7B);           // 0° - red

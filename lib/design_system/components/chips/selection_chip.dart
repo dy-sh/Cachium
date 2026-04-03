@@ -59,7 +59,7 @@ class _FMChipState extends ConsumerState<SelectionChip>
           ),
           decoration: BoxDecoration(
             color: widget.isSelected
-                ? selectedColor.withValues(alpha: 0.1)
+                ? selectedColor.withValues(alpha: AppColors.opacitySubtle)
                 : AppColors.surface,
             borderRadius: AppRadius.chip,
             border: Border.all(

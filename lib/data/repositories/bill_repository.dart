@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
+import '../../core/utils/decrypt_batch.dart';
 import '../../features/bills/data/models/bill.dart' as ui;
 import '../../features/transactions/data/models/recurring_rule.dart';
 import '../encryption/bill_data.dart';
@@ -117,8 +118,8 @@ class BillRepository with CorruptionTracker {
       final rows = await database.getAllBills();
       int corruptedCount = 0;
 
-      final results = await Future.wait(
-        rows.map((row) async {
+      final results = await decryptBatch(
+        rows.map((row) => () async {
           try {
             final cached = _decryptionCache.get(row.id, row.encryptedBlob);
             if (cached != null) return cached;
@@ -149,8 +150,8 @@ class BillRepository with CorruptionTracker {
     return database.watchAllBills().asyncMap((rows) async {
       int corruptedCount = 0;
 
-      final results = await Future.wait(
-        rows.map((row) async {
+      final results = await decryptBatch(
+        rows.map((row) => () async {
           try {
             final cached = _decryptionCache.get(row.id, row.encryptedBlob);
             if (cached != null) return cached;

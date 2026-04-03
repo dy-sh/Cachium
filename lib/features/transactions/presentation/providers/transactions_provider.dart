@@ -744,7 +744,7 @@ final transactionMapProvider = Provider<Map<String, Transaction>>((ref) {
   return {for (final t in transactions) t.id: t};
 });
 
-final transactionByIdProvider = Provider.family<Transaction?, String>((ref, id) {
+final transactionByIdProvider = Provider.autoDispose.family<Transaction?, String>((ref, id) {
   return ref.watch(transactionMapProvider)[id];
 });
 

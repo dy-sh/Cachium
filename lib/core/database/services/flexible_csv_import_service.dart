@@ -52,23 +52,36 @@ class FlexibleCsvImportService {
     }
   }
 
-  /// Auto-detect column mappings based on header names.
+  /// Auto-detect column mappings based on header names using scored matching.
+  /// Higher scores win: exact key match (3) > alias match (2) > no match (0).
+  /// When scores tie, shorter header names are preferred to avoid partial matches.
   Map<String, FieldMapping> autoDetectMappings(
     ImportEntityType entityType,
     List<String> csvHeaders,
   ) {
     final fields = ImportFieldDefinitions.getFieldsForType(entityType);
     final mappings = <String, FieldMapping>{};
+    final claimedHeaders = <String>{};
 
     for (final field in fields) {
       String? matchedColumn;
+      int bestScore = 0;
 
-      // Try to find a matching header
       for (final header in csvHeaders) {
-        if (_headersMatch(header, field.key)) {
+        if (claimedHeaders.contains(header)) continue;
+
+        final score = _scoreMatch(header, field.key);
+        if (score > bestScore ||
+            (score == bestScore &&
+                matchedColumn != null &&
+                header.length < matchedColumn.length)) {
+          bestScore = score;
           matchedColumn = header;
-          break;
         }
+      }
+
+      if (matchedColumn != null) {
+        claimedHeaders.add(matchedColumn);
       }
 
       mappings[field.key] = FieldMapping(
@@ -86,21 +99,20 @@ class FlexibleCsvImportService {
     return mappings;
   }
 
-  /// Check if a CSV header matches a field key (case-insensitive, ignoring separators).
-  bool _headersMatch(String header, String fieldKey) {
+  /// Score how well a CSV header matches a field key.
+  /// Returns 3 for exact key match, 2 for alias match, 0 for no match.
+  int _scoreMatch(String header, String fieldKey) {
     final normalizedHeader = _normalizeColumnName(header);
     final normalizedKey = _normalizeColumnName(fieldKey);
 
-    // Direct match
-    if (normalizedHeader == normalizedKey) return true;
+    if (normalizedHeader == normalizedKey) return 3;
 
-    // Common aliases
     final aliases = _getFieldAliases(fieldKey);
     for (final alias in aliases) {
-      if (normalizedHeader == _normalizeColumnName(alias)) return true;
+      if (normalizedHeader == _normalizeColumnName(alias)) return 2;
     }
 
-    return false;
+    return 0;
   }
 
   String _normalizeColumnName(String name) {

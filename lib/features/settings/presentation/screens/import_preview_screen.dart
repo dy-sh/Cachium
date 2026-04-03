@@ -125,68 +125,69 @@ class ImportPreviewScreen extends ConsumerWidget {
         borderRadius: AppRadius.card,
         border: Border.all(color: AppColors.expense.withValues(alpha: 0.3)),
       ),
-      constraints: const BoxConstraints(maxHeight: 200),
-      child: ListView.separated(
-        shrinkWrap: true,
+      child: Padding(
         padding: const EdgeInsets.all(AppSpacing.sm),
-        itemCount: invalidRows.take(10).length,
-        separatorBuilder: (_, __) => Divider(
-          color: AppColors.border,
-          height: AppSpacing.md,
-        ),
-        itemBuilder: (context, index) {
-          final row = invalidRows[index];
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.expense.withValues(alpha: 0.15),
-                      borderRadius: AppRadius.xsAll,
-                    ),
-                    child: Text(
-                      'Row ${row.rowIndex}',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.expense,
-                      ),
-                    ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: List.generate(invalidRows.take(10).length, (index) {
+            final row = invalidRows[index];
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (index > 0)
+                  Divider(
+                    color: AppColors.border,
+                    height: AppSpacing.md,
                   ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              ...row.errors.map((error) {
-                return Padding(
-                  padding: const EdgeInsets.only(left: 8, top: 2),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        LucideIcons.x,
-                        size: 12,
-                        color: AppColors.expense,
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
                       ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          error,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.expense,
-                          ),
+                      decoration: BoxDecoration(
+                        color: AppColors.expense.withValues(alpha: 0.15),
+                        borderRadius: AppRadius.xsAll,
+                      ),
+                      child: Text(
+                        'Row ${row.rowIndex}',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: AppColors.expense,
                         ),
                       ),
-                    ],
-                  ),
-                );
-              }),
-            ],
-          );
-        },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                ...row.errors.map((error) {
+                  return Padding(
+                    padding: const EdgeInsets.only(left: 8, top: 2),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          LucideIcons.x,
+                          size: 12,
+                          color: AppColors.expense,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            error,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.expense,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            );
+          }),
+        ),
       ),
     );
   }

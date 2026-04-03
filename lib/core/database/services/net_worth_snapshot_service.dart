@@ -128,8 +128,8 @@ class NetWorthSnapshotService {
           1,
         );
 
-        // Safety: max 12 months of backfill
-        if (snapshots.length >= 12) break;
+        // Safety: max 5 years of backfill
+        if (snapshots.length >= 60) break;
       }
 
       // Save all snapshots

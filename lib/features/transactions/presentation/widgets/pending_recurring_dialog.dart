@@ -141,20 +141,14 @@ class _PendingRecurringDialogState
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.35,
-                ),
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: _ruleInfos.length,
-                  separatorBuilder: (_, __) =>
-                      const SizedBox(height: AppSpacing.xs),
-                  itemBuilder: (context, index) {
-                    final info = _ruleInfos[index];
-                    final typeColor =
-                        AppColors.getTransactionColor(info.rule.type.name, intensity);
-                    return GestureDetector(
+              Column(
+                children: List.generate(_ruleInfos.length, (index) {
+                  final info = _ruleInfos[index];
+                  final typeColor =
+                      AppColors.getTransactionColor(info.rule.type.name, intensity);
+                  return Padding(
+                    padding: EdgeInsets.only(top: index > 0 ? AppSpacing.xs : 0),
+                    child: GestureDetector(
                       onTap: () {
                         setState(() {
                           info.isSelected = !info.isSelected;
@@ -229,9 +223,9 @@ class _PendingRecurringDialogState
                           ],
                         ),
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  );
+                }),
               ),
               const SizedBox(height: AppSpacing.lg),
               PrimaryButton(

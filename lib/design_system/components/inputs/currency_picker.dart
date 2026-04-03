@@ -232,7 +232,7 @@ class CurrencyCodeChip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(currency.flag, style: const TextStyle(fontSize: 14)),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppSpacing.xs),
             Text(
               currency.code,
               style: AppTypography.labelSmall.copyWith(

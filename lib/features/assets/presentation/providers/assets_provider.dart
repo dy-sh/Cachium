@@ -174,7 +174,7 @@ final assetsProvider =
   return AssetsNotifier();
 });
 
-final assetByIdProvider = Provider.family<Asset?, String>((ref, id) {
+final assetByIdProvider = Provider.autoDispose.family<Asset?, String>((ref, id) {
   final assetsAsync = ref.watch(assetsProvider);
   final assets = assetsAsync.valueOrNull;
   if (assets == null) return null;

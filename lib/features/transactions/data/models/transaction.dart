@@ -64,6 +64,7 @@ class Transaction {
     this.note,
     this.merchant,
     required this.createdAt,
+    // Zero amounts are intentional: used for balance adjustments and zero-value transfers.
   })  : assert(amount >= 0, 'Transaction amount must be non-negative'),
         assert(conversionRate > 0 && conversionRate.isFinite,
             'Conversion rate must be positive and finite'),

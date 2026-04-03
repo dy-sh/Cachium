@@ -145,7 +145,7 @@ final assetCategoriesProvider =
   return AssetCategoriesNotifier();
 });
 
-final assetCategoryByIdProvider = Provider.family<AssetCategory?, String>((ref, id) {
+final assetCategoryByIdProvider = Provider.autoDispose.family<AssetCategory?, String>((ref, id) {
   final categoriesAsync = ref.watch(assetCategoriesProvider);
   final categories = categoriesAsync.valueOrNull;
   if (categories == null) return null;

@@ -184,12 +184,12 @@ class _FMNotificationState extends ConsumerState<Notification>
             color: AppColors.surface,
             borderRadius: AppRadius.mdAll,
             border: Border.all(
-              color: color.withValues(alpha: 0.3),
+              color: color.withValues(alpha: AppColors.opacityMedium),
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
+                color: Colors.black.withValues(alpha: AppColors.opacityMedium),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -202,7 +202,7 @@ class _FMNotificationState extends ConsumerState<Notification>
                 width: AppSpacing.notificationIconSize,
                 height: AppSpacing.notificationIconSize,
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
+                  color: color.withValues(alpha: AppColors.opacityLight),
                   borderRadius: AppRadius.smAll,
                 ),
                 child: Icon(
@@ -235,7 +235,7 @@ class _FMNotificationState extends ConsumerState<Notification>
                       vertical: AppSpacing.xs,
                     ),
                     decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.15),
+                      color: color.withValues(alpha: AppColors.opacityLight),
                       borderRadius: AppRadius.smAll,
                     ),
                     child: Text(

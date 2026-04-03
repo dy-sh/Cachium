@@ -182,12 +182,10 @@ class BulkPickerSheet extends StatelessWidget {
         const SizedBox(height: AppSpacing.lg),
         Text(title, style: AppTypography.h3),
         const SizedBox(height: AppSpacing.md),
-        Flexible(
-          child: ListView.builder(
-            shrinkWrap: true,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-            itemCount: items.length,
-            itemBuilder: (context, index) {
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+          child: Column(
+            children: List.generate(items.length, (index) {
               final item = items[index];
               return GestureDetector(
                 onTap: () => Navigator.pop(context, item.id),
@@ -216,7 +214,7 @@ class BulkPickerSheet extends StatelessWidget {
                   ),
                 ),
               );
-            },
+            }),
           ),
         ),
         SizedBox(height: MediaQuery.of(context).padding.bottom + AppSpacing.md),

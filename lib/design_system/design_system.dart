@@ -44,6 +44,7 @@ export 'components/inputs/input_field.dart';
 export 'components/layout/bottom_nav_bar.dart';
 export 'components/layout/form_header.dart';
 export 'components/layout/page_layout.dart';
+export 'components/layout/responsive_layout.dart';
 export 'components/layout/unsaved_work_pop_scope.dart';
 export 'components/layout/screen_header.dart';
 export 'components/layout/settings_header.dart';

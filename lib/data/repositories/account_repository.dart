@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
+import '../../core/utils/decrypt_batch.dart';
 import '../../features/accounts/data/models/account.dart' as ui;
 import '../encryption/account_data.dart';
 import 'corruption_tracker.dart';
@@ -196,8 +197,8 @@ class AccountRepository with CorruptionTracker {
       final rows = await database.getAllAccounts();
       int corruptedCount = 0;
 
-      final results = await Future.wait(
-        rows.map((row) async {
+      final results = await decryptBatch(
+        rows.map((row) => () async {
           try {
             final cached = _decryptionCache.get(row.id, row.encryptedBlob);
             if (cached != null) return cached;
@@ -278,8 +279,8 @@ class AccountRepository with CorruptionTracker {
     return database.watchAllAccounts().asyncMap((rows) async {
       int corruptedCount = 0;
 
-      final results = await Future.wait(
-        rows.map((row) async {
+      final results = await decryptBatch(
+        rows.map((row) => () async {
           try {
             final cached = _decryptionCache.get(row.id, row.encryptedBlob);
             if (cached != null) return cached;

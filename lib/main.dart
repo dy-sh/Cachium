@@ -50,10 +50,10 @@ void main() async {
   try {
     await container.read(keyProviderProvider).getKey();
   } on EncryptionKeyCorruptedException catch (_) {
-    debugPrint('FATAL: Encryption key corrupted during pre-warm');
+    debugPrint('FATAL: Critical initialization error');
     container.read(encryptionKeyCorruptedProvider.notifier).state = true;
   } catch (e) {
-    debugPrint('Encryption key pre-warm failed: $e');
+    debugPrint('Initialization pre-warm failed: $e');
     container.read(startupErrorProvider.notifier).state =
         'Encryption initialization failed. Some features may not work correctly.';
   }
@@ -63,7 +63,7 @@ void main() async {
     await container.read(settingsProvider.future);
     await container.read(settingsProvider.notifier).migrateCredentialsIfNeeded();
   } on EncryptionKeyCorruptedException catch (_) {
-    debugPrint('FATAL: Encryption key corrupted');
+    debugPrint('FATAL: Critical initialization error (migration)');
     container.read(encryptionKeyCorruptedProvider.notifier).state = true;
   } catch (_) {
     debugPrint('Credential migration failed');

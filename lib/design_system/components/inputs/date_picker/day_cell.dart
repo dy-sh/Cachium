@@ -40,7 +40,7 @@ class _FMDayCellState extends ConsumerState<DayCell>
   Widget build(BuildContext context) {
     final accentColor = ref.watch(accentColorProvider);
     final textColor = widget.isDisabled
-        ? AppColors.textTertiary.withValues(alpha: 0.5)
+        ? AppColors.textTertiary.withValues(alpha: AppColors.opacityStrong)
         : widget.isSelected
             ? AppColors.background
             : widget.isToday

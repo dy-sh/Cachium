@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_spacing.dart';
+import '../../../core/constants/app_typography.dart';
 
 /// A scaffold wrapper providing consistent page structure with optional app bar and padding.
 class PageLayout extends StatelessWidget {
@@ -58,11 +59,7 @@ class PageLayout extends StatelessWidget {
                         Expanded(
                           child: Text(
                             title!,
-                            style: TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: AppTypography.h4,
                           ),
                         )
                       else

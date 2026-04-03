@@ -408,7 +408,7 @@ final categoryMapProvider = Provider<Map<String, Category>>((ref) {
   return {for (final c in categories) c.id: c};
 });
 
-final categoryByIdProvider = Provider.family<Category?, String>((ref, id) {
+final categoryByIdProvider = Provider.autoDispose.family<Category?, String>((ref, id) {
   return ref.watch(categoryMapProvider)[id];
 });
 

@@ -45,59 +45,52 @@ void showTemplatePicker({
               ),
               child: Text('Apply Template', style: AppTypography.h4),
             ),
-            ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.4,
-              ),
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: templates.length,
-                itemBuilder: (_, index) {
-                  final template = templates[index];
-                  final typeColor = AppColors.getTransactionColor(
-                    template.type.name,
-                    ref.read(colorIntensityProvider),
-                  );
-                  final subtitleParts = <String>[template.type.displayName];
-                  if (template.amount != null) {
-                    subtitleParts.add(template.amount!.toStringAsFixed(2));
-                  }
-                  if (template.merchant != null) {
-                    subtitleParts.add(template.merchant!);
-                  }
-                  return ListTile(
-                    leading: Icon(
-                      LucideIcons.fileText,
-                      color: typeColor,
-                      size: 20,
+            Column(
+              children: List.generate(templates.length, (index) {
+                final template = templates[index];
+                final typeColor = AppColors.getTransactionColor(
+                  template.type.name,
+                  ref.read(colorIntensityProvider),
+                );
+                final subtitleParts = <String>[template.type.displayName];
+                if (template.amount != null) {
+                  subtitleParts.add(template.amount!.toStringAsFixed(2));
+                }
+                if (template.merchant != null) {
+                  subtitleParts.add(template.merchant!);
+                }
+                return ListTile(
+                  leading: Icon(
+                    LucideIcons.fileText,
+                    color: typeColor,
+                    size: 20,
+                  ),
+                  title: Text(
+                    template.name,
+                    style: AppTypography.bodyMedium,
+                  ),
+                  subtitle: Text(
+                    subtitleParts.join(' \u00b7 '),
+                    style: AppTypography.labelSmall.copyWith(
+                      color: AppColors.textTertiary,
                     ),
-                    title: Text(
-                      template.name,
-                      style: AppTypography.bodyMedium,
-                    ),
-                    subtitle: Text(
-                      subtitleParts.join(' \u00b7 '),
-                      style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.textTertiary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    onTap: () {
-                      Navigator.of(sheetContext).pop();
-                      ref.read(transactionFormProvider.notifier)
-                          .applyTemplate(template);
-                      if (template.merchant != null) {
-                        merchantController.text = template.merchant!;
-                      }
-                      if (template.note != null) {
-                        noteController.text = template.note!;
-                      }
-                      onApplied();
-                    },
-                  );
-                },
-              ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  onTap: () {
+                    Navigator.of(sheetContext).pop();
+                    ref.read(transactionFormProvider.notifier)
+                        .applyTemplate(template);
+                    if (template.merchant != null) {
+                      merchantController.text = template.merchant!;
+                    }
+                    if (template.note != null) {
+                      noteController.text = template.note!;
+                    }
+                    onApplied();
+                  },
+                );
+              }),
             ),
             const SizedBox(height: AppSpacing.md),
           ],

@@ -112,30 +112,30 @@ class _CategoryFilterSheetState extends ConsumerState<CategoryFilterSheet> {
                     .toList()
                   ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
-                return ListView.builder(
-                  shrinkWrap: true,
+                return Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.lg,
                   ),
-                  itemCount: roots.length,
-                  itemBuilder: (context, index) {
-                    final parent = roots[index];
-                    final children = categories
-                        .where((c) => c.parentId == parent.id)
-                        .toList()
-                      ..sort(
-                          (a, b) => a.sortOrder.compareTo(b.sortOrder));
-                    final isExpanded =
-                        _expandedParents.contains(parent.id);
+                  child: Column(
+                    children: List.generate(roots.length, (index) {
+                      final parent = roots[index];
+                      final children = categories
+                          .where((c) => c.parentId == parent.id)
+                          .toList()
+                        ..sort(
+                            (a, b) => a.sortOrder.compareTo(b.sortOrder));
+                      final isExpanded =
+                          _expandedParents.contains(parent.id);
 
-                    return _buildParentTile(
-                      parent,
-                      children,
-                      isExpanded,
-                      categories,
-                      colorIntensity,
-                    );
-                  },
+                      return _buildParentTile(
+                        parent,
+                        children,
+                        isExpanded,
+                        categories,
+                        colorIntensity,
+                      );
+                    }),
+                  ),
                 );
               },
               loading: () => const Center(

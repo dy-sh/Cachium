@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
+import '../../core/utils/decrypt_batch.dart';
 import '../../features/transactions/data/models/transaction.dart' as tx;
 import '../../features/transactions/data/models/transaction_template.dart' as ui;
 import '../encryption/transaction_template_data.dart';
@@ -106,8 +107,8 @@ class TransactionTemplateRepository with CorruptionTracker {
       final rows = await database.getAllTransactionTemplates();
       int corruptedCount = 0;
 
-      final results = await Future.wait(
-        rows.map((row) async {
+      final results = await decryptBatch(
+        rows.map((row) => () async {
           try {
             final cached = _decryptionCache.get(row.id, row.encryptedBlob);
             if (cached != null) return cached;

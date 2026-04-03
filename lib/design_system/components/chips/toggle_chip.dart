@@ -50,7 +50,7 @@ class ToggleChip extends ConsumerWidget {
                 vertical: AppSpacing.sm,
               ),
               decoration: BoxDecoration(
-                color: isSelected ? color.withValues(alpha: 0.15) : Colors.transparent,
+                color: isSelected ? color.withValues(alpha: AppColors.opacityLight) : Colors.transparent,
                 borderRadius: AppRadius.smAll,
                 border: Border.all(
                   color: isSelected ? color : Colors.transparent,

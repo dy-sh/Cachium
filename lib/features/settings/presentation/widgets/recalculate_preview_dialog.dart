@@ -73,17 +73,14 @@ class RecalculatePreviewDialog extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 300),
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: changedAccounts.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
-                  itemBuilder: (context, index) {
-                    final change = changedAccounts[index];
-                    return _BalanceChangeCard(change: change);
-                  },
-                ),
+              Column(
+                children: List.generate(changedAccounts.length, (index) {
+                  final change = changedAccounts[index];
+                  return Padding(
+                    padding: EdgeInsets.only(top: index > 0 ? AppSpacing.sm : 0),
+                    child: _BalanceChangeCard(change: change),
+                  );
+                }),
               ),
             ],
           ],

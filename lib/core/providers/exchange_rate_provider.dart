@@ -12,6 +12,9 @@ final exchangeRateServiceProvider = Provider<ExchangeRateService>((ref) {
   return ExchangeRateService();
 });
 
+/// Whether the last exchange rate fetch attempt failed.
+final exchangeRateFetchFailedProvider = StateProvider<bool>((ref) => false);
+
 class ExchangeRatesNotifier extends AsyncNotifier<Map<String, double>> {
   @override
   Future<Map<String, double>> build() async {
@@ -64,8 +67,10 @@ class ExchangeRatesNotifier extends AsyncNotifier<Map<String, double>> {
         }
       }
       _cacheRates(validatedRates);
+      ref.read(exchangeRateFetchFailedProvider.notifier).state = false;
       return validatedRates;
     } catch (e) {
+      ref.read(exchangeRateFetchFailedProvider.notifier).state = true;
       debugPrint('ExchangeRates: failed to fetch rates: $e');
       // Return cached rates if available, but log the staleness
       if (service.cachedRates.isNotEmpty) {
@@ -97,9 +102,11 @@ class ExchangeRatesNotifier extends AsyncNotifier<Map<String, double>> {
     try {
       final rates = await service.fetchRates(mainCurrency);
       _cacheRates(rates);
+      ref.read(exchangeRateFetchFailedProvider.notifier).state = false;
       state = AsyncData(rates);
     } catch (e) {
       debugPrint('ExchangeRates: refresh failed: $e');
+      ref.read(exchangeRateFetchFailedProvider.notifier).state = true;
       // Keep current state on refresh failure
     }
   }

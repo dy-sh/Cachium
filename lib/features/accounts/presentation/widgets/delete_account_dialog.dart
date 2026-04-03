@@ -220,17 +220,17 @@ class MoveTransactionsDialog extends ConsumerWidget {
             const SizedBox(height: AppSpacing.lg),
             ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 250),
-              child: ListView.separated(
-                shrinkWrap: true,
-                itemCount: availableAccounts.length,
-                separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
-                itemBuilder: (context, index) {
+              child: Column(
+                children: List.generate(availableAccounts.length, (index) {
                   final account = availableAccounts[index];
-                  return _AccountOption(
-                    account: account,
-                    onTap: () => Navigator.pop(context, account),
+                  return Padding(
+                    padding: EdgeInsets.only(top: index > 0 ? AppSpacing.sm : 0),
+                    child: _AccountOption(
+                      account: account,
+                      onTap: () => Navigator.pop(context, account),
+                    ),
                   );
-                },
+                }),
               ),
             ),
           ],
