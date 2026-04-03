@@ -57,15 +57,50 @@ class RecurringRulesScreen extends ConsumerWidget {
                     );
                   }
 
+                  final autoGenerate = ref.watch(settingsProvider).valueOrNull?.autoGenerateRecurring ?? false;
+
                   return ListView.separated(
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.screenPadding,
                     ),
-                    itemCount: rules.length,
+                    itemCount: rules.length + 1,
                     separatorBuilder: (_, __) =>
                         const SizedBox(height: AppSpacing.sm),
                     itemBuilder: (context, index) {
-                      final rule = rules[index];
+                      if (index == 0) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Auto-generate',
+                                      style: AppTypography.bodyMedium.copyWith(
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Generate pending transactions automatically on app start',
+                                      style: AppTypography.bodySmall.copyWith(
+                                        color: AppColors.textTertiary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Toggle(
+                                value: autoGenerate,
+                                onChanged: (v) => ref.read(settingsProvider.notifier).setAutoGenerateRecurring(v),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                      final rule = rules[index - 1];
                       return _RecurringRuleCard(rule: rule);
                     },
                   );

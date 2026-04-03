@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../core/constants/app_colors.dart';
+import '../core/providers/balance_fix_provider.dart';
 import '../core/providers/corruption_status_provider.dart';
+import '../core/utils/app_logger.dart';
 import '../design_system/design_system.dart';
+import '../features/settings/presentation/providers/settings_provider.dart';
 import '../features/transactions/presentation/providers/recurring_rules_provider.dart';
 import '../features/transactions/presentation/widgets/pending_recurring_dialog.dart';
 import 'app_router.dart';
+
+const _log = AppLogger('NavigationShell');
 
 class NavigationShell extends ConsumerStatefulWidget {
   final Widget child;
@@ -30,6 +35,18 @@ class _NavigationShellState extends ConsumerState<NavigationShell> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkPendingRecurring();
       _checkCorruption();
+      _listenForBalanceFixes();
+    });
+  }
+
+  void _listenForBalanceFixes() {
+    ref.listenManual(balanceFixCountProvider, (prev, count) {
+      if (count > 0 && mounted) {
+        context.showInfoNotification(
+          'Corrected $count account balance${count == 1 ? '' : 's'} that had drifted.',
+        );
+        ref.read(balanceFixCountProvider.notifier).state = 0;
+      }
     });
   }
 
@@ -43,8 +60,21 @@ class _NavigationShellState extends ConsumerState<NavigationShell> {
       final rules = ref.read(recurringRulesProvider).valueOrNull ?? [];
       final pendingRules =
           rules.where((r) => r.hasPendingGenerations).toList();
+      if (pendingRules.isEmpty || !mounted) return;
 
-      if (pendingRules.isNotEmpty && mounted) {
+      final settings = ref.read(settingsProvider).valueOrNull;
+      if (settings?.autoGenerateRecurring == true) {
+        // Auto mode: generate silently and notify
+        final count = await ref
+            .read(recurringRulesProvider.notifier)
+            .generatePendingTransactions();
+        if (count > 0 && mounted) {
+          context.showInfoNotification(
+            'Auto-generated $count recurring transaction${count == 1 ? '' : 's'}.',
+          );
+        }
+      } else {
+        // Manual mode: show dialog (existing behavior)
         await showPendingRecurringDialog(
           context: context,
           ref: ref,
@@ -53,7 +83,7 @@ class _NavigationShellState extends ConsumerState<NavigationShell> {
       }
     } catch (e) {
       // Non-fatal: recurring check failure shouldn't block the app
-      debugPrint('NavigationShell: recurring rules check failed: $e');
+      _log.warning('recurring rules check failed: $e');
     }
   }
 

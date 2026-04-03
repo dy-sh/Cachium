@@ -19,6 +19,7 @@ import '../../data/repositories/transaction_template_repository.dart';
 import '../database/app_database.dart';
 import '../database/services/encryption_service.dart';
 import '../database/services/file_key_provider.dart';
+import '../database/services/key_backup_service.dart';
 import '../database/services/key_provider.dart';
 import '../database/services/secure_key_provider.dart';
 
@@ -32,6 +33,11 @@ final keyProviderProvider = Provider<KeyProvider>((ref) {
     return SecureKeyProvider();
   }
   return FileKeyProvider();
+});
+
+/// Provider for the key backup service.
+final keyBackupServiceProvider = Provider<KeyBackupService>((ref) {
+  return KeyBackupService(ref.watch(keyProviderProvider));
 });
 
 /// Provider for the encryption service.

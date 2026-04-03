@@ -59,6 +59,7 @@ _$SettingsDataImpl _$$SettingsDataImplFromJson(
   weeklySpendingSummaryDay:
       (json['weeklySpendingSummaryDay'] as num?)?.toInt() ?? 1,
   encryptAttachments: json['encryptAttachments'] as bool? ?? false,
+  autoGenerateRecurring: json['autoGenerateRecurring'] as bool? ?? false,
   homeShowBudgetProgress: json['homeShowBudgetProgress'] as bool? ?? true,
   homeSectionOrder:
       (json['homeSectionOrder'] as List<dynamic>?)
@@ -117,6 +118,7 @@ Map<String, dynamic> _$$SettingsDataImplToJson(_$SettingsDataImpl instance) =>
       'weeklySpendingSummaryEnabled': instance.weeklySpendingSummaryEnabled,
       'weeklySpendingSummaryDay': instance.weeklySpendingSummaryDay,
       'encryptAttachments': instance.encryptAttachments,
+      'autoGenerateRecurring': instance.autoGenerateRecurring,
       'homeShowBudgetProgress': instance.homeShowBudgetProgress,
       'homeSectionOrder': instance.homeSectionOrder,
       'tutorialCompleted': instance.tutorialCompleted,

@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../utils/app_logger.dart';
 import 'package:uuid/uuid.dart';
 import '../../../data/repositories/net_worth_snapshot_repository.dart';
 import '../../../features/accounts/data/models/account.dart';
@@ -13,6 +13,7 @@ import '../../../features/transactions/presentation/providers/transactions_provi
 import '../../providers/database_providers.dart';
 
 const _uuid = Uuid();
+const _log = AppLogger('NetWorthSnapshot');
 
 class NetWorthSnapshotService {
   /// Takes a snapshot for the current month if one doesn't already exist.
@@ -32,7 +33,7 @@ class NetWorthSnapshotService {
 
       unawaited(_takeSnapshot(repo, accounts, mainCurrency, monthStart));
     } catch (e) {
-      debugPrint('NetWorthSnapshotService.takeSnapshotIfNeeded failed: $e');
+      _log.error('takeSnapshotIfNeeded failed', e);
     }
   }
 
@@ -137,9 +138,9 @@ class NetWorthSnapshotService {
         await repo.save(snapshot);
       }
 
-      debugPrint('NetWorthSnapshotService: backfilled ${snapshots.length} snapshots');
+      _log.debug('backfilled ${snapshots.length} snapshots');
     } catch (e) {
-      debugPrint('NetWorthSnapshotService.backfillIfNeeded failed: $e');
+      _log.error('backfillIfNeeded failed', e);
     }
   }
 

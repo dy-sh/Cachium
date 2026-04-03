@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../core/providers/database_providers.dart';
 import '../../../../core/services/attachment_file_service.dart';
 import '../../../attachments/data/models/attachment.dart';
@@ -14,7 +14,14 @@ import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../data/models/transaction.dart';
 import '../../data/models/transaction_template.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
+import 'transaction_form_auto_suggestion.dart';
+import 'transaction_form_change_detector.dart';
+import 'transaction_form_currency_handler.dart';
+import 'transaction_form_validator.dart';
 import 'transactions_provider.dart';
+
+export 'transaction_form_change_detector.dart';
+export 'transaction_form_validator.dart';
 
 /// Result of a save operation.
 class SaveResult {
@@ -85,101 +92,7 @@ class TransactionFormState {
 
   bool get isTransfer => type == TransactionType.transfer;
 
-  bool get isValid {
-    final amountValid = allowZeroAmount ? amount >= 0 : amount > 0;
-    if (isTransfer) {
-      return amountValid &&
-          accountId != null &&
-          destinationAccountId != null &&
-          accountId != destinationAccountId;
-    }
-    return amountValid && categoryId != null && accountId != null;
-  }
-
   bool get isEditing => editingTransactionId != null;
-
-  // Field-level validation errors
-  String? get amountError {
-    if (!showValidationErrors) return null;
-    if (allowZeroAmount ? amount < 0 : amount <= 0) return 'Enter an amount';
-    return null;
-  }
-
-  String? get categoryError {
-    if (!showValidationErrors || isTransfer) return null;
-    if (categoryId == null) return 'Select a category';
-    return null;
-  }
-
-  String? get accountError {
-    if (!showValidationErrors) return null;
-    if (accountId == null) return 'Select an account';
-    return null;
-  }
-
-  String? get sameAccountError {
-    if (!isTransfer) return null;
-    // Show same-account error immediately (real-time feedback)
-    if (accountId != null &&
-        destinationAccountId != null &&
-        accountId == destinationAccountId) {
-      return 'Source and destination must be different';
-    }
-    if (!showValidationErrors) return null;
-    if (destinationAccountId == null) return 'Select a destination account';
-    return null;
-  }
-
-  /// Whether currency-relevant fields changed from the original (amount, currencyCode, conversionRate).
-  bool get hasCurrencyFieldChanges {
-    if (!isEditing || originalTransaction == null) return true;
-    final orig = originalTransaction!;
-    return amount != orig.amount ||
-        currencyCode != orig.currencyCode ||
-        conversionRate != orig.conversionRate;
-  }
-
-  /// Check if any field has changed from original (for edit mode).
-  bool get hasChanges {
-    if (!isEditing || originalTransaction == null) return true; // New transaction always "has changes"
-    final orig = originalTransaction!;
-    return type != orig.type ||
-        amount != orig.amount ||
-        categoryId != orig.categoryId ||
-        accountId != orig.accountId ||
-        destinationAccountId != orig.destinationAccountId ||
-        destinationAmount != orig.destinationAmount ||
-        assetId != orig.assetId ||
-        !_isSameDateTime(date, orig.date) ||
-        note != orig.note ||
-        merchant != orig.merchant ||
-        currencyCode != orig.currencyCode ||
-        conversionRate != orig.conversionRate ||
-        !_sameTagIds(tagIds, originalTagIds);
-  }
-
-  /// Compare dates ignoring seconds/milliseconds (only year, month, day, hour, minute).
-  bool _isSameDateTime(DateTime a, DateTime? b) {
-    if (b == null) return false;
-    return a.year == b.year &&
-        a.month == b.month &&
-        a.day == b.day &&
-        a.hour == b.hour &&
-        a.minute == b.minute;
-  }
-
-  bool _sameTagIds(List<String> a, List<String> b) {
-    if (a.length != b.length) return false;
-    final sortedA = List<String>.from(a)..sort();
-    final sortedB = List<String>.from(b)..sort();
-    for (int i = 0; i < sortedA.length; i++) {
-      if (sortedA[i] != sortedB[i]) return false;
-    }
-    return true;
-  }
-
-  /// Valid and has changes (for Save button).
-  bool get canSave => isValid && hasChanges;
 
   TransactionFormState copyWith({
     TransactionType? type,
@@ -254,7 +167,8 @@ final isCrossCurrencyTransferProvider = Provider.autoDispose<bool>((ref) {
   return src.currencyCode != dst.currencyCode;
 });
 
-class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> {
+class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState>
+    with TransactionAutoSuggestion, TransactionCurrencyHandler {
   @override
   TransactionFormState build() {
     final defaultType = ref.read(defaultTransactionTypeProvider);
@@ -327,7 +241,7 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
     state = state.copyWith(
       destinationAccountId: accountId,
     );
-    _recalculateDestinationAmount();
+    recalculateDestinationAmount();
   }
 
   /// Apply last used account if setting is enabled and no account is selected.
@@ -347,38 +261,17 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
 
   void setAmount(double amount) {
     state = state.copyWith(amount: amount);
-    _recalculateDestinationAmount();
+    recalculateDestinationAmount();
   }
 
   void setCategory(String categoryId) {
     state = state.copyWith(categoryId: categoryId, categoryAutoSelected: false);
-    _autoSuggestAsset();
+    autoSuggestAsset();
   }
 
   void setAccount(String accountId) {
-    // Set currency from account
-    final account = ref.read(accountByIdProvider(accountId));
-    final currencyCode = account?.currencyCode ?? state.currencyCode;
-    final mainCurrency = ref.read(mainCurrencyCodeProvider);
-
-    double conversionRate = 1.0;
-    if (currencyCode != mainCurrency) {
-      // Auto-refresh rates if stale and this is a foreign-currency account
-      final isStale = ref.read(exchangeRatesStaleProvider);
-      if (isStale) {
-        ref.read(exchangeRatesProvider.notifier).refresh();
-      }
-
-      final rate = ref.read(exchangeRateProvider((from: currencyCode, to: mainCurrency)));
-      conversionRate = rate;
-    }
-
-    state = state.copyWith(
-      accountId: accountId,
-      currencyCode: currencyCode,
-      conversionRate: conversionRate,
-    );
-    _recalculateDestinationAmount();
+    refreshExchangeRateForAccount(accountId);
+    recalculateDestinationAmount();
   }
 
   void setDate(DateTime date) {
@@ -393,47 +286,11 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
     state = state.copyWith(merchant: merchant);
 
     if (!state.isEditing) {
-      // Auto-categorize by merchant when creating a new transaction
       if (merchant != null && merchant.trim().isNotEmpty) {
-        final autoEnabled = ref.read(autoCategorizeByMerchantProvider);
-        if (autoEnabled) {
-          // Only auto-fill if no manual category was selected
-          if (state.categoryId == null || state.categoryAutoSelected) {
-            final merchantMap = ref.read(merchantCategoryMapProvider);
-            final suggestedCategoryId = merchantMap[merchant.trim().toLowerCase()];
-            if (suggestedCategoryId != null) {
-              final category = ref.read(categoryByIdProvider(suggestedCategoryId));
-              if (category != null) {
-                state = state.copyWith(
-                  categoryId: suggestedCategoryId,
-                  categoryAutoSelected: true,
-                );
-              }
-            }
-          }
-        }
+        autoCategorizeByMerchant(merchant);
       }
 
-      // Auto-suggest asset by merchant
-      _autoSuggestAsset();
-    }
-  }
-
-  void _autoSuggestAsset() {
-    if (state.isEditing) return;
-    // Don't override manual asset selection
-    if (state.assetId != null && !state.assetAutoSelected) return;
-
-    final suggested = ref.read(suggestedAssetProvider((
-      merchant: state.merchant,
-      categoryId: state.categoryId,
-    )));
-
-    if (suggested != null) {
-      state = state.copyWith(assetId: suggested, assetAutoSelected: true);
-    } else if (state.assetAutoSelected) {
-      // Clear auto-suggested asset when suggestion no longer applies
-      state = state.copyWith(clearAssetId: true, assetAutoSelected: false);
+      autoSuggestAsset();
     }
   }
 
@@ -446,28 +303,6 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
       destinationAmount: amount,
       clearDestinationAmount: amount == null,
     );
-  }
-
-  void _recalculateDestinationAmount() {
-    if (!state.isTransfer || state.accountId == null || state.destinationAccountId == null) {
-      return;
-    }
-    final srcAccount = ref.read(accountByIdProvider(state.accountId!));
-    final dstAccount = ref.read(accountByIdProvider(state.destinationAccountId!));
-    if (srcAccount == null || dstAccount == null) return;
-
-    if (srcAccount.currencyCode == dstAccount.currencyCode) {
-      // Same currency - no destinationAmount needed
-      state = state.copyWith(clearDestinationAmount: true);
-      return;
-    }
-
-    // Cross-currency: calculate using live rates
-    if (state.amount > 0) {
-      final rate = ref.read(exchangeRateProvider((from: srcAccount.currencyCode, to: dstAccount.currencyCode)));
-      final converted = state.amount * rate;
-      state = state.copyWith(destinationAmount: roundCurrency(converted));
-    }
   }
 
   void setTagIds(List<String> tagIds) {
@@ -574,7 +409,7 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState> 
       final tagIds = await repo.getTagIdsForTransaction(transactionId);
       state = state.copyWith(tagIds: tagIds, originalTagIds: tagIds);
     } catch (e) {
-      debugPrint('TransactionForm: failed to load tags: $e');
+      const AppLogger('TransactionForm').warning('failed to load tags: $e');
     }
   }
 

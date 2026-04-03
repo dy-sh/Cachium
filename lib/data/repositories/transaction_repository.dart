@@ -1,13 +1,14 @@
-import 'package:flutter/foundation.dart';
-
 import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
+import '../../core/utils/app_logger.dart';
 import '../../core/utils/decrypt_batch.dart';
 import '../../features/transactions/data/models/transaction.dart' as ui;
 import '../encryption/transaction_data.dart';
 import 'corruption_tracker.dart';
 import 'decryption_cache.dart';
+
+const _log = AppLogger('TransactionRepo');
 
 /// Repository for managing encrypted transaction storage.
 ///
@@ -236,7 +237,7 @@ class TransactionRepository with CorruptionTracker {
             _decryptionCache.put(row.id, row.encryptedBlob, result);
             return result;
           } catch (e) {
-            debugPrint('WARNING: Corrupted transaction row id=${row.id}: $e');
+            _log.warning('Corrupted transaction row id=${row.id}: $e');
             corruptedCount++;
             return null;
           }
@@ -273,7 +274,7 @@ class TransactionRepository with CorruptionTracker {
             _decryptionCache.put(row.id, row.encryptedBlob, result);
             return result;
           } catch (e) {
-            debugPrint('WARNING: Corrupted deleted transaction row id=${row.id}: $e');
+            _log.warning('Corrupted deleted transaction row id=${row.id}: $e');
             corruptedCount++;
             return null;
           }
@@ -374,7 +375,7 @@ class TransactionRepository with CorruptionTracker {
             _decryptionCache.put(row.id, row.encryptedBlob, result);
             return result;
           } catch (e) {
-            debugPrint('WARNING: Corrupted transaction row id=${row.id}: $e');
+            _log.warning('Corrupted transaction row id=${row.id}: $e');
             corruptedCount++;
             return null;
           }

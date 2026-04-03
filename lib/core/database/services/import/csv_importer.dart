@@ -13,12 +13,13 @@ import '../../../../data/encryption/recurring_rule_data.dart';
 import '../../../../data/encryption/savings_goal_data.dart';
 import '../../../../data/encryption/transaction_data.dart';
 import '../../../../data/encryption/transaction_template_data.dart';
-import '../../../../features/transactions/data/models/transaction.dart' as tx;
 import '../../../../features/settings/data/models/csv_import_preview.dart';
-import '../../../utils/balance_calculation.dart';
 import '../../../utils/currency_conversion.dart';
 import '../../app_database.dart';
 import '../encryption_service.dart';
+import 'csv_post_import.dart' as post_import;
+import 'csv_row_parser.dart' as row_parser;
+import 'csv_validator.dart' as validator;
 import 'import_helpers.dart';
 
 class CsvImporter {
@@ -97,8 +98,8 @@ class CsvImporter {
       }
 
       // Validate foreign key references and reconcile balances within the transaction
-      transactionsSkippedFromValidation = await _validateForeignKeys(errors);
-      await _reconcileAccountBalances(errors);
+      transactionsSkippedFromValidation = await post_import.validateForeignKeys(database, encryptionService, errors);
+      await post_import.reconcileAccountBalances(database, encryptionService, errors);
     });
 
     return ImportResult(
@@ -147,7 +148,7 @@ class CsvImporter {
       }
 
       // Validate it's a valid CSV file
-      final validationError = await _validateCsvFile(path);
+      final validationError = await validator.validateCsvFile(path);
       if (validationError != null) {
         final fileName = path.split('/').last;
         return FilePickResult.error('Invalid CSV file "$fileName": $validationError');
@@ -155,229 +156,6 @@ class CsvImporter {
     }
 
     return FilePickResult.success(paths);
-  }
-
-  /// Validates that a file is a valid CSV file with all required columns.
-  /// Returns an error message if invalid, null if valid.
-  Future<String?> _validateCsvFile(String path) async {
-    try {
-      final file = File(path);
-      if (!file.existsSync()) {
-        return 'File does not exist';
-      }
-
-      // Check file size (should have at least a header row)
-      if (file.lengthSync() == 0) {
-        return 'File is empty';
-      }
-
-      // Try to parse as CSV
-      final content = await file.readAsString();
-      final rows = const CsvToListConverter().convert(content);
-
-      if (rows.isEmpty) {
-        return 'No data found in file';
-      }
-
-      // Check if it has a header row with at least one column
-      if (rows.first.isEmpty) {
-        return 'No columns found in header row';
-      }
-
-      // Get headers (normalize to handle both snake_case and camelCase)
-      final headers = rows.first.map((e) => e.toString().toLowerCase()).toSet();
-
-      // Determine file type and validate required columns
-      final fileName = path.split('/').last.toLowerCase();
-
-      if (fileName.contains('transaction_template')) {
-        return _validateGenericEncryptedCsv(headers, 'Transaction templates');
-      } else if (fileName.contains('transaction')) {
-        return _validateTransactionsCsv(headers);
-      } else if (fileName.contains('account')) {
-        return _validateAccountsCsv(headers);
-      } else if (fileName.contains('categor')) {
-        return _validateCategoriesCsv(headers);
-      } else if (fileName.contains('settings')) {
-        return _validateSettingsCsv(headers);
-      } else if (fileName.contains('budget')) {
-        return _validateGenericEncryptedCsv(headers, 'Budgets');
-      } else if (fileName.contains('asset')) {
-        return _validateGenericEncryptedCsv(headers, 'Assets');
-      } else if (fileName.contains('recurring')) {
-        return _validateGenericEncryptedCsv(headers, 'Recurring rules');
-      } else if (fileName.contains('savings') || fileName.contains('goal')) {
-        return _validateGenericEncryptedCsv(headers, 'Savings goals');
-      }
-
-      // If filename doesn't match, try to detect by columns
-      if (_validateTransactionsCsv(headers) == null) return null;
-      if (_validateAccountsCsv(headers) == null) return null;
-      if (_validateCategoriesCsv(headers) == null) return null;
-      if (_validateSettingsCsv(headers) == null) return null;
-
-      return 'Not a recognized Cachium export file';
-    } on FormatException catch (e) {
-      return 'Invalid CSV format: ${e.message}';
-    } catch (e) {
-      return 'Could not read file';
-    }
-  }
-
-  /// Check if headers contain a column (handles snake_case and camelCase).
-  bool _hasColumn(Set<String> headers, String snakeCase, String camelCase) {
-    return headers.contains(snakeCase) || headers.contains(camelCase.toLowerCase());
-  }
-
-  /// Validates transactions CSV has all required columns.
-  String? _validateTransactionsCsv(Set<String> headers) {
-    // Check for encrypted format first
-    if (_hasColumn(headers, 'encrypted_blob', 'encryptedBlob')) {
-      final requiredEncrypted = [
-        ('id', 'id'),
-        ('date', 'date'),
-        ('last_updated_at', 'lastUpdatedAt'),
-        ('is_deleted', 'isDeleted'),
-        ('encrypted_blob', 'encryptedBlob'),
-      ];
-      final missing = requiredEncrypted
-          .where((col) => !_hasColumn(headers, col.$1, col.$2))
-          .map((col) => col.$1)
-          .toList();
-      if (missing.isNotEmpty) {
-        return 'Transactions file missing columns: ${missing.join(', ')}';
-      }
-      return null;
-    }
-
-    // Plaintext format (is_deleted is optional - defaults to false when missing)
-    final requiredPlaintext = [
-      ('id', 'id'),
-      ('date', 'date'),
-      ('last_updated_at', 'lastUpdatedAt'),
-      ('amount', 'amount'),
-      ('category_id', 'categoryId'),
-      ('account_id', 'accountId'),
-      ('type', 'type'),
-      ('currency', 'currency'),
-    ];
-    final missing = requiredPlaintext
-        .where((col) => !_hasColumn(headers, col.$1, col.$2))
-        .map((col) => col.$1)
-        .toList();
-    if (missing.isNotEmpty) {
-      return 'Transactions file missing columns: ${missing.join(', ')}';
-    }
-    return null;
-  }
-
-  /// Validates accounts CSV has all required columns.
-  String? _validateAccountsCsv(Set<String> headers) {
-    // Check for encrypted format first
-    if (_hasColumn(headers, 'encrypted_blob', 'encryptedBlob')) {
-      final requiredEncrypted = [
-        ('id', 'id'),
-        ('created_at', 'createdAt'),
-        ('last_updated_at', 'lastUpdatedAt'),
-        ('is_deleted', 'isDeleted'),
-        ('encrypted_blob', 'encryptedBlob'),
-      ];
-      final missing = requiredEncrypted
-          .where((col) => !_hasColumn(headers, col.$1, col.$2))
-          .map((col) => col.$1)
-          .toList();
-      if (missing.isNotEmpty) {
-        return 'Accounts file missing columns: ${missing.join(', ')}';
-      }
-      return null;
-    }
-
-    // Plaintext format (is_deleted is optional - defaults to false when missing)
-    final requiredPlaintext = [
-      ('id', 'id'),
-      ('created_at', 'createdAt'),
-      ('last_updated_at', 'lastUpdatedAt'),
-      ('name', 'name'),
-      ('type', 'type'),
-      ('balance', 'balance'),
-    ];
-    final missing = requiredPlaintext
-        .where((col) => !_hasColumn(headers, col.$1, col.$2))
-        .map((col) => col.$1)
-        .toList();
-    if (missing.isNotEmpty) {
-      return 'Accounts file missing columns: ${missing.join(', ')}';
-    }
-    return null;
-  }
-
-  /// Validates categories CSV has all required columns.
-  String? _validateCategoriesCsv(Set<String> headers) {
-    // Check for encrypted format first
-    if (_hasColumn(headers, 'encrypted_blob', 'encryptedBlob')) {
-      final requiredEncrypted = [
-        ('id', 'id'),
-        ('sort_order', 'sortOrder'),
-        ('last_updated_at', 'lastUpdatedAt'),
-        ('is_deleted', 'isDeleted'),
-        ('encrypted_blob', 'encryptedBlob'),
-      ];
-      final missing = requiredEncrypted
-          .where((col) => !_hasColumn(headers, col.$1, col.$2))
-          .map((col) => col.$1)
-          .toList();
-      if (missing.isNotEmpty) {
-        return 'Categories file missing columns: ${missing.join(', ')}';
-      }
-      return null;
-    }
-
-    // Plaintext format (is_deleted is optional - defaults to false when missing)
-    final requiredPlaintext = [
-      ('id', 'id'),
-      ('sort_order', 'sortOrder'),
-      ('last_updated_at', 'lastUpdatedAt'),
-      ('name', 'name'),
-      ('icon_code_point', 'iconCodePoint'),
-      ('icon_font_family', 'iconFontFamily'),
-      ('color_index', 'colorIndex'),
-      ('type', 'type'),
-      ('is_custom', 'isCustom'),
-    ];
-    final missing = requiredPlaintext
-        .where((col) => !_hasColumn(headers, col.$1, col.$2))
-        .map((col) => col.$1)
-        .toList();
-    if (missing.isNotEmpty) {
-      return 'Categories file missing columns: ${missing.join(', ')}';
-    }
-    return null;
-  }
-
-  /// Validates a CSV file for tables that use the standard encrypted schema
-  /// (id, created_at, last_updated_at, is_deleted, encrypted_blob) or plaintext with id column.
-  String? _validateGenericEncryptedCsv(Set<String> headers, String tableName) {
-    if (!headers.contains('id')) {
-      return '$tableName file missing required column: id';
-    }
-    return null;
-  }
-
-  /// Validates settings CSV has all required columns.
-  String? _validateSettingsCsv(Set<String> headers) {
-    final required = [
-      ('id', 'id'),
-      ('last_updated_at', 'lastUpdatedAt'),
-      ('json_data', 'jsonData'),
-    ];
-    final missing = required
-        .where((col) => !_hasColumn(headers, col.$1, col.$2))
-        .map((col) => col.$1)
-        .toList();
-    if (missing.isNotEmpty) {
-      return 'Settings file missing columns: ${missing.join(', ')}';
-    }
-    return null;
   }
 
   /// Generate a preview of what will be imported from CSV files.
@@ -420,8 +198,8 @@ class CsvImporter {
 
         // Extract transaction IDs and referenced category/account IDs
         final idIndex = headers.indexOf('id');
-        final categoryIdIndex = _findColumnIndex(headers, ['category_id', 'categoryId']);
-        final accountIdIndex = _findColumnIndex(headers, ['account_id', 'accountId']);
+        final categoryIdIndex = row_parser.findColumnIndex(headers, ['category_id', 'categoryId']);
+        final accountIdIndex = row_parser.findColumnIndex(headers, ['account_id', 'accountId']);
 
         for (int i = 1; i < rows.length; i++) {
           final row = rows[i];
@@ -495,9 +273,9 @@ class CsvImporter {
     fileStatuses.sort((a, b) => a.type.index.compareTo(b.type.index));
 
     // Get existing IDs from database
-    final existingTransactionIds = await _getExistingTransactionIds();
-    final existingCategoryIds = await _getExistingCategoryIds();
-    final existingAccountIds = await _getExistingAccountIds();
+    final existingTransactionIds = await row_parser.getExistingTransactionIds(database);
+    final existingCategoryIds = await row_parser.getExistingCategoryIds(database);
+    final existingAccountIds = await row_parser.getExistingAccountIds(database);
 
     // Calculate duplicates for all types
     final duplicateTransactionIds = csvTransactionIds.intersection(existingTransactionIds);
@@ -550,9 +328,9 @@ class CsvImporter {
     int settingsImported = 0;
 
     // Get existing IDs to skip duplicates
-    final existingTransactionIds = await _getExistingTransactionIds();
-    final existingAccountIds = await _getExistingAccountIds();
-    final existingCategoryIds = await _getExistingCategoryIds();
+    final existingTransactionIds = await row_parser.getExistingTransactionIds(database);
+    final existingAccountIds = await row_parser.getExistingAccountIds(database);
+    final existingCategoryIds = await row_parser.getExistingCategoryIds(database);
 
     for (final path in paths) {
       final fileName = path.split('/').last.toLowerCase();
@@ -596,31 +374,6 @@ class CsvImporter {
       transactionsSkipped: totalSkipped,
       errors: errors,
     );
-  }
-
-  // Helper methods
-
-  int _findColumnIndex(List<String> headers, List<String> possibleNames) {
-    for (final name in possibleNames) {
-      final index = headers.indexOf(name);
-      if (index >= 0) return index;
-    }
-    return -1;
-  }
-
-  Future<Set<String>> _getExistingTransactionIds() async {
-    final result = await database.select(database.transactions).get();
-    return result.map((t) => t.id).toSet();
-  }
-
-  Future<Set<String>> _getExistingCategoryIds() async {
-    final result = await database.select(database.categories).get();
-    return result.map((c) => c.id).toSet();
-  }
-
-  Future<Set<String>> _getExistingAccountIds() async {
-    final result = await database.select(database.accounts).get();
-    return result.map((a) => a.id).toSet();
   }
 
   // CSV import methods
@@ -1685,186 +1438,4 @@ class CsvImporter {
     return (imported: imported, skipped: skipped);
   }
 
-  /// Validate that imported transactions reference existing accounts and categories.
-  /// Soft-deletes orphaned transactions and returns the count of skipped transactions.
-  Future<int> _validateForeignKeys(List<String> errors) async {
-    int skipped = 0;
-
-    try {
-      // Collect valid account IDs
-      final accountRows = await database.select(database.accounts).get();
-      final validAccountIds = <String>{};
-      for (final row in accountRows) {
-        if (!row.isDeleted) {
-          validAccountIds.add(row.id);
-        }
-      }
-
-      // Collect valid category IDs
-      final categoryRows = await database.select(database.categories).get();
-      final validCategoryIds = <String>{};
-      for (final row in categoryRows) {
-        if (!row.isDeleted) {
-          validCategoryIds.add(row.id);
-        }
-      }
-
-      // Collect valid asset IDs
-      final assetRows = await database.select(database.assets).get();
-      final validAssetIds = <String>{};
-      for (final row in assetRows) {
-        if (!row.isDeleted) {
-          validAssetIds.add(row.id);
-        }
-      }
-
-      // Check transactions for orphaned references
-      final transactionRows = await database.select(database.transactions).get();
-      for (final row in transactionRows) {
-        if (row.isDeleted) continue;
-        try {
-          final json = await encryptionService.decryptJson(row.encryptedBlob);
-          final data = TransactionData.fromJson(json);
-
-          final hasValidAccount = validAccountIds.contains(data.accountId);
-          final hasValidCategory = data.categoryId.isEmpty || validCategoryIds.contains(data.categoryId);
-          final hasValidDestAccount = data.destinationAccountId == null ||
-              data.destinationAccountId!.isEmpty ||
-              validAccountIds.contains(data.destinationAccountId);
-
-          // Treat empty destinationAccountId as null for transfers
-          final isTransfer = data.type == 'transfer';
-          final hasEmptyDestAccount = isTransfer &&
-              data.destinationAccountId != null &&
-              data.destinationAccountId!.isEmpty;
-          final hasOrphanedAsset = data.assetId != null &&
-              data.assetId!.isNotEmpty &&
-              !validAssetIds.contains(data.assetId);
-
-          if (!hasValidAccount || !hasValidCategory || !hasValidDestAccount || hasEmptyDestAccount) {
-            final reasons = <String>[];
-            if (!hasValidAccount) reasons.add('account "${data.accountId}" not found');
-            if (!hasValidCategory) reasons.add('category "${data.categoryId}" not found');
-            if (!hasValidDestAccount) reasons.add('destination account "${data.destinationAccountId}" not found');
-            if (hasEmptyDestAccount) reasons.add('transfer missing destination account');
-
-            errors.add('Skipped transaction ${data.id}: ${reasons.join(', ')}');
-
-            // Soft-delete the orphaned transaction
-            await (database.update(database.transactions)
-                  ..where((t) => t.id.equals(row.id)))
-                .write(const TransactionsCompanion(isDeleted: Value(true)));
-            skipped++;
-          } else if (hasOrphanedAsset) {
-            // Asset is optional — clear it instead of deleting the transaction
-            final cleanedData = data.copyWith(assetId: null);
-            final encryptedBlob = await encryptionService.encryptJson(cleanedData.toJson());
-            await (database.update(database.transactions)
-                  ..where((t) => t.id.equals(row.id)))
-                .write(TransactionsCompanion(encryptedBlob: Value(encryptedBlob)));
-            errors.add('Cleared orphaned asset "${data.assetId}" from transaction ${data.id}');
-          }
-        } catch (e) {
-          errors.add('Skipped corrupted transaction ${row.id}: $e');
-        }
-      }
-    } catch (e) {
-      errors.add('Foreign key validation error: $e');
-    }
-
-    return skipped;
-  }
-
-  /// Recalculate and fix account balances from transaction history after import.
-  ///
-  /// For each account, computes expectedBalance = initialBalance + deltas,
-  /// and updates the stored balance if it differs. Adds warnings for mismatches.
-  Future<void> _reconcileAccountBalances(List<String> errors) async {
-    try {
-      // Decrypt all accounts
-      final accountRows = await database.select(database.accounts).get();
-      final transactionRows = await database.select(database.transactions).get();
-
-      // Decrypt transactions
-      final transactions = <tx.Transaction>[];
-      for (final row in transactionRows) {
-        if (row.isDeleted) continue;
-        try {
-          final json = await encryptionService.decryptJson(row.encryptedBlob);
-          final data = TransactionData.fromJson(json);
-          transactions.add(tx.Transaction(
-            id: data.id,
-            amount: data.amount,
-            type: tx.TransactionType.values.firstWhere(
-              (t) => t.name == data.type,
-              orElse: () => tx.TransactionType.expense,
-            ),
-            categoryId: data.categoryId,
-            accountId: data.accountId,
-            destinationAccountId: data.destinationAccountId,
-            destinationAmount: data.destinationAmount,
-            currencyCode: data.currency,
-            conversionRate: data.conversionRate,
-            mainCurrencyCode: data.mainCurrencyCode,
-            mainCurrencyAmount: data.mainCurrencyAmount,
-            date: DateTime.fromMillisecondsSinceEpoch(data.dateMillis),
-            createdAt: DateTime.fromMillisecondsSinceEpoch(data.createdAtMillis),
-          ));
-        } catch (e) {
-          errors.add('Skipped corrupted transaction during reconciliation ${row.id}: $e');
-        }
-      }
-
-      final deltas = calculateAccountDeltas(transactions);
-
-      for (final row in accountRows) {
-        if (row.isDeleted) continue;
-        try {
-          final json = await encryptionService.decryptJson(row.encryptedBlob);
-          final data = AccountData.fromJson(json);
-          final delta = deltas[data.id] ?? 0;
-          final expectedBalance = roundCurrency(data.initialBalance + delta);
-
-          if ((data.balance - expectedBalance).abs() > 0.001) {
-            errors.add(
-              'Account "${data.name}" balance adjusted: '
-              '${data.balance} -> $expectedBalance',
-            );
-
-            // Update the account with corrected balance
-            final corrected = AccountData(
-              id: data.id,
-              name: data.name,
-              type: data.type,
-              balance: expectedBalance,
-              initialBalance: data.initialBalance,
-              customColorValue: data.customColorValue,
-              customIconCodePoint: data.customIconCodePoint,
-              customIconFontFamily: data.customIconFontFamily,
-              customIconFontPackage: data.customIconFontPackage,
-              currencyCode: data.currencyCode,
-              createdAtMillis: data.createdAtMillis,
-            );
-            final encryptedBlob =
-                await encryptionService.encryptJson(corrected.toJson());
-
-            await database.into(database.accounts).insertOnConflictUpdate(
-              AccountsCompanion(
-                id: Value(row.id),
-                createdAt: Value(row.createdAt),
-                sortOrder: Value(row.sortOrder),
-                lastUpdatedAt: Value(DateTime.now().millisecondsSinceEpoch),
-                isDeleted: Value(row.isDeleted),
-                encryptedBlob: Value(encryptedBlob),
-              ),
-            );
-          }
-        } catch (_) {
-          // Skip corrupted accounts
-        }
-      }
-    } catch (e) {
-      errors.add('Balance reconciliation failed: $e');
-    }
-  }
 }

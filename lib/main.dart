@@ -8,10 +8,14 @@ import 'app.dart';
 import 'core/database/services/net_worth_snapshot_service.dart';
 import 'core/error/error_screen.dart';
 import 'core/exceptions/app_exception.dart';
+import 'core/providers/balance_fix_provider.dart';
 import 'core/providers/database_providers.dart';
 import 'core/services/notification_service.dart';
+import 'core/utils/app_logger.dart';
 import 'features/settings/presentation/providers/database_management_providers.dart';
 import 'features/settings/presentation/providers/settings_provider.dart';
+
+const _log = AppLogger('App');
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,10 +35,10 @@ void main() async {
   // Set up global error handling
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
-    debugPrint('FlutterError: ${details.exceptionAsString()}');
+    _log.error('FlutterError: ${details.exceptionAsString()}');
   };
   PlatformDispatcher.instance.onError = (error, stack) {
-    debugPrint('Unhandled error: $error\n$stack');
+    _log.error('Unhandled error: $error\n$stack');
     return true;
   };
   ErrorWidget.builder = (details) => ErrorScreen(details: details);
@@ -50,10 +54,10 @@ void main() async {
   try {
     await container.read(keyProviderProvider).getKey();
   } on EncryptionKeyCorruptedException catch (_) {
-    debugPrint('FATAL: Critical initialization error');
+    _log.error('FATAL: Critical initialization error');
     container.read(encryptionKeyCorruptedProvider.notifier).state = true;
   } catch (e) {
-    debugPrint('Initialization pre-warm failed: $e');
+    _log.error('Initialization pre-warm failed', e);
     container.read(startupErrorProvider.notifier).state =
         'Encryption initialization failed. Some features may not work correctly.';
   }
@@ -63,10 +67,10 @@ void main() async {
     await container.read(settingsProvider.future);
     await container.read(settingsProvider.notifier).migrateCredentialsIfNeeded();
   } on EncryptionKeyCorruptedException catch (_) {
-    debugPrint('FATAL: Critical initialization error (migration)');
+    _log.error('FATAL: Critical initialization error (migration)');
     container.read(encryptionKeyCorruptedProvider.notifier).state = true;
-  } catch (_) {
-    debugPrint('Credential migration failed');
+  } catch (e) {
+    _log.error('Credential migration failed', e);
     container.read(startupErrorProvider.notifier).state =
         'Credential migration incomplete. Your PIN/password may need to be re-set.';
   }
@@ -77,26 +81,29 @@ void main() async {
   // Clean up soft-deleted records older than 30 days
   try {
     unawaited(db.cleanupDeletedRecords());
-  } catch (_) {
-    debugPrint('Cleanup of deleted records failed');
+  } catch (e) {
+    _log.error('Cleanup of deleted records failed', e);
   }
 
   // Auto-fix account balance inconsistencies (non-blocking)
   unawaited(
     container.read(databaseConsistencyServiceProvider).autoFixBalances().then((count) {
-      if (count > 0) debugPrint('Auto-fixed $count account balance(s)');
-    }).catchError((_) {
-      debugPrint('Balance consistency check failed');
+      if (count > 0) {
+        _log.warning('Auto-fixed $count account balance(s)');
+        container.read(balanceFixCountProvider.notifier).state = count;
+      }
+    }).catchError((Object e) {
+      _log.error('Balance consistency check failed', e);
     }),
   );
 
   // Take monthly net worth snapshot (non-blocking, errors handled internally)
-  unawaited(NetWorthSnapshotService.takeSnapshotIfNeeded(container).catchError((_) {
-    debugPrint('Net worth snapshot failed');
+  unawaited(NetWorthSnapshotService.takeSnapshotIfNeeded(container).catchError((Object e) {
+    _log.error('Net worth snapshot failed', e);
   }));
   // Backfill historical snapshots if none exist (async, non-blocking)
-  unawaited(NetWorthSnapshotService.backfillIfNeeded(container).catchError((_) {
-    debugPrint('Net worth backfill failed');
+  unawaited(NetWorthSnapshotService.backfillIfNeeded(container).catchError((Object e) {
+    _log.error('Net worth backfill failed', e);
   }));
 
   runApp(

@@ -139,6 +139,9 @@ class SettingsData with _$SettingsData {
     /// Whether attachment files on disk are encrypted
     @Default(false) bool encryptAttachments,
 
+    /// Whether recurring transactions are auto-generated on startup
+    @Default(false) bool autoGenerateRecurring,
+
     /// Whether budget progress is shown on home
     @Default(true) bool homeShowBudgetProgress,
 

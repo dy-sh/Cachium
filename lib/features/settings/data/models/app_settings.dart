@@ -244,6 +244,9 @@ class AppSettings {
   // Attachments
   final bool encryptAttachments;
 
+  // Recurring
+  final bool autoGenerateRecurring;
+
   // Onboarding
   final bool onboardingCompleted;
   final bool tutorialCompleted;
@@ -305,6 +308,7 @@ class AppSettings {
     this.weeklySpendingSummaryEnabled = false,
     this.weeklySpendingSummaryDay = 1,
     this.encryptAttachments = false,
+    this.autoGenerateRecurring = false,
     this.onboardingCompleted = false,
     this.tutorialCompleted = false,
   });
@@ -373,6 +377,7 @@ class AppSettings {
     bool? weeklySpendingSummaryEnabled,
     int? weeklySpendingSummaryDay,
     bool? encryptAttachments,
+    bool? autoGenerateRecurring,
     bool? onboardingCompleted,
     bool? tutorialCompleted,
   }) {
@@ -433,6 +438,7 @@ class AppSettings {
       weeklySpendingSummaryEnabled: weeklySpendingSummaryEnabled ?? this.weeklySpendingSummaryEnabled,
       weeklySpendingSummaryDay: weeklySpendingSummaryDay ?? this.weeklySpendingSummaryDay,
       encryptAttachments: encryptAttachments ?? this.encryptAttachments,
+      autoGenerateRecurring: autoGenerateRecurring ?? this.autoGenerateRecurring,
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
       tutorialCompleted: tutorialCompleted ?? this.tutorialCompleted,
     );

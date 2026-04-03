@@ -95,12 +95,16 @@ class AssetDao extends DatabaseAccessor<AppDatabase>
         .getSingleOrNull();
   }
 
-  /// Get all non-deleted assets ordered by sortOrder ascending
-  Future<List<Asset>> getAll() async {
-    return (select(assets)
-          ..where((a) => a.isDeleted.equals(false))
-          ..orderBy([(a) => OrderingTerm.asc(a.sortOrder)]))
-        .get();
+  /// Get all non-deleted assets ordered by sortOrder ascending.
+  /// Supports optional pagination via [limit] and [offset].
+  Future<List<Asset>> getAll({int? limit, int? offset}) async {
+    final query = select(assets)
+      ..where((a) => a.isDeleted.equals(false))
+      ..orderBy([(a) => OrderingTerm.asc(a.sortOrder)]);
+    if (limit != null) {
+      query.limit(limit, offset: offset);
+    }
+    return query.get();
   }
 
   /// Watch all non-deleted assets (for reactive UI)

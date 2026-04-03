@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
+import '../../core/utils/app_logger.dart';
 import '../../core/utils/decrypt_batch.dart';
 import '../../features/accounts/data/models/account.dart' as ui;
 import '../encryption/account_data.dart';
 import 'corruption_tracker.dart';
 import 'decryption_cache.dart';
+
+const _log = AppLogger('AccountRepo');
 
 /// Repository for managing encrypted account storage.
 ///
@@ -211,7 +214,7 @@ class AccountRepository with CorruptionTracker {
             _decryptionCache.put(row.id, row.encryptedBlob, result);
             return result;
           } catch (e) {
-            debugPrint('WARNING: Corrupted account row id=${row.id}: $e');
+            _log.warning('Corrupted account row id=${row.id}: $e');
             corruptedCount++;
             return null;
           }
@@ -293,7 +296,7 @@ class AccountRepository with CorruptionTracker {
             _decryptionCache.put(row.id, row.encryptedBlob, result);
             return result;
           } catch (e) {
-            debugPrint('WARNING: Corrupted account row id=${row.id}: $e');
+            _log.warning('Corrupted account row id=${row.id}: $e');
             corruptedCount++;
             return null;
           }

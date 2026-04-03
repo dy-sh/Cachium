@@ -1,13 +1,16 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
+import '../../core/utils/app_logger.dart';
 import '../../core/utils/decrypt_batch.dart';
 import '../../features/tags/data/models/tag.dart' as ui;
 import '../encryption/tag_data.dart';
 import 'corruption_tracker.dart';
 import 'decryption_cache.dart';
+
+const _log = AppLogger('TagRepo');
 
 /// Repository for managing encrypted tag storage.
 class TagRepository with CorruptionTracker {
@@ -125,7 +128,7 @@ class TagRepository with CorruptionTracker {
             _decryptionCache.put(row.id, row.encryptedBlob, result);
             return result;
           } catch (e) {
-            debugPrint('WARNING: Corrupted tag row id=${row.id}: $e');
+            _log.warning('Corrupted tag row id=${row.id}: $e');
             corruptedCount++;
             return null;
           }
@@ -197,7 +200,7 @@ class TagRepository with CorruptionTracker {
             _decryptionCache.put(row.id, row.encryptedBlob, result);
             return result;
           } catch (e) {
-            debugPrint('WARNING: Corrupted tag row id=${row.id}: $e');
+            _log.warning('Corrupted tag row id=${row.id}: $e');
             corruptedCount++;
             return null;
           }

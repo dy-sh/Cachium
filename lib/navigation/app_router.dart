@@ -23,6 +23,7 @@ import '../features/settings/presentation/screens/csv_import_screen.dart';
 import '../features/settings/presentation/screens/database_settings_screen.dart';
 import '../features/settings/presentation/screens/export_screen.dart';
 import '../features/settings/presentation/screens/formats_settings_screen.dart';
+import '../features/settings/presentation/screens/key_backup_screen.dart';
 import '../features/settings/presentation/screens/manual_rates_screen.dart';
 import '../features/settings/presentation/screens/notification_settings_screen.dart';
 import '../features/settings/presentation/screens/home_settings_screen.dart';
@@ -98,6 +99,7 @@ class AppRoutes {
   static const assetCategories = '/settings/assets/categories';
   static const assetDetail = '/asset/:id';
   static const assetCompare = '/assets/compare';
+  static const keyBackup = '/settings/key-backup';
   static const calendar = '/calendar';
   static const netWorthHistory = '/analytics/net-worth-history';
 
@@ -456,6 +458,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
           state,
           const SavingsGoalsScreen(),
+          animationsEnabled: ref.read(formAnimationsEnabledProvider),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.keyBackup,
+        pageBuilder: (context, state) => PageTransitions.buildSlideLeftTransition(
+          state,
+          const KeyBackupScreen(),
           animationsEnabled: ref.read(formAnimationsEnabledProvider),
         ),
       ),

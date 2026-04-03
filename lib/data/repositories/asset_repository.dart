@@ -1,13 +1,16 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
+import '../../core/utils/app_logger.dart';
 import '../../core/utils/decrypt_batch.dart';
 import '../../features/assets/data/models/asset.dart' as ui;
 import '../encryption/asset_data.dart';
 import 'corruption_tracker.dart';
 import 'decryption_cache.dart';
+
+const _log = AppLogger('AssetRepo');
 
 /// Repository for managing encrypted asset storage.
 ///
@@ -143,10 +146,10 @@ class AssetRepository with CorruptionTracker {
     }
   }
 
-  /// Get all non-deleted assets
-  Future<List<ui.Asset>> getAllAssets() async {
+  /// Get all non-deleted assets. Supports optional pagination.
+  Future<List<ui.Asset>> getAllAssets({int? limit, int? offset}) async {
     try {
-      final rows = await database.getAllAssets();
+      final rows = await database.getAllAssets(limit: limit, offset: offset);
       int corruptedCount = 0;
 
       final results = await decryptBatch(
@@ -163,7 +166,7 @@ class AssetRepository with CorruptionTracker {
             _decryptionCache.put(row.id, row.encryptedBlob, result);
             return result;
           } catch (e) {
-            debugPrint('WARNING: Corrupted asset row id=${row.id}: $e');
+            _log.warning('Corrupted asset row id=${row.id}: $e');
             corruptedCount++;
             return null;
           }
@@ -236,7 +239,7 @@ class AssetRepository with CorruptionTracker {
             _decryptionCache.put(row.id, row.encryptedBlob, result);
             return result;
           } catch (e) {
-            debugPrint('WARNING: Corrupted asset row id=${row.id}: $e');
+            _log.warning('Corrupted asset row id=${row.id}: $e');
             corruptedCount++;
             return null;
           }

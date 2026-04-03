@@ -1,14 +1,15 @@
-import 'package:flutter/foundation.dart';
-
 import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
+import '../../core/utils/app_logger.dart';
 import '../../core/utils/decrypt_batch.dart';
 import '../../features/bills/data/models/bill.dart' as ui;
 import '../../features/transactions/data/models/recurring_rule.dart';
 import '../encryption/bill_data.dart';
 import 'corruption_tracker.dart';
 import 'decryption_cache.dart';
+
+const _log = AppLogger('BillRepo');
 
 /// Repository for managing encrypted bill storage.
 class BillRepository with CorruptionTracker {
@@ -132,7 +133,7 @@ class BillRepository with CorruptionTracker {
             _decryptionCache.put(row.id, row.encryptedBlob, result);
             return result;
           } catch (e) {
-            debugPrint('WARNING: Corrupted bill row id=${row.id}: $e');
+            _log.warning('Corrupted bill row id=${row.id}: $e');
             corruptedCount++;
             return null;
           }
@@ -164,7 +165,7 @@ class BillRepository with CorruptionTracker {
             _decryptionCache.put(row.id, row.encryptedBlob, result);
             return result;
           } catch (e) {
-            debugPrint('WARNING: Corrupted bill row id=${row.id}: $e');
+            _log.warning('Corrupted bill row id=${row.id}: $e');
             corruptedCount++;
             return null;
           }

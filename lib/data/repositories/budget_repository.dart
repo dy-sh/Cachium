@@ -1,13 +1,14 @@
-import 'package:flutter/foundation.dart';
-
 import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
+import '../../core/utils/app_logger.dart';
 import '../../core/utils/decrypt_batch.dart';
 import '../../features/budgets/data/models/budget.dart' as ui;
 import '../encryption/budget_data.dart';
 import 'corruption_tracker.dart';
 import 'decryption_cache.dart';
+
+const _log = AppLogger('BudgetRepo');
 
 class BudgetRepository with CorruptionTracker {
   final db.AppDatabase database;
@@ -119,7 +120,7 @@ class BudgetRepository with CorruptionTracker {
             _decryptionCache.put(row.id, row.encryptedBlob, result);
             return result;
           } catch (e) {
-            debugPrint('WARNING: Corrupted budget row id=${row.id}: $e');
+            _log.warning('Corrupted budget row id=${row.id}: $e');
             corruptedCount++;
             return null;
           }

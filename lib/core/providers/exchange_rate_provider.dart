@@ -1,12 +1,14 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/settings/data/models/app_settings.dart';
 import '../../features/settings/presentation/providers/settings_provider.dart';
 import '../services/exchange_rate_service.dart';
+import '../utils/app_logger.dart';
 import '../utils/currency_conversion.dart';
+
+const _log = AppLogger('ExchangeRates');
 
 final exchangeRateServiceProvider = Provider<ExchangeRateService>((ref) {
   return ExchangeRateService();
@@ -42,7 +44,7 @@ class ExchangeRatesNotifier extends AsyncNotifier<Map<String, double>> {
         );
         service.setCachedRates(cached, mainCurrency);
       } catch (e) {
-        debugPrint('ExchangeRates: failed to load cached rates: $e');
+        _log.warning('failed to load cached rates: $e');
       }
     }
 
@@ -63,7 +65,7 @@ class ExchangeRatesNotifier extends AsyncNotifier<Map<String, double>> {
         if (isValidExchangeRate(entry.value)) {
           validatedRates[entry.key] = entry.value;
         } else {
-          debugPrint('ExchangeRates: rejected invalid rate for ${entry.key}: ${entry.value}');
+          _log.warning('rejected invalid rate for ${entry.key}: ${entry.value}');
         }
       }
       _cacheRates(validatedRates);
@@ -71,14 +73,14 @@ class ExchangeRatesNotifier extends AsyncNotifier<Map<String, double>> {
       return validatedRates;
     } catch (e) {
       ref.read(exchangeRateFetchFailedProvider.notifier).state = true;
-      debugPrint('ExchangeRates: failed to fetch rates: $e');
+      _log.error('failed to fetch rates', e);
       // Return cached rates if available, but log the staleness
       if (service.cachedRates.isNotEmpty) {
-        debugPrint('ExchangeRates: using cached rates as fallback');
+        _log.warning('using cached rates as fallback');
         return service.cachedRates;
       }
       // Return minimal map with just the main currency
-      debugPrint('ExchangeRates: no cached rates available, using fallback {$mainCurrency: 1.0}');
+      _log.warning('no cached rates available, using fallback {$mainCurrency: 1.0}');
       return {mainCurrency: 1.0};
     }
   }
@@ -91,7 +93,7 @@ class ExchangeRatesNotifier extends AsyncNotifier<Map<String, double>> {
         DateTime.now().millisecondsSinceEpoch,
       );
     } catch (e) {
-      debugPrint('ExchangeRates: failed to cache rates: $e');
+      _log.error('failed to cache rates', e);
     }
   }
 
@@ -105,7 +107,7 @@ class ExchangeRatesNotifier extends AsyncNotifier<Map<String, double>> {
       ref.read(exchangeRateFetchFailedProvider.notifier).state = false;
       state = AsyncData(rates);
     } catch (e) {
-      debugPrint('ExchangeRates: refresh failed: $e');
+      _log.error('refresh failed', e);
       ref.read(exchangeRateFetchFailedProvider.notifier).state = true;
       // Keep current state on refresh failure
     }

@@ -735,7 +735,8 @@ class AppDatabase extends _$AppDatabase {
 
   Future<Asset?> getAsset(String id) => assetDao.getById(id);
 
-  Future<List<Asset>> getAllAssets() => assetDao.getAll();
+  Future<List<Asset>> getAllAssets({int? limit, int? offset}) =>
+      assetDao.getAll(limit: limit, offset: offset);
 
   Stream<List<Asset>> watchAllAssets() => assetDao.watchAll();
 

@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 import '../../../data/repositories/account_repository.dart';
 import '../../../data/repositories/budget_repository.dart';
 import '../../../data/repositories/category_repository.dart';
@@ -9,7 +7,10 @@ import '../../../data/repositories/transaction_repository.dart';
 import '../../../data/repositories/transaction_template_repository.dart';
 import '../../../features/settings/data/models/database_consistency.dart';
 import '../../../features/transactions/data/models/transaction.dart';
+import '../../utils/app_logger.dart';
 import '../../utils/balance_calculation.dart';
+
+const _log = AppLogger('DatabaseConsistency');
 
 /// Service for checking database consistency.
 ///
@@ -174,7 +175,7 @@ class DatabaseConsistencyService {
       final transactionDelta = accountDeltas[account.id] ?? 0;
       final expectedBalance = account.initialBalance + transactionDelta;
       if ((account.balance - expectedBalance).abs() > 0.001) {
-        debugPrint(
+        _log.warning(
           'Balance fix: ${account.name} '
           '${account.balance} -> $expectedBalance '
           '(delta: ${expectedBalance - account.balance})',

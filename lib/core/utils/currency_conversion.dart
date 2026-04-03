@@ -1,5 +1,6 @@
 import '../../features/transactions/data/models/transaction.dart';
 import '../providers/exchange_rate_provider.dart';
+import 'app_logger.dart';
 
 /// ISO 4217 currencies with non-standard decimal places.
 /// Most currencies use 2 decimals; these are the exceptions.
@@ -57,8 +58,8 @@ double convertedAmount(
 
   // Fallback to stored conversion rate (live rate unavailable)
   assert(() {
-    // ignore: avoid_print
-    print('currency_conversion: using stored rate for ${tx.currencyCode} (no live rate available)');
+    const log = AppLogger('CurrencyConversion');
+    log.debug('using stored rate for ${tx.currencyCode} (no live rate available)');
     return true;
   }());
   if (tx.conversionRate <= 0 || !tx.conversionRate.isFinite) {

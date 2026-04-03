@@ -120,6 +120,9 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
   Future<void> setWeeklySpendingSummaryEnabled(bool v) => _update((s) => s.copyWith(weeklySpendingSummaryEnabled: v));
   Future<void> setWeeklySpendingSummaryDay(int v) => _update((s) => s.copyWith(weeklySpendingSummaryDay: v));
 
+  // Recurring
+  Future<void> setAutoGenerateRecurring(bool v) => _update((s) => s.copyWith(autoGenerateRecurring: v));
+
   // Security
   Future<void> setAppLockEnabled(bool v) => _update((s) => s.copyWith(appLockEnabled: v));
   Future<void> setAutoLockTimeout(AutoLockTimeout v) => _update((s) => s.copyWith(autoLockTimeout: v));

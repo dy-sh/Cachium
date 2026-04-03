@@ -9,4 +9,9 @@ abstract class KeyProvider {
   ///
   /// Throws an exception if the key cannot be retrieved.
   Future<Uint8List> getKey();
+
+  /// Overwrites the stored encryption key with [key].
+  /// The key must be exactly 32 bytes.
+  /// After calling this, [getKey] will return the new key.
+  Future<void> restoreKey(Uint8List key);
 }

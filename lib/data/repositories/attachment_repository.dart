@@ -1,11 +1,12 @@
-import 'package:flutter/foundation.dart';
-
 import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
+import '../../core/utils/app_logger.dart';
 import '../../core/utils/decrypt_batch.dart';
 import '../../features/attachments/data/models/attachment.dart' as ui;
 import '../encryption/attachment_data.dart';
+
+const _log = AppLogger('AttachmentRepo');
 
 /// Repository for managing encrypted attachment metadata storage.
 class AttachmentRepository {
@@ -100,7 +101,7 @@ class AttachmentRepository {
             );
             return _toAttachment(data);
           } catch (e) {
-            debugPrint('WARNING: Corrupted attachment row id=${row.id}: $e');
+            _log.warning('Corrupted attachment row id=${row.id}: $e');
             return null;
           }
         }),
@@ -127,7 +128,7 @@ class AttachmentRepository {
             );
             return _toAttachment(data);
           } catch (e) {
-            debugPrint('WARNING: Corrupted attachment row id=${row.id}: $e');
+            _log.warning('Corrupted attachment row id=${row.id}: $e');
             return null;
           }
         }),
@@ -185,7 +186,7 @@ class AttachmentRepository {
             );
             return _toAttachment(data);
           } catch (e) {
-            debugPrint('WARNING: Corrupted attachment row id=${row.id}: $e');
+            _log.warning('Corrupted attachment row id=${row.id}: $e');
             return null;
           }
         }),

@@ -39,6 +39,13 @@ class SecureKeyProvider implements KeyProvider {
     }
   }
 
+  @override
+  Future<void> restoreKey(Uint8List key) async {
+    assert(key.length == 32, 'Key must be exactly 32 bytes');
+    await _storage.write(key: _storageKey, value: base64Encode(key));
+    _cachedKey = Uint8List.fromList(key);
+  }
+
   Future<Uint8List> _loadOrGenerateKey() async {
     final existing = await _storage.read(key: _storageKey);
     if (existing != null) {

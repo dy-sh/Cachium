@@ -7,7 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Test key provider with a fixed 32-byte key.
 class TestKeyProvider extends KeyProvider {
-  final Uint8List _key;
+  Uint8List _key;
 
   TestKeyProvider()
       : _key = Uint8List.fromList(
@@ -15,6 +15,9 @@ class TestKeyProvider extends KeyProvider {
 
   @override
   Future<Uint8List> getKey() async => _key;
+
+  @override
+  Future<void> restoreKey(Uint8List key) async => _key = key;
 }
 
 /// Key provider that returns a different key (for wrong-key tests).
@@ -22,6 +25,9 @@ class WrongKeyProvider extends KeyProvider {
   @override
   Future<Uint8List> getKey() async =>
       Uint8List.fromList(List.generate(32, (i) => 255 - i));
+
+  @override
+  Future<void> restoreKey(Uint8List key) async {}
 }
 
 void main() {

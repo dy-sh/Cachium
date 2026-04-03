@@ -1,12 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
+import '../utils/app_logger.dart';
 
-void _log(String msg) {
-  // ignore: avoid_print
-  if (kDebugMode) print(msg);
-}
+const _log = AppLogger('ExchangeRateService');
 
 abstract class ExchangeRateApi {
   String get name;
@@ -119,23 +116,23 @@ class ExchangeRateService {
         DateTime.now().difference(_lastFetchTime!) < _minFetchInterval &&
         _cachedBaseCurrency == baseCurrency &&
         _cachedRates.isNotEmpty) {
-      _log('[ExchangeRateService] THROTTLED: returning cached rates (last fetch ${DateTime.now().difference(_lastFetchTime!).inSeconds}s ago)');
+      _log.debug('THROTTLED: returning cached rates (last fetch ${DateTime.now().difference(_lastFetchTime!).inSeconds}s ago)');
       return Map.from(_cachedRates);
     }
 
-    _log('[ExchangeRateService] fetchRates(base=$baseCurrency) using ${_api.name}');
+    _log.debug('fetchRates(base=$baseCurrency) using ${_api.name}');
     try {
       final rates = await _api.fetchRates(baseCurrency);
       _cachedRates = Map.from(rates);
       _cachedBaseCurrency = baseCurrency;
       _lastFetchTime = DateTime.now();
-      _log('[ExchangeRateService] SUCCESS: ${rates.length} rates, EUR=${rates['EUR']}');
+      _log.debug('SUCCESS: ${rates.length} rates, EUR=${rates['EUR']}');
       return rates;
     } catch (e) {
-      _log('[ExchangeRateService] FAILED: $e');
+      _log.error('FAILED', e);
       // Return cached rates on failure if base currency matches
       if (_cachedBaseCurrency == baseCurrency && _cachedRates.isNotEmpty) {
-        _log('[ExchangeRateService] Using cached rates as fallback');
+        _log.warning('Using cached rates as fallback');
         return Map.from(_cachedRates);
       }
       rethrow;

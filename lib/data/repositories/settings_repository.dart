@@ -1,12 +1,14 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../core/database/app_database.dart' as db;
+import '../../core/utils/app_logger.dart';
 import '../../features/settings/data/models/app_settings.dart' as ui;
 import '../../features/transactions/data/models/transaction.dart';
 import '../encryption/settings_data.dart';
+
+const _log = AppLogger('SettingsRepo');
 
 /// Repository for managing app settings storage.
 ///
@@ -79,6 +81,7 @@ class SettingsRepository {
       weeklySpendingSummaryEnabled: settings.weeklySpendingSummaryEnabled,
       weeklySpendingSummaryDay: settings.weeklySpendingSummaryDay,
       encryptAttachments: settings.encryptAttachments,
+      autoGenerateRecurring: settings.autoGenerateRecurring,
       homeShowBudgetProgress: settings.homeShowBudgetProgress,
       homeSectionOrder: settings.homeSectionOrder,
       tutorialCompleted: settings.tutorialCompleted,
@@ -159,6 +162,7 @@ class SettingsRepository {
       weeklySpendingSummaryEnabled: data.weeklySpendingSummaryEnabled,
       weeklySpendingSummaryDay: data.weeklySpendingSummaryDay,
       encryptAttachments: data.encryptAttachments,
+      autoGenerateRecurring: data.autoGenerateRecurring,
       homeShowBudgetProgress: data.homeShowBudgetProgress,
       homeSectionOrder: data.homeSectionOrder,
       tutorialCompleted: data.tutorialCompleted,
@@ -205,7 +209,7 @@ class SettingsRepository {
         appPassword: password,
       );
     } catch (_) {
-      if (kDebugMode) debugPrint('SettingsRepository: Failed to read credentials from secure storage');
+      _log.warning('Failed to read credentials from secure storage');
       if (settings.appLockEnabled) {
         settings = settings.copyWith(credentialReadFailed: true);
       }
@@ -229,7 +233,7 @@ class SettingsRepository {
       existingPin = await _secureStorage.read(key: _pinKey);
       existingPassword = await _secureStorage.read(key: _passwordKey);
     } catch (_) {
-      if (kDebugMode) debugPrint('SettingsRepository: Failed to read existing credentials during migration');
+      _log.warning('Failed to read existing credentials during migration');
       return;
     }
 
@@ -241,7 +245,7 @@ class SettingsRepository {
         await _secureStorage.write(key: _pinKey, value: dbPin);
         pinMigrated = true;
       } catch (_) {
-        if (kDebugMode) debugPrint('SettingsRepository: PIN migration to secure storage failed');
+        _log.warning('PIN migration to secure storage failed');
       }
     }
 
@@ -250,7 +254,7 @@ class SettingsRepository {
         await _secureStorage.write(key: _passwordKey, value: dbPassword);
         passwordMigrated = true;
       } catch (_) {
-        if (kDebugMode) debugPrint('SettingsRepository: password migration to secure storage failed');
+        _log.warning('Password migration to secure storage failed');
       }
     }
 
@@ -266,10 +270,10 @@ class SettingsRepository {
           lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
           jsonData: cleanJsonData,
         );
-        if (kDebugMode) debugPrint('SettingsRepository: migrated credentials from DB to secure storage');
+        _log.debug('Migrated credentials from DB to secure storage');
       } catch (_) {
         // DB update failed — credentials are duplicated but safe. Will retry next launch.
-        if (kDebugMode) debugPrint('SettingsRepository: DB cleanup after migration failed');
+        _log.warning('DB cleanup after migration failed');
       }
     }
   }
@@ -288,7 +292,7 @@ class SettingsRepository {
         await _secureStorage.delete(key: _passwordKey);
       }
     } catch (_) {
-      if (kDebugMode) debugPrint('SettingsRepository: Failed to save credentials to secure storage');
+      _log.error('Failed to save credentials to secure storage');
     }
   }
 

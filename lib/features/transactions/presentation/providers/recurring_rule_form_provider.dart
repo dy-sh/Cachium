@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/database_providers.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../data/models/recurring_rule.dart';
 import '../../data/models/transaction.dart';
 
@@ -226,7 +226,7 @@ class RecurringRuleFormNotifier
         state = state.copyWith(currencyCode: account.currencyCode);
       }
     } catch (e) {
-      debugPrint('RecurringRuleForm: failed to load account currency: $e');
+      const AppLogger('RecurringRuleForm').warning('failed to load account currency: $e');
     }
   }
 

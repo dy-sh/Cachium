@@ -40,7 +40,7 @@ class FileKeyProvider implements KeyProvider {
       );
     }
 
-    // Generate a new 32-byte key
+    // Key file not found — generate a new one
     final key = Uint8List(32);
     final random = Random.secure();
     for (int i = 0; i < 32; i++) {
@@ -50,5 +50,14 @@ class FileKeyProvider implements KeyProvider {
     file.writeAsStringSync(base64Encode(key));
     _cachedKey = key;
     return key;
+  }
+
+  @override
+  Future<void> restoreKey(Uint8List key) async {
+    assert(key.length == 32, 'Key must be exactly 32 bytes');
+    final dir = await getApplicationSupportDirectory();
+    final file = File('${dir.path}/$_fileName');
+    file.writeAsStringSync(base64Encode(key));
+    _cachedKey = Uint8List.fromList(key);
   }
 }

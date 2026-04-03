@@ -148,6 +148,9 @@ mixin _$SettingsData {
   /// Whether attachment files on disk are encrypted
   bool get encryptAttachments => throw _privateConstructorUsedError;
 
+  /// Whether recurring transactions are auto-generated on startup
+  bool get autoGenerateRecurring => throw _privateConstructorUsedError;
+
   /// Whether budget progress is shown on home
   bool get homeShowBudgetProgress => throw _privateConstructorUsedError;
 
@@ -216,6 +219,7 @@ abstract class $SettingsDataCopyWith<$Res> {
     bool weeklySpendingSummaryEnabled,
     int weeklySpendingSummaryDay,
     bool encryptAttachments,
+    bool autoGenerateRecurring,
     bool homeShowBudgetProgress,
     List<String> homeSectionOrder,
     bool tutorialCompleted,
@@ -278,6 +282,7 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
     Object? weeklySpendingSummaryEnabled = null,
     Object? weeklySpendingSummaryDay = null,
     Object? encryptAttachments = null,
+    Object? autoGenerateRecurring = null,
     Object? homeShowBudgetProgress = null,
     Object? homeSectionOrder = null,
     Object? tutorialCompleted = null,
@@ -448,6 +453,10 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
                 ? _value.encryptAttachments
                 : encryptAttachments // ignore: cast_nullable_to_non_nullable
                       as bool,
+            autoGenerateRecurring: null == autoGenerateRecurring
+                ? _value.autoGenerateRecurring
+                : autoGenerateRecurring // ignore: cast_nullable_to_non_nullable
+                      as bool,
             homeShowBudgetProgress: null == homeShowBudgetProgress
                 ? _value.homeShowBudgetProgress
                 : homeShowBudgetProgress // ignore: cast_nullable_to_non_nullable
@@ -517,6 +526,7 @@ abstract class _$$SettingsDataImplCopyWith<$Res>
     bool weeklySpendingSummaryEnabled,
     int weeklySpendingSummaryDay,
     bool encryptAttachments,
+    bool autoGenerateRecurring,
     bool homeShowBudgetProgress,
     List<String> homeSectionOrder,
     bool tutorialCompleted,
@@ -578,6 +588,7 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
     Object? weeklySpendingSummaryEnabled = null,
     Object? weeklySpendingSummaryDay = null,
     Object? encryptAttachments = null,
+    Object? autoGenerateRecurring = null,
     Object? homeShowBudgetProgress = null,
     Object? homeSectionOrder = null,
     Object? tutorialCompleted = null,
@@ -748,6 +759,10 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
             ? _value.encryptAttachments
             : encryptAttachments // ignore: cast_nullable_to_non_nullable
                   as bool,
+        autoGenerateRecurring: null == autoGenerateRecurring
+            ? _value.autoGenerateRecurring
+            : autoGenerateRecurring // ignore: cast_nullable_to_non_nullable
+                  as bool,
         homeShowBudgetProgress: null == homeShowBudgetProgress
             ? _value.homeShowBudgetProgress
             : homeShowBudgetProgress // ignore: cast_nullable_to_non_nullable
@@ -810,6 +825,7 @@ class _$SettingsDataImpl implements _SettingsData {
     this.weeklySpendingSummaryEnabled = false,
     this.weeklySpendingSummaryDay = 1,
     this.encryptAttachments = false,
+    this.autoGenerateRecurring = false,
     this.homeShowBudgetProgress = true,
     final List<String> homeSectionOrder = const [
       'accounts',
@@ -1035,6 +1051,11 @@ class _$SettingsDataImpl implements _SettingsData {
   @JsonKey()
   final bool encryptAttachments;
 
+  /// Whether recurring transactions are auto-generated on startup
+  @override
+  @JsonKey()
+  final bool autoGenerateRecurring;
+
   /// Whether budget progress is shown on home
   @override
   @JsonKey()
@@ -1060,7 +1081,7 @@ class _$SettingsDataImpl implements _SettingsData {
 
   @override
   String toString() {
-    return 'SettingsData(id: $id, themeMode: $themeMode, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, mainCurrencyCode: $mainCurrencyCode, exchangeRateApiOption: $exchangeRateApiOption, cachedExchangeRates: $cachedExchangeRates, lastRateFetchTimestamp: $lastRateFetchTimestamp, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, autoCategorizeByMerchant: $autoCategorizeByMerchant, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, categoriesFoldedCount: $categoriesFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, categorySortOption: $categorySortOption, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId, appLockEnabled: $appLockEnabled, appPinCode: $appPinCode, appPassword: $appPassword, autoLockTimeout: $autoLockTimeout, biometricUnlockEnabled: $biometricUnlockEnabled, notificationsEnabled: $notificationsEnabled, budgetAlertThresholds: $budgetAlertThresholds, recurringRemindersEnabled: $recurringRemindersEnabled, recurringReminderAdvanceDays: $recurringReminderAdvanceDays, weeklySpendingSummaryEnabled: $weeklySpendingSummaryEnabled, weeklySpendingSummaryDay: $weeklySpendingSummaryDay, encryptAttachments: $encryptAttachments, homeShowBudgetProgress: $homeShowBudgetProgress, homeSectionOrder: $homeSectionOrder, tutorialCompleted: $tutorialCompleted)';
+    return 'SettingsData(id: $id, themeMode: $themeMode, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, mainCurrencyCode: $mainCurrencyCode, exchangeRateApiOption: $exchangeRateApiOption, cachedExchangeRates: $cachedExchangeRates, lastRateFetchTimestamp: $lastRateFetchTimestamp, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, autoCategorizeByMerchant: $autoCategorizeByMerchant, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, categoriesFoldedCount: $categoriesFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, categorySortOption: $categorySortOption, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId, appLockEnabled: $appLockEnabled, appPinCode: $appPinCode, appPassword: $appPassword, autoLockTimeout: $autoLockTimeout, biometricUnlockEnabled: $biometricUnlockEnabled, notificationsEnabled: $notificationsEnabled, budgetAlertThresholds: $budgetAlertThresholds, recurringRemindersEnabled: $recurringRemindersEnabled, recurringReminderAdvanceDays: $recurringReminderAdvanceDays, weeklySpendingSummaryEnabled: $weeklySpendingSummaryEnabled, weeklySpendingSummaryDay: $weeklySpendingSummaryDay, encryptAttachments: $encryptAttachments, autoGenerateRecurring: $autoGenerateRecurring, homeShowBudgetProgress: $homeShowBudgetProgress, homeSectionOrder: $homeSectionOrder, tutorialCompleted: $tutorialCompleted)';
   }
 
   @override
@@ -1174,6 +1195,8 @@ class _$SettingsDataImpl implements _SettingsData {
                 other.weeklySpendingSummaryDay == weeklySpendingSummaryDay) &&
             (identical(other.encryptAttachments, encryptAttachments) ||
                 other.encryptAttachments == encryptAttachments) &&
+            (identical(other.autoGenerateRecurring, autoGenerateRecurring) ||
+                other.autoGenerateRecurring == autoGenerateRecurring) &&
             (identical(other.homeShowBudgetProgress, homeShowBudgetProgress) ||
                 other.homeShowBudgetProgress == homeShowBudgetProgress) &&
             const DeepCollectionEquality().equals(
@@ -1229,6 +1252,7 @@ class _$SettingsDataImpl implements _SettingsData {
     weeklySpendingSummaryEnabled,
     weeklySpendingSummaryDay,
     encryptAttachments,
+    autoGenerateRecurring,
     homeShowBudgetProgress,
     const DeepCollectionEquality().hash(_homeSectionOrder),
     tutorialCompleted,
@@ -1291,6 +1315,7 @@ abstract class _SettingsData implements SettingsData {
     final bool weeklySpendingSummaryEnabled,
     final int weeklySpendingSummaryDay,
     final bool encryptAttachments,
+    final bool autoGenerateRecurring,
     final bool homeShowBudgetProgress,
     final List<String> homeSectionOrder,
     final bool tutorialCompleted,
@@ -1466,6 +1491,10 @@ abstract class _SettingsData implements SettingsData {
   /// Whether attachment files on disk are encrypted
   @override
   bool get encryptAttachments;
+
+  /// Whether recurring transactions are auto-generated on startup
+  @override
+  bool get autoGenerateRecurring;
 
   /// Whether budget progress is shown on home
   @override
