@@ -1,4 +1,5 @@
 import 'package:cachium/core/services/exchange_rate_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Fake API that returns fixed rates.
@@ -24,6 +25,18 @@ class FakeExchangeRateApi implements ExchangeRateApi {
 }
 
 void main() {
+  // Suppress debugPrint output during tests to keep test output clean.
+  late DebugPrintCallback originalDebugPrint;
+
+  setUp(() {
+    originalDebugPrint = debugPrint;
+    debugPrint = (String? message, {int? wrapWidth}) {};
+  });
+
+  tearDown(() {
+    debugPrint = originalDebugPrint;
+  });
+
   group('ExchangeRateService', () {
     late ExchangeRateService service;
     late FakeExchangeRateApi fakeApi;

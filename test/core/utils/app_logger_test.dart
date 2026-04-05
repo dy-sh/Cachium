@@ -1,8 +1,21 @@
 import 'package:cachium/core/utils/app_logger.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('AppLogger', () {
+    // Suppress debugPrint output during logger tests to keep test output clean.
+    late DebugPrintCallback originalDebugPrint;
+
+    setUp(() {
+      originalDebugPrint = debugPrint;
+      debugPrint = (String? message, {int? wrapWidth}) {};
+    });
+
+    tearDown(() {
+      debugPrint = originalDebugPrint;
+    });
+
     test('can be constructed with a tag', () {
       const logger = AppLogger('TestTag');
       expect(logger.tag, 'TestTag');
