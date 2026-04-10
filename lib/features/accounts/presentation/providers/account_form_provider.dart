@@ -1,7 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/exceptions/app_exception.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/account.dart';
+import 'accounts_provider.dart';
+
+/// Result of an account save operation.
+class AccountSaveResult {
+  final bool success;
+  final String? errorMessage;
+  final String? newAccountId;
+
+  const AccountSaveResult({
+    required this.success,
+    this.errorMessage,
+    this.newAccountId,
+  });
+}
 
 class AccountFormState {
   final AccountType? type;
@@ -12,6 +27,7 @@ class AccountFormState {
   final String? editingAccountId;
   final int? customColorIndex; // null means use default type color
   final Color? originalCustomColor; // stored color from account being edited
+  final bool isSaving;
 
   const AccountFormState({
     this.type,
@@ -22,6 +38,7 @@ class AccountFormState {
     this.editingAccountId,
     this.customColorIndex,
     this.originalCustomColor,
+    this.isSaving = false,
   });
 
   // Current balance is computed from initial balance + transactions
@@ -44,6 +61,7 @@ class AccountFormState {
     bool clearCustomColor = false,
     Color? originalCustomColor,
     bool clearOriginalCustomColor = false,
+    bool? isSaving,
   }) {
     return AccountFormState(
       type: type ?? this.type,
@@ -54,6 +72,7 @@ class AccountFormState {
       editingAccountId: editingAccountId ?? this.editingAccountId,
       customColorIndex: clearCustomColor ? null : (customColorIndex ?? this.customColorIndex),
       originalCustomColor: clearOriginalCustomColor ? null : (originalCustomColor ?? this.originalCustomColor),
+      isSaving: isSaving ?? this.isSaving,
     );
   }
 }
@@ -109,6 +128,75 @@ class AccountFormNotifier extends AutoDisposeNotifier<AccountFormState> {
       state = state.copyWith(clearCustomColor: true);
     } else {
       state = state.copyWith(customColorIndex: index);
+    }
+  }
+
+  /// Persist the current form as either a new account or an update.
+  ///
+  /// [customColor] is resolved by the caller from the current color intensity
+  /// palette since that palette is UI-facing and lives outside the notifier.
+  Future<AccountSaveResult> save({required Color? customColor}) async {
+    if (state.isSaving) {
+      return const AccountSaveResult(
+        success: false,
+        errorMessage: 'Save already in progress',
+      );
+    }
+    if (!state.isValid) {
+      return const AccountSaveResult(
+        success: false,
+        errorMessage: 'Please fill in all required fields',
+      );
+    }
+
+    state = state.copyWith(isSaving: true);
+    try {
+      final formState = state;
+      if (formState.isEditing) {
+        final originalAccount = ref.read(
+          accountByIdProvider(formState.editingAccountId!),
+        );
+        if (originalAccount == null) {
+          return const AccountSaveResult(
+            success: false,
+            errorMessage: 'Account no longer exists',
+          );
+        }
+        // Calculate new balance based on initial balance change
+        final initialBalanceDiff =
+            formState.initialBalance - originalAccount.initialBalance;
+        final newBalance = originalAccount.balance + initialBalanceDiff;
+
+        final updatedAccount = originalAccount.copyWith(
+          name: formState.name,
+          type: formState.type,
+          initialBalance: formState.initialBalance,
+          balance: newBalance,
+          currencyCode: formState.currencyCode,
+          customColor: customColor,
+        );
+        await ref.read(accountsProvider.notifier).updateAccount(updatedAccount);
+        return const AccountSaveResult(success: true);
+      } else {
+        final newAccountId = await ref
+            .read(accountsProvider.notifier)
+            .addAccount(
+              name: formState.name,
+              type: formState.type!,
+              initialBalance: formState.initialBalance,
+              currencyCode: formState.currencyCode,
+              customColor: customColor,
+            );
+        return AccountSaveResult(success: true, newAccountId: newAccountId);
+      }
+    } catch (e) {
+      return AccountSaveResult(
+        success: false,
+        errorMessage:
+            e is AppException ? e.userMessage : 'Failed to save account',
+      );
+    } finally {
+      state = state.copyWith(isSaving: false);
     }
   }
 }

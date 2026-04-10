@@ -237,3 +237,41 @@ class ShimmerListItem extends StatelessWidget {
     );
   }
 }
+
+/// Variant selector for [ShimmerList].
+enum ShimmerListVariant { account, transaction, listItem }
+
+/// Renders a consistent column of shimmer skeletons while async data loads.
+///
+/// Use instead of hand-rolled `List.generate(N, (_) => ShimmerXCard())`.
+class ShimmerList extends StatelessWidget {
+  final ShimmerListVariant variant;
+  final int count;
+  final double itemHeight;
+
+  const ShimmerList({
+    super.key,
+    this.variant = ShimmerListVariant.listItem,
+    this.count = 3,
+    this.itemHeight = 60,
+  });
+
+  Widget _buildItem() {
+    switch (variant) {
+      case ShimmerListVariant.account:
+        return const ShimmerAccountCard();
+      case ShimmerListVariant.transaction:
+        return const ShimmerTransactionItem();
+      case ShimmerListVariant.listItem:
+        return ShimmerListItem(height: itemHeight);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(count, (_) => _buildItem()),
+    );
+  }
+}

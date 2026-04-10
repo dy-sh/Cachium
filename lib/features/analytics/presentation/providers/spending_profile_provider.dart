@@ -12,16 +12,22 @@ import 'analytics_filter_provider.dart';
 import 'period_comparison_provider.dart';
 
 final spendingProfileProvider = Provider<List<SpendingProfile>>((ref) {
-  final transactionsAsync = ref.watch(transactionsProvider);
-  final categoriesAsync = ref.watch(categoriesProvider);
+  // Use .select((v) => v.valueOrNull) so this provider skips rebuilds on
+  // AsyncValue state transitions (loading → data with the same list).
+  final transactions = ref.watch(
+    transactionsProvider.select((v) => v.valueOrNull),
+  );
+  final categories = ref.watch(
+    categoriesProvider.select((v) => v.valueOrNull),
+  );
   final filter = ref.watch(analyticsFilterProvider);
   final periodA = ref.watch(comparisonPeriodAProvider);
   final periodB = ref.watch(comparisonPeriodBProvider);
   final mainCurrency = ref.watch(mainCurrencyCodeProvider);
-  final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
+  final rates = ref.watch(
+    exchangeRatesProvider.select((v) => v.valueOrNull),
+  ) ?? {};
 
-  final transactions = transactionsAsync.valueOrNull;
-  final categories = categoriesAsync.valueOrNull;
   if (transactions == null || categories == null) return [];
 
   final catMap = <String, Category>{};

@@ -5,6 +5,8 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../../design_system/animations/shimmer_loading.dart';
+import '../../../../design_system/components/feedback/error_placeholder.dart';
 import '../../../budgets/data/models/budget_progress.dart';
 import '../../../budgets/presentation/providers/budget_provider.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
@@ -14,23 +16,42 @@ class BudgetProgressList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final now = DateTime.now();
-    final progressList = ref.watch(
-      budgetProgressProvider((year: now.year, month: now.month)),
-    );
+    final budgetsAsync = ref.watch(budgetsProvider);
 
-    if (progressList.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-      child: Column(
-        children: progressList
-            .take(3) // Show top 3 budgets on home screen
-            .map((progress) => _BudgetProgressItem(progress: progress))
-            .toList(),
+    return budgetsAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+        child: ShimmerList(count: 2, itemHeight: 72),
       ),
+      error: (error, stack) => const Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.screenPadding,
+          vertical: AppSpacing.md,
+        ),
+        child: ErrorPlaceholder(message: 'Unable to load budgets'),
+      ),
+      data: (_) {
+        final now = DateTime.now();
+        final progressList = ref.watch(
+          budgetProgressProvider((year: now.year, month: now.month)),
+        );
+
+        if (progressList.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.screenPadding,
+          ),
+          child: Column(
+            children: progressList
+                .take(3) // Show top 3 budgets on home screen
+                .map((progress) => _BudgetProgressItem(progress: progress))
+                .toList(),
+          ),
+        );
+      },
     );
   }
 }

@@ -62,6 +62,19 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
     final count = selectedIds.length;
 
+    final confirmed = await showConfirmationDialog(
+      context: context,
+      title: 'Delete transactions?',
+      message: count == 1
+          ? 'Delete this transaction? You can undo immediately after.'
+          : 'Delete $count transactions? You can undo immediately after.',
+      confirmLabel: 'Delete',
+      isDestructive: true,
+      icon: LucideIcons.trash2,
+    );
+    if (!confirmed) return;
+    if (!mounted) return;
+
     await ref.read(transactionsProvider.notifier).deleteTransactions(selectedIds.toList());
     _exitSelectionMode();
 

@@ -245,4 +245,35 @@ void main() {
       expect(state.hasCurrencyFieldChanges, isTrue);
     });
   });
+
+  group('TransactionFormState.isSaving', () {
+    test('defaults to false', () {
+      final state = TransactionFormState(date: DateTime(2026, 3, 15));
+      expect(state.isSaving, isFalse);
+    });
+
+    test('copyWith toggles isSaving to true', () {
+      final state = TransactionFormState(date: DateTime(2026, 3, 15));
+      final saving = state.copyWith(isSaving: true);
+      expect(saving.isSaving, isTrue);
+      // Other fields unchanged
+      expect(saving.date, state.date);
+      expect(saving.amount, state.amount);
+    });
+
+    test('copyWith without isSaving preserves value', () {
+      final state = TransactionFormState(date: DateTime(2026, 3, 15))
+          .copyWith(isSaving: true);
+      final next = state.copyWith(amount: 100);
+      expect(next.isSaving, isTrue);
+      expect(next.amount, 100);
+    });
+
+    test('copyWith can reset isSaving to false', () {
+      final state = TransactionFormState(date: DateTime(2026, 3, 15))
+          .copyWith(isSaving: true);
+      final next = state.copyWith(isSaving: false);
+      expect(next.isSaving, isFalse);
+    });
+  });
 }

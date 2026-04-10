@@ -11,12 +11,16 @@ final filteredAnalyticsTransactionsProvider = Provider<List<Transaction>>((ref) 
   // Keep alive so switching analytics tabs doesn't recompute the filtered list.
   ref.keepAlive();
 
-  final transactionsAsync = ref.watch(transactionsProvider);
+  // Use .select((v) => v.valueOrNull) so this critical upstream skips
+  // rebuilds on AsyncValue state transitions — every analytics provider
+  // fans in through this one, so the savings compound.
+  final transactions = ref.watch(
+    transactionsProvider.select((v) => v.valueOrNull),
+  );
   final filter = ref.watch(analyticsFilterProvider);
-  final categoriesAsync = ref.watch(categoriesProvider);
-
-  final transactions = transactionsAsync.valueOrNull;
-  final categories = categoriesAsync.valueOrNull;
+  final categories = ref.watch(
+    categoriesProvider.select((v) => v.valueOrNull),
+  );
 
   if (transactions == null) return [];
 

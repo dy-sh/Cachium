@@ -30,8 +30,9 @@ class RecentTransactionsList extends ConsumerWidget {
     final transactionsAsync = ref.watch(recentTransactionsProvider);
 
     return transactionsAsync.when(
-      loading: () => Column(
-        children: List.generate(4, (_) => const ShimmerTransactionItem()),
+      loading: () => const ShimmerList(
+        variant: ShimmerListVariant.transaction,
+        count: 4,
       ),
       error: (error, stack) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),

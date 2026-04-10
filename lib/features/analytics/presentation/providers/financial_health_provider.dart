@@ -6,11 +6,15 @@ import 'income_expense_summary_provider.dart';
 import 'net_worth_history_provider.dart';
 
 final financialHealthProvider = Provider<FinancialHealth>((ref) {
-  final accountsAsync = ref.watch(accountsProvider);
+  // Use .select() to skip rebuilds on AsyncValue state transitions —
+  // we only care about the resolved list. Matches the pattern used in
+  // income_expense_summary_provider.
+  final accounts = ref.watch(
+    accountsProvider.select((asyncValue) => asyncValue.valueOrNull),
+  );
   final summary = ref.watch(incomeExpenseSummaryProvider);
   final netWorthHistory = ref.watch(netWorthHistoryProvider);
 
-  final accounts = accountsAsync.valueOrNull;
   if (accounts == null || accounts.isEmpty) {
     return FinancialHealth.empty;
   }

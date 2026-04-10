@@ -3,12 +3,13 @@ import 'package:flutter/services.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/providers/async_value_extensions.dart';
 import '../../../../core/providers/exchange_rate_provider.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../design_system/animations/animated_counter.dart';
+import '../../../../design_system/animations/shimmer_loading.dart';
+import '../../../../design_system/components/feedback/error_placeholder.dart';
 import '../../../../design_system/components/feedback/notification.dart';
 import '../../../accounts/data/models/account.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
@@ -27,18 +28,58 @@ class _TotalBalanceCardState extends ConsumerState<TotalBalanceCard> {
 
   @override
   Widget build(BuildContext context) {
+    final accountsAsync = ref.watch(accountsProvider);
+
+    return accountsAsync.when(
+      loading: () => _buildShell(
+        child: const Padding(
+          padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+          child: ShimmerListItem(height: 96),
+        ),
+      ),
+      error: (error, stack) => _buildShell(
+        child: const Padding(
+          padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+          child: ErrorPlaceholder(message: 'Unable to load balance'),
+        ),
+      ),
+      data: (accounts) => _buildCard(context, accounts),
+    );
+  }
+
+  Widget _buildShell({required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        borderRadius: AppRadius.lgAll,
+        border: Border.all(color: AppColors.border, width: 1),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.surfaceLight.withValues(alpha: 0.5),
+            AppColors.surface.withValues(alpha: 0.3),
+          ],
+        ),
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildCard(BuildContext context, List<Account> accounts) {
     final totalBalance = ref.watch(totalBalanceProvider);
     final mainCurrency = ref.watch(mainCurrencyCodeProvider);
     final intensity = ref.watch(colorIntensityProvider);
     final incomeColor = AppColors.getTransactionColor('income', intensity);
     final expenseColor = AppColors.getTransactionColor('expense', intensity);
-    final holdings = _getHoldings(ref);
-    final liabilities = _getLiabilities(ref);
+    final holdings = _computeHoldings(accounts, mainCurrency);
+    final liabilities = _computeLiabilities(accounts, mainCurrency);
     final textSize = ref.watch(homeTotalBalanceTextSizeProvider);
     final balancesHidden = ref.watch(homeBalancesHiddenByDefaultProvider);
     final isSmall = textSize == AmountDisplaySize.small;
     final ratesStale = ref.watch(exchangeRatesStaleProvider);
-    final hasMultipleCurrencies = _hasMultipleCurrencies(ref);
+    final hasMultipleCurrencies =
+        accounts.any((a) => a.currencyCode != mainCurrency);
 
     // If balances are hidden by default, use local state to track reveal
     final showBalance = !balancesHidden || _balanceRevealed;
@@ -183,38 +224,26 @@ class _TotalBalanceCardState extends ConsumerState<TotalBalanceCard> {
     );
   }
 
-  bool _hasMultipleCurrencies(WidgetRef ref) {
-    final accounts = ref.watch(accountsProvider).valueOrEmpty;
-    final mainCurrency = ref.watch(mainCurrencyCodeProvider);
-    return accounts.any((a) => a.currencyCode != mainCurrency);
-  }
-
-  double _getHoldings(WidgetRef ref) {
-    final accounts = ref.watch(accountsProvider).valueOrEmpty;
-    final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  double _computeHoldings(List<Account> accounts, String mainCurrency) {
     final rates = ref.watch(exchangeRatesProvider).valueOrNull;
-    return accounts
-        .where((a) => a.type.isHolding)
-        .fold(0.0, (sum, a) {
+    return accounts.where((a) => a.type.isHolding).fold(0.0, (sum, a) {
       if (a.currencyCode == mainCurrency || rates == null) {
         return sum + a.balance;
       }
-      return sum + convertToMainCurrency(a.balance, a.currencyCode, mainCurrency, rates);
+      return sum +
+          convertToMainCurrency(a.balance, a.currencyCode, mainCurrency, rates);
     });
   }
 
-  double _getLiabilities(WidgetRef ref) {
-    final accounts = ref.watch(accountsProvider).valueOrEmpty;
-    final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  double _computeLiabilities(List<Account> accounts, String mainCurrency) {
     final rates = ref.watch(exchangeRatesProvider).valueOrNull;
-    return accounts
-        .where((a) => a.type.isLiability)
-        .fold(0.0, (sum, a) {
+    return accounts.where((a) => a.type.isLiability).fold(0.0, (sum, a) {
       final balance = a.balance.abs();
       if (a.currencyCode == mainCurrency || rates == null) {
         return sum + balance;
       }
-      return sum + convertToMainCurrency(balance, a.currencyCode, mainCurrency, rates);
+      return sum +
+          convertToMainCurrency(balance, a.currencyCode, mainCurrency, rates);
     });
   }
 }

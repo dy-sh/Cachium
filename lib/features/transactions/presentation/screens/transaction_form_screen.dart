@@ -47,7 +47,6 @@ class TransactionFormScreen extends ConsumerStatefulWidget {
 class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   bool _initialized = false;
   bool _accountApplied = false;
-  bool _isSaving = false;
   late TextEditingController _noteController;
   late TextEditingController _merchantController;
 
@@ -308,7 +307,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
 
             _SaveBar(
               formState: formState,
-              isSaving: _isSaving,
+              isSaving: formState.isSaving,
               onSave: () => _saveTransaction(),
             ),
           ],
@@ -327,21 +326,13 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   }
 
   Future<void> _saveTransaction() async {
-    setState(() => _isSaving = true);
-    try {
-      final result = await ref.read(transactionFormProvider.notifier).save();
-      if (mounted) {
-        if (result.success) {
-          context.pop();
-          context.showSuccessNotification(result.message);
-        } else {
-          context.showErrorNotification(result.message);
-        }
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isSaving = false);
-      }
+    final result = await ref.read(transactionFormProvider.notifier).save();
+    if (!mounted) return;
+    if (result.success) {
+      context.pop();
+      context.showSuccessNotification(result.message);
+    } else {
+      context.showErrorNotification(result.message);
     }
   }
 

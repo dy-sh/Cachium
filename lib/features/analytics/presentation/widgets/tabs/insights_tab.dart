@@ -5,6 +5,9 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_radius.dart';
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/constants/app_typography.dart';
+import '../../../../../design_system/animations/shimmer_loading.dart';
+import '../../../../../design_system/components/feedback/error_placeholder.dart';
+import '../../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../providers/anomaly_detection_provider.dart';
 import '../../providers/prediction_alerts_provider.dart';
 import '../../providers/streaks_provider.dart';
@@ -21,6 +24,28 @@ class InsightsTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final transactionsAsync = ref.watch(transactionsProvider);
+
+    return transactionsAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.screenPadding,
+          vertical: AppSpacing.lg,
+        ),
+        child: ShimmerList(count: 3, itemHeight: 100),
+      ),
+      error: (error, stack) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
+        child: ErrorPlaceholder(
+          message: 'Unable to load insights',
+          onRetry: () => ref.invalidate(transactionsProvider),
+        ),
+      ),
+      data: (_) => _buildContent(ref),
+    );
+  }
+
+  Widget _buildContent(WidgetRef ref) {
     final anomalies = ref.watch(anomalyDetectionProvider);
     final predictions = ref.watch(predictionAlertsProvider);
     final streaks = ref.watch(streaksProvider);

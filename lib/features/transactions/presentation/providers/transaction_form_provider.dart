@@ -64,6 +64,8 @@ class TransactionFormState {
   final bool assetAutoSelected;
   // Validation UI state
   final bool showValidationErrors;
+  // Save in progress
+  final bool isSaving;
 
   const TransactionFormState({
     this.type = TransactionType.expense,
@@ -88,6 +90,7 @@ class TransactionFormState {
     this.categoryAutoSelected = false,
     this.assetAutoSelected = false,
     this.showValidationErrors = false,
+    this.isSaving = false,
   });
 
   bool get isTransfer => type == TransactionType.transfer;
@@ -122,6 +125,7 @@ class TransactionFormState {
     bool? categoryAutoSelected,
     bool? assetAutoSelected,
     bool? showValidationErrors,
+    bool? isSaving,
   }) {
     return TransactionFormState(
       type: type ?? this.type,
@@ -150,6 +154,7 @@ class TransactionFormState {
       categoryAutoSelected: categoryAutoSelected ?? this.categoryAutoSelected,
       assetAutoSelected: assetAutoSelected ?? this.assetAutoSelected,
       showValidationErrors: showValidationErrors ?? this.showValidationErrors,
+      isSaving: isSaving ?? this.isSaving,
     );
   }
 }
@@ -415,6 +420,9 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState>
 
   /// Save the transaction (create or update). Returns a SaveResult.
   Future<SaveResult> save() async {
+    if (state.isSaving) {
+      return const SaveResult(success: false, message: 'Save already in progress');
+    }
     // Validate first
     if (!validate()) {
       return const SaveResult(success: false, message: 'Please fill in all required fields');
@@ -423,6 +431,16 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState>
     if (!state.hasChanges) {
       return SaveResult(success: false, message: 'No changes to save', isEdit: state.isEditing);
     }
+
+    state = state.copyWith(isSaving: true);
+    try {
+      return await _performSave();
+    } finally {
+      state = state.copyWith(isSaving: false);
+    }
+  }
+
+  Future<SaveResult> _performSave() async {
 
     final formState = state;
     final isEditing = formState.isEditing;
