@@ -1,8 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/database_providers.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/credential_hasher.dart';
 import '../../../transactions/data/models/transaction.dart';
 import '../../data/models/app_settings.dart';
+import '../../data/services/credential_migration_service.dart';
+
+const _log = AppLogger('SettingsProvider');
+
+final credentialMigrationServiceProvider = Provider<CredentialMigrationService>(
+  (ref) => const CredentialMigrationService(),
+);
 
 class SettingsNotifier extends AsyncNotifier<AppSettings> {
   @override
@@ -159,70 +167,33 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     final current = state.valueOrNull;
     if (current == null) return;
 
-    var needsSave = false;
-    var updated = current;
+    final service = ref.read(credentialMigrationServiceProvider);
+    final updated = await service.upgradeIfNeeded(
+      current,
+      rawPin: rawPin,
+      rawPassword: rawPassword,
+    );
+    if (updated == null) return;
 
-    if (rawPin != null &&
-        current.appPinCode != null &&
-        CredentialHasher.needsUpgrade(current.appPinCode!)) {
-      final hashed = await CredentialHasher.hash(rawPin);
-      updated = updated.copyWith(appPinCode: hashed);
-      needsSave = true;
-    }
-
-    if (rawPassword != null &&
-        current.appPassword != null &&
-        CredentialHasher.needsUpgrade(current.appPassword!)) {
-      final hashed = await CredentialHasher.hash(rawPassword);
-      updated = updated.copyWith(appPassword: hashed);
-      needsSave = true;
-    }
-
-    if (needsSave) {
-      try {
-        await _saveAndUpdate(updated);
-      } catch (_) {
-        // Silent failure — old format still works
-      }
+    try {
+      await _saveAndUpdate(updated);
+    } catch (e) {
+      _log.warning('Credential PBKDF2 upgrade save failed: $e');
     }
   }
 
   /// Migrate credentials to current hashing format (PBKDF2).
-  /// Handles: plaintext → PBKDF2, sha256 → PBKDF2.
+  /// Handles: plaintext → PBKDF2. SHA-256 is left alone (still verifies).
   /// Called once on app startup if needed.
   Future<void> migrateCredentialsIfNeeded() async {
     final current = state.valueOrNull;
     if (current == null) return;
 
-    var needsSave = false;
-    var updated = current;
+    final service = ref.read(credentialMigrationServiceProvider);
+    final updated = await service.migrateIfNeeded(current);
+    if (updated == null) return;
 
-    if (current.appPinCode != null && !CredentialHasher.isPbkdf2(current.appPinCode!)) {
-      if (CredentialHasher.isHashed(current.appPinCode!)) {
-        // sha256 format — we can't reverse the hash, so credential must be
-        // re-entered by the user. Skip migration for sha256 (it still verifies).
-      } else {
-        // Plaintext — migrate to PBKDF2
-        final hashed = await CredentialHasher.hash(current.appPinCode!);
-        updated = updated.copyWith(appPinCode: hashed);
-        needsSave = true;
-      }
-    }
-
-    if (current.appPassword != null && !CredentialHasher.isPbkdf2(current.appPassword!)) {
-      if (CredentialHasher.isHashed(current.appPassword!)) {
-        // sha256 format — can't reverse, skip (still verifies correctly)
-      } else {
-        // Plaintext — migrate to PBKDF2
-        final hashed = await CredentialHasher.hash(current.appPassword!);
-        updated = updated.copyWith(appPassword: hashed);
-        needsSave = true;
-      }
-    }
-
-    if (needsSave) {
-      await _saveAndUpdate(updated);
-    }
+    await _saveAndUpdate(updated);
   }
 
   // Onboarding

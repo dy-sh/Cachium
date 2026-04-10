@@ -208,8 +208,8 @@ class SettingsRepository {
         appPinCode: pin,
         appPassword: password,
       );
-    } catch (_) {
-      _log.warning('Failed to read credentials from secure storage');
+    } catch (e) {
+      _log.warning('Failed to read credentials from secure storage: $e');
       if (settings.appLockEnabled) {
         settings = settings.copyWith(credentialReadFailed: true);
       }
@@ -232,8 +232,8 @@ class SettingsRepository {
     try {
       existingPin = await _secureStorage.read(key: _pinKey);
       existingPassword = await _secureStorage.read(key: _passwordKey);
-    } catch (_) {
-      _log.warning('Failed to read existing credentials during migration');
+    } catch (e) {
+      _log.warning('Failed to read existing credentials during migration: $e');
       return;
     }
 
@@ -244,8 +244,8 @@ class SettingsRepository {
       try {
         await _secureStorage.write(key: _pinKey, value: dbPin);
         pinMigrated = true;
-      } catch (_) {
-        _log.warning('PIN migration to secure storage failed');
+      } catch (e) {
+        _log.warning('PIN migration to secure storage failed: $e');
       }
     }
 
@@ -253,8 +253,8 @@ class SettingsRepository {
       try {
         await _secureStorage.write(key: _passwordKey, value: dbPassword);
         passwordMigrated = true;
-      } catch (_) {
-        _log.warning('Password migration to secure storage failed');
+      } catch (e) {
+        _log.warning('Password migration to secure storage failed: $e');
       }
     }
 
@@ -271,9 +271,9 @@ class SettingsRepository {
           jsonData: cleanJsonData,
         );
         _log.debug('Migrated credentials from DB to secure storage');
-      } catch (_) {
+      } catch (e) {
         // DB update failed — credentials are duplicated but safe. Will retry next launch.
-        _log.warning('DB cleanup after migration failed');
+        _log.warning('DB cleanup after migration failed: $e');
       }
     }
   }
@@ -291,8 +291,8 @@ class SettingsRepository {
       } else {
         await _secureStorage.delete(key: _passwordKey);
       }
-    } catch (_) {
-      _log.error('Failed to save credentials to secure storage');
+    } catch (e) {
+      _log.error('Failed to save credentials to secure storage', e);
     }
   }
 

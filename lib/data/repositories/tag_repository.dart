@@ -4,11 +4,11 @@ import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
 import '../../core/utils/app_logger.dart';
-import '../../core/utils/decrypt_batch.dart';
 import '../../features/tags/data/models/tag.dart' as ui;
 import '../encryption/tag_data.dart';
 import 'corruption_tracker.dart';
 import 'decryption_cache.dart';
+import 'encrypted_repository_helpers.dart';
 
 const _log = AppLogger('TagRepo');
 
@@ -109,34 +109,30 @@ class TagRepository with CorruptionTracker {
     }
   }
 
+  Future<({List<ui.Tag> entities, int corruptedCount})> _decryptRows(
+      List<db.TagRow> rows) {
+    return decryptRowsWithCache<ui.Tag, TagData, db.TagRow>(
+      rows: rows,
+      rowId: (row) => row.id,
+      rowBlob: (row) => row.encryptedBlob,
+      decryptRow: (row) => encryptionService.decryptTag(
+        row.encryptedBlob,
+        expectedId: row.id,
+        expectedSortOrder: row.sortOrder,
+      ),
+      toEntity: _toTag,
+      cache: _decryptionCache,
+      log: _log,
+      entityType: _entityType,
+    );
+  }
+
   Future<List<ui.Tag>> getAllTags() async {
     try {
       final rows = await database.getAllTags();
-      int corruptedCount = 0;
-
-      final results = await decryptBatch(
-        rows.map((row) => () async {
-          try {
-            final cached = _decryptionCache.get(row.id, row.encryptedBlob);
-            if (cached != null) return cached;
-            final data = await encryptionService.decryptTag(
-              row.encryptedBlob,
-              expectedId: row.id,
-              expectedSortOrder: row.sortOrder,
-            );
-            final result = _toTag(data);
-            _decryptionCache.put(row.id, row.encryptedBlob, result);
-            return result;
-          } catch (e) {
-            _log.warning('Corrupted tag row id=${row.id}: $e');
-            corruptedCount++;
-            return null;
-          }
-        }),
-      );
-
-      updateCorruptedCount(corruptedCount);
-      return results.whereType<ui.Tag>().toList();
+      final result = await _decryptRows(rows);
+      updateCorruptedCount(result.corruptedCount);
+      return result.entities;
     } catch (e) {
       if (e is RepositoryException) rethrow;
       throw RepositoryException.fetch(entityType: _entityType, cause: e);
@@ -184,31 +180,9 @@ class TagRepository with CorruptionTracker {
 
   Stream<List<ui.Tag>> watchAllTags() {
     return database.watchAllTags().asyncMap((rows) async {
-      int corruptedCount = 0;
-
-      final results = await decryptBatch(
-        rows.map((row) => () async {
-          try {
-            final cached = _decryptionCache.get(row.id, row.encryptedBlob);
-            if (cached != null) return cached;
-            final data = await encryptionService.decryptTag(
-              row.encryptedBlob,
-              expectedId: row.id,
-              expectedSortOrder: row.sortOrder,
-            );
-            final result = _toTag(data);
-            _decryptionCache.put(row.id, row.encryptedBlob, result);
-            return result;
-          } catch (e) {
-            _log.warning('Corrupted tag row id=${row.id}: $e');
-            corruptedCount++;
-            return null;
-          }
-        }),
-      );
-
-      updateCorruptedCount(corruptedCount);
-      return results.whereType<ui.Tag>().toList();
+      final result = await _decryptRows(rows);
+      updateCorruptedCount(result.corruptedCount);
+      return result.entities;
     });
   }
 

@@ -4,11 +4,11 @@ import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
 import '../../core/utils/app_logger.dart';
-import '../../core/utils/decrypt_batch.dart';
 import '../../features/categories/data/models/category.dart' as ui;
 import '../encryption/category_data.dart';
 import 'corruption_tracker.dart';
 import 'decryption_cache.dart';
+import 'encrypted_repository_helpers.dart';
 
 const _log = AppLogger('CategoryRepo');
 
@@ -182,37 +182,33 @@ class CategoryRepository with CorruptionTracker {
     return category;
   }
 
+  Future<({List<ui.Category> entities, int corruptedCount})> _decryptRows(
+      List<db.CategoryRow> rows) {
+    return decryptRowsWithCache<ui.Category, CategoryData, db.CategoryRow>(
+      rows: rows,
+      rowId: (row) => row.id,
+      rowBlob: (row) => row.encryptedBlob,
+      decryptRow: (row) => encryptionService.decryptCategory(
+        row.encryptedBlob,
+        expectedId: row.id,
+        expectedSortOrder: row.sortOrder,
+      ),
+      toEntity: _toCategory,
+      cache: _decryptionCache,
+      log: _log,
+      entityType: _entityType,
+    );
+  }
+
   /// Get all non-deleted categories
   ///
   /// Throws [RepositoryException] if fetch or decryption fails.
   Future<List<ui.Category>> getAllCategories() async {
     try {
       final rows = await database.getAllCategories();
-      int corruptedCount = 0;
-
-      final results = await decryptBatch(
-        rows.map((row) => () async {
-          try {
-            final cached = _decryptionCache.get(row.id, row.encryptedBlob);
-            if (cached != null) return cached;
-            final data = await encryptionService.decryptCategory(
-              row.encryptedBlob,
-              expectedId: row.id,
-              expectedSortOrder: row.sortOrder,
-            );
-            final result = _toCategory(data);
-            _decryptionCache.put(row.id, row.encryptedBlob, result);
-            return result;
-          } catch (e) {
-            _log.warning('Corrupted category row id=${row.id}: $e');
-            corruptedCount++;
-            return null;
-          }
-        }),
-      );
-
-      updateCorruptedCount(corruptedCount);
-      return results.whereType<ui.Category>().toList();
+      final result = await _decryptRows(rows);
+      updateCorruptedCount(result.corruptedCount);
+      return result.entities;
     } catch (e) {
       if (e is RepositoryException) rethrow;
       throw RepositoryException.fetch(entityType: _entityType, cause: e);
@@ -268,31 +264,9 @@ class CategoryRepository with CorruptionTracker {
   /// Corrupted rows are silently skipped to maintain stream stability.
   Stream<List<ui.Category>> watchAllCategories() {
     return database.watchAllCategories().asyncMap((rows) async {
-      int corruptedCount = 0;
-
-      final results = await decryptBatch(
-        rows.map((row) => () async {
-          try {
-            final cached = _decryptionCache.get(row.id, row.encryptedBlob);
-            if (cached != null) return cached;
-            final data = await encryptionService.decryptCategory(
-              row.encryptedBlob,
-              expectedId: row.id,
-              expectedSortOrder: row.sortOrder,
-            );
-            final result = _toCategory(data);
-            _decryptionCache.put(row.id, row.encryptedBlob, result);
-            return result;
-          } catch (e) {
-            _log.warning('Corrupted category row id=${row.id}: $e');
-            corruptedCount++;
-            return null;
-          }
-        }),
-      );
-
-      updateCorruptedCount(corruptedCount);
-      return results.whereType<ui.Category>().toList();
+      final result = await _decryptRows(rows);
+      updateCorruptedCount(result.corruptedCount);
+      return result.entities;
     });
   }
 

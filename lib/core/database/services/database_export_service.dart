@@ -17,8 +17,12 @@ import '../../../data/encryption/savings_goal_data.dart';
 import '../../../data/encryption/transaction_data.dart';
 import '../../../data/encryption/transaction_template_data.dart';
 import '../../../features/settings/data/models/export_options.dart';
+import '../../utils/app_logger.dart';
 import '../app_database.dart';
 import 'encryption_service.dart';
+import 'export/export_schemas.dart';
+
+const _log = AppLogger('ExportService');
 
 /// Service for exporting database data to SQLite or CSV formats.
 class DatabaseExportService {
@@ -44,13 +48,13 @@ class DatabaseExportService {
             } else if (entry is Directory) {
               await entry.delete(recursive: true);
             }
-          } catch (_) {
-            // Ignore cleanup errors for individual files
+          } catch (e) {
+            _log.debug('Failed to delete stale export entry ${entry.path}: $e');
           }
         }
       }
-    } catch (_) {
-      // Don't fail the export if cleanup fails
+    } catch (e) {
+      _log.debug('Export cleanup scan failed: $e');
     }
   }
 
@@ -66,7 +70,7 @@ class DatabaseExportService {
 
     try {
       if (options.encryptionEnabled) {
-        await _createEncryptedSchema(exportDb);
+        createEncryptedExportSchema(exportDb);
         await _exportTransactionsEncrypted(exportDb);
         await _exportAccountsEncrypted(exportDb);
         await _exportCategoriesEncrypted(exportDb);
@@ -78,7 +82,7 @@ class DatabaseExportService {
         await _exportSavingsGoalsEncrypted(exportDb);
         await _exportTransactionTemplatesEncrypted(exportDb);
       } else {
-        await _createPlaintextSchema(exportDb);
+        createPlaintextExportSchema(exportDb);
         await _exportTransactionsPlaintext(exportDb);
         await _exportAccountsPlaintext(exportDb);
         await _exportCategoriesPlaintext(exportDb);
@@ -164,300 +168,6 @@ class DatabaseExportService {
       subject: 'Cachium CSV Export',
       sharePositionOrigin: sharePositionOrigin ?? const Rect.fromLTWH(0, 0, 100, 100),
     );
-  }
-
-  // Schema creation methods
-
-  Future<void> _createEncryptedSchema(sql.Database db) async {
-    db.execute('''
-      CREATE TABLE transactions (
-        id TEXT PRIMARY KEY,
-        date INTEGER NOT NULL,
-        last_updated_at INTEGER NOT NULL,
-        is_deleted INTEGER NOT NULL DEFAULT 0,
-        encrypted_blob BLOB NOT NULL
-      )
-    ''');
-
-    db.execute('''
-      CREATE TABLE accounts (
-        id TEXT PRIMARY KEY,
-        created_at INTEGER NOT NULL,
-        sort_order INTEGER NOT NULL DEFAULT 0,
-        last_updated_at INTEGER NOT NULL,
-        is_deleted INTEGER NOT NULL DEFAULT 0,
-        encrypted_blob BLOB NOT NULL
-      )
-    ''');
-
-    db.execute('''
-      CREATE TABLE categories (
-        id TEXT PRIMARY KEY,
-        sort_order INTEGER NOT NULL,
-        last_updated_at INTEGER NOT NULL,
-        is_deleted INTEGER NOT NULL DEFAULT 0,
-        encrypted_blob BLOB NOT NULL
-      )
-    ''');
-
-    db.execute('''
-      CREATE TABLE app_settings (
-        id TEXT PRIMARY KEY,
-        last_updated_at INTEGER NOT NULL,
-        json_data TEXT NOT NULL
-      )
-    ''');
-
-    db.execute('''
-      CREATE TABLE budgets (
-        id TEXT PRIMARY KEY,
-        created_at INTEGER NOT NULL,
-        last_updated_at INTEGER NOT NULL,
-        is_deleted INTEGER NOT NULL DEFAULT 0,
-        encrypted_blob BLOB NOT NULL
-      )
-    ''');
-
-    db.execute('''
-      CREATE TABLE assets (
-        id TEXT PRIMARY KEY,
-        created_at INTEGER NOT NULL,
-        sort_order INTEGER NOT NULL DEFAULT 0,
-        last_updated_at INTEGER NOT NULL,
-        is_deleted INTEGER NOT NULL DEFAULT 0,
-        encrypted_blob BLOB NOT NULL
-      )
-    ''');
-
-    db.execute('''
-      CREATE TABLE asset_categories (
-        id TEXT PRIMARY KEY,
-        created_at INTEGER NOT NULL,
-        sort_order INTEGER NOT NULL DEFAULT 0,
-        last_updated_at INTEGER NOT NULL,
-        is_deleted INTEGER NOT NULL DEFAULT 0,
-        encrypted_blob BLOB NOT NULL
-      )
-    ''');
-
-    db.execute('''
-      CREATE TABLE recurring_rules (
-        id TEXT PRIMARY KEY,
-        created_at INTEGER NOT NULL,
-        last_updated_at INTEGER NOT NULL,
-        is_deleted INTEGER NOT NULL DEFAULT 0,
-        encrypted_blob BLOB NOT NULL
-      )
-    ''');
-
-    db.execute('''
-      CREATE TABLE savings_goals (
-        id TEXT PRIMARY KEY,
-        created_at INTEGER NOT NULL,
-        last_updated_at INTEGER NOT NULL,
-        is_deleted INTEGER NOT NULL DEFAULT 0,
-        encrypted_blob BLOB NOT NULL
-      )
-    ''');
-
-    db.execute('''
-      CREATE TABLE transaction_templates (
-        id TEXT PRIMARY KEY,
-        created_at INTEGER NOT NULL,
-        last_updated_at INTEGER NOT NULL,
-        is_deleted INTEGER NOT NULL DEFAULT 0,
-        encrypted_blob BLOB NOT NULL
-      )
-    ''');
-  }
-
-  Future<void> _createPlaintextSchema(sql.Database db) async {
-    db.execute('''
-      CREATE TABLE transactions (
-        id TEXT PRIMARY KEY,
-        date INTEGER NOT NULL,
-        last_updated_at INTEGER NOT NULL,
-        is_deleted INTEGER NOT NULL DEFAULT 0,
-        amount REAL NOT NULL,
-        category_id TEXT NOT NULL,
-        account_id TEXT NOT NULL,
-        type TEXT NOT NULL,
-        note TEXT,
-        currency TEXT NOT NULL DEFAULT 'USD',
-        conversion_rate REAL NOT NULL DEFAULT 1.0,
-        main_currency_code TEXT NOT NULL DEFAULT 'USD',
-        main_currency_amount REAL,
-        destination_account_id TEXT,
-        destination_amount REAL,
-        merchant TEXT,
-        asset_id TEXT,
-        is_acquisition_cost INTEGER NOT NULL DEFAULT 0,
-        date_millis INTEGER NOT NULL,
-        created_at_millis INTEGER NOT NULL
-      )
-    ''');
-
-    db.execute('''
-      CREATE TABLE accounts (
-        id TEXT PRIMARY KEY,
-        created_at INTEGER NOT NULL,
-        sort_order INTEGER NOT NULL DEFAULT 0,
-        last_updated_at INTEGER NOT NULL,
-        is_deleted INTEGER NOT NULL DEFAULT 0,
-        name TEXT NOT NULL,
-        type TEXT NOT NULL,
-        balance REAL NOT NULL,
-        initial_balance REAL NOT NULL DEFAULT 0,
-        currency_code TEXT NOT NULL DEFAULT 'USD',
-        custom_color_value INTEGER,
-        custom_icon_code_point INTEGER,
-        custom_icon_font_family TEXT,
-        custom_icon_font_package TEXT,
-        created_at_millis INTEGER NOT NULL
-      )
-    ''');
-
-    db.execute('''
-      CREATE TABLE categories (
-        id TEXT PRIMARY KEY,
-        sort_order INTEGER NOT NULL,
-        last_updated_at INTEGER NOT NULL,
-        is_deleted INTEGER NOT NULL DEFAULT 0,
-        name TEXT NOT NULL,
-        icon_code_point INTEGER NOT NULL,
-        icon_font_family TEXT NOT NULL,
-        icon_font_package TEXT,
-        color_index INTEGER NOT NULL,
-        type TEXT NOT NULL,
-        is_custom INTEGER NOT NULL DEFAULT 0,
-        parent_id TEXT,
-        show_assets INTEGER NOT NULL DEFAULT 0
-      )
-    ''');
-
-    db.execute('''
-      CREATE TABLE app_settings (
-        id TEXT PRIMARY KEY,
-        last_updated_at INTEGER NOT NULL,
-        json_data TEXT NOT NULL
-      )
-    ''');
-
-    db.execute('''
-      CREATE TABLE budgets (
-        id TEXT PRIMARY KEY,
-        created_at INTEGER NOT NULL,
-        last_updated_at INTEGER NOT NULL,
-        is_deleted INTEGER NOT NULL DEFAULT 0,
-        category_id TEXT NOT NULL,
-        amount REAL NOT NULL,
-        year INTEGER NOT NULL,
-        month INTEGER NOT NULL,
-        created_at_millis INTEGER NOT NULL
-      )
-    ''');
-
-    db.execute('''
-      CREATE TABLE assets (
-        id TEXT PRIMARY KEY,
-        created_at INTEGER NOT NULL,
-        sort_order INTEGER NOT NULL DEFAULT 0,
-        last_updated_at INTEGER NOT NULL,
-        is_deleted INTEGER NOT NULL DEFAULT 0,
-        name TEXT NOT NULL,
-        icon_code_point INTEGER NOT NULL,
-        icon_font_family TEXT,
-        icon_font_package TEXT,
-        color_index INTEGER NOT NULL,
-        status TEXT NOT NULL,
-        note TEXT,
-        purchase_price REAL,
-        purchase_currency_code TEXT,
-        asset_category_id TEXT,
-        purchase_date_millis INTEGER,
-        created_at_millis INTEGER NOT NULL
-      )
-    ''');
-
-    db.execute('''
-      CREATE TABLE asset_categories (
-        id TEXT PRIMARY KEY,
-        created_at INTEGER NOT NULL,
-        sort_order INTEGER NOT NULL DEFAULT 0,
-        last_updated_at INTEGER NOT NULL,
-        is_deleted INTEGER NOT NULL DEFAULT 0,
-        name TEXT NOT NULL,
-        icon_code_point INTEGER NOT NULL,
-        icon_font_family TEXT,
-        icon_font_package TEXT,
-        color_index INTEGER NOT NULL,
-        created_at_millis INTEGER NOT NULL
-      )
-    ''');
-
-    db.execute('''
-      CREATE TABLE recurring_rules (
-        id TEXT PRIMARY KEY,
-        created_at INTEGER NOT NULL,
-        last_updated_at INTEGER NOT NULL,
-        is_deleted INTEGER NOT NULL DEFAULT 0,
-        name TEXT NOT NULL,
-        amount REAL NOT NULL,
-        type TEXT NOT NULL,
-        category_id TEXT NOT NULL,
-        account_id TEXT NOT NULL,
-        destination_account_id TEXT,
-        merchant TEXT,
-        note TEXT,
-        currency_code TEXT NOT NULL DEFAULT 'USD',
-        destination_amount REAL,
-        frequency TEXT NOT NULL,
-        start_date_millis INTEGER NOT NULL,
-        end_date_millis INTEGER,
-        last_generated_date_millis INTEGER NOT NULL,
-        is_active INTEGER NOT NULL DEFAULT 1,
-        created_at_millis INTEGER NOT NULL
-      )
-    ''');
-
-    db.execute('''
-      CREATE TABLE savings_goals (
-        id TEXT PRIMARY KEY,
-        created_at INTEGER NOT NULL,
-        last_updated_at INTEGER NOT NULL,
-        is_deleted INTEGER NOT NULL DEFAULT 0,
-        name TEXT NOT NULL,
-        target_amount REAL NOT NULL,
-        current_amount REAL NOT NULL DEFAULT 0,
-        color_index INTEGER NOT NULL,
-        icon_code_point INTEGER NOT NULL,
-        icon_font_family TEXT,
-        icon_font_package TEXT,
-        linked_account_id TEXT,
-        target_date_millis INTEGER,
-        note TEXT,
-        created_at_millis INTEGER NOT NULL
-      )
-    ''');
-
-    db.execute('''
-      CREATE TABLE transaction_templates (
-        id TEXT PRIMARY KEY,
-        created_at INTEGER NOT NULL,
-        last_updated_at INTEGER NOT NULL,
-        is_deleted INTEGER NOT NULL DEFAULT 0,
-        name TEXT NOT NULL,
-        amount REAL,
-        type TEXT NOT NULL,
-        category_id TEXT,
-        account_id TEXT,
-        destination_account_id TEXT,
-        asset_id TEXT,
-        merchant TEXT,
-        note TEXT,
-        created_at_millis INTEGER NOT NULL
-      )
-    ''');
   }
 
   // Encrypted export methods
@@ -990,7 +700,8 @@ class DatabaseExportService {
       json.remove('appPinCode');
       json.remove('appPassword');
       return jsonEncode(json);
-    } catch (_) {
+    } catch (e) {
+      _log.warning('Failed to strip credentials from settings JSON: $e');
       return jsonData;
     }
   }

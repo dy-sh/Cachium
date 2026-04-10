@@ -330,9 +330,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           // Transaction list
           Expanded(
             child: groupsAsync.when(
-              loading: () => ListView(
+              loading: () => ListView.builder(
                 physics: const NeverScrollableScrollPhysics(),
-                children: List.generate(8, (_) => const ShimmerTransactionItem()),
+                itemCount: 8,
+                itemBuilder: (_, __) => const ShimmerTransactionItem(),
               ),
               error: (error, stack) => Center(
                 child: Column(

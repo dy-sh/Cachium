@@ -1,6 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
 
+import '../../../../core/utils/app_logger.dart';
+
+const _log = AppLogger('AppLock');
+
 /// Service for managing biometric authentication.
 class AppLockService {
   final LocalAuthentication _auth = LocalAuthentication();
@@ -11,7 +15,8 @@ class AppLockService {
       final canCheck = await _auth.canCheckBiometrics;
       final isDeviceSupported = await _auth.isDeviceSupported();
       return canCheck || isDeviceSupported;
-    } catch (_) {
+    } catch (e) {
+      _log.debug('Biometric availability check failed: $e');
       return false;
     }
   }
@@ -20,7 +25,8 @@ class AppLockService {
   Future<List<BiometricType>> getAvailableBiometrics() async {
     try {
       return await _auth.getAvailableBiometrics();
-    } catch (_) {
+    } catch (e) {
+      _log.debug('getAvailableBiometrics failed: $e');
       return [];
     }
   }
@@ -35,7 +41,8 @@ class AppLockService {
           biometricOnly: false,
         ),
       );
-    } catch (_) {
+    } catch (e) {
+      _log.warning('Biometric authentication failed: $e');
       return false;
     }
   }

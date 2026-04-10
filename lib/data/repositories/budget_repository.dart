@@ -2,11 +2,11 @@ import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
 import '../../core/utils/app_logger.dart';
-import '../../core/utils/decrypt_batch.dart';
 import '../../features/budgets/data/models/budget.dart' as ui;
 import '../encryption/budget_data.dart';
 import 'corruption_tracker.dart';
 import 'decryption_cache.dart';
+import 'encrypted_repository_helpers.dart';
 
 const _log = AppLogger('BudgetRepo');
 
@@ -104,31 +104,22 @@ class BudgetRepository with CorruptionTracker {
   Future<List<ui.Budget>> getAllBudgets() async {
     try {
       final rows = await database.getAllBudgets();
-      int corruptedCount = 0;
-
-      final results = await decryptBatch(
-        rows.map((row) => () async {
-          try {
-            final cached = _decryptionCache.get(row.id, row.encryptedBlob);
-            if (cached != null) return cached;
-            final data = await encryptionService.decryptBudget(
-              row.encryptedBlob,
-              expectedId: row.id,
-              expectedCreatedAtMillis: row.createdAt,
-            );
-            final result = _toBudget(data);
-            _decryptionCache.put(row.id, row.encryptedBlob, result);
-            return result;
-          } catch (e) {
-            _log.warning('Corrupted budget row id=${row.id}: $e');
-            corruptedCount++;
-            return null;
-          }
-        }),
+      final result = await decryptRowsWithCache<ui.Budget, BudgetData, db.BudgetRow>(
+        rows: rows,
+        rowId: (row) => row.id,
+        rowBlob: (row) => row.encryptedBlob,
+        decryptRow: (row) => encryptionService.decryptBudget(
+          row.encryptedBlob,
+          expectedId: row.id,
+          expectedCreatedAtMillis: row.createdAt,
+        ),
+        toEntity: _toBudget,
+        cache: _decryptionCache,
+        log: _log,
+        entityType: _entityType,
       );
-
-      updateCorruptedCount(corruptedCount);
-      return results.whereType<ui.Budget>().toList();
+      updateCorruptedCount(result.corruptedCount);
+      return result.entities;
     } catch (e) {
       if (e is RepositoryException) rethrow;
       throw RepositoryException.fetch(entityType: _entityType, cause: e);

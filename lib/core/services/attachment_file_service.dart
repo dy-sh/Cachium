@@ -4,6 +4,10 @@ import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
+import '../utils/app_logger.dart';
+
+const _log = AppLogger('AttachmentFile');
+
 /// Service for managing attachment files on disk.
 class AttachmentFileService {
   static const _uuid = Uuid();
@@ -42,8 +46,8 @@ class AttachmentFileService {
         thumbnailPath = '${thumbDir.path}/$thumbName';
         await File(thumbnailPath).writeAsBytes(thumbBytes);
       }
-    } catch (_) {
-      // Thumbnail generation failed — continue without it
+    } catch (e) {
+      _log.warning('Thumbnail generation failed: $e');
     }
 
     return (
@@ -58,16 +62,16 @@ class AttachmentFileService {
     try {
       final file = File(filePath);
       if (file.existsSync()) await file.delete();
-    } catch (_) {
-      // Best-effort deletion — file may already be gone
+    } catch (e) {
+      _log.debug('Attachment file delete failed (may already be gone): $e');
     }
 
     if (thumbnailPath != null) {
       try {
         final thumb = File(thumbnailPath);
         if (thumb.existsSync()) await thumb.delete();
-      } catch (_) {
-        // Best-effort deletion — thumbnail may already be gone
+      } catch (e) {
+        _log.debug('Thumbnail delete failed (may already be gone): $e');
       }
     }
   }

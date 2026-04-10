@@ -188,10 +188,11 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
           // Accounts list
           Expanded(
             child: isLoading
-                ? ListView(
+                ? ListView.builder(
                     physics: const NeverScrollableScrollPhysics(),
                     padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-                    children: List.generate(5, (_) => const ShimmerAccountCard()),
+                    itemCount: 5,
+                    itemBuilder: (_, __) => const ShimmerAccountCard(),
                   )
                 : accountsByType.values.every((list) => list.isEmpty)
                     ? Padding(

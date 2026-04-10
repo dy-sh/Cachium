@@ -17,6 +17,7 @@ import 'daos/tag_dao.dart';
 import 'daos/transaction_dao.dart';
 import 'daos/transaction_tag_dao.dart';
 import 'daos/transaction_template_dao.dart';
+import 'database_indexes.dart';
 
 part 'app_database.g.dart';
 
@@ -309,7 +310,7 @@ class AppDatabase extends _$AppDatabase {
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (Migrator m) async {
           await m.createAll();
-          await _createIndexes(m);
+          await createDatabaseIndexes(this);
         },
         onUpgrade: (Migrator m, int from, int to) async {
           // App is not released — destructive migration is safe.
@@ -318,134 +319,9 @@ class AppDatabase extends _$AppDatabase {
             await m.deleteTable(table.actualTableName);
           }
           await m.createAll();
-          await _createIndexes(m);
+          await createDatabaseIndexes(this);
         },
       );
-
-  /// Create performance indexes on commonly queried columns.
-  Future<void> _createIndexes(Migrator m) async {
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_transactions_is_deleted ON transactions(is_deleted)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_transactions_is_deleted_date ON transactions(is_deleted, date)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_accounts_is_deleted ON accounts(is_deleted)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_accounts_sort_order ON accounts(sort_order)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_categories_is_deleted ON categories(is_deleted)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_categories_sort_order ON categories(sort_order)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_budgets_is_deleted ON budgets(is_deleted)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_assets_is_deleted ON assets(is_deleted)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_asset_categories_is_deleted ON asset_categories(is_deleted)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_recurring_rules_is_deleted ON recurring_rules(is_deleted)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_savings_goals_is_deleted ON savings_goals(is_deleted)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_transaction_templates_is_deleted ON transaction_templates(is_deleted)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_tags_is_deleted ON tags(is_deleted)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_tags_sort_order ON tags(sort_order)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_transaction_tags_transaction ON transaction_tags(transaction_id)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_transaction_tags_tag ON transaction_tags(tag_id)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_attachments_transaction ON attachments(transaction_id)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_attachments_is_deleted ON attachments(is_deleted)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_bills_is_deleted ON bills(is_deleted)',
-    );
-
-    // lastUpdatedAt indexes for sync/LWW resolution
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_transactions_last_updated ON transactions(last_updated_at)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_accounts_last_updated ON accounts(last_updated_at)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_categories_last_updated ON categories(last_updated_at)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_budgets_last_updated ON budgets(last_updated_at)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_assets_last_updated ON assets(last_updated_at)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_asset_categories_last_updated ON asset_categories(last_updated_at)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_recurring_rules_last_updated ON recurring_rules(last_updated_at)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_savings_goals_last_updated ON savings_goals(last_updated_at)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_transaction_templates_last_updated ON transaction_templates(last_updated_at)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_tags_last_updated ON tags(last_updated_at)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_attachments_last_updated ON attachments(last_updated_at)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_bills_last_updated ON bills(last_updated_at)',
-    );
-
-    // Composite indexes for cleanup queries (is_deleted + last_updated_at)
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_transactions_deleted_updated ON transactions(is_deleted, last_updated_at)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_accounts_deleted_updated ON accounts(is_deleted, last_updated_at)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_categories_deleted_updated ON categories(is_deleted, last_updated_at)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_budgets_deleted_updated ON budgets(is_deleted, last_updated_at)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_assets_deleted_updated ON assets(is_deleted, last_updated_at)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_tags_deleted_updated ON tags(is_deleted, last_updated_at)',
-    );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_bills_deleted_updated ON bills(is_deleted, last_updated_at)',
-    );
-  }
 
   /// Remove orphaned records from join/child tables where the parent no longer exists.
   Future<int> cleanupOrphanedRecords() async {

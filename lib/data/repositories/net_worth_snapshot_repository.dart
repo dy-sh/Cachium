@@ -1,7 +1,10 @@
 import 'dart:convert';
 
 import '../../core/database/app_database.dart';
+import '../../core/utils/app_logger.dart';
 import '../../features/analytics/data/models/net_worth_snapshot.dart';
+
+const _log = AppLogger('NetWorthSnapshotRepo');
 
 class NetWorthSnapshotRepository {
   final AppDatabase database;
@@ -41,8 +44,8 @@ class NetWorthSnapshotRepository {
     try {
       final decoded = jsonDecode(row.perAccountBalancesJson) as Map<String, dynamic>;
       balances = decoded.map((k, v) => MapEntry(k, (v as num).toDouble()));
-    } catch (_) {
-      // Malformed JSON — use empty balances map
+    } catch (e) {
+      _log.warning('Malformed perAccountBalancesJson for snapshot ${row.id}: $e');
     }
 
     return NetWorthSnapshot(

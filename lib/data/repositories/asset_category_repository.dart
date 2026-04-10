@@ -4,11 +4,11 @@ import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
 import '../../core/utils/app_logger.dart';
-import '../../core/utils/decrypt_batch.dart';
 import '../../features/assets/data/models/asset_category.dart' as ui;
 import '../encryption/asset_category_data.dart';
 import 'corruption_tracker.dart';
 import 'decryption_cache.dart';
+import 'encrypted_repository_helpers.dart';
 
 const _log = AppLogger('AssetCategoryRepo');
 
@@ -98,31 +98,23 @@ class AssetCategoryRepository with CorruptionTracker {
   Future<List<ui.AssetCategory>> getAllCategories() async {
     try {
       final rows = await database.getAllAssetCategories();
-      int corruptedCount = 0;
-
-      final results = await decryptBatch(
-        rows.map((row) => () async {
-          try {
-            final cached = _decryptionCache.get(row.id, row.encryptedBlob);
-            if (cached != null) return cached;
-            final data = await encryptionService.decryptAssetCategory(
-              row.encryptedBlob,
-              expectedId: row.id,
-              expectedCreatedAtMillis: row.createdAt,
-            );
-            final result = _toCategory(data);
-            _decryptionCache.put(row.id, row.encryptedBlob, result);
-            return result;
-          } catch (e) {
-            _log.warning('Corrupted asset category row id=${row.id}: $e');
-            corruptedCount++;
-            return null;
-          }
-        }),
+      final result = await decryptRowsWithCache<ui.AssetCategory,
+          AssetCategoryData, db.AssetCategoryRow>(
+        rows: rows,
+        rowId: (row) => row.id,
+        rowBlob: (row) => row.encryptedBlob,
+        decryptRow: (row) => encryptionService.decryptAssetCategory(
+          row.encryptedBlob,
+          expectedId: row.id,
+          expectedCreatedAtMillis: row.createdAt,
+        ),
+        toEntity: _toCategory,
+        cache: _decryptionCache,
+        log: _log,
+        entityType: _entityType,
       );
-
-      updateCorruptedCount(corruptedCount);
-      return results.whereType<ui.AssetCategory>().toList();
+      updateCorruptedCount(result.corruptedCount);
+      return result.entities;
     } catch (e) {
       if (e is RepositoryException) rethrow;
       throw RepositoryException.fetch(entityType: _entityType, cause: e);

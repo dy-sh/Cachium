@@ -4,11 +4,11 @@ import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
 import '../../core/utils/app_logger.dart';
-import '../../core/utils/decrypt_batch.dart';
 import '../../features/savings_goals/data/models/savings_goal.dart' as ui;
 import '../encryption/savings_goal_data.dart';
 import 'corruption_tracker.dart';
 import 'decryption_cache.dart';
+import 'encrypted_repository_helpers.dart';
 
 const _log = AppLogger('SavingsGoalRepo');
 
@@ -112,31 +112,23 @@ class SavingsGoalRepository with CorruptionTracker {
   Future<List<ui.SavingsGoal>> getAllGoals() async {
     try {
       final rows = await database.getAllSavingsGoals();
-      int corruptedCount = 0;
-
-      final results = await decryptBatch(
-        rows.map((row) => () async {
-          try {
-            final cached = _decryptionCache.get(row.id, row.encryptedBlob);
-            if (cached != null) return cached;
-            final data = await encryptionService.decryptSavingsGoal(
-              row.encryptedBlob,
-              expectedId: row.id,
-              expectedCreatedAtMillis: row.createdAt,
-            );
-            final result = _toGoal(data);
-            _decryptionCache.put(row.id, row.encryptedBlob, result);
-            return result;
-          } catch (e) {
-            _log.warning('Corrupted savings goal row id=${row.id}: $e');
-            corruptedCount++;
-            return null;
-          }
-        }),
+      final result =
+          await decryptRowsWithCache<ui.SavingsGoal, SavingsGoalData, db.SavingsGoalRow>(
+        rows: rows,
+        rowId: (row) => row.id,
+        rowBlob: (row) => row.encryptedBlob,
+        decryptRow: (row) => encryptionService.decryptSavingsGoal(
+          row.encryptedBlob,
+          expectedId: row.id,
+          expectedCreatedAtMillis: row.createdAt,
+        ),
+        toEntity: _toGoal,
+        cache: _decryptionCache,
+        log: _log,
+        entityType: _entityType,
       );
-
-      updateCorruptedCount(corruptedCount);
-      return results.whereType<ui.SavingsGoal>().toList();
+      updateCorruptedCount(result.corruptedCount);
+      return result.entities;
     } catch (e) {
       throw RepositoryException.fetch(entityType: _entityType, cause: e);
     }

@@ -4,6 +4,9 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/providers/database_providers.dart';
+import '../../../../core/utils/app_logger.dart';
+
+const _log = AppLogger('SearchHistory');
 
 /// Maximum number of recent searches to store.
 const _maxRecentSearches = 10;
@@ -20,7 +23,8 @@ class SearchHistoryNotifier extends AsyncNotifier<List<String>> {
     try {
       final list = (jsonDecode(row.jsonData) as List).cast<String>();
       return list.take(_maxRecentSearches).toList();
-    } catch (_) {
+    } catch (e) {
+      _log.warning('Failed to decode search history JSON: $e');
       return [];
     }
   }
@@ -62,8 +66,8 @@ class SearchHistoryNotifier extends AsyncNotifier<List<String>> {
         lastUpdatedAt: DateTime.now().millisecondsSinceEpoch,
         jsonData: jsonEncode(searches),
       );
-    } catch (_) {
-      // Silent failure — search history is non-critical
+    } catch (e) {
+      _log.debug('Failed to persist search history (non-critical): $e');
     }
   }
 }

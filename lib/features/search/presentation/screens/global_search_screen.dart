@@ -262,46 +262,52 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
       );
     }
 
-    return ListView(
+    return ListView.builder(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.screenPadding,
       ),
-      children: [
-        const SizedBox(height: AppSpacing.sm),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Recent Searches',
-              style: AppTypography.labelMedium.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
-              ),
+      itemCount: recentSearches.length + 1,
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return Padding(
+            padding: const EdgeInsets.only(
+              top: AppSpacing.sm,
+              bottom: AppSpacing.sm,
             ),
-            GestureDetector(
-              onTap: () {
-                ref.read(searchHistoryProvider.notifier).clearAll();
-              },
-              child: Text(
-                'Clear All',
-                style: AppTypography.labelSmall.copyWith(
-                  color: AppColors.textTertiary,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Recent Searches',
+                  style: AppTypography.labelMedium.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
+                GestureDetector(
+                  onTap: () {
+                    ref.read(searchHistoryProvider.notifier).clearAll();
+                  },
+                  child: Text(
+                    'Clear All',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        ...recentSearches.map((query) => _RecentSearchTile(
-              query: query,
-              onTap: () => _executeSearch(query),
-              onRemove: () {
-                ref
-                    .read(searchHistoryProvider.notifier)
-                    .removeSearch(query);
-              },
-            )),
-      ],
+          );
+        }
+        final query = recentSearches[index - 1];
+        return _RecentSearchTile(
+          query: query,
+          onTap: () => _executeSearch(query),
+          onRemove: () {
+            ref.read(searchHistoryProvider.notifier).removeSearch(query);
+          },
+        );
+      },
     );
   }
 

@@ -2,11 +2,11 @@ import '../../core/database/app_database.dart' as db;
 import '../../core/database/services/encryption_service.dart';
 import '../../core/exceptions/app_exception.dart';
 import '../../core/utils/app_logger.dart';
-import '../../core/utils/decrypt_batch.dart';
 import '../../features/transactions/data/models/transaction.dart' as ui;
 import '../encryption/transaction_data.dart';
 import 'corruption_tracker.dart';
 import 'decryption_cache.dart';
+import 'encrypted_repository_helpers.dart';
 
 const _log = AppLogger('TransactionRepo');
 
@@ -215,37 +215,33 @@ class TransactionRepository with CorruptionTracker {
     return transaction;
   }
 
+  Future<({List<ui.Transaction> entities, int corruptedCount})> _decryptRows(
+      List<db.Transaction> rows) {
+    return decryptRowsWithCache<ui.Transaction, TransactionData, db.Transaction>(
+      rows: rows,
+      rowId: (row) => row.id,
+      rowBlob: (row) => row.encryptedBlob,
+      decryptRow: (row) => encryptionService.decrypt(
+        row.encryptedBlob,
+        expectedId: row.id,
+        expectedDateMillis: row.date,
+      ),
+      toEntity: _toTransaction,
+      cache: _decryptionCache,
+      log: _log,
+      entityType: _entityType,
+    );
+  }
+
   /// Get all non-deleted transactions
   ///
   /// Throws [RepositoryException] if fetch or decryption fails.
   Future<List<ui.Transaction>> getAllTransactions() async {
     try {
       final rows = await database.getAllTransactions();
-      int corruptedCount = 0;
-
-      final results = await decryptBatch(
-        rows.map((row) => () async {
-          try {
-            final cached = _decryptionCache.get(row.id, row.encryptedBlob);
-            if (cached != null) return cached;
-            final data = await encryptionService.decrypt(
-              row.encryptedBlob,
-              expectedId: row.id,
-              expectedDateMillis: row.date,
-            );
-            final result = _toTransaction(data);
-            _decryptionCache.put(row.id, row.encryptedBlob, result);
-            return result;
-          } catch (e) {
-            _log.warning('Corrupted transaction row id=${row.id}: $e');
-            corruptedCount++;
-            return null;
-          }
-        }),
-      );
-
-      updateCorruptedCount(corruptedCount);
-      return results.whereType<ui.Transaction>().toList();
+      final result = await _decryptRows(rows);
+      updateCorruptedCount(result.corruptedCount);
+      return result.entities;
     } catch (e) {
       if (e is RepositoryException) rethrow;
       throw RepositoryException.fetch(entityType: _entityType, cause: e);
@@ -258,31 +254,9 @@ class TransactionRepository with CorruptionTracker {
   Future<List<ui.Transaction>> getAllDeletedTransactions() async {
     try {
       final rows = await database.getAllDeletedTransactions();
-      int corruptedCount = 0;
-
-      final results = await decryptBatch(
-        rows.map((row) => () async {
-          try {
-            final cached = _decryptionCache.get(row.id, row.encryptedBlob);
-            if (cached != null) return cached;
-            final data = await encryptionService.decrypt(
-              row.encryptedBlob,
-              expectedId: row.id,
-              expectedDateMillis: row.date,
-            );
-            final result = _toTransaction(data);
-            _decryptionCache.put(row.id, row.encryptedBlob, result);
-            return result;
-          } catch (e) {
-            _log.warning('Corrupted deleted transaction row id=${row.id}: $e');
-            corruptedCount++;
-            return null;
-          }
-        }),
-      );
-
-      updateCorruptedCount(corruptedCount);
-      return results.whereType<ui.Transaction>().toList();
+      final result = await _decryptRows(rows);
+      updateCorruptedCount(result.corruptedCount);
+      return result.entities;
     } catch (e) {
       if (e is RepositoryException) rethrow;
       throw RepositoryException.fetch(entityType: _entityType, cause: e);
@@ -359,31 +333,9 @@ class TransactionRepository with CorruptionTracker {
   /// Corrupted rows are silently skipped to maintain stream stability.
   Stream<List<ui.Transaction>> watchAllTransactions() {
     return database.watchAllTransactions().asyncMap((rows) async {
-      int corruptedCount = 0;
-
-      final results = await decryptBatch(
-        rows.map((row) => () async {
-          try {
-            final cached = _decryptionCache.get(row.id, row.encryptedBlob);
-            if (cached != null) return cached;
-            final data = await encryptionService.decrypt(
-              row.encryptedBlob,
-              expectedId: row.id,
-              expectedDateMillis: row.date,
-            );
-            final result = _toTransaction(data);
-            _decryptionCache.put(row.id, row.encryptedBlob, result);
-            return result;
-          } catch (e) {
-            _log.warning('Corrupted transaction row id=${row.id}: $e');
-            corruptedCount++;
-            return null;
-          }
-        }),
-      );
-
-      updateCorruptedCount(corruptedCount);
-      return results.whereType<ui.Transaction>().toList();
+      final result = await _decryptRows(rows);
+      updateCorruptedCount(result.corruptedCount);
+      return result.entities;
     });
   }
 

@@ -84,7 +84,8 @@ class CredentialHasher {
       salt = base64Decode(parts[1]);
       expectedHash = base64Decode(parts[2]);
     } catch (_) {
-      // Corrupted base64 in stored hash — reject rather than crash
+      // Corrupted base64 in stored hash — reject rather than crash.
+      // Intentionally unlogged: input is user-provided credential material.
       return false;
     }
 

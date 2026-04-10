@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import '../../utils/app_logger.dart';
 import 'key_provider.dart';
+
+const _log = AppLogger('KeyBackup');
 
 /// Service for backing up and restoring the encryption key.
 ///
@@ -23,7 +26,8 @@ class KeyBackupService {
     try {
       final decoded = base64Decode(b64.trim());
       return decoded.length == 32;
-    } catch (_) {
+    } catch (e) {
+      _log.debug('Key backup base64 decode failed: $e');
       return false;
     }
   }
@@ -39,7 +43,8 @@ class KeyBackupService {
         if (decoded[i] != current[i]) return false;
       }
       return true;
-    } catch (_) {
+    } catch (e) {
+      _log.debug('Key backup verification failed: $e');
       return false;
     }
   }
