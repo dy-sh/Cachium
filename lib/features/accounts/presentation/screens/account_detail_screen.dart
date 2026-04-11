@@ -57,21 +57,9 @@ class AccountDetailScreen extends ConsumerWidget {
     final transactions = ref.watch(transactionsByAccountProvider(accountId));
     final bgOpacity = AppColors.getBgOpacity(intensity);
 
-    // Calculate this month's income and expense for this account
-    final now = DateTime.now();
-    final monthStart = DateTime(now.year, now.month, 1);
-    final monthTransactions = transactions.where((tx) =>
-        tx.date.isAfter(monthStart.subtract(const Duration(seconds: 1))) &&
-        tx.accountId == accountId); // Only count when this is the source
-    double monthIncome = 0;
-    double monthExpense = 0;
-    for (final tx in monthTransactions) {
-      if (tx.type == TransactionType.income) {
-        monthIncome += tx.amount;
-      } else if (tx.type == TransactionType.expense) {
-        monthExpense += tx.amount;
-      }
-    }
+    final monthlyStats = ref.watch(accountMonthlyStatsProvider(accountId));
+    final monthIncome = monthlyStats.income;
+    final monthExpense = monthlyStats.expense;
 
     return Scaffold(
       backgroundColor: AppColors.background,

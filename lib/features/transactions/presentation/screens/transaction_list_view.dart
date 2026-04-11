@@ -13,8 +13,11 @@ import '../../../../core/animations/haptic_helper.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../design_system/design_system.dart';
+import '../../../accounts/data/models/account.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
+import '../../../categories/data/models/category.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
+import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/transaction.dart';
 import '../../../../navigation/app_router.dart';
@@ -82,9 +85,19 @@ class _TransactionListViewState extends ConsumerState<TransactionListView> {
 
   @override
   Widget build(BuildContext context) {
+    // Hoist all cross-row lookups here so each _TransactionItem can be
+    // a plain StatelessWidget without subscribing to providers per row.
+    // When any of these change, the whole list rebuilds once — not once
+    // per visible row.
     final mainCurrency = ref.watch(mainCurrencyCodeProvider);
     final rates = ref.watch(exchangeRatesProvider).valueOrNull ??
         const <String, double>{};
+    final accountMap = ref.watch(accountMapProvider);
+    final categoryMap = ref.watch(categoryMapProvider);
+    final intensity = ref.watch(colorIntensityProvider);
+    final accentColor = ref.watch(accentColorProvider);
+    final isSelectionMode = ref.watch(transactionSelectionModeProvider);
+    final hapticEnabled = ref.watch(hapticEnabledProvider);
 
     if (widget.groups.isEmpty) {
       return const Center(
@@ -129,6 +142,12 @@ class _TransactionListViewState extends ConsumerState<TransactionListView> {
             group: widget.groups[index],
             mainCurrency: mainCurrency,
             rates: rates,
+            accountMap: accountMap,
+            categoryMap: categoryMap,
+            intensity: intensity,
+            accentColor: accentColor,
+            isSelectionMode: isSelectionMode,
+            hapticEnabled: hapticEnabled,
           );
           if (widget.isInitialLoad && index < 15) {
             return StaggeredListItem(
@@ -147,11 +166,23 @@ class _TransactionGroupWidget extends StatelessWidget {
   final TransactionGroup group;
   final String mainCurrency;
   final Map<String, double> rates;
+  final Map<String, Account> accountMap;
+  final Map<String, Category> categoryMap;
+  final ColorIntensity intensity;
+  final Color accentColor;
+  final bool isSelectionMode;
+  final bool hapticEnabled;
 
   const _TransactionGroupWidget({
     required this.group,
     required this.mainCurrency,
     required this.rates,
+    required this.accountMap,
+    required this.categoryMap,
+    required this.intensity,
+    required this.accentColor,
+    required this.isSelectionMode,
+    required this.hapticEnabled,
   });
 
   @override
@@ -185,7 +216,20 @@ class _TransactionGroupWidget extends StatelessWidget {
             ],
           ),
         ),
-        ...group.transactions.map((tx) => _TransactionItem(transaction: tx)),
+        ...group.transactions.map((tx) => _TransactionItem(
+              transaction: tx,
+              account: accountMap[tx.accountId],
+              destAccount: tx.destinationAccountId != null
+                  ? accountMap[tx.destinationAccountId!]
+                  : null,
+              category: categoryMap[tx.categoryId],
+              mainCurrency: mainCurrency,
+              rates: rates,
+              intensity: intensity,
+              accentColor: accentColor,
+              isSelectionMode: isSelectionMode,
+              hapticEnabled: hapticEnabled,
+            )),
         const SizedBox(height: AppSpacing.md),
       ],
     );
@@ -194,26 +238,40 @@ class _TransactionGroupWidget extends StatelessWidget {
 
 class _TransactionItem extends ConsumerWidget {
   final Transaction transaction;
+  final Account? account;
+  final Account? destAccount;
+  final Category? category;
+  final String mainCurrency;
+  final Map<String, double> rates;
+  final ColorIntensity intensity;
+  final Color accentColor;
+  final bool isSelectionMode;
+  final bool hapticEnabled;
 
-  const _TransactionItem({required this.transaction});
+  const _TransactionItem({
+    required this.transaction,
+    required this.account,
+    required this.destAccount,
+    required this.category,
+    required this.mainCurrency,
+    required this.rates,
+    required this.intensity,
+    required this.accentColor,
+    required this.isSelectionMode,
+    required this.hapticEnabled,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final category = ref.watch(categoryByIdProvider(transaction.categoryId));
-    final account = ref.watch(accountByIdProvider(transaction.accountId));
-    final destAccount = transaction.destinationAccountId != null
-        ? ref.watch(accountByIdProvider(transaction.destinationAccountId!))
-        : null;
-    final intensity = ref.watch(colorIntensityProvider);
+    // Only per-item selection state is watched here; every other visual
+    // input comes from constructor parameters hoisted by TransactionListView.
+    final isSelected = ref.watch(isTransactionSelectedProvider(transaction.id));
     final isTransfer = transaction.type == TransactionType.transfer;
     final color = AppColors.getTransactionColor(transaction.type.name, intensity);
     final bgOpacity = AppColors.getBgOpacity(intensity);
     final categoryColor = isTransfer
         ? AppColors.getTransactionColor('transfer', intensity)
         : (category?.getColor(intensity) ?? AppColors.textSecondary);
-    final isSelectionMode = ref.watch(transactionSelectionModeProvider);
-    final isSelected = ref.watch(isTransactionSelectedProvider(transaction.id));
-    final accentColor = ref.watch(accentColorProvider);
 
     Widget itemContent = Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -331,40 +389,7 @@ class _TransactionItem extends ConsumerWidget {
             flex: 0,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 120),
-              child: Builder(builder: (context) {
-                final mainCurrency = ref.watch(mainCurrencyCodeProvider);
-                final isForeign = transaction.currencyCode != mainCurrency;
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      isTransfer
-                          ? CurrencyFormatter.format(transaction.amount, currencyCode: transaction.currencyCode)
-                          : CurrencyFormatter.formatWithSign(transaction.amount, transaction.type.name, currencyCode: transaction.currencyCode),
-                      style: AppTypography.moneySmall.copyWith(color: color),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (isForeign) Builder(builder: (context) {
-                      final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
-                      final converted = convertToMainCurrency(transaction.amount, transaction.currencyCode, mainCurrency, rates);
-                      return Text(
-                        '\u2248 ${CurrencyFormatter.format(converted, currencyCode: mainCurrency)}',
-                        style: AppTypography.labelSmall.copyWith(color: AppColors.textTertiary),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      );
-                    }),
-                    if (!isTransfer && !isForeign)
-                      Text(
-                        account?.name ?? 'Unknown',
-                        style: AppTypography.labelSmall,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                  ],
-                );
-              }),
+              child: _buildAmountColumn(isTransfer, color),
             ),
           ),
         ],
@@ -445,13 +470,10 @@ class _TransactionItem extends ConsumerWidget {
         ),
       ),
       confirmDismiss: (direction) async {
-        final hapticEnabled = ref.read(hapticEnabledProvider);
         await HapticHelper.mediumImpact(enabled: hapticEnabled);
         if (direction == DismissDirection.startToEnd) {
           // Duplicate: create new transaction with same details, today's date
           final tx = transaction;
-          final mainCurrency = ref.read(mainCurrencyCodeProvider);
-          final rates = ref.read(exchangeRatesProvider).valueOrNull ?? {};
           // Recompute conversion rate using current live rates
           final newConversionRate = (tx.currencyCode != mainCurrency && rates[tx.currencyCode] != null)
               ? 1.0 / rates[tx.currencyCode]!
@@ -498,6 +520,37 @@ class _TransactionItem extends ConsumerWidget {
         child: itemContent,
       ),
     ),
+    );
+  }
+
+  Widget _buildAmountColumn(bool isTransfer, Color color) {
+    final isForeign = transaction.currencyCode != mainCurrency;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(
+          isTransfer
+              ? CurrencyFormatter.format(transaction.amount, currencyCode: transaction.currencyCode)
+              : CurrencyFormatter.formatWithSign(transaction.amount, transaction.type.name, currencyCode: transaction.currencyCode),
+          style: AppTypography.moneySmall.copyWith(color: color),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        if (isForeign)
+          Text(
+            '\u2248 ${CurrencyFormatter.format(convertToMainCurrency(transaction.amount, transaction.currencyCode, mainCurrency, rates), currencyCode: mainCurrency)}',
+            style: AppTypography.labelSmall.copyWith(color: AppColors.textTertiary),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        if (!isTransfer && !isForeign)
+          Text(
+            account?.name ?? 'Unknown',
+            style: AppTypography.labelSmall,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+      ],
     );
   }
 }

@@ -91,7 +91,11 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
 
   // Formats
   Future<void> setDateFormat(DateFormatOption v) => _update((s) => s.copyWith(dateFormat: v));
-  Future<void> setMainCurrencyCode(String v) => _update((s) => s.copyWith(mainCurrencyCode: v));
+  Future<void> setMainCurrencyCode(String v) => _update((s) => s.copyWith(
+        mainCurrencyCode: v,
+        clearCachedExchangeRates: true,
+        lastRateFetchTimestamp: 0,
+      ));
   Future<void> setExchangeRateApiOption(ExchangeRateApiOption v) => _update((s) => s.copyWith(exchangeRateApiOption: v));
   Future<void> setLastRateFetchTimestamp(int v) => _update((s) => s.copyWith(lastRateFetchTimestamp: v));
   Future<void> setFirstDayOfWeek(FirstDayOfWeek v) => _update((s) => s.copyWith(firstDayOfWeek: v));

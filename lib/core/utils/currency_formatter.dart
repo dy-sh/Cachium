@@ -42,4 +42,28 @@ class CurrencyFormatter {
     }
     return format(amount, currencyCode: currencyCode);
   }
+
+  /// Format an amount with thousands separators and fixed decimals, WITHOUT a
+  /// currency symbol. Callers that need to prepend a symbol themselves (e.g.
+  /// charts that control symbol placement separately) should use this.
+  static String formatNumber(double amount, {int decimalDigits = 2}) {
+    return NumberFormat.decimalPatternDigits(
+      locale: 'en_US',
+      decimalDigits: decimalDigits,
+    ).format(amount);
+  }
+
+  /// Short-form amount for chart axis labels: 1.2M / 3.4K / 500.
+  /// Prepends the provided symbol without whitespace. Suitable for compact
+  /// contexts where a full currency-formatted value would overflow.
+  static String formatShort(double amount, String symbol) {
+    final abs = amount.abs();
+    if (abs >= 1000000) {
+      return '$symbol${(amount / 1000000).toStringAsFixed(1)}M';
+    }
+    if (abs >= 1000) {
+      return '$symbol${(amount / 1000).toStringAsFixed(1)}K';
+    }
+    return '$symbol${amount.toStringAsFixed(0)}';
+  }
 }

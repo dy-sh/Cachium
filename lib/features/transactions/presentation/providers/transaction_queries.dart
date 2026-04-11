@@ -193,6 +193,37 @@ final transactionCountByAccountProvider = Provider.family<int, String>((ref, acc
   return ref.watch(transactionsByAccountProvider(accountId)).length;
 });
 
+/// This-month income and expense totals for an account, in that account's
+/// native currency. Memoized: only recomputes when the transactions list
+/// changes. Use instead of folding over transactions in widget builds.
+class AccountMonthlyStats {
+  final double income;
+  final double expense;
+  const AccountMonthlyStats({required this.income, required this.expense});
+  static const zero = AccountMonthlyStats(income: 0, expense: 0);
+}
+
+final accountMonthlyStatsProvider =
+    Provider.family<AccountMonthlyStats, String>((ref, accountId) {
+  final transactions = ref.watch(transactionsByAccountProvider(accountId));
+  final now = DateTime.now();
+  final monthStart = DateTime(now.year, now.month, 1);
+  double income = 0;
+  double expense = 0;
+  for (final tx in transactions) {
+    // Only count when this account is the source — destination-only legs are
+    // excluded so transfers don't inflate the "this-account" view.
+    if (tx.accountId != accountId) continue;
+    if (tx.date.isBefore(monthStart)) continue;
+    if (tx.type == TransactionType.income) {
+      income += tx.amount;
+    } else if (tx.type == TransactionType.expense) {
+      expense += tx.amount;
+    }
+  }
+  return AccountMonthlyStats(income: income, expense: expense);
+});
+
 final transactionsByCategoryProvider = Provider.family<List<Transaction>, String>((ref, categoryId) {
   final transactions = ref.watch(transactionsProvider).valueOrNull;
   if (transactions == null) return [];

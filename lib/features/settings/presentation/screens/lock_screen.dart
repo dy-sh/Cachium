@@ -8,6 +8,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/credential_hasher.dart';
 import '../providers/app_lock_provider.dart';
 import '../providers/settings_provider.dart';
@@ -24,6 +25,7 @@ class LockScreen extends ConsumerStatefulWidget {
 }
 
 class _LockScreenState extends ConsumerState<LockScreen> {
+  static const _log = AppLogger('LockScreen');
   static const _maxPinLength = 8;
   static const _lockoutThreshold1 = 5;
   static const _lockoutThreshold2 = 10;
@@ -219,9 +221,18 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     if (!mounted) return;
 
     if (matched) {
-      // Transparently upgrade to PBKDF2 if needed
+      // Transparently upgrade to PBKDF2 if needed. Failures here are
+      // non-fatal for the unlock (the legacy hash still authenticated the
+      // user), but we log them so they're not invisible.
       if (CredentialHasher.needsUpgrade(storedPin)) {
-        unawaited(ref.read(settingsProvider.notifier).upgradeCredentialIfNeeded(rawPin: rawPin));
+        try {
+          await ref
+              .read(settingsProvider.notifier)
+              .upgradeCredentialIfNeeded(rawPin: rawPin);
+        } catch (e) {
+          _log.error('PIN credential upgrade failed', e);
+        }
+        if (!mounted) return;
       }
       _unlock();
     } else if (_enteredPin.length >= _maxPinLength) {
@@ -258,9 +269,16 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     if (!mounted) return;
 
     if (matched) {
-      // Transparently upgrade to PBKDF2 if needed
+      // Transparently upgrade to PBKDF2 if needed. See _verifyPin for rationale.
       if (CredentialHasher.needsUpgrade(storedPassword)) {
-        unawaited(ref.read(settingsProvider.notifier).upgradeCredentialIfNeeded(rawPassword: rawPassword));
+        try {
+          await ref
+              .read(settingsProvider.notifier)
+              .upgradeCredentialIfNeeded(rawPassword: rawPassword);
+        } catch (e) {
+          _log.error('password credential upgrade failed', e);
+        }
+        if (!mounted) return;
       }
       _unlock();
     } else {

@@ -40,30 +40,46 @@ class _FMIconButtonState extends State<IconBtn>
 
   @override
   Widget build(BuildContext context) {
+    // Visual size stays at widget.size so existing toolbars keep their layout,
+    // but the hit target expands to Material's kMinInteractiveDimension (48)
+    // for accessibility. The extra area is transparent padding around the
+    // visible button.
+    final visualSize = widget.size;
+    final hitSize = visualSize < kMinInteractiveDimension
+        ? kMinInteractiveDimension
+        : visualSize;
+
     return Semantics(
       button: true,
       label: widget.semanticLabel,
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: widget.onPressed,
         onTapDown: handleTapDown,
         onTapUp: handleTapUp,
         onTapCancel: handleTapCancel,
-        child: buildScaleTransition(
-          child: Container(
-            width: widget.size,
-            height: widget.size,
-            decoration: BoxDecoration(
-              color: widget.backgroundColor ?? AppColors.surface,
-              borderRadius: AppRadius.mdAll,
-              border: widget.showBorder
-                  ? Border.all(color: AppColors.border)
-                  : null,
-            ),
-            child: Center(
-              child: Icon(
-                widget.icon,
-                color: widget.iconColor ?? AppColors.textPrimary,
-                size: widget.size * 0.5,
+        child: SizedBox(
+          width: hitSize,
+          height: hitSize,
+          child: Center(
+            child: buildScaleTransition(
+              child: Container(
+                width: visualSize,
+                height: visualSize,
+                decoration: BoxDecoration(
+                  color: widget.backgroundColor ?? AppColors.surface,
+                  borderRadius: AppRadius.mdAll,
+                  border: widget.showBorder
+                      ? Border.all(color: AppColors.border)
+                      : null,
+                ),
+                child: Center(
+                  child: Icon(
+                    widget.icon,
+                    color: widget.iconColor ?? AppColors.textPrimary,
+                    size: visualSize * 0.5,
+                  ),
+                ),
               ),
             ),
           ),

@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io' show Platform;
+import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -83,6 +85,13 @@ class _AppGate extends ConsumerStatefulWidget {
 }
 
 class _AppGateState extends ConsumerState<_AppGate> with WidgetsBindingObserver {
+  /// iOS has no per-activity FLAG_SECURE equivalent, so we paint a blur over
+  /// the app tree whenever the process isn't foregrounded. The overlay is
+  /// visible in the app-switcher snapshot that iOS captures when we leave
+  /// the foreground, preventing sensitive data from leaking there.
+  /// Android is already handled by FLAG_SECURE in MainActivity.
+  bool _iosBlurOverlayActive = false;
+
   @override
   void initState() {
     super.initState();
@@ -98,6 +107,22 @@ class _AppGateState extends ConsumerState<_AppGate> with WidgetsBindingObserver 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
+
+    if (Platform.isIOS) {
+      // `inactive` is the state iOS captures the app-switcher snapshot in,
+      // before `paused`. We also set the blur on `paused`/`hidden` to cover
+      // any platform variation, and clear it on `resumed`.
+      final shouldBlur = state == AppLifecycleState.inactive ||
+          state == AppLifecycleState.paused ||
+          state == AppLifecycleState.hidden;
+      if (shouldBlur != _iosBlurOverlayActive) {
+        setState(() => _iosBlurOverlayActive = shouldBlur);
+      }
+      if (state == AppLifecycleState.resumed && _iosBlurOverlayActive) {
+        setState(() => _iosBlurOverlayActive = false);
+      }
+    }
+
     final appLockEnabled = ref.read(appLockEnabledProvider);
     if (!appLockEnabled) return;
 
@@ -149,6 +174,22 @@ class _AppGateState extends ConsumerState<_AppGate> with WidgetsBindingObserver 
       const ScreenSecurityService().setSecure(hideFromScreenshots);
     });
 
+    final app = _buildGatedApp(ref);
+
+    // iOS blur-overlay parity for the app-switcher snapshot. Only active
+    // when the user has opted into hiding from screenshots.
+    if (Platform.isIOS && _iosBlurOverlayActive && hideFromScreenshots) {
+      return Stack(
+        children: [
+          app,
+          const Positioned.fill(child: _IosBlurOverlay()),
+        ],
+      );
+    }
+    return app;
+  }
+
+  Widget _buildGatedApp(WidgetRef ref) {
     // Fatal: encryption key corrupted — cannot decrypt any data
     final keyCorrupted = ref.watch(encryptionKeyCorruptedProvider);
     if (keyCorrupted) {
@@ -298,6 +339,29 @@ class _MainAppState extends ConsumerState<_MainApp> {
       debugShowCheckedModeBanner: false,
       routerConfig: router,
       theme: CachiumApp.currentTheme,
+    );
+  }
+}
+
+/// Full-screen blur shown over the app tree on iOS while the process is
+/// inactive/paused, so the app-switcher snapshot iOS takes at that moment
+/// doesn't leak sensitive financial data. Android uses FLAG_SECURE instead.
+class _IosBlurOverlay extends StatelessWidget {
+  const _IosBlurOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    return BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+      child: Container(
+        color: AppColors.background.withValues(alpha: 0.6),
+        alignment: Alignment.center,
+        child: Icon(
+          Icons.lock_outline,
+          size: 56,
+          color: AppColors.textSecondary,
+        ),
+      ),
     );
   }
 }

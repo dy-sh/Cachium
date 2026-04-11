@@ -371,7 +371,7 @@ class _ReorderableAccountTypeSection extends ConsumerWidget {
                     height: 28,
                     decoration: BoxDecoration(
                       color: accountColor.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(7),
+                      borderRadius: AppRadius.smAll,
                     ),
                     child: Icon(
                       account.icon,
@@ -497,7 +497,7 @@ class _AccountCard extends ConsumerWidget {
                       height: 28,
                       decoration: BoxDecoration(
                         color: accountColor.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(7),
+                        borderRadius: AppRadius.smAll,
                       ),
                       child: Icon(
                         account.icon,

@@ -57,7 +57,10 @@ class _ToggleChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.chipPaddingVerticalCompact,
+        ),
         decoration: BoxDecoration(
           color: selected ? AppColors.accentPrimary.withValues(alpha: 0.2) : AppColors.surfaceLight,
           borderRadius: AppRadius.lgAll,

@@ -57,6 +57,9 @@ class _AccountPreviewListState extends ConsumerState<AccountPreviewList> {
       ),
       data: (accounts) {
         final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+        final rates =
+            ref.watch(exchangeRatesProvider).valueOrNull ?? const <String, double>{};
+        final cardStyle = ref.watch(accountCardStyleProvider);
         final hasForeignCurrency = accounts.any((a) => a.currencyCode != mainCurrency);
         final listHeight = hasForeignCurrency ? 84.0 : 72.0;
 
@@ -83,6 +86,9 @@ class _AccountPreviewListState extends ConsumerState<AccountPreviewList> {
               intensity: intensity,
               textSize: textSize,
               showBalance: showBalances,
+              mainCurrency: mainCurrency,
+              rates: rates,
+              cardStyle: cardStyle,
               onTap: balancesHidden && !_balancesRevealed
                   ? () => setState(() => _balancesRevealed = true)
                   : () => context.push(AppRoutes.accountDetailPath(accounts[index].id)),
@@ -95,11 +101,14 @@ class _AccountPreviewListState extends ConsumerState<AccountPreviewList> {
   }
 }
 
-class _AccountPreviewCard extends ConsumerWidget {
+class _AccountPreviewCard extends StatelessWidget {
   final Account account;
   final ColorIntensity intensity;
   final AmountDisplaySize textSize;
   final bool showBalance;
+  final String mainCurrency;
+  final Map<String, double> rates;
+  final AccountCardStyle cardStyle;
   final VoidCallback onTap;
 
   const _AccountPreviewCard({
@@ -107,15 +116,17 @@ class _AccountPreviewCard extends ConsumerWidget {
     required this.intensity,
     required this.textSize,
     required this.showBalance,
+    required this.mainCurrency,
+    required this.rates,
+    required this.cardStyle,
     required this.onTap,
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final accountColor = account.getColorWithIntensity(intensity);
     final expenseColor = AppColors.getTransactionColor('expense', intensity);
     final bgOpacity = AppColors.getBgOpacity(intensity);
-    final cardStyle = ref.watch(accountCardStyleProvider);
     final isSmall = textSize == AmountDisplaySize.small;
 
     // Opacity multipliers based on card style
@@ -191,7 +202,7 @@ class _AccountPreviewCard extends ConsumerWidget {
                       height: 28,
                       decoration: BoxDecoration(
                         color: accountColor.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(7),
+                        borderRadius: AppRadius.smAll,
                       ),
                       child: Icon(
                         account.icon,
@@ -235,21 +246,16 @@ class _AccountPreviewCard extends ConsumerWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                if (showBalance && account.currencyCode != ref.watch(mainCurrencyCodeProvider))
-                  Builder(builder: (context) {
-                    final mainCurrency = ref.watch(mainCurrencyCodeProvider);
-                    final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
-                    final converted = convertToMainCurrency(account.balance, account.currencyCode, mainCurrency, rates);
-                    return Text(
-                      '\u2248 ${CurrencyFormatter.format(converted, currencyCode: mainCurrency)}',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.textTertiary,
-                        fontSize: 9,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    );
-                  }),
+                if (showBalance && account.currencyCode != mainCurrency)
+                  Text(
+                    '\u2248 ${CurrencyFormatter.format(convertToMainCurrency(account.balance, account.currencyCode, mainCurrency, rates), currencyCode: mainCurrency)}',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: AppColors.textTertiary,
+                      fontSize: 9,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
               ],
             ),
           ),

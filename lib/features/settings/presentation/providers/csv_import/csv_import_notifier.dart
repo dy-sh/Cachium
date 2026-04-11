@@ -791,13 +791,25 @@ class FlexibleCsvImportNotifier extends AutoDisposeNotifier<FlexibleCsvImportSta
         state.existingAccountsByName,
       );
 
-      // Invalidate providers to refresh data
-      ref.invalidate(categoriesProvider);
-      ref.invalidate(accountsProvider);
-      ref.invalidate(transactionsProvider);
+      // Invalidate only the providers whose underlying data actually changed.
+      // `categoriesToCreate`/`accountsToCreate` carry auto-created rows during
+      // transaction imports, so those always touch categories/accounts too.
+      final entityType = state.config!.entityType;
+      final createdCategories = state.parseResult!.categoriesToCreate.isNotEmpty;
+      final createdAccounts = state.parseResult!.accountsToCreate.isNotEmpty;
+
+      if (entityType == ImportEntityType.category || createdCategories) {
+        ref.invalidate(categoriesProvider);
+      }
+      if (entityType == ImportEntityType.account || createdAccounts) {
+        ref.invalidate(accountsProvider);
+      }
+      if (entityType == ImportEntityType.transaction) {
+        ref.invalidate(transactionsProvider);
+      }
 
       // Recalculate account balances if transactions were imported
-      if (state.config!.entityType == ImportEntityType.transaction && result.imported > 0) {
+      if (entityType == ImportEntityType.transaction && result.imported > 0) {
         await _recalculateAccountBalances();
       }
 

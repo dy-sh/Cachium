@@ -8,6 +8,7 @@ import '../../../../core/constants/app_radius.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/constants/currencies.dart';
+import '../../../../core/utils/currency_formatter.dart';
 import '../../../../design_system/design_system.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../providers/net_worth_snapshot_provider.dart';
@@ -408,21 +409,11 @@ class NetWorthHistoryScreen extends ConsumerWidget {
     );
   }
 
-  static String _formatNumber(double value) {
-    return value.toStringAsFixed(2).replaceAllMapped(
-      RegExp(r'(\d)(?=(\d{3})+\.)'),
-      (m) => '${m[1]},',
-    );
-  }
+  static String _formatNumber(double value) =>
+      CurrencyFormatter.formatNumber(value);
 
-  static String _formatAmountShort(double value, String symbol) {
-    if (value.abs() >= 1000000) {
-      return '$symbol${(value / 1000000).toStringAsFixed(1)}M';
-    } else if (value.abs() >= 1000) {
-      return '$symbol${(value / 1000).toStringAsFixed(1)}K';
-    }
-    return '$symbol${value.toStringAsFixed(0)}';
-  }
+  static String _formatAmountShort(double value, String symbol) =>
+      CurrencyFormatter.formatShort(value, symbol);
 }
 
 class _LegendDot extends StatelessWidget {

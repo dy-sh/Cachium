@@ -14,6 +14,7 @@ import '../../../categories/data/models/category.dart';
 import '../../../settings/data/models/app_settings.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../../core/constants/currencies.dart';
+import '../../../../core/utils/currency_conversion.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../../data/models/budget.dart';
 import '../../data/models/budget_progress.dart';
@@ -371,10 +372,15 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
   @override
   void initState() {
     super.initState();
-    if (widget.editBudget != null) {
-      _selectedCategoryId = widget.editBudget!.categoryId;
-      _amountController.text = widget.editBudget!.amount.toStringAsFixed(0);
-      _rolloverEnabled = widget.editBudget!.rolloverEnabled;
+    final budget = widget.editBudget;
+    if (budget != null) {
+      _selectedCategoryId = budget.categoryId;
+      final mainCurrency = ref.read(mainCurrencyCodeProvider);
+      final decimals = currencyDecimalPlaces(mainCurrency);
+      _amountController.text =
+          roundCurrency(budget.amount, currencyCode: mainCurrency)
+              .toStringAsFixed(decimals);
+      _rolloverEnabled = budget.rolloverEnabled;
     }
   }
 
