@@ -114,7 +114,7 @@ class AssetCategoriesScreen extends ConsumerWidget {
               child: categoriesAsync.when(
                 data: (categories) {
                   if (categories.isEmpty) {
-                    return EmptyState.centered(
+                    return const EmptyState.centered(
                       icon: LucideIcons.layoutGrid,
                       title: 'No categories yet',
                       subtitle: 'Add categories to organize your assets',

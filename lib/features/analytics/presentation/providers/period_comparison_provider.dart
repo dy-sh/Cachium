@@ -38,9 +38,9 @@ final periodComparisonDataProvider = Provider<PeriodComparisonData>((ref) {
   final transactions = transactionsAsync.valueOrNull;
   final categories = categoriesAsync.valueOrNull;
   if (transactions == null) {
-    return PeriodComparisonData(
-      periodA: const PeriodMetrics(label: 'Period A', income: 0, expense: 0, transactionCount: 0),
-      periodB: const PeriodMetrics(label: 'Period B', income: 0, expense: 0, transactionCount: 0),
+    return const PeriodComparisonData(
+      periodA: PeriodMetrics(label: 'Period A', income: 0, expense: 0, transactionCount: 0),
+      periodB: PeriodMetrics(label: 'Period B', income: 0, expense: 0, transactionCount: 0),
       categoryComparison: [],
     );
   }

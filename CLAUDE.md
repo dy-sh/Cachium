@@ -122,6 +122,29 @@ Key `AppColors` methods: `getAccountColor()`, `getTransactionColor()`, `getCateg
 - Cascading rollover up to 12 months; overspending produces zero rollover (clamped)
 - `BudgetProgress.effectiveBudget` used for progress calculations
 
+## Security
+
+- **SQLite exports are always encrypted.** `DatabaseExportService.exportToSqlite` has no plaintext code path. CSV exports can be plaintext (for spreadsheet analysis) but `export_screen.dart` shows a hard warning dialog before writing.
+- **PBKDF2 iteration bounds on verify.** `CredentialHasher` caps the iteration count read from a stored hash at `[1000, 1_000_000]`. Outside that range, verify returns false — defense-in-depth against tampered storage.
+- **Exchange rate HTTP client is hardened.** `exchange_rate_service.dart` uses an `HttpClient` with explicit `badCertificateCallback` rejection, connection and request timeouts, and a hostname allowlist. No SPKI pinning yet (see TODO in file) — requires a cert-watch process for the upstream APIs.
+- **Screen protection (Android FLAG_SECURE).** User-togglable via `hideFromScreenshots` setting, default on. Routed through `ScreenSecurityService` → `MethodChannel('cachium/security')` → `MainActivity.kt`. `MainActivity.onCreate` applies FLAG_SECURE before Flutter attaches so the first frame is also hidden. Toggling flows through `settingsProvider.setHideFromScreenshots` and is reconciled on app gate build via `ref.listen`. iOS has no equivalent per-activity flag — TODO: blur-overlay on background.
+- **Auto-lock lifecycle.** `AppLockStateNotifier.onBackground()` preserves the *earliest* background timestamp across rapid background/foreground cycles via `_backgroundedAt ??= DateTime.now()`. `lock()` clears the timestamp so re-backgrounding starts a fresh timer. `app.dart` routes `paused` and `hidden` lifecycle states to `onBackground`; `inactive` is ignored (iOS fires it on control-center pulldowns).
+- **Startup is non-blocking.** `main.dart` kicks off the encryption key pre-warm, settings load, credential migration, and notification init as `unawaited` futures after `runApp`, so first paint is not blocked by secure-storage latency. The app gate's existing `shouldShowWelcomeProvider` loading state covers the window until settings resolve.
+
+## Performance
+
+- **Holdings and liabilities are memoized.** Use `totalHoldingsProvider` / `totalLiabilitiesProvider` in `accounts_provider.dart` instead of folding over the account list inside widget builds. These only re-run when `accountsProvider`, `mainCurrencyCodeProvider`, or `exchangeRatesProvider` actually change.
+- **`_setting` helper uses `.select`.** Every convenience provider in `settings_provider.dart` (e.g., `themeModeProvider`, `mainCurrencyCodeProvider`) is now selective — changing one setting no longer invalidates every derived provider. When adding a new convenience provider, use `_setting((s) => s.field, fallback)`.
+- **Paged transaction fetch is available.** `transactionRepository.getTransactionsPaged(limit:, offset:)` and `appDatabase.getTransactionsPaged` exist for callers that can work with a bounded window (recent-transactions widgets, dashboard previews). The main transactions screen still loads all rows because its search/filter/grouping pipeline operates on the full in-memory list.
+
+## File Layout Conventions (Large Files)
+
+When a feature file grows past ~800 lines, prefer one of these splits:
+
+- **Provider queries vs CRUD.** `transactions_provider.dart` holds the `TransactionsNotifier` CRUD surface and re-exports derived query/filter/search providers from `transaction_queries.dart`. Callers that `import 'transactions_provider.dart'` get both.
+- **Screen + part widgets.** `assets_screen.dart` uses `part 'assets_screen_widgets.dart'` to split private child widgets into a sibling file while keeping library-private scoping (access to `_AssetTab`, `_AssetsScreenState`, etc.).
+- **Orchestrator + concern-specific extension parts.** `csv_importer.dart` keeps the bulk-import path in the main file and has `csv_importer_skip_duplicates.dart` as a `part` file with an `extension CsvImporterSkipDuplicates on CsvImporter` that adds the reconciliation methods.
+
 ## Key Files
 
 - `lib/app.dart` — Theme and routing (dark/light ThemeData, gated by welcome/lock/main screens)
@@ -130,9 +153,11 @@ Key `AppColors` methods: `getAccountColor()`, `getTransactionColor()`, `getCateg
 - `lib/core/constants/app_colors.dart` — Theme-aware color system (dark/light variants)
 - `lib/core/database/app_database.dart` — Database schema (version 28)
 - `lib/core/utils/currency_conversion.dart` — `conversionGainLoss()`, `roundCurrency()`
-- `lib/core/utils/credential_hasher.dart` — PBKDF2 credential hashing (with legacy SHA-256 and plaintext migration)
-- `lib/features/settings/data/models/app_settings.dart` — Settings model + ThemeModeOption + ColorIntensity + AutoLockTimeout
+- `lib/core/utils/credential_hasher.dart` — PBKDF2 credential hashing (with legacy SHA-256 and plaintext migration, iteration cap on verify)
+- `lib/core/services/screen_security_service.dart` — Android FLAG_SECURE bridge (MethodChannel `cachium/security`)
+- `android/app/src/main/kotlin/com/example/cachium/MainActivity.kt` — MethodChannel handler for `setSecure`, defaults to secure on Activity onCreate
+- `lib/features/settings/data/models/app_settings.dart` — Settings model + ThemeModeOption + ColorIntensity + AutoLockTimeout + hideFromScreenshots
 - `lib/design_system/components/feedback/notification.dart` — Custom notifications
-- `lib/core/services/exchange_rate_service.dart` — Exchange rate fetching
+- `lib/core/services/exchange_rate_service.dart` — Exchange rate fetching (hardened HttpClient with timeouts + host allowlist)
 - `lib/features/bills/` — Bill reminders feature module
 - `lib/features/budgets/` — Budgets with rollover support

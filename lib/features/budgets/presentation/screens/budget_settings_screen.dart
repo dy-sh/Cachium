@@ -170,7 +170,7 @@ class _BudgetSettingsScreenState extends ConsumerState<BudgetSettingsScreen> {
               ),
             ),
 
-          SliverToBoxAdapter(
+          const SliverToBoxAdapter(
             child: SizedBox(
               height: AppSpacing.bottomNavHeight + AppSpacing.lg,
             ),
@@ -401,7 +401,7 @@ class _BudgetFormSheetState extends ConsumerState<_BudgetFormSheet> {
       ),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.only(
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(AppRadius.xl),
           topRight: Radius.circular(AppRadius.xl),
         ),

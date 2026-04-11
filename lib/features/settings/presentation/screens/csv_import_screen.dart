@@ -64,7 +64,7 @@ class _CsvImportScreenState extends ConsumerState<CsvImportScreen> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
+                          const Icon(
                             LucideIcons.info,
                             size: 20,
                             color: AppColors.cyan,

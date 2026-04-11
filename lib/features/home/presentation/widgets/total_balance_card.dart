@@ -11,7 +11,6 @@ import '../../../../design_system/animations/animated_counter.dart';
 import '../../../../design_system/animations/shimmer_loading.dart';
 import '../../../../design_system/components/feedback/error_placeholder.dart';
 import '../../../../design_system/components/feedback/notification.dart';
-import '../../../accounts/data/models/account.dart';
 import '../../../accounts/presentation/providers/accounts_provider.dart';
 import '../../../settings/data/models/app_settings.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
@@ -28,6 +27,9 @@ class _TotalBalanceCardState extends ConsumerState<TotalBalanceCard> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch only the async state's phase (loading/error/data) via a select
+    // so the card doesn't rebuild when the account list mutates but the
+    // phase is unchanged.
     final accountsAsync = ref.watch(accountsProvider);
 
     return accountsAsync.when(
@@ -43,7 +45,7 @@ class _TotalBalanceCardState extends ConsumerState<TotalBalanceCard> {
           child: ErrorPlaceholder(message: 'Unable to load balance'),
         ),
       ),
-      data: (accounts) => _buildCard(context, accounts),
+      data: (_) => _buildCard(context),
     );
   }
 
@@ -66,20 +68,29 @@ class _TotalBalanceCardState extends ConsumerState<TotalBalanceCard> {
     );
   }
 
-  Widget _buildCard(BuildContext context, List<Account> accounts) {
+  Widget _buildCard(BuildContext context) {
     final totalBalance = ref.watch(totalBalanceProvider);
     final mainCurrency = ref.watch(mainCurrencyCodeProvider);
     final intensity = ref.watch(colorIntensityProvider);
     final incomeColor = AppColors.getTransactionColor('income', intensity);
     final expenseColor = AppColors.getTransactionColor('expense', intensity);
-    final holdings = _computeHoldings(accounts, mainCurrency);
-    final liabilities = _computeLiabilities(accounts, mainCurrency);
+    // Memoized: these only recompute when accounts, main currency, or rates
+    // actually change — no per-build folds over the account list.
+    final holdings = ref.watch(totalHoldingsProvider);
+    final liabilities = ref.watch(totalLiabilitiesProvider);
     final textSize = ref.watch(homeTotalBalanceTextSizeProvider);
     final balancesHidden = ref.watch(homeBalancesHiddenByDefaultProvider);
     final isSmall = textSize == AmountDisplaySize.small;
     final ratesStale = ref.watch(exchangeRatesStaleProvider);
-    final hasMultipleCurrencies =
-        accounts.any((a) => a.currencyCode != mainCurrency);
+    // Only rebuild when the has-foreign-currency bit flips, not on any list
+    // mutation.
+    final hasMultipleCurrencies = ref.watch(
+      accountsProvider.select((async) {
+        final list = async.valueOrNull;
+        if (list == null) return false;
+        return list.any((a) => a.currencyCode != mainCurrency);
+      }),
+    );
 
     // If balances are hidden by default, use local state to track reveal
     final showBalance = !balancesHidden || _balanceRevealed;
@@ -224,28 +235,6 @@ class _TotalBalanceCardState extends ConsumerState<TotalBalanceCard> {
     );
   }
 
-  double _computeHoldings(List<Account> accounts, String mainCurrency) {
-    final rates = ref.watch(exchangeRatesProvider).valueOrNull;
-    return accounts.where((a) => a.type.isHolding).fold(0.0, (sum, a) {
-      if (a.currencyCode == mainCurrency || rates == null) {
-        return sum + a.balance;
-      }
-      return sum +
-          convertToMainCurrency(a.balance, a.currencyCode, mainCurrency, rates);
-    });
-  }
-
-  double _computeLiabilities(List<Account> accounts, String mainCurrency) {
-    final rates = ref.watch(exchangeRatesProvider).valueOrNull;
-    return accounts.where((a) => a.type.isLiability).fold(0.0, (sum, a) {
-      final balance = a.balance.abs();
-      if (a.currencyCode == mainCurrency || rates == null) {
-        return sum + balance;
-      }
-      return sum +
-          convertToMainCurrency(balance, a.currencyCode, mainCurrency, rates);
-    });
-  }
 }
 
 class _BalanceBreakdown extends StatelessWidget {

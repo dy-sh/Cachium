@@ -83,9 +83,9 @@ class _TransactionListViewState extends ConsumerState<TransactionListView> {
   @override
   Widget build(BuildContext context) {
     if (widget.groups.isEmpty) {
-      return Center(
+      return const Center(
         child: Padding(
-          padding: const EdgeInsets.symmetric(
+          padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.screenPadding,
           ),
           child: EmptyState.centered(
@@ -106,7 +106,7 @@ class _TransactionListViewState extends ConsumerState<TransactionListView> {
       onRefresh: () async => widget.onRefresh(),
       child: ListView.builder(
         controller: _scrollController,
-        padding: EdgeInsets.only(
+        padding: const EdgeInsets.only(
           left: AppSpacing.screenPadding,
           right: AppSpacing.screenPadding,
           bottom: AppSpacing.bottomNavHeight + AppSpacing.lg,
@@ -115,8 +115,8 @@ class _TransactionListViewState extends ConsumerState<TransactionListView> {
         itemBuilder: (context, index) {
           // Loading indicator at the bottom
           if (index >= widget.groups.length) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
               child: Center(child: LoadingIndicator()),
             );
           }
@@ -408,7 +408,7 @@ class _TransactionItem extends ConsumerWidget {
             borderRadius: AppRadius.mdAll,
           ),
           alignment: Alignment.centerLeft,
-          child: Icon(
+          child: const Icon(
             LucideIcons.copy,
             color: AppColors.cyan,
             size: 22,
@@ -425,7 +425,7 @@ class _TransactionItem extends ConsumerWidget {
             borderRadius: AppRadius.mdAll,
           ),
           alignment: Alignment.centerRight,
-          child: Icon(
+          child: const Icon(
             LucideIcons.trash2,
             color: AppColors.red,
             size: 22,

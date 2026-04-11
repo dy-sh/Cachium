@@ -31,7 +31,7 @@ class ImportCsvPreviewDialog extends StatelessWidget {
               color: AppColors.income.withValues(alpha: 0.1),
               borderRadius: AppRadius.iconButton,
             ),
-            child: Icon(
+            child: const Icon(
               LucideIcons.fileUp,
               size: 20,
               color: AppColors.income,

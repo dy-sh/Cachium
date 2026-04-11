@@ -12,20 +12,20 @@ class AboutSettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
+      body: const SafeArea(
         child: Column(
           children: [
-            const SettingsHeader(title: 'About'),
+            SettingsHeader(title: 'About'),
             // Scrollable content
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+                padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SettingsSection(
                       title: 'App Info',
-                      children: const [
+                      children: [
                         SettingsTile(
                           title: 'Version',
                           value: '1.0.0',
@@ -33,7 +33,7 @@ class AboutSettingsScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: AppSpacing.xxxl),
+                    SizedBox(height: AppSpacing.xxxl),
                   ],
                 ),
               ),

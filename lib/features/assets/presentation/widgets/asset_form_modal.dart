@@ -236,7 +236,7 @@ class _AssetFormModalState extends ConsumerState<AssetFormModal> {
                                 color: AppColors.expense.withValues(alpha: 0.1),
                                 borderRadius: AppRadius.smAll,
                               ),
-                              child: Icon(
+                              child: const Icon(
                                 LucideIcons.trash2,
                                 size: 18,
                                 color: AppColors.expense,

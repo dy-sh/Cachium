@@ -86,7 +86,7 @@ class _KeyBackupScreenState extends ConsumerState<KeyBackupScreen> {
     if (!mounted) return;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => ConfirmationDialog(
+      builder: (context) => const ConfirmationDialog(
         title: 'Restore Encryption Key',
         message: 'This will replace your current encryption key. '
             'Only do this if your current key is lost or corrupted. '
@@ -146,7 +146,7 @@ class _KeyBackupScreenState extends ConsumerState<KeyBackupScreen> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
+                        const Icon(
                           LucideIcons.shieldAlert,
                           size: 18,
                           color: AppColors.expense,

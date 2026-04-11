@@ -465,6 +465,52 @@ final totalBalanceProvider = Provider<double>((ref) {
   });
 });
 
+double _sumConverted(
+  Iterable<Account> accounts,
+  String mainCurrency,
+  Map<String, double>? rates, {
+  bool absolute = false,
+}) {
+  return accounts.fold(0.0, (sum, a) {
+    final value = absolute ? a.balance.abs() : a.balance;
+    if (a.currencyCode == mainCurrency || rates == null) {
+      return sum + value;
+    }
+    return sum + convertToMainCurrency(value, a.currencyCode, mainCurrency, rates);
+  });
+}
+
+/// Total holdings across all non-liability accounts, converted to the main
+/// currency. Memoized so home-screen rebuilds don't re-fold on every widget
+/// tick — only fires when the list, main currency, or rates actually change.
+final totalHoldingsProvider = Provider<double>((ref) {
+  final accounts = ref.watch(accountsProvider).valueOrNull;
+  if (accounts == null) return 0.0;
+  final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  final rates = ref.watch(exchangeRatesProvider).valueOrNull;
+  return _sumConverted(
+    accounts.where((a) => a.type.isHolding),
+    mainCurrency,
+    rates,
+  );
+});
+
+/// Total liabilities across all liability accounts, expressed as a positive
+/// magnitude, converted to the main currency. Memoized for the same reason
+/// as [totalHoldingsProvider].
+final totalLiabilitiesProvider = Provider<double>((ref) {
+  final accounts = ref.watch(accountsProvider).valueOrNull;
+  if (accounts == null) return 0.0;
+  final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+  final rates = ref.watch(exchangeRatesProvider).valueOrNull;
+  return _sumConverted(
+    accounts.where((a) => a.type.isLiability),
+    mainCurrency,
+    rates,
+    absolute: true,
+  );
+});
+
 final accountsByTypeProvider =
     Provider<Map<AccountType, List<Account>>>((ref) {
   final accountsAsync = ref.watch(accountsProvider);

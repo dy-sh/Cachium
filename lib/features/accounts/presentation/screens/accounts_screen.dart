@@ -213,7 +213,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                         },
                         child: ListView(
                           physics: const AlwaysScrollableScrollPhysics(),
-                          padding: EdgeInsets.only(
+                          padding: const EdgeInsets.only(
                             left: AppSpacing.screenPadding,
                             right: AppSpacing.screenPadding,
                             bottom: AppSpacing.bottomNavHeight + AppSpacing.lg,

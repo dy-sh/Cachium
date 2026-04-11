@@ -39,24 +39,24 @@ class ForecastsTab extends ConsumerWidget {
   }
 
   Widget _buildContent() {
-    return ScrollAnchoredList(
+    return const ScrollAnchoredList(
       sections: [
         Padding(
-          padding: const EdgeInsets.symmetric(
+          padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.screenPadding,
           ),
-          child: const SpendingProjectionChart(),
+          child: SpendingProjectionChart(),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(
+          padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.screenPadding,
           ),
-          child: const BudgetForecastCards(),
+          child: BudgetForecastCards(),
         ),
-        const TrendExtrapolationSection(),
-        const RecurringTimeline(),
-        const WhatIfSimulator(),
-        const SavingsGoalSection(),
+        TrendExtrapolationSection(),
+        RecurringTimeline(),
+        WhatIfSimulator(),
+        SavingsGoalSection(),
       ],
     );
   }

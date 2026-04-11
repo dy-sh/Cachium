@@ -42,7 +42,7 @@ class UpcomingBillsList extends ConsumerWidget {
           ),
           child: Row(
             children: [
-              Icon(
+              const Icon(
                 LucideIcons.checkCircle,
                 size: 20,
                 color: AppColors.income,

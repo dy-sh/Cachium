@@ -238,7 +238,7 @@ class _DatabaseSettingsScreenState extends ConsumerState<DatabaseSettingsScreen>
       ),
       child: Row(
         children: [
-          Icon(LucideIcons.alertTriangle, size: 18, color: AppColors.red),
+          const Icon(LucideIcons.alertTriangle, size: 18, color: AppColors.red),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(

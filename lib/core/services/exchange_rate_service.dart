@@ -5,69 +5,95 @@ import '../utils/app_logger.dart';
 
 const _log = AppLogger('ExchangeRateService');
 
+// Hardened HTTP client settings shared by all exchange rate providers.
+// Defense in depth: system trust store is already enforced by Dart's
+// HttpClient, but we explicitly reject bad certs via the callback so a
+// future refactor can't silently weaken validation. Connection and total
+// timeouts bound latency for slow/hostile networks.
+const _kConnectionTimeout = Duration(seconds: 10);
+const _kRequestTimeout = Duration(seconds: 15);
+
+HttpClient _buildHardenedClient() {
+  final client = HttpClient()
+    ..connectionTimeout = _kConnectionTimeout
+    // Explicit rejection. Dart's default already rejects bad certs, but
+    // making the policy explicit prevents accidental weakening later.
+    // TODO(security): add SPKI pinning once we have a cert-watch process
+    //                 for the upstream APIs (certs rotate on 60–90 day cycles).
+    ..badCertificateCallback = (cert, host, port) => false;
+  return client;
+}
+
+void _assertHttpsHost(Uri uri, Set<String> allowedHosts) {
+  if (uri.scheme != 'https') {
+    throw const HttpException('Only HTTPS is allowed for exchange rate APIs');
+  }
+  if (!allowedHosts.contains(uri.host)) {
+    throw HttpException('Unexpected exchange rate host: ${uri.host}');
+  }
+}
+
+Future<Map<String, double>> _fetchAndDecodeRates(
+  Uri uri, {
+  required Set<String> allowedHosts,
+  required String baseCurrency,
+}) async {
+  _assertHttpsHost(uri, allowedHosts);
+  final client = _buildHardenedClient();
+  try {
+    final request = await client.getUrl(uri).timeout(_kRequestTimeout);
+    final response = await request.close().timeout(_kRequestTimeout);
+
+    if (response.statusCode != 200) {
+      throw HttpException('Failed to fetch rates: ${response.statusCode}');
+    }
+
+    final body = await response.transform(utf8.decoder).join().timeout(_kRequestTimeout);
+    final json = jsonDecode(body) as Map<String, dynamic>;
+    final rates = (json['rates'] as Map<String, dynamic>).map(
+      (key, value) => MapEntry(key, (value as num).toDouble()),
+    );
+    rates[baseCurrency] = 1.0;
+    return rates;
+  } finally {
+    client.close(force: true);
+  }
+}
+
 abstract class ExchangeRateApi {
   String get name;
   Future<Map<String, double>> fetchRates(String baseCurrency);
 }
 
 class FrankfurterApi implements ExchangeRateApi {
+  static const _allowedHosts = {'api.frankfurter.app'};
+
   @override
   String get name => 'Frankfurter';
 
   @override
-  Future<Map<String, double>> fetchRates(String baseCurrency) async {
-    final client = HttpClient();
-    try {
-      final request = await client.getUrl(
-        Uri.parse('https://api.frankfurter.app/latest?from=$baseCurrency'),
-      );
-      final response = await request.close();
-
-      if (response.statusCode != 200) {
-        throw HttpException('Failed to fetch rates: ${response.statusCode}');
-      }
-
-      final body = await response.transform(utf8.decoder).join();
-      final json = jsonDecode(body) as Map<String, dynamic>;
-      final rates = (json['rates'] as Map<String, dynamic>).map(
-        (key, value) => MapEntry(key, (value as num).toDouble()),
-      );
-      // Add base currency with rate 1.0
-      rates[baseCurrency] = 1.0;
-      return rates;
-    } finally {
-      client.close();
-    }
+  Future<Map<String, double>> fetchRates(String baseCurrency) {
+    return _fetchAndDecodeRates(
+      Uri.parse('https://api.frankfurter.app/latest?from=$baseCurrency'),
+      allowedHosts: _allowedHosts,
+      baseCurrency: baseCurrency,
+    );
   }
 }
 
 class OpenExchangeRateApi implements ExchangeRateApi {
+  static const _allowedHosts = {'open.er-api.com'};
+
   @override
   String get name => 'Open ER-API';
 
   @override
-  Future<Map<String, double>> fetchRates(String baseCurrency) async {
-    final client = HttpClient();
-    try {
-      final request = await client.getUrl(
-        Uri.parse('https://open.er-api.com/v6/latest/$baseCurrency'),
-      );
-      final response = await request.close();
-
-      if (response.statusCode != 200) {
-        throw HttpException('Failed to fetch rates: ${response.statusCode}');
-      }
-
-      final body = await response.transform(utf8.decoder).join();
-      final json = jsonDecode(body) as Map<String, dynamic>;
-      final rates = (json['rates'] as Map<String, dynamic>).map(
-        (key, value) => MapEntry(key, (value as num).toDouble()),
-      );
-      rates[baseCurrency] = 1.0;
-      return rates;
-    } finally {
-      client.close();
-    }
+  Future<Map<String, double>> fetchRates(String baseCurrency) {
+    return _fetchAndDecodeRates(
+      Uri.parse('https://open.er-api.com/v6/latest/$baseCurrency'),
+      allowedHosts: _allowedHosts,
+      baseCurrency: baseCurrency,
+    );
   }
 }
 

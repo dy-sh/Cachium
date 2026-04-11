@@ -4,7 +4,7 @@ import 'package:cachium/features/settings/data/models/flexible_csv_import_config
 void main() {
   group('FlexibleCsvImportConfig.getSampleValues', () {
     test('returns up to 3 sample values', () {
-      final config = FlexibleCsvImportConfig(
+      final config = const FlexibleCsvImportConfig(
         entityType: ImportEntityType.account,
         filePath: '/tmp/test.csv',
         csvHeaders: ['name', 'balance'],
@@ -14,24 +14,24 @@ void main() {
           ['Carol', '300'],
           ['Dave', '400'],
         ],
-        fieldMappings: const {},
+        fieldMappings: {},
       );
       expect(config.getSampleValues('name'), ['Alice', 'Bob', 'Carol']);
     });
 
     test('returns empty for unknown column', () {
-      final config = FlexibleCsvImportConfig(
+      final config = const FlexibleCsvImportConfig(
         entityType: ImportEntityType.account,
         filePath: '/tmp/test.csv',
         csvHeaders: ['name'],
         csvRows: [['Alice']],
-        fieldMappings: const {},
+        fieldMappings: {},
       );
       expect(config.getSampleValues('unknown'), isEmpty);
     });
 
     test('skips empty and null values', () {
-      final config = FlexibleCsvImportConfig(
+      final config = const FlexibleCsvImportConfig(
         entityType: ImportEntityType.account,
         filePath: '/tmp/test.csv',
         csvHeaders: ['name'],
@@ -42,13 +42,13 @@ void main() {
           ['Bob'],
           ['null'],
         ],
-        fieldMappings: const {},
+        fieldMappings: {},
       );
       expect(config.getSampleValues('name'), ['Alice', 'Bob']);
     });
 
     test('handles rows shorter than column index', () {
-      final config = FlexibleCsvImportConfig(
+      final config = const FlexibleCsvImportConfig(
         entityType: ImportEntityType.account,
         filePath: '/tmp/test.csv',
         csvHeaders: ['a', 'b', 'c'],
@@ -57,7 +57,7 @@ void main() {
           ['x', 'y'],
           ['x', 'y', 'z'],
         ],
-        fieldMappings: const {},
+        fieldMappings: {},
       );
       expect(config.getSampleValues('c'), ['z']);
     });
@@ -65,12 +65,12 @@ void main() {
 
   group('FlexibleCsvImportConfig.copyWith', () {
     test('clearPresetName sets to null', () {
-      final config = FlexibleCsvImportConfig(
+      final config = const FlexibleCsvImportConfig(
         entityType: ImportEntityType.account,
         filePath: '/tmp/test.csv',
-        csvHeaders: const [],
-        csvRows: const [],
-        fieldMappings: const {},
+        csvHeaders: [],
+        csvRows: [],
+        fieldMappings: {},
         presetName: 'Cachium',
       );
       final copy = config.copyWith(clearPresetName: true);

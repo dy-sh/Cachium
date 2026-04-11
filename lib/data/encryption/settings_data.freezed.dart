@@ -127,6 +127,11 @@ mixin _$SettingsData {
   /// Whether biometric unlock is enabled (when hardware is available)
   bool get biometricUnlockEnabled => throw _privateConstructorUsedError;
 
+  /// Whether to hide the app's UI from screenshots and recent-app screenshots
+  /// (Android FLAG_SECURE). Default on — sensitive financial data should not
+  /// leak via screen capture by default.
+  bool get hideFromScreenshots => throw _privateConstructorUsedError;
+
   /// Whether notifications are enabled
   bool get notificationsEnabled => throw _privateConstructorUsedError;
 
@@ -212,6 +217,7 @@ abstract class $SettingsDataCopyWith<$Res> {
     String? appPassword,
     String autoLockTimeout,
     bool biometricUnlockEnabled,
+    bool hideFromScreenshots,
     bool notificationsEnabled,
     List<int> budgetAlertThresholds,
     bool recurringRemindersEnabled,
@@ -275,6 +281,7 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
     Object? appPassword = freezed,
     Object? autoLockTimeout = null,
     Object? biometricUnlockEnabled = null,
+    Object? hideFromScreenshots = null,
     Object? notificationsEnabled = null,
     Object? budgetAlertThresholds = null,
     Object? recurringRemindersEnabled = null,
@@ -425,6 +432,10 @@ class _$SettingsDataCopyWithImpl<$Res, $Val extends SettingsData>
                 ? _value.biometricUnlockEnabled
                 : biometricUnlockEnabled // ignore: cast_nullable_to_non_nullable
                       as bool,
+            hideFromScreenshots: null == hideFromScreenshots
+                ? _value.hideFromScreenshots
+                : hideFromScreenshots // ignore: cast_nullable_to_non_nullable
+                      as bool,
             notificationsEnabled: null == notificationsEnabled
                 ? _value.notificationsEnabled
                 : notificationsEnabled // ignore: cast_nullable_to_non_nullable
@@ -519,6 +530,7 @@ abstract class _$$SettingsDataImplCopyWith<$Res>
     String? appPassword,
     String autoLockTimeout,
     bool biometricUnlockEnabled,
+    bool hideFromScreenshots,
     bool notificationsEnabled,
     List<int> budgetAlertThresholds,
     bool recurringRemindersEnabled,
@@ -581,6 +593,7 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
     Object? appPassword = freezed,
     Object? autoLockTimeout = null,
     Object? biometricUnlockEnabled = null,
+    Object? hideFromScreenshots = null,
     Object? notificationsEnabled = null,
     Object? budgetAlertThresholds = null,
     Object? recurringRemindersEnabled = null,
@@ -731,6 +744,10 @@ class __$$SettingsDataImplCopyWithImpl<$Res>
             ? _value.biometricUnlockEnabled
             : biometricUnlockEnabled // ignore: cast_nullable_to_non_nullable
                   as bool,
+        hideFromScreenshots: null == hideFromScreenshots
+            ? _value.hideFromScreenshots
+            : hideFromScreenshots // ignore: cast_nullable_to_non_nullable
+                  as bool,
         notificationsEnabled: null == notificationsEnabled
             ? _value.notificationsEnabled
             : notificationsEnabled // ignore: cast_nullable_to_non_nullable
@@ -818,6 +835,7 @@ class _$SettingsDataImpl implements _SettingsData {
     this.appPassword,
     this.autoLockTimeout = 'immediate',
     this.biometricUnlockEnabled = true,
+    this.hideFromScreenshots = true,
     this.notificationsEnabled = false,
     final List<int> budgetAlertThresholds = const [75, 90, 100],
     this.recurringRemindersEnabled = true,
@@ -1008,6 +1026,13 @@ class _$SettingsDataImpl implements _SettingsData {
   @JsonKey()
   final bool biometricUnlockEnabled;
 
+  /// Whether to hide the app's UI from screenshots and recent-app screenshots
+  /// (Android FLAG_SECURE). Default on — sensitive financial data should not
+  /// leak via screen capture by default.
+  @override
+  @JsonKey()
+  final bool hideFromScreenshots;
+
   /// Whether notifications are enabled
   @override
   @JsonKey()
@@ -1081,7 +1106,7 @@ class _$SettingsDataImpl implements _SettingsData {
 
   @override
   String toString() {
-    return 'SettingsData(id: $id, themeMode: $themeMode, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, mainCurrencyCode: $mainCurrencyCode, exchangeRateApiOption: $exchangeRateApiOption, cachedExchangeRates: $cachedExchangeRates, lastRateFetchTimestamp: $lastRateFetchTimestamp, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, autoCategorizeByMerchant: $autoCategorizeByMerchant, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, categoriesFoldedCount: $categoriesFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, categorySortOption: $categorySortOption, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId, appLockEnabled: $appLockEnabled, appPinCode: $appPinCode, appPassword: $appPassword, autoLockTimeout: $autoLockTimeout, biometricUnlockEnabled: $biometricUnlockEnabled, notificationsEnabled: $notificationsEnabled, budgetAlertThresholds: $budgetAlertThresholds, recurringRemindersEnabled: $recurringRemindersEnabled, recurringReminderAdvanceDays: $recurringReminderAdvanceDays, weeklySpendingSummaryEnabled: $weeklySpendingSummaryEnabled, weeklySpendingSummaryDay: $weeklySpendingSummaryDay, encryptAttachments: $encryptAttachments, autoGenerateRecurring: $autoGenerateRecurring, homeShowBudgetProgress: $homeShowBudgetProgress, homeSectionOrder: $homeSectionOrder, tutorialCompleted: $tutorialCompleted)';
+    return 'SettingsData(id: $id, themeMode: $themeMode, colorIntensity: $colorIntensity, accentColorIndex: $accentColorIndex, accountCardStyle: $accountCardStyle, tabTransitionsEnabled: $tabTransitionsEnabled, formAnimationsEnabled: $formAnimationsEnabled, balanceCountersEnabled: $balanceCountersEnabled, dateFormat: $dateFormat, mainCurrencyCode: $mainCurrencyCode, exchangeRateApiOption: $exchangeRateApiOption, cachedExchangeRates: $cachedExchangeRates, lastRateFetchTimestamp: $lastRateFetchTimestamp, firstDayOfWeek: $firstDayOfWeek, hapticFeedbackEnabled: $hapticFeedbackEnabled, startScreen: $startScreen, lastUsedAccountId: $lastUsedAccountId, autoCategorizeByMerchant: $autoCategorizeByMerchant, selectLastCategory: $selectLastCategory, selectLastAccount: $selectLastAccount, accountsFoldedCount: $accountsFoldedCount, categoriesFoldedCount: $categoriesFoldedCount, showAddAccountButton: $showAddAccountButton, showAddCategoryButton: $showAddCategoryButton, defaultTransactionType: $defaultTransactionType, allowZeroAmount: $allowZeroAmount, categorySortOption: $categorySortOption, lastUsedIncomeCategoryId: $lastUsedIncomeCategoryId, lastUsedExpenseCategoryId: $lastUsedExpenseCategoryId, appLockEnabled: $appLockEnabled, appPinCode: $appPinCode, appPassword: $appPassword, autoLockTimeout: $autoLockTimeout, biometricUnlockEnabled: $biometricUnlockEnabled, hideFromScreenshots: $hideFromScreenshots, notificationsEnabled: $notificationsEnabled, budgetAlertThresholds: $budgetAlertThresholds, recurringRemindersEnabled: $recurringRemindersEnabled, recurringReminderAdvanceDays: $recurringReminderAdvanceDays, weeklySpendingSummaryEnabled: $weeklySpendingSummaryEnabled, weeklySpendingSummaryDay: $weeklySpendingSummaryDay, encryptAttachments: $encryptAttachments, autoGenerateRecurring: $autoGenerateRecurring, homeShowBudgetProgress: $homeShowBudgetProgress, homeSectionOrder: $homeSectionOrder, tutorialCompleted: $tutorialCompleted)';
   }
 
   @override
@@ -1165,6 +1190,8 @@ class _$SettingsDataImpl implements _SettingsData {
                 other.autoLockTimeout == autoLockTimeout) &&
             (identical(other.biometricUnlockEnabled, biometricUnlockEnabled) ||
                 other.biometricUnlockEnabled == biometricUnlockEnabled) &&
+            (identical(other.hideFromScreenshots, hideFromScreenshots) ||
+                other.hideFromScreenshots == hideFromScreenshots) &&
             (identical(other.notificationsEnabled, notificationsEnabled) ||
                 other.notificationsEnabled == notificationsEnabled) &&
             const DeepCollectionEquality().equals(
@@ -1245,6 +1272,7 @@ class _$SettingsDataImpl implements _SettingsData {
     appPassword,
     autoLockTimeout,
     biometricUnlockEnabled,
+    hideFromScreenshots,
     notificationsEnabled,
     const DeepCollectionEquality().hash(_budgetAlertThresholds),
     recurringRemindersEnabled,
@@ -1308,6 +1336,7 @@ abstract class _SettingsData implements SettingsData {
     final String? appPassword,
     final String autoLockTimeout,
     final bool biometricUnlockEnabled,
+    final bool hideFromScreenshots,
     final bool notificationsEnabled,
     final List<int> budgetAlertThresholds,
     final bool recurringRemindersEnabled,
@@ -1463,6 +1492,12 @@ abstract class _SettingsData implements SettingsData {
   /// Whether biometric unlock is enabled (when hardware is available)
   @override
   bool get biometricUnlockEnabled;
+
+  /// Whether to hide the app's UI from screenshots and recent-app screenshots
+  /// (Android FLAG_SECURE). Default on — sensitive financial data should not
+  /// leak via screen capture by default.
+  @override
+  bool get hideFromScreenshots;
 
   /// Whether notifications are enabled
   @override

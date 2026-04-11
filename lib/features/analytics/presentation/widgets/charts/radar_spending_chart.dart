@@ -78,7 +78,7 @@ class _RadarSpendingChartState extends State<RadarSpendingChart> {
                 titlePositionPercentageOffset: 0.15,
                 getTitle: (index, angle) {
                   if (widget.profiles.isEmpty || index >= widget.profiles.first.axes.length) {
-                    return RadarChartTitle(text: '');
+                    return const RadarChartTitle(text: '');
                   }
                   return RadarChartTitle(
                     text: widget.profiles.first.axes[index].categoryName,

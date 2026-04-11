@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/database_providers.dart';
+import '../../../../core/services/screen_security_service.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/credential_hasher.dart';
 import '../../../transactions/data/models/transaction.dart';
@@ -135,6 +136,13 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
   Future<void> setAppLockEnabled(bool v) => _update((s) => s.copyWith(appLockEnabled: v));
   Future<void> setAutoLockTimeout(AutoLockTimeout v) => _update((s) => s.copyWith(autoLockTimeout: v));
   Future<void> setBiometricUnlockEnabled(bool v) => _update((s) => s.copyWith(biometricUnlockEnabled: v));
+
+  Future<void> setHideFromScreenshots(bool v) async {
+    // Apply to the OS first so toggling off takes effect immediately, even
+    // if the save races. Save is still optimistic-with-rollback via _update.
+    await const ScreenSecurityService().setSecure(v);
+    await _update((s) => s.copyWith(hideFromScreenshots: v));
+  }
 
   Future<void> setAppPinCode(String? pin) async {
     final current = state.valueOrNull;
@@ -295,10 +303,17 @@ final settingsProvider = AsyncNotifierProvider<SettingsNotifier, AppSettings>(()
 
 // Helper to reduce boilerplate in convenience providers.
 // Falls back to AppSettings defaults when settings haven't loaded yet.
+//
+// Uses `.select` so each derived provider only rebuilds when its specific
+// field changes — without this, changing any one setting would invalidate
+// every single convenience provider in the graph, causing a cascade of
+// widget rebuilds across the app.
 Provider<T> _setting<T>(T Function(AppSettings) select, T fallback) {
   return Provider<T>((ref) {
-    final settings = ref.watch(settingsProvider).valueOrNull;
-    return settings != null ? select(settings) : fallback;
+    return ref.watch(settingsProvider.select((async) {
+      final settings = async.valueOrNull;
+      return settings != null ? select(settings) : fallback;
+    }));
   });
 }
 
@@ -428,3 +443,7 @@ final appPinCodeProvider = _setting((s) => s.appPinCode, null);
 final appPasswordProvider = _setting((s) => s.appPassword, null);
 final autoLockTimeoutProvider = _setting((s) => s.autoLockTimeout, AutoLockTimeout.immediate);
 final biometricUnlockEnabledProvider = _setting((s) => s.biometricUnlockEnabled, true);
+final hideFromScreenshotsProvider = _setting((s) => s.hideFromScreenshots, true);
+
+// Convenience providers — Recurring
+final autoGenerateRecurringProvider = _setting((s) => s.autoGenerateRecurring, false);

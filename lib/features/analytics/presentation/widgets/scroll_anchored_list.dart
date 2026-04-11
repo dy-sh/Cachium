@@ -192,7 +192,7 @@ class _ScrollAnchoredListState extends ConsumerState<ScrollAnchoredList> {
 
     return ListView.builder(
       controller: _scrollController,
-      padding: EdgeInsets.only(
+      padding: const EdgeInsets.only(
         top: AppSpacing.md,
         bottom: AppSpacing.bottomNavHeight + AppSpacing.lg,
       ),

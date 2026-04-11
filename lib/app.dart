@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/constants/app_colors.dart';
 import 'core/providers/database_providers.dart';
 import 'core/services/notification_service.dart';
+import 'core/services/screen_security_service.dart';
 import 'features/settings/data/models/app_settings.dart';
 import 'features/settings/presentation/providers/app_lock_provider.dart';
 import 'features/settings/presentation/providers/database_management_providers.dart';
@@ -133,6 +134,20 @@ class _AppGateState extends ConsumerState<_AppGate> with WidgetsBindingObserver 
     final themeMode = ref.watch(themeModeProvider);
     final platformBrightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
     CachiumApp.applyThemeMode(themeMode, platformBrightness);
+
+    // Apply FLAG_SECURE whenever the setting changes. MainActivity defaults
+    // to secure on Android onCreate so the first frame is already hidden;
+    // this reconciles with whatever the user has chosen once settings load.
+    final hideFromScreenshots = ref.watch(hideFromScreenshotsProvider);
+    ref.listen<bool>(hideFromScreenshotsProvider, (prev, next) {
+      if (prev != next) {
+        const ScreenSecurityService().setSecure(next);
+      }
+    });
+    // Apply on first build as well, since ref.listen only fires on change.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      const ScreenSecurityService().setSecure(hideFromScreenshots);
+    });
 
     // Fatal: encryption key corrupted — cannot decrypt any data
     final keyCorrupted = ref.watch(encryptionKeyCorruptedProvider);
@@ -271,7 +286,7 @@ class _EncryptionErrorScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
+              const Icon(
                 Icons.error_outline,
                 size: 64,
                 color: AppColors.red,

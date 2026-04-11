@@ -248,6 +248,30 @@ class TransactionRepository with CorruptionTracker {
     }
   }
 
+  /// Get a page of non-deleted transactions ordered by date descending.
+  ///
+  /// Note: the transactions screen still uses [getAllTransactions] because
+  /// its search/filter/grouping pipeline operates on the full in-memory list.
+  /// This method is for callers that can work with a bounded window (recent
+  /// transactions widgets, dashboard previews, anything that never needs to
+  /// filter across unloaded rows).
+  ///
+  /// Throws [RepositoryException] if fetch or decryption fails.
+  Future<List<ui.Transaction>> getTransactionsPaged({
+    required int limit,
+    int offset = 0,
+  }) async {
+    try {
+      final rows = await database.getTransactionsPaged(limit: limit, offset: offset);
+      final result = await _decryptRows(rows);
+      updateCorruptedCount(result.corruptedCount);
+      return result.entities;
+    } catch (e) {
+      if (e is RepositoryException) rethrow;
+      throw RepositoryException.fetch(entityType: _entityType, cause: e);
+    }
+  }
+
   /// Get all soft-deleted transactions
   ///
   /// Throws [RepositoryException] if fetch or decryption fails.

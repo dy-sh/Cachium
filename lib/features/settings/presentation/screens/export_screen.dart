@@ -24,11 +24,17 @@ class ExportScreen extends ConsumerStatefulWidget {
 }
 
 class _ExportScreenState extends ConsumerState<ExportScreen> {
+  // Controls the encrypt-data toggle for CSV exports only.
+  // SQLite exports are always encrypted — the toggle is hidden for SQLite.
   bool _encryptionEnabled = true;
 
-  String get _title => widget.format == ExportFormat.sqlite
-      ? 'Export SQLite'
-      : 'Export CSV';
+  bool get _isSqlite => widget.format == ExportFormat.sqlite;
+
+  String get _title => _isSqlite ? 'Export SQLite' : 'Export CSV';
+
+  String get _infoText => _isSqlite
+      ? 'SQLite exports are always encrypted. They can be imported back to restore your data.'
+      : 'Exported backup can be imported back to restore your data.';
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +74,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                           const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Text(
-                              'Exported backup can be imported back to restore your data.',
+                              _infoText,
                               style: AppTypography.bodySmall.copyWith(
                                 color: AppColors.textSecondary,
                               ),
@@ -79,23 +85,25 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                     ),
                     const SizedBox(height: AppSpacing.xxl),
 
-                    // Options Section
-                    SettingsSection(
-                      title: 'Options',
-                      children: [
-                        SettingsToggleTile(
-                          title: 'Encrypt data',
-                          description: 'Protects sensitive information (recommended)',
-                          value: _encryptionEnabled,
-                          onChanged: (value) {
-                            setState(() {
-                              _encryptionEnabled = value;
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xxl),
+                    // Options Section — only for CSV exports, since SQLite is always encrypted.
+                    if (!_isSqlite) ...[
+                      SettingsSection(
+                        title: 'Options',
+                        children: [
+                          SettingsToggleTile(
+                            title: 'Encrypt data',
+                            description: 'Protects sensitive information (recommended)',
+                            value: _encryptionEnabled,
+                            onChanged: (value) {
+                              setState(() {
+                                _encryptionEnabled = value;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.xxl),
+                    ],
 
                     // Export button
                     PrimaryButton(
@@ -124,7 +132,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                           children: [
                             Row(
                               children: [
-                                Icon(
+                                const Icon(
                                   LucideIcons.alertCircle,
                                   size: 20,
                                   color: AppColors.expense,
@@ -165,10 +173,12 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
   }
 
   Future<void> _handleExport(BuildContext context, WidgetRef ref) async {
-    final options = ExportOptions(encryptionEnabled: _encryptionEnabled);
+    // SQLite is always encrypted; for CSV we honor the user's toggle.
+    final effectiveEncryption = _isSqlite ? true : _encryptionEnabled;
+    final options = ExportOptions(encryptionEnabled: effectiveEncryption);
 
     // Warn about unencrypted CSV export
-    if (!_encryptionEnabled) {
+    if (!effectiveEncryption) {
       final confirmed = await showConfirmationDialog(
         context: context,
         title: 'Unencrypted export',

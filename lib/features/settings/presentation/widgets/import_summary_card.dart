@@ -121,7 +121,7 @@ class ImportSummaryCard extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(
+                      const Icon(
                         LucideIcons.plusCircle,
                         size: 16,
                         color: AppColors.cyan,
@@ -167,7 +167,7 @@ class ImportSummaryCard extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(
+                      const Icon(
                         LucideIcons.alertCircle,
                         size: 16,
                         color: AppColors.expense,
@@ -450,7 +450,7 @@ class ImportResultCard extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(
+                      const Icon(
                         LucideIcons.alertCircle,
                         size: 16,
                         color: AppColors.expense,

@@ -46,44 +46,56 @@ void main() async {
   // Create a provider container to pre-warm the database
   final container = ProviderContainer();
 
-  // Pre-warm the database connection
+  // Pre-warm the database connection (cheap — just touches the provider)
   final db = container.read(databaseProvider);
 
-  // Pre-warm the encryption key (must happen on main isolate
-  // before any background isolate tries to use it)
-  try {
-    await container.read(keyProviderProvider).getKey();
-  } on EncryptionKeyCorruptedException catch (_) {
-    _log.error('FATAL: Critical initialization error');
-    container.read(encryptionKeyCorruptedProvider.notifier).state = true;
-  } catch (e) {
-    _log.error('Initialization pre-warm failed', e);
-    container.read(startupErrorProvider.notifier).state =
-        'Encryption initialization failed. Some features may not work correctly.';
-  }
+  // Run startup async work off the critical path so runApp fires immediately.
+  // The app gate already shows a spinner via shouldShowWelcomeProvider's
+  // loading state, so the user sees the shell instantly instead of a
+  // black pre-paint while secure-storage latency is hit.
+  //
+  // Order matters inside this future: key load → settings load → migration.
+  // Credential migration MUST complete before the lock screen verifies
+  // anything, but the lock screen itself depends on shouldShowWelcomeProvider
+  // which depends on settingsProvider — so any consumer of settings naturally
+  // waits for the chain below.
+  unawaited(() async {
+    try {
+      await container.read(keyProviderProvider).getKey();
+    } on EncryptionKeyCorruptedException catch (_) {
+      _log.error('FATAL: Critical initialization error');
+      container.read(encryptionKeyCorruptedProvider.notifier).state = true;
+      return;
+    } catch (e) {
+      _log.error('Initialization pre-warm failed', e);
+      container.read(startupErrorProvider.notifier).state =
+          'Encryption initialization failed. Some features may not work correctly.';
+      return;
+    }
 
-  // Migrate plaintext/SHA-256 credentials to PBKDF2 hashing
-  try {
-    await container.read(settingsProvider.future);
-    await container.read(settingsProvider.notifier).migrateCredentialsIfNeeded();
-  } on EncryptionKeyCorruptedException catch (_) {
-    _log.error('FATAL: Critical initialization error (migration)');
-    container.read(encryptionKeyCorruptedProvider.notifier).state = true;
-  } catch (e) {
-    _log.error('Credential migration failed', e);
-    container.read(startupErrorProvider.notifier).state =
-        'Credential migration incomplete. Your PIN/password may need to be re-set.';
-  }
+    try {
+      await container.read(settingsProvider.future);
+      await container.read(settingsProvider.notifier).migrateCredentialsIfNeeded();
+    } on EncryptionKeyCorruptedException catch (_) {
+      _log.error('FATAL: Critical initialization error (migration)');
+      container.read(encryptionKeyCorruptedProvider.notifier).state = true;
+    } catch (e) {
+      _log.error('Credential migration failed', e);
+      container.read(startupErrorProvider.notifier).state =
+          'Credential migration incomplete. Your PIN/password may need to be re-set.';
+    }
+  }());
 
-  // Initialize notification service
-  await NotificationService().init();
+  // Initialize notification service in the background — notifications are
+  // scheduled lazily and nothing fires at first paint.
+  unawaited(NotificationService().init().catchError((Object e) {
+    _log.error('Notification init failed', e);
+  }));
 
   // Clean up soft-deleted records older than 30 days
-  try {
-    unawaited(db.cleanupDeletedRecords());
-  } catch (e) {
+  unawaited(db.cleanupDeletedRecords().catchError((Object e) {
     _log.error('Cleanup of deleted records failed', e);
-  }
+  }));
 
   // Auto-fix account balance inconsistencies (non-blocking)
   unawaited(

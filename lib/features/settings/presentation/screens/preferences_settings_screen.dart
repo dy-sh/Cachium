@@ -24,21 +24,21 @@ class PreferencesSettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
+      body: const SafeArea(
         child: Column(
           children: [
-            const SettingsHeader(title: 'Preferences'),
+            SettingsHeader(title: 'Preferences'),
             // Scrollable content
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+                padding: EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const AppearanceSection(),
-                    const SizedBox(height: AppSpacing.xl),
-                    const SecuritySection(),
-                    const SizedBox(height: AppSpacing.xxxl),
+                    AppearanceSection(),
+                    SizedBox(height: AppSpacing.xl),
+                    SecuritySection(),
+                    SizedBox(height: AppSpacing.xxxl),
                   ],
                 ),
               ),

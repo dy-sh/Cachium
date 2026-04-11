@@ -45,6 +45,7 @@ _$SettingsDataImpl _$$SettingsDataImplFromJson(
   appPassword: json['appPassword'] as String?,
   autoLockTimeout: json['autoLockTimeout'] as String? ?? 'immediate',
   biometricUnlockEnabled: json['biometricUnlockEnabled'] as bool? ?? true,
+  hideFromScreenshots: json['hideFromScreenshots'] as bool? ?? true,
   notificationsEnabled: json['notificationsEnabled'] as bool? ?? false,
   budgetAlertThresholds:
       (json['budgetAlertThresholds'] as List<dynamic>?)
@@ -111,6 +112,7 @@ Map<String, dynamic> _$$SettingsDataImplToJson(_$SettingsDataImpl instance) =>
       'appPassword': instance.appPassword,
       'autoLockTimeout': instance.autoLockTimeout,
       'biometricUnlockEnabled': instance.biometricUnlockEnabled,
+      'hideFromScreenshots': instance.hideFromScreenshots,
       'notificationsEnabled': instance.notificationsEnabled,
       'budgetAlertThresholds': instance.budgetAlertThresholds,
       'recurringRemindersEnabled': instance.recurringRemindersEnabled,

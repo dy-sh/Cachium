@@ -143,7 +143,7 @@ class _BillFormScreenState extends ConsumerState<BillFormScreen> {
                             color: AppColors.expense.withValues(alpha: 0.15),
                             borderRadius: AppRadius.smAll,
                           ),
-                          child: Icon(
+                          child: const Icon(
                             LucideIcons.trash2,
                             size: 18,
                             color: AppColors.expense,

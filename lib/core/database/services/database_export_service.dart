@@ -9,7 +9,6 @@ import 'package:sqlite3/sqlite3.dart' as sql;
 
 import '../../../data/encryption/account_data.dart';
 import '../../../data/encryption/asset_data.dart';
-import '../../../data/encryption/asset_category_data.dart';
 import '../../../data/encryption/budget_data.dart';
 import '../../../data/encryption/category_data.dart';
 import '../../../data/encryption/recurring_rule_data.dart';
@@ -59,6 +58,12 @@ class DatabaseExportService {
   }
 
   /// Export database to SQLite format.
+  ///
+  /// SQLite exports are always encrypted — there is no legitimate reason to
+  /// emit plaintext SQLite since the encrypted format is equally
+  /// round-trippable, and a plaintext database file on disk is a high-value
+  /// target for forensic recovery.
+  ///
   /// Returns the path to the exported file.
   Future<String> exportToSqlite(ExportOptions options) async {
     await cleanupPreviousExports();
@@ -69,31 +74,17 @@ class DatabaseExportService {
     final exportDb = sql.sqlite3.open(dbPath);
 
     try {
-      if (options.encryptionEnabled) {
-        createEncryptedExportSchema(exportDb);
-        await _exportTransactionsEncrypted(exportDb);
-        await _exportAccountsEncrypted(exportDb);
-        await _exportCategoriesEncrypted(exportDb);
-        await _exportSettingsEncrypted(exportDb);
-        await _exportBudgetsEncrypted(exportDb);
-        await _exportAssetsEncrypted(exportDb);
-        await _exportAssetCategoriesEncrypted(exportDb);
-        await _exportRecurringRulesEncrypted(exportDb);
-        await _exportSavingsGoalsEncrypted(exportDb);
-        await _exportTransactionTemplatesEncrypted(exportDb);
-      } else {
-        createPlaintextExportSchema(exportDb);
-        await _exportTransactionsPlaintext(exportDb);
-        await _exportAccountsPlaintext(exportDb);
-        await _exportCategoriesPlaintext(exportDb);
-        await _exportSettingsPlaintext(exportDb);
-        await _exportBudgetsPlaintext(exportDb);
-        await _exportAssetsPlaintext(exportDb);
-        await _exportAssetCategoriesPlaintext(exportDb);
-        await _exportRecurringRulesPlaintext(exportDb);
-        await _exportSavingsGoalsPlaintext(exportDb);
-        await _exportTransactionTemplatesPlaintext(exportDb);
-      }
+      createEncryptedExportSchema(exportDb);
+      await _exportTransactionsEncrypted(exportDb);
+      await _exportAccountsEncrypted(exportDb);
+      await _exportCategoriesEncrypted(exportDb);
+      await _exportSettingsEncrypted(exportDb);
+      await _exportBudgetsEncrypted(exportDb);
+      await _exportAssetsEncrypted(exportDb);
+      await _exportAssetCategoriesEncrypted(exportDb);
+      await _exportRecurringRulesEncrypted(exportDb);
+      await _exportSavingsGoalsEncrypted(exportDb);
+      await _exportTransactionTemplatesEncrypted(exportDb);
       exportDb.dispose();
       return dbPath;
     } catch (e) {
@@ -355,322 +346,6 @@ class DatabaseExportService {
     stmt.dispose();
   }
 
-  // Plaintext export methods
-
-  Future<void> _exportTransactionsPlaintext(sql.Database exportDb) async {
-    final rows = await database.select(database.transactions).get();
-
-    final stmt = exportDb.prepare(
-      '''INSERT INTO transactions
-         (id, date, last_updated_at, is_deleted, amount, category_id, account_id, type, note, currency, conversion_rate, main_currency_code, main_currency_amount, destination_account_id, destination_amount, merchant, asset_id, is_acquisition_cost, date_millis, created_at_millis)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-    );
-
-    for (final row in rows) {
-      final json = await encryptionService.decryptJson(row.encryptedBlob);
-      final data = TransactionData.fromJson(json);
-
-      stmt.execute([
-        row.id,
-        row.date,
-        row.lastUpdatedAt,
-        row.isDeleted ? 1 : 0,
-        data.amount,
-        data.categoryId,
-        data.accountId,
-        data.type,
-        data.note,
-        data.currency,
-        data.conversionRate,
-        data.mainCurrencyCode,
-        data.mainCurrencyAmount,
-        data.destinationAccountId,
-        data.destinationAmount,
-        data.merchant,
-        data.assetId,
-        data.isAcquisitionCost ? 1 : 0,
-        data.dateMillis,
-        data.createdAtMillis,
-      ]);
-    }
-
-    stmt.dispose();
-  }
-
-  Future<void> _exportAccountsPlaintext(sql.Database exportDb) async {
-    final rows = await database.select(database.accounts).get();
-
-    final stmt = exportDb.prepare(
-      '''INSERT INTO accounts
-         (id, created_at, sort_order, last_updated_at, is_deleted, name, type, balance, initial_balance, currency_code, custom_color_value, custom_icon_code_point, custom_icon_font_family, custom_icon_font_package, created_at_millis)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-    );
-
-    for (final row in rows) {
-      final json = await encryptionService.decryptJson(row.encryptedBlob);
-      final data = AccountData.fromJson(json);
-
-      stmt.execute([
-        row.id,
-        row.createdAt,
-        row.sortOrder,
-        row.lastUpdatedAt,
-        row.isDeleted ? 1 : 0,
-        data.name,
-        data.type,
-        data.balance,
-        data.initialBalance,
-        data.currencyCode,
-        data.customColorValue,
-        data.customIconCodePoint,
-        data.customIconFontFamily,
-        data.customIconFontPackage,
-        data.createdAtMillis,
-      ]);
-    }
-
-    stmt.dispose();
-  }
-
-  Future<void> _exportCategoriesPlaintext(sql.Database exportDb) async {
-    final rows = await database.select(database.categories).get();
-
-    final stmt = exportDb.prepare(
-      '''INSERT INTO categories
-         (id, sort_order, last_updated_at, is_deleted, name, icon_code_point, icon_font_family, icon_font_package, color_index, type, is_custom, parent_id, show_assets)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-    );
-
-    for (final row in rows) {
-      final json = await encryptionService.decryptJson(row.encryptedBlob);
-      final data = CategoryData.fromJson(json);
-
-      stmt.execute([
-        row.id,
-        row.sortOrder,
-        row.lastUpdatedAt,
-        row.isDeleted ? 1 : 0,
-        data.name,
-        data.iconCodePoint,
-        data.iconFontFamily,
-        data.iconFontPackage,
-        data.colorIndex,
-        data.type,
-        data.isCustom ? 1 : 0,
-        data.parentId,
-        data.showAssets ? 1 : 0,
-      ]);
-    }
-
-    stmt.dispose();
-  }
-
-  Future<void> _exportBudgetsPlaintext(sql.Database exportDb) async {
-    final rows = await database.select(database.budgets).get();
-
-    final stmt = exportDb.prepare(
-      '''INSERT INTO budgets
-         (id, created_at, last_updated_at, is_deleted, category_id, amount, year, month, created_at_millis)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-    );
-
-    for (final row in rows) {
-      final json = await encryptionService.decryptJson(row.encryptedBlob);
-      final data = BudgetData.fromJson(json);
-
-      stmt.execute([
-        row.id,
-        row.createdAt,
-        row.lastUpdatedAt,
-        row.isDeleted ? 1 : 0,
-        data.categoryId,
-        data.amount,
-        data.year,
-        data.month,
-        data.createdAtMillis,
-      ]);
-    }
-
-    stmt.dispose();
-  }
-
-  Future<void> _exportAssetsPlaintext(sql.Database exportDb) async {
-    final rows = await database.select(database.assets).get();
-
-    final stmt = exportDb.prepare(
-      '''INSERT INTO assets
-         (id, created_at, sort_order, last_updated_at, is_deleted, name, icon_code_point, icon_font_family, icon_font_package, color_index, status, note, purchase_price, purchase_currency_code, asset_category_id, purchase_date_millis, created_at_millis)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-    );
-
-    for (final row in rows) {
-      final json = await encryptionService.decryptJson(row.encryptedBlob);
-      final data = AssetData.fromJson(json);
-
-      stmt.execute([
-        row.id,
-        row.createdAt,
-        row.sortOrder,
-        row.lastUpdatedAt,
-        row.isDeleted ? 1 : 0,
-        data.name,
-        data.iconCodePoint,
-        data.iconFontFamily,
-        data.iconFontPackage,
-        data.colorIndex,
-        data.status,
-        data.note,
-        data.purchasePrice,
-        data.purchaseCurrencyCode,
-        data.assetCategoryId,
-        data.purchaseDateMillis,
-        data.createdAtMillis,
-      ]);
-    }
-
-    stmt.dispose();
-  }
-
-  Future<void> _exportAssetCategoriesPlaintext(sql.Database exportDb) async {
-    final rows = await database.select(database.assetCategories).get();
-
-    final stmt = exportDb.prepare(
-      '''INSERT INTO asset_categories
-         (id, created_at, sort_order, last_updated_at, is_deleted, name, icon_code_point, icon_font_family, icon_font_package, color_index, created_at_millis)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-    );
-
-    for (final row in rows) {
-      final json = await encryptionService.decryptJson(row.encryptedBlob);
-      final data = AssetCategoryData.fromJson(json);
-
-      stmt.execute([
-        row.id,
-        row.createdAt,
-        row.sortOrder,
-        row.lastUpdatedAt,
-        row.isDeleted ? 1 : 0,
-        data.name,
-        data.iconCodePoint,
-        data.iconFontFamily,
-        data.iconFontPackage,
-        data.colorIndex,
-        data.createdAtMillis,
-      ]);
-    }
-
-    stmt.dispose();
-  }
-
-  Future<void> _exportRecurringRulesPlaintext(sql.Database exportDb) async {
-    final rows = await database.select(database.recurringRules).get();
-
-    final stmt = exportDb.prepare(
-      '''INSERT INTO recurring_rules
-         (id, created_at, last_updated_at, is_deleted, name, amount, type, category_id, account_id, destination_account_id, merchant, note, currency_code, destination_amount, frequency, start_date_millis, end_date_millis, last_generated_date_millis, is_active, created_at_millis)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-    );
-
-    for (final row in rows) {
-      final json = await encryptionService.decryptJson(row.encryptedBlob);
-      final data = RecurringRuleData.fromJson(json);
-
-      stmt.execute([
-        row.id,
-        row.createdAt,
-        row.lastUpdatedAt,
-        row.isDeleted ? 1 : 0,
-        data.name,
-        data.amount,
-        data.type,
-        data.categoryId,
-        data.accountId,
-        data.destinationAccountId,
-        data.merchant,
-        data.note,
-        data.currencyCode,
-        data.destinationAmount,
-        data.frequency,
-        data.startDateMillis,
-        data.endDateMillis,
-        data.lastGeneratedDateMillis,
-        data.isActive ? 1 : 0,
-        data.createdAtMillis,
-      ]);
-    }
-
-    stmt.dispose();
-  }
-
-  Future<void> _exportSavingsGoalsPlaintext(sql.Database exportDb) async {
-    final rows = await database.select(database.savingsGoals).get();
-
-    final stmt = exportDb.prepare(
-      '''INSERT INTO savings_goals
-         (id, created_at, last_updated_at, is_deleted, name, target_amount, current_amount, color_index, icon_code_point, icon_font_family, icon_font_package, linked_account_id, target_date_millis, note, created_at_millis)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-    );
-
-    for (final row in rows) {
-      final json = await encryptionService.decryptJson(row.encryptedBlob);
-      final data = SavingsGoalData.fromJson(json);
-
-      stmt.execute([
-        row.id,
-        row.createdAt,
-        row.lastUpdatedAt,
-        row.isDeleted ? 1 : 0,
-        data.name,
-        data.targetAmount,
-        data.currentAmount,
-        data.colorIndex,
-        data.iconCodePoint,
-        data.iconFontFamily,
-        data.iconFontPackage,
-        data.linkedAccountId,
-        data.targetDateMillis,
-        data.note,
-        data.createdAtMillis,
-      ]);
-    }
-
-    stmt.dispose();
-  }
-
-  Future<void> _exportTransactionTemplatesPlaintext(sql.Database exportDb) async {
-    final rows = await database.select(database.transactionTemplates).get();
-
-    final stmt = exportDb.prepare(
-      '''INSERT INTO transaction_templates
-         (id, created_at, last_updated_at, is_deleted, name, amount, type, category_id, account_id, destination_account_id, asset_id, merchant, note, created_at_millis)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-    );
-
-    for (final row in rows) {
-      final json = await encryptionService.decryptJson(row.encryptedBlob);
-      final data = TransactionTemplateData.fromJson(json);
-
-      stmt.execute([
-        row.id,
-        row.createdAt,
-        row.lastUpdatedAt,
-        row.isDeleted ? 1 : 0,
-        data.name,
-        data.amount,
-        data.type,
-        data.categoryId,
-        data.accountId,
-        data.destinationAccountId,
-        data.assetId,
-        data.merchant,
-        data.note,
-        data.createdAtMillis,
-      ]);
-    }
-
-    stmt.dispose();
-  }
-
   // AppSettings export methods
 
   Future<void> _exportSettingsEncrypted(sql.Database exportDb) async {
@@ -704,11 +379,6 @@ class DatabaseExportService {
       _log.warning('Failed to strip credentials from settings JSON: $e');
       return jsonData;
     }
-  }
-
-  Future<void> _exportSettingsPlaintext(sql.Database exportDb) async {
-    // Settings are stored as plaintext JSON in both formats
-    await _exportSettingsEncrypted(exportDb);
   }
 
   // CSV export methods

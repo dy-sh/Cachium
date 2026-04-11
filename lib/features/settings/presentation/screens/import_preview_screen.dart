@@ -166,7 +166,7 @@ class ImportPreviewScreen extends ConsumerWidget {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
+                        const Icon(
                           LucideIcons.x,
                           size: 12,
                           color: AppColors.expense,

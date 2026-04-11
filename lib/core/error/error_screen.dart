@@ -11,21 +11,21 @@ class ErrorScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
+    return const Material(
       color: Colors.black,
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.all(32),
+          padding: EdgeInsets.all(32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 Icons.error_outline_rounded,
                 color: Colors.white54,
                 size: 48,
               ),
-              const SizedBox(height: 16),
-              const Text(
+              SizedBox(height: 16),
+              Text(
                 'Something went wrong',
                 style: TextStyle(
                   color: Colors.white,
@@ -34,8 +34,8 @@ class ErrorScreen extends StatelessWidget {
                   decoration: TextDecoration.none,
                 ),
               ),
-              const SizedBox(height: 8),
-              const Text(
+              SizedBox(height: 8),
+              Text(
                 'An unexpected error occurred.\nTry going back or restarting the app.',
                 textAlign: TextAlign.center,
                 style: TextStyle(

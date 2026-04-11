@@ -10,26 +10,26 @@ class AnalyticsFilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const DateRangeSelector(),
-        const SizedBox(height: AppSpacing.md),
-        const AccountFilterChips(),
-        const SizedBox(height: AppSpacing.md),
+        DateRangeSelector(),
+        SizedBox(height: AppSpacing.md),
+        AccountFilterChips(),
+        SizedBox(height: AppSpacing.md),
         Padding(
-          padding: const EdgeInsets.symmetric(
+          padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.screenPadding,
           ),
           child: Row(
-            children: const [
+            children: [
               CategoryFilterPopup(),
               Spacer(),
               TypeFilterToggle(),
             ],
           ),
         ),
-        const SizedBox(height: AppSpacing.lg),
+        SizedBox(height: AppSpacing.lg),
       ],
     );
   }

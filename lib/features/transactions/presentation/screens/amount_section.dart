@@ -59,7 +59,7 @@ class AmountSection extends ConsumerWidget {
               behavior: HitTestBehavior.opaque,
               child: Row(
                 children: [
-                  Icon(LucideIcons.alertTriangle, size: 14, color: AppColors.yellow),
+                  const Icon(LucideIcons.alertTriangle, size: 14, color: AppColors.yellow),
                   const SizedBox(width: AppSpacing.xs),
                   Text(
                     'Rates outdated — tap to refresh',

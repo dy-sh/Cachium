@@ -407,6 +407,11 @@ class AppDatabase extends _$AppDatabase {
 
   Future<List<Transaction>> getAllTransactions() => transactionDao.getAll();
 
+  /// Paged fetch, ordered by date descending. Used by the transactions list
+  /// to avoid loading all rows at once when the table is large.
+  Future<List<Transaction>> getTransactionsPaged({required int limit, int offset = 0}) =>
+      transactionDao.getAll(limit: limit, offset: offset);
+
   Future<List<Transaction>> getAllDeletedTransactions() => transactionDao.getAllDeleted();
 
   Stream<List<Transaction>> watchAllTransactions() => transactionDao.watchAll();

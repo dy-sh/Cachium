@@ -16,6 +16,11 @@ class CredentialHasher {
   static const _iterations = 100000;
   static const _hashLength = 32; // 256 bits
   static const _saltLength = 16; // 128 bits
+  // Defense-in-depth bounds on iteration count read from a stored hash.
+  // Rejects tampered/corrupted values: too low would weaken the hash,
+  // too high would DoS verify by burning CPU.
+  static const _minVerifyIterations = 1000;
+  static const _maxVerifyIterations = 1000000;
 
   /// Hash a credential (PIN or password) using PBKDF2.
   static Future<String> hash(String credential) async {
@@ -77,6 +82,9 @@ class CredentialHasher {
 
     final iterations = int.tryParse(parts[0]);
     if (iterations == null) return false;
+    if (iterations < _minVerifyIterations || iterations > _maxVerifyIterations) {
+      return false;
+    }
 
     final List<int> salt;
     final List<int> expectedHash;

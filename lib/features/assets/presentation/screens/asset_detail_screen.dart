@@ -590,7 +590,7 @@ class _AssetTransactionItem extends ConsumerWidget {
           value: 'unlink',
           child: Row(
             children: [
-              Icon(LucideIcons.unlink, size: 16, color: AppColors.expense),
+              const Icon(LucideIcons.unlink, size: 16, color: AppColors.expense),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 'Unlink from Asset',

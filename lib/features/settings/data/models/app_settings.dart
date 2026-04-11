@@ -232,6 +232,7 @@ class AppSettings {
   final AutoLockTimeout autoLockTimeout;
   final bool credentialReadFailed;
   final bool biometricUnlockEnabled;
+  final bool hideFromScreenshots;
 
   // Notifications
   final bool notificationsEnabled;
@@ -301,6 +302,7 @@ class AppSettings {
     this.autoLockTimeout = AutoLockTimeout.immediate,
     this.credentialReadFailed = false,
     this.biometricUnlockEnabled = true,
+    this.hideFromScreenshots = true,
     this.notificationsEnabled = false,
     this.budgetAlertThresholds = const [75, 90, 100],
     this.recurringRemindersEnabled = true,
@@ -370,6 +372,7 @@ class AppSettings {
     AutoLockTimeout? autoLockTimeout,
     bool? credentialReadFailed,
     bool? biometricUnlockEnabled,
+    bool? hideFromScreenshots,
     bool? notificationsEnabled,
     List<int>? budgetAlertThresholds,
     bool? recurringRemindersEnabled,
@@ -431,6 +434,7 @@ class AppSettings {
       autoLockTimeout: autoLockTimeout ?? this.autoLockTimeout,
       credentialReadFailed: credentialReadFailed ?? this.credentialReadFailed,
       biometricUnlockEnabled: biometricUnlockEnabled ?? this.biometricUnlockEnabled,
+      hideFromScreenshots: hideFromScreenshots ?? this.hideFromScreenshots,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       budgetAlertThresholds: budgetAlertThresholds ?? this.budgetAlertThresholds,
       recurringRemindersEnabled: recurringRemindersEnabled ?? this.recurringRemindersEnabled,

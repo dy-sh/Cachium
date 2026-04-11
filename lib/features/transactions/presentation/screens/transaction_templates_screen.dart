@@ -42,8 +42,8 @@ class TransactionTemplatesScreen extends ConsumerWidget {
               child: templatesAsync.when(
                 data: (templates) {
                   if (templates.isEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(
                         horizontal: AppSpacing.screenPadding,
                       ),
                       child: EmptyState.centered(
@@ -193,7 +193,7 @@ class _TemplateCard extends ConsumerWidget {
                   value: 'delete',
                   child: Row(
                     children: [
-                      Icon(
+                      const Icon(
                         LucideIcons.trash2,
                         size: 16,
                         color: AppColors.expense,

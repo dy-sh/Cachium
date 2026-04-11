@@ -109,7 +109,7 @@ class _AttachmentViewerScreenState
           loading: () => const Center(
             child: CircularProgressIndicator(),
           ),
-          error: (e, _) => Center(
+          error: (e, _) => const Center(
             child: Text(
               'Error loading attachments',
               style: TextStyle(color: Colors.white70),

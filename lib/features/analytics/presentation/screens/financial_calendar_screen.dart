@@ -308,7 +308,7 @@ class _DayCell extends StatelessWidget {
                     child: Container(
                       width: 5,
                       height: 5,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: AppColors.amber,
                         shape: BoxShape.circle,
                       ),
@@ -320,7 +320,7 @@ class _DayCell extends StatelessWidget {
               if (data!.income > 0)
                 Text(
                   CurrencyFormatter.formatCompact(data!.income, currencyCode: mainCurrency),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 8,
                     color: AppColors.income,
                     fontWeight: FontWeight.w500,
@@ -331,7 +331,7 @@ class _DayCell extends StatelessWidget {
               if (data!.expense > 0)
                 Text(
                   CurrencyFormatter.formatCompact(data!.expense, currencyCode: mainCurrency),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 8,
                     color: AppColors.expense,
                     fontWeight: FontWeight.w500,

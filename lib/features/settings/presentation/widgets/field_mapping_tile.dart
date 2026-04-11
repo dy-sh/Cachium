@@ -179,7 +179,7 @@ class FieldMappingTile extends ConsumerWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(LucideIcons.check, size: 12, color: AppColors.income),
+            const Icon(LucideIcons.check, size: 12, color: AppColors.income),
             const SizedBox(width: 4),
             Text(
               'Mapped',
@@ -202,7 +202,7 @@ class FieldMappingTile extends ConsumerWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(LucideIcons.sparkles, size: 12, color: AppColors.cyan),
+            const Icon(LucideIcons.sparkles, size: 12, color: AppColors.cyan),
             const SizedBox(width: 4),
             Text(
               'Auto-generate',
@@ -315,7 +315,7 @@ class FieldMappingTile extends ConsumerWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(LucideIcons.sparkles, size: 16, color: AppColors.cyan),
+          const Icon(LucideIcons.sparkles, size: 16, color: AppColors.cyan),
           const SizedBox(width: 8),
           Expanded(
             child: Text(

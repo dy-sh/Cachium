@@ -210,7 +210,7 @@ class _CategoryItemDropTargetState extends State<CategoryItemDropTarget> {
             // Don't show if this is the dragged item (childWhenDragging handles it)
             if (_isHovering && !widget.suppressPlaceholder)
               Transform.translate(
-                offset: Offset(0, -AppSpacing.sm),
+                offset: const Offset(0, -AppSpacing.sm),
                 child: Container(
                   height: _feedbackHeight,
                   margin: EdgeInsets.only(

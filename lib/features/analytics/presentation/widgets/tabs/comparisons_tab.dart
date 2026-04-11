@@ -10,8 +10,8 @@ class ComparisonsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ScrollAnchoredList(
-      sections: const [
+    return const ScrollAnchoredList(
+      sections: [
         YearOverYearSection(),
         PeriodComparisonSection(),
         CategoryComparisonSection(),

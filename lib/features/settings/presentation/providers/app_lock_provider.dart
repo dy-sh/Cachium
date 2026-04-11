@@ -68,21 +68,31 @@ class AppLockStateNotifier extends Notifier<bool> {
     return true; // Start locked if app lock is enabled
   }
 
-  void lock() => state = true;
+  void lock() {
+    _backgroundedAt = null;
+    state = true;
+  }
+
   void unlock() {
     _backgroundedAt = null;
     state = false;
   }
 
-  /// Called when the app goes to background.
+  /// Called when the app goes to background. Preserves the earliest
+  /// background timestamp across rapid background/foreground cycles, so a
+  /// user who flicks between apps can't reset the timer by accident.
   void onBackground() {
-    _backgroundedAt = DateTime.now();
+    _backgroundedAt ??= DateTime.now();
   }
 
-  /// Called when the app comes to foreground.
-  /// Returns whether the app should be locked based on the configured timeout.
+  /// Called when the app comes to foreground. Locks the app if the
+  /// configured timeout has elapsed since it was backgrounded.
   void onForeground({required Duration? timeoutDuration, required bool isImmediate, required bool isNever}) {
-    if (state) return; // Already locked
+    if (state) {
+      // Already locked — clear timestamp so re-background starts fresh.
+      _backgroundedAt = null;
+      return;
+    }
 
     if (isImmediate) {
       lock();
@@ -99,6 +109,7 @@ class AppLockStateNotifier extends Notifier<bool> {
       final elapsed = DateTime.now().difference(_backgroundedAt!);
       if (elapsed >= timeoutDuration) {
         lock();
+        return;
       }
     }
     _backgroundedAt = null;

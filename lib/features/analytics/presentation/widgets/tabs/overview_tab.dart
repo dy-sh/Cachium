@@ -27,88 +27,88 @@ class OverviewTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ScrollAnchoredList(
+    return const ScrollAnchoredList(
       sections: [
-        const PeriodSummaryCards(),
+        PeriodSummaryCards(),
         Padding(
-          padding: const EdgeInsets.symmetric(
+          padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.screenPadding,
           ),
-          child: const ConversionGainLossCard(),
+          child: ConversionGainLossCard(),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(
+          padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.screenPadding,
           ),
-          child: const SavingsGauge(),
+          child: SavingsGauge(),
         ),
-        const FinancialHealthSection(),
-        const FinancialInsightsSection(),
-        const SpendingTrendsSection(),
+        FinancialHealthSection(),
+        FinancialInsightsSection(),
+        SpendingTrendsSection(),
         Padding(
-          padding: const EdgeInsets.symmetric(
+          padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.screenPadding,
           ),
-          child: const BalanceLineChart(),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.screenPadding,
-          ),
-          child: const NetWorthChart(),
+          child: BalanceLineChart(),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(
+          padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.screenPadding,
           ),
-          child: const HoldingLiabilityPieChart(),
+          child: NetWorthChart(),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(
+          padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.screenPadding,
           ),
-          child: const IncomeExpenseChart(),
+          child: HoldingLiabilityPieChart(),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(
+          padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.screenPadding,
           ),
-          child: const WaterfallChart(),
+          child: IncomeExpenseChart(),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(
+          padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.screenPadding,
           ),
-          child: const CategoryPieChart(),
+          child: WaterfallChart(),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(
+          padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.screenPadding,
           ),
-          child: const TreemapChart(),
+          child: CategoryPieChart(),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(
+          padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.screenPadding,
           ),
-          child: const TopCategoriesList(limit: 5),
+          child: TreemapChart(),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(
+          padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.screenPadding,
           ),
-          child: const MerchantAnalysisSection(),
+          child: TopCategoriesList(limit: 5),
         ),
-        const SankeyFlowSection(),
-        const AccountFlowSection(),
-        const CashFlowCalendar(),
         Padding(
-          padding: const EdgeInsets.symmetric(
+          padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.screenPadding,
           ),
-          child: const SpendingHeatmap(),
+          child: MerchantAnalysisSection(),
         ),
-        const BudgetProgressSection(),
+        SankeyFlowSection(),
+        AccountFlowSection(),
+        CashFlowCalendar(),
+        Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.screenPadding,
+          ),
+          child: SpendingHeatmap(),
+        ),
+        BudgetProgressSection(),
       ],
     );
   }

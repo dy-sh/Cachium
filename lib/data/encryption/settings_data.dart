@@ -118,6 +118,11 @@ class SettingsData with _$SettingsData {
     /// Whether biometric unlock is enabled (when hardware is available)
     @Default(true) bool biometricUnlockEnabled,
 
+    /// Whether to hide the app's UI from screenshots and recent-app screenshots
+    /// (Android FLAG_SECURE). Default on — sensitive financial data should not
+    /// leak via screen capture by default.
+    @Default(true) bool hideFromScreenshots,
+
     /// Whether notifications are enabled
     @Default(false) bool notificationsEnabled,
 

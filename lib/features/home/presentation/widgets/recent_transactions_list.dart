@@ -147,7 +147,7 @@ class _TransactionItem extends ConsumerWidget {
           borderRadius: AppRadius.mdAll,
         ),
         alignment: Alignment.centerRight,
-        child: Icon(
+        child: const Icon(
           LucideIcons.trash2,
           color: AppColors.red,
           size: 22,

@@ -44,8 +44,8 @@ class RecurringRulesScreen extends ConsumerWidget {
               child: rulesAsync.when(
                 data: (rules) {
                   if (rules.isEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(
                         horizontal: AppSpacing.screenPadding,
                       ),
                       child: EmptyState.centered(
@@ -57,7 +57,7 @@ class RecurringRulesScreen extends ConsumerWidget {
                     );
                   }
 
-                  final autoGenerate = ref.watch(settingsProvider).valueOrNull?.autoGenerateRecurring ?? false;
+                  final autoGenerate = ref.watch(autoGenerateRecurringProvider);
 
                   return ListView.separated(
                     padding: const EdgeInsets.symmetric(
@@ -266,7 +266,7 @@ class _RecurringRuleCard extends ConsumerWidget {
                 value: 'delete',
                 child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       LucideIcons.trash2,
                       size: 16,
                       color: AppColors.expense,

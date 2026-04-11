@@ -43,7 +43,7 @@ class _CategoryFilterSheetState extends ConsumerState<CategoryFilterSheet> {
       ),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.only(
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(AppRadius.xl),
           topRight: Radius.circular(AppRadius.xl),
         ),

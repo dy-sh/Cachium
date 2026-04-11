@@ -90,57 +90,57 @@ class Transaction {
   /// Safer than constructor assertions: won't crash on corrupt DB reads.
   void validate() {
     if (amount < 0) {
-      throw ValidationException(message: 'Transaction amount must be non-negative', field: 'amount');
+      throw const ValidationException(message: 'Transaction amount must be non-negative', field: 'amount');
     }
     if (conversionRate <= 0 || !conversionRate.isFinite) {
-      throw ValidationException(message: 'Conversion rate must be positive and finite', field: 'conversionRate');
+      throw const ValidationException(message: 'Conversion rate must be positive and finite', field: 'conversionRate');
     }
     if (destinationAmount != null && destinationAmount! < 0) {
-      throw ValidationException(message: 'Destination amount must be non-negative', field: 'destinationAmount');
+      throw const ValidationException(message: 'Destination amount must be non-negative', field: 'destinationAmount');
     }
     if (mainCurrencyAmount != null && mainCurrencyAmount! < 0) {
-      throw ValidationException(message: 'Main currency amount must be non-negative', field: 'mainCurrencyAmount');
+      throw const ValidationException(message: 'Main currency amount must be non-negative', field: 'mainCurrencyAmount');
     }
     if (currencyCode.length != 3) {
-      throw ValidationException(message: 'Currency code must be 3 characters', field: 'currencyCode');
+      throw const ValidationException(message: 'Currency code must be 3 characters', field: 'currencyCode');
     }
     if (mainCurrencyCode.length != 3) {
-      throw ValidationException(message: 'Main currency code must be 3 characters', field: 'mainCurrencyCode');
+      throw const ValidationException(message: 'Main currency code must be 3 characters', field: 'mainCurrencyCode');
     }
     if (id.isEmpty) {
-      throw ValidationException(message: 'Transaction ID must not be empty', field: 'id');
+      throw const ValidationException(message: 'Transaction ID must not be empty', field: 'id');
     }
     if (type != TransactionType.transfer && categoryId.isEmpty) {
-      throw ValidationException(message: 'Category ID must not be empty', field: 'categoryId');
+      throw const ValidationException(message: 'Category ID must not be empty', field: 'categoryId');
     }
     if (accountId.isEmpty) {
-      throw ValidationException(message: 'Account ID must not be empty', field: 'accountId');
+      throw const ValidationException(message: 'Account ID must not be empty', field: 'accountId');
     }
     if (type == TransactionType.transfer) {
       if (destinationAccountId == null || destinationAccountId!.isEmpty) {
-        throw ValidationException(
+        throw const ValidationException(
           message: 'Transfer must have a destination account',
           field: 'destinationAccountId',
         );
       }
       if (destinationAccountId == accountId) {
-        throw ValidationException(
+        throw const ValidationException(
           message: 'Transfer source and destination accounts must differ',
           field: 'destinationAccountId',
         );
       }
     }
     if (date.year < 2000) {
-      throw ValidationException(message: 'Transaction date must not be before year 2000', field: 'date');
+      throw const ValidationException(message: 'Transaction date must not be before year 2000', field: 'date');
     }
     if (date.isAfter(DateTime.now().add(const Duration(days: 1)))) {
-      throw ValidationException(message: 'Transaction date must not be more than 1 day in the future', field: 'date');
+      throw const ValidationException(message: 'Transaction date must not be more than 1 day in the future', field: 'date');
     }
     if (note != null && note!.length > 1000) {
-      throw ValidationException(message: 'Note must be 1000 characters or fewer', field: 'note');
+      throw const ValidationException(message: 'Note must be 1000 characters or fewer', field: 'note');
     }
     if (merchant != null && merchant!.length > 200) {
-      throw ValidationException(message: 'Merchant must be 200 characters or fewer', field: 'merchant');
+      throw const ValidationException(message: 'Merchant must be 200 characters or fewer', field: 'merchant');
     }
   }
 

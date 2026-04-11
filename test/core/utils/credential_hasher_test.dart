@@ -123,5 +123,25 @@ void main() {
       final result2 = await CredentialHasher.verify('test', 'pbkdf2:abc:c2FsdA==:aGFzaA==');
       expect(result2, isFalse);
     });
+
+    test('verify rejects iteration count below the safe minimum', () async {
+      // 100 iterations is far too weak; should be rejected even if the rest
+      // of the hash is well-formed.
+      final weak = 'pbkdf2:100:c2FsdA==:aGFzaA==';
+      expect(await CredentialHasher.verify('test', weak), isFalse);
+    });
+
+    test('verify rejects iteration count above the safe maximum', () async {
+      // 10 million iterations would DoS the verify call; reject it.
+      final excessive = 'pbkdf2:10000000:c2FsdA==:aGFzaA==';
+      expect(await CredentialHasher.verify('test', excessive), isFalse);
+    });
+
+    test('verify accepts standard iteration count', () async {
+      // Hash something legitimately and verify — sanity check that the
+      // iteration cap doesn't reject the current default.
+      final hashed = await CredentialHasher.hash('correct');
+      expect(await CredentialHasher.verify('correct', hashed), isTrue);
+    });
   });
 }

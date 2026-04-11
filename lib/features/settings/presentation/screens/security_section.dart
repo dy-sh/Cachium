@@ -95,6 +95,14 @@ class SecuritySection extends ConsumerWidget {
               },
             ),
         ],
+        SettingsToggleTile(
+          title: 'Hide from Screenshots',
+          description: 'Blocks screenshots and screen recording (Android)',
+          value: settings.hideFromScreenshots,
+          onChanged: (value) {
+            ref.read(settingsProvider.notifier).setHideFromScreenshots(value);
+          },
+        ),
         SettingsTile(
           title: hasPinSet ? 'Change PIN' : 'Set PIN Code',
           description: hasPinSet

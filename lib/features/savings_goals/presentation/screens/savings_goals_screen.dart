@@ -235,7 +235,7 @@ class _SavingsGoalCard extends ConsumerWidget {
                     value: 'delete',
                     child: Row(
                       children: [
-                        Icon(
+                        const Icon(
                           LucideIcons.trash2,
                           size: 16,
                           color: AppColors.expense,

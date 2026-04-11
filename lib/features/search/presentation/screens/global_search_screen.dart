@@ -173,9 +173,9 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
               child: query.isEmpty
                   ? _buildEmptyQueryState(recentSearches)
                   : results.isEmpty
-                      ? Center(
+                      ? const Center(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(
+                            padding: EdgeInsets.symmetric(
                               horizontal: AppSpacing.screenPadding,
                             ),
                             child: EmptyState.centered(

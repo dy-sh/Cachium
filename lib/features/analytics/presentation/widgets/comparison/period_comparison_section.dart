@@ -128,7 +128,7 @@ class PeriodComparisonSection extends ConsumerWidget {
               title: 'Period Overview',
               series: [
                 ComparativeBarSeries(name: 'Period A', color: AppColors.accentPrimary),
-                ComparativeBarSeries(name: 'Period B', color: AppColors.yellow),
+                const ComparativeBarSeries(name: 'Period B', color: AppColors.yellow),
               ],
               groups: [
                 ComparativeBarGroup(label: 'Income', values: [data.periodA.income, data.periodB.income]),
