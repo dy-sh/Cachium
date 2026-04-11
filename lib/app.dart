@@ -213,14 +213,44 @@ class _LockGate extends ConsumerWidget {
     final isLocked = ref.watch(appLockStateProvider);
 
     if (appLockEnabled && isLocked) {
-      return MaterialApp(
-        title: 'Cachium',
-        debugShowCheckedModeBanner: false,
-        theme: CachiumApp.currentTheme,
-        home: LockScreen(
-          onUnlocked: () {
-            // State already updated by the lock screen
-          },
+      // Block the lock screen until credential migration has finished.
+      // Otherwise a user authenticating on first run after upgrade can be
+      // verified against a legacy hash that was about to be rewritten.
+      final migrationReady = ref.watch(credentialMigrationReadyProvider);
+      return migrationReady.when(
+        data: (_) => MaterialApp(
+          title: 'Cachium',
+          debugShowCheckedModeBanner: false,
+          theme: CachiumApp.currentTheme,
+          home: LockScreen(
+            onUnlocked: () {
+              // State already updated by the lock screen
+            },
+          ),
+        ),
+        loading: () => MaterialApp(
+          title: 'Cachium',
+          debugShowCheckedModeBanner: false,
+          theme: CachiumApp.currentTheme,
+          home: Scaffold(
+            backgroundColor: AppColors.background,
+            body: Center(
+              child: CircularProgressIndicator(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ),
+        // On migration error we still let the user through — the lock
+        // screen's verify path has its own legacy-hash fallback, and
+        // blocking sign-in entirely would trap the user out of their data.
+        error: (_, __) => MaterialApp(
+          title: 'Cachium',
+          debugShowCheckedModeBanner: false,
+          theme: CachiumApp.currentTheme,
+          home: LockScreen(
+            onUnlocked: () {},
+          ),
         ),
       );
     }

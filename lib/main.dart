@@ -54,11 +54,10 @@ void main() async {
   // loading state, so the user sees the shell instantly instead of a
   // black pre-paint while secure-storage latency is hit.
   //
-  // Order matters inside this future: key load → settings load → migration.
-  // Credential migration MUST complete before the lock screen verifies
-  // anything, but the lock screen itself depends on shouldShowWelcomeProvider
-  // which depends on settingsProvider — so any consumer of settings naturally
-  // waits for the chain below.
+  // Key is loaded here; settings load is triggered by the UI reading
+  // settingsProvider. Credential migration is gated by
+  // credentialMigrationReadyProvider, which the lock screen awaits before
+  // allowing the user to authenticate.
   unawaited(() async {
     try {
       await container.read(keyProviderProvider).getKey();
@@ -73,9 +72,10 @@ void main() async {
       return;
     }
 
+    // Pre-warm migration so the FutureProvider starts resolving immediately
+    // and the lock screen doesn't stall on first paint.
     try {
-      await container.read(settingsProvider.future);
-      await container.read(settingsProvider.notifier).migrateCredentialsIfNeeded();
+      await container.read(credentialMigrationReadyProvider.future);
     } on EncryptionKeyCorruptedException catch (_) {
       _log.error('FATAL: Critical initialization error (migration)');
       container.read(encryptionKeyCorruptedProvider.notifier).state = true;

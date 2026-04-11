@@ -68,15 +68,9 @@ class _ManualRatesScreenState extends ConsumerState<ManualRatesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = ref.watch(settingsProvider).valueOrNull;
-    if (settings == null) {
-      return Scaffold(
-        backgroundColor: AppColors.background,
-        body: const Center(child: LoadingIndicator()),
-      );
-    }
-
-    final mainCurrency = settings.mainCurrencyCode;
+    // Only watch the main currency — rebuilding this whole screen on every
+    // unrelated settings toggle is wasted work.
+    final mainCurrency = ref.watch(mainCurrencyCodeProvider);
 
     // Load rates on first build
     if (_rates.isEmpty) {

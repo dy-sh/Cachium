@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/exceptions/app_exception.dart';
 import '../../../../core/providers/async_value_extensions.dart';
@@ -153,7 +154,8 @@ class CategoriesNotifier extends AsyncNotifier<List<Category>>
     final categories = state.valueOrNull;
     if (categories == null) return;
 
-    final parent = categories.firstWhere((c) => c.id == parentId);
+    final parent = categories.firstWhereOrNull((c) => c.id == parentId);
+    if (parent == null) return;
     final children = categories.where((c) => c.parentId == parentId).toList();
 
     if (children.isEmpty) return;
@@ -236,7 +238,8 @@ class CategoriesNotifier extends AsyncNotifier<List<Category>>
     final categories = state.valueOrNull;
     if (categories == null) return;
 
-    final parent = categories.firstWhere((c) => c.id == id);
+    final parent = categories.firstWhereOrNull((c) => c.id == id);
+    if (parent == null) return;
     final children = categories.where((c) => c.parentId == id).toList();
 
     try {

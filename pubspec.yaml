@@ -39,6 +39,7 @@ dependencies:
 
   # Utilities
   uuid: ^4.4.0
+  collection: ^1.18.0
 
   # Icons
   lucide_icons: ^0.257.0

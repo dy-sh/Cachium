@@ -43,7 +43,7 @@ class _FakeTransactionsNotifier extends TransactionsNotifier {
   Future<List<Transaction>> build() async => [];
 
   @override
-  Future<void> addTransaction({
+  Future<Transaction> addTransaction({
     required double amount,
     required TransactionType type,
     required String categoryId,
@@ -70,6 +70,20 @@ class _FakeTransactionsNotifier extends TransactionsNotifier {
       accountId: accountId,
       note: note,
     ));
+    return Transaction(
+      id: 'fake-${_txCalls.length}',
+      amount: amount,
+      type: type,
+      categoryId: categoryId,
+      accountId: accountId,
+      currencyCode: currencyCode,
+      conversionRate: conversionRate,
+      mainCurrencyCode: mainCurrencyCode,
+      mainCurrencyAmount: mainCurrencyAmount ?? amount,
+      date: date,
+      note: note,
+      createdAt: DateTime.now(),
+    );
   }
 }
 

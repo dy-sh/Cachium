@@ -23,7 +23,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     return repo.getAllTransactions();
   }
 
-  Future<void> addTransaction({
+  Future<Transaction> addTransaction({
     required double amount,
     required TransactionType type,
     required String categoryId,
@@ -115,6 +115,8 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
 
     // Update local state
     state = state.whenData((transactions) => [transaction, ...transactions]);
+
+    return transaction;
   }
 
   Future<void> updateTransaction(Transaction transaction) async {

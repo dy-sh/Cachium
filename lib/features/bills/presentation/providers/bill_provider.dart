@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -47,7 +48,8 @@ class BillsNotifier extends AsyncNotifier<List<Bill>>
   /// Mark a bill as paid and optionally create an expense transaction.
   Future<void> markAsPaid(String id, {bool createTransaction = true}) async {
     final bills = state.valueOrNull ?? [];
-    final bill = bills.firstWhere((b) => b.id == id);
+    final bill = bills.firstWhereOrNull((b) => b.id == id);
+    if (bill == null) return;
     final now = DateTime.now();
 
     // Mark current bill as paid

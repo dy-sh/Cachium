@@ -545,6 +545,7 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState>
         : (savedFormState.originalTransaction?.mainCurrencyCode ?? mainCurrency);
 
     try {
+      final String savedTxId;
       if (isEditing) {
         // Update existing transaction
         final originalTransaction = ref.read(
@@ -577,9 +578,11 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState>
         );
         await ref.read(transactionsProvider.notifier)
             .updateTransaction(updatedTransaction);
+        savedTxId = savedFormState.editingTransactionId!;
       } else {
-        // Add new transaction
-        await ref.read(transactionsProvider.notifier).addTransaction(
+        // Add new transaction — capture the returned Transaction so we attach
+        // tags/attachments to the correct row (don't guess via list order).
+        final created = await ref.read(transactionsProvider.notifier).addTransaction(
               amount: savedFormState.amount,
               type: savedFormState.type,
               categoryId: isTransfer ? '' : savedFormState.categoryId!,
@@ -596,22 +599,18 @@ class TransactionFormNotifier extends AutoDisposeNotifier<TransactionFormState>
               note: savedFormState.note,
               merchant: savedFormState.merchant,
             );
+        savedTxId = created.id;
       }
 
-      // Determine saved transaction ID
-      final savedTxId = isEditing
-          ? savedFormState.editingTransactionId!
-          : ref.read(transactionsProvider).valueOrNull?.first.id;
-
       // Save tag associations
-      if (savedTxId != null &&
-          (savedFormState.tagIds.isNotEmpty || savedFormState.originalTagIds.isNotEmpty)) {
+      if (savedFormState.tagIds.isNotEmpty ||
+          savedFormState.originalTagIds.isNotEmpty) {
         final tagRepo = ref.read(tagRepositoryProvider);
         await tagRepo.setTagsForTransaction(savedTxId, savedFormState.tagIds);
       }
 
       // Process pending attachments
-      if (savedTxId != null && savedFormState.pendingAttachments.isNotEmpty) {
+      if (savedFormState.pendingAttachments.isNotEmpty) {
         final attachRepo = ref.read(attachmentRepositoryProvider);
         final fileService = AttachmentFileService();
         const uuid = Uuid();

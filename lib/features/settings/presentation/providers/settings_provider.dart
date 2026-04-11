@@ -13,6 +13,15 @@ final credentialMigrationServiceProvider = Provider<CredentialMigrationService>(
   (ref) => const CredentialMigrationService(),
 );
 
+/// Resolves once credential migration has run (or been skipped because no
+/// upgrade was needed). Callers that verify credentials — e.g. the lock
+/// screen — must await this before letting the user authenticate, otherwise
+/// they can race the migration and verify against a legacy hash.
+final credentialMigrationReadyProvider = FutureProvider<void>((ref) async {
+  await ref.watch(settingsProvider.future);
+  await ref.read(settingsProvider.notifier).migrateCredentialsIfNeeded();
+});
+
 class SettingsNotifier extends AsyncNotifier<AppSettings> {
   @override
   Future<AppSettings> build() async {
@@ -22,13 +31,35 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
     final settings = await repo.loadSettings();
 
     if (settings != null) {
-      return settings;
+      final sanitized = _sanitize(settings);
+      if (!identical(sanitized, settings)) {
+        // Persist the repair so the corrupted value doesn't come back next run.
+        await repo.saveSettings(sanitized);
+      }
+      return sanitized;
     }
 
     // First run - return defaults and save them
     const defaultSettings = AppSettings();
     await repo.saveSettings(defaultSettings);
     return defaultSettings;
+  }
+
+  /// Repair invariants that could silently break downstream logic
+  /// (currency lookups, exchange-rate fetches) if a stored value got
+  /// corrupted. Returns the same instance if nothing needed repair.
+  AppSettings _sanitize(AppSettings s) {
+    const defaults = AppSettings();
+    var fixed = s;
+    final code = s.mainCurrencyCode.trim().toUpperCase();
+    final validCode = code.length == 3 && RegExp(r'^[A-Z]{3}$').hasMatch(code);
+    if (!validCode) {
+      _log.warning('Sanitizing invalid mainCurrencyCode "${s.mainCurrencyCode}" → ${defaults.mainCurrencyCode}');
+      fixed = fixed.copyWith(mainCurrencyCode: defaults.mainCurrencyCode);
+    } else if (code != s.mainCurrencyCode) {
+      fixed = fixed.copyWith(mainCurrencyCode: code);
+    }
+    return fixed;
   }
 
   Future<void> _saveAndUpdate(AppSettings newSettings) async {

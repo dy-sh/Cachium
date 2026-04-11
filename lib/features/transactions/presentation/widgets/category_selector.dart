@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -35,10 +36,8 @@ class CategoryNavigationState {
 
     if (selectedId == null || categories.isEmpty) return;
 
-    final selectedCategory = categories.firstWhere(
-      (c) => c.id == selectedId,
-      orElse: () => categories.first,
-    );
+    final selectedCategory = categories.firstWhereOrNull((c) => c.id == selectedId);
+    if (selectedCategory == null) return;
 
     if (selectedCategory.parentId != null) {
       _navigationStack.addAll(ancestors.map((c) => c.id));
@@ -78,11 +77,8 @@ class CategoryNavigationState {
     if (_navigationStack.length < 2) return 'All Categories';
 
     final previousParentId = _navigationStack[_navigationStack.length - 2];
-    final previousParent = categories.firstWhere(
-      (c) => c.id == previousParentId,
-      orElse: () => categories.first,
-    );
-    return previousParent.name;
+    final previousParent = categories.firstWhereOrNull((c) => c.id == previousParentId);
+    return previousParent?.name ?? 'All Categories';
   }
 
   /// Get categories to display at the current navigation level.
@@ -382,10 +378,14 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
   }
 
   Widget _buildNavigationRow(ColorIntensity intensity) {
-    final parentCategory = widget.categories.firstWhere(
+    final parentCategory = widget.categories.firstWhereOrNull(
       (c) => c.id == _navState.viewingParentId,
-      orElse: () => widget.categories.first,
     );
+    if (parentCategory == null) {
+      // Viewing a parent that no longer exists (e.g. deleted mid-interaction).
+      // Render nothing; _navState.navigateBack() the next tick.
+      return const SizedBox.shrink();
+    }
 
     final isParentSelected = widget.selectedId == _navState.viewingParentId;
     final categoryColor = parentCategory.getColor(intensity);
