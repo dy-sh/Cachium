@@ -419,16 +419,18 @@ class HomeConfig {
 }
 
 final homeConfigProvider = Provider<HomeConfig>((ref) {
-  final s = ref.watch(settingsProvider).valueOrNull;
-  if (s == null) return const HomeConfig();
-  return HomeConfig(
-    sectionOrder: s.homeSectionOrder,
-    showAccountsList: s.homeShowAccountsList,
-    showTotalBalance: s.homeShowTotalBalance,
-    showQuickActions: s.homeShowQuickActions,
-    showRecentTransactions: s.homeShowRecentTransactions,
-    showBudgetProgress: s.homeShowBudgetProgress,
-  );
+  return ref.watch(settingsProvider.select((async) {
+    final s = async.valueOrNull;
+    if (s == null) return const HomeConfig();
+    return HomeConfig(
+      sectionOrder: s.homeSectionOrder,
+      showAccountsList: s.homeShowAccountsList,
+      showTotalBalance: s.homeShowTotalBalance,
+      showQuickActions: s.homeShowQuickActions,
+      showRecentTransactions: s.homeShowRecentTransactions,
+      showBudgetProgress: s.homeShowBudgetProgress,
+    );
+  }));
 });
 
 // Convenience providers — Assets

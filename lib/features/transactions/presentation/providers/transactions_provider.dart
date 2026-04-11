@@ -44,11 +44,16 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
       throw ValidationException.outOfRange('conversionRate', min: 0);
     }
 
-    // Validate referenced entities exist
-    if (ref.read(accountByIdProvider(accountId)) == null) {
+    // Validate referenced entities exist. Await the async notifiers so a
+    // cold-start race can't make a real entity look missing.
+    final accounts = await ref.read(accountsProvider.future);
+    final categories = await ref.read(categoriesProvider.future);
+    final accountsById = {for (final a in accounts) a.id: a};
+    final srcAccount = accountsById[accountId];
+    if (srcAccount == null) {
       throw EntityNotFoundException(entityType: 'Account', entityId: accountId);
     }
-    if (ref.read(categoryByIdProvider(categoryId)) == null) {
+    if (!categories.any((c) => c.id == categoryId)) {
       throw EntityNotFoundException(entityType: 'Category', entityId: categoryId);
     }
 
@@ -82,10 +87,12 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
 
     // Capture account state before entering transaction to avoid race conditions
     if (type == TransactionType.transfer && destinationAccountId != null) {
-      final srcAccount = ref.read(accountByIdProvider(accountId));
-      final dstAccount = ref.read(accountByIdProvider(destinationAccountId));
+      final dstAccount = accountsById[destinationAccountId];
+      if (dstAccount == null) {
+        throw EntityNotFoundException(
+            entityType: 'Account', entityId: destinationAccountId);
+      }
       if (destinationAmount == null &&
-          srcAccount != null && dstAccount != null &&
           srcAccount.currencyCode != dstAccount.currencyCode) {
         throw const ValidationException(
           message: 'Cross-currency transfer requires destinationAmount',
@@ -111,11 +118,15 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
   }
 
   Future<void> updateTransaction(Transaction transaction) async {
-    // Validate referenced entities exist
-    if (ref.read(accountByIdProvider(transaction.accountId)) == null) {
+    // Validate referenced entities exist. Await the async notifiers so a
+    // cold-start race can't make a real entity look missing.
+    final accounts = await ref.read(accountsProvider.future);
+    final categories = await ref.read(categoriesProvider.future);
+    final accountsById = {for (final a in accounts) a.id: a};
+    if (!accountsById.containsKey(transaction.accountId)) {
       throw EntityNotFoundException(entityType: 'Account', entityId: transaction.accountId);
     }
-    if (ref.read(categoryByIdProvider(transaction.categoryId)) == null) {
+    if (!categories.any((c) => c.id == transaction.categoryId)) {
       throw EntityNotFoundException(entityType: 'Category', entityId: transaction.categoryId);
     }
 
@@ -137,10 +148,13 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     // Validate cross-currency transfer before entering transaction
     if (transaction.type == TransactionType.transfer &&
         transaction.destinationAccountId != null) {
-      final srcAcct = ref.read(accountByIdProvider(transaction.accountId));
-      final dstAcct = ref.read(accountByIdProvider(transaction.destinationAccountId!));
+      final srcAcct = accountsById[transaction.accountId]!;
+      final dstAcct = accountsById[transaction.destinationAccountId!];
+      if (dstAcct == null) {
+        throw EntityNotFoundException(
+            entityType: 'Account', entityId: transaction.destinationAccountId!);
+      }
       if (transaction.destinationAmount == null &&
-          srcAcct != null && dstAcct != null &&
           srcAcct.currencyCode != dstAcct.currencyCode) {
         throw const ValidationException(
           message: 'Cross-currency transfer requires destinationAmount',

@@ -82,6 +82,10 @@ class _TransactionListViewState extends ConsumerState<TransactionListView> {
 
   @override
   Widget build(BuildContext context) {
+    final mainCurrency = ref.watch(mainCurrencyCodeProvider);
+    final rates = ref.watch(exchangeRatesProvider).valueOrNull ??
+        const <String, double>{};
+
     if (widget.groups.isEmpty) {
       return const Center(
         child: Padding(
@@ -121,7 +125,11 @@ class _TransactionListViewState extends ConsumerState<TransactionListView> {
             );
           }
 
-          final child = _TransactionGroupWidget(group: widget.groups[index]);
+          final child = _TransactionGroupWidget(
+            group: widget.groups[index],
+            mainCurrency: mainCurrency,
+            rates: rates,
+          );
           if (widget.isInitialLoad && index < 15) {
             return StaggeredListItem(
               index: index,
@@ -135,15 +143,19 @@ class _TransactionListViewState extends ConsumerState<TransactionListView> {
   }
 }
 
-class _TransactionGroupWidget extends ConsumerWidget {
+class _TransactionGroupWidget extends StatelessWidget {
   final TransactionGroup group;
+  final String mainCurrency;
+  final Map<String, double> rates;
 
-  const _TransactionGroupWidget({required this.group});
+  const _TransactionGroupWidget({
+    required this.group,
+    required this.mainCurrency,
+    required this.rates,
+  });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final mainCurrency = ref.watch(mainCurrencyCodeProvider);
-    final rates = ref.watch(exchangeRatesProvider).valueOrNull ?? {};
+  Widget build(BuildContext context) {
     final netAmount = group.netAmountInMainCurrency(rates, mainCurrency);
 
     return Column(

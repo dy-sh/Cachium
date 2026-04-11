@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -56,25 +54,29 @@ class SecuritySection extends ConsumerWidget {
           ),
           value: settings.appLockEnabled,
           onChanged: (value) async {
-            if (value) {
-              final available = biometricAvailable.valueOrNull ?? false;
-              if (!available && !hasAnyAuth) {
-                if (context.mounted) {
+            try {
+              if (value) {
+                final available = biometricAvailable.valueOrNull ?? false;
+                if (!available && !hasAnyAuth) {
                   context.showWarningNotification(
                     'Set a PIN or password first to enable App Lock',
                   );
+                  return;
                 }
-                return;
-              }
 
-              if (available) {
-                final service = ref.read(appLockServiceProvider);
-                final authenticated = await service.authenticate();
-                if (!authenticated) return;
+                if (available) {
+                  final service = ref.read(appLockServiceProvider);
+                  final authenticated = await service.authenticate();
+                  if (!context.mounted) return;
+                  if (!authenticated) return;
+                }
+                await ref.read(settingsProvider.notifier).setAppLockEnabled(true);
+              } else {
+                await ref.read(settingsProvider.notifier).setAppLockEnabled(false);
               }
-              unawaited(ref.read(settingsProvider.notifier).setAppLockEnabled(true));
-            } else {
-              unawaited(ref.read(settingsProvider.notifier).setAppLockEnabled(false));
+            } catch (_) {
+              if (!context.mounted) return;
+              context.showErrorNotification('Failed to update App Lock');
             }
           },
         ),
@@ -90,8 +92,13 @@ class SecuritySection extends ConsumerWidget {
               title: 'Biometric Unlock',
               description: 'Use fingerprint or face to unlock the app',
               value: settings.biometricUnlockEnabled,
-              onChanged: (value) {
-                ref.read(settingsProvider.notifier).setBiometricUnlockEnabled(value);
+              onChanged: (value) async {
+                try {
+                  await ref.read(settingsProvider.notifier).setBiometricUnlockEnabled(value);
+                } catch (_) {
+                  if (!context.mounted) return;
+                  context.showErrorNotification('Failed to update biometric unlock');
+                }
               },
             ),
         ],
@@ -99,8 +106,13 @@ class SecuritySection extends ConsumerWidget {
           title: 'Hide from Screenshots',
           description: 'Blocks screenshots and screen recording (Android)',
           value: settings.hideFromScreenshots,
-          onChanged: (value) {
-            ref.read(settingsProvider.notifier).setHideFromScreenshots(value);
+          onChanged: (value) async {
+            try {
+              await ref.read(settingsProvider.notifier).setHideFromScreenshots(value);
+            } catch (_) {
+              if (!context.mounted) return;
+              context.showErrorNotification('Failed to update screen protection');
+            }
           },
         ),
         SettingsTile(
