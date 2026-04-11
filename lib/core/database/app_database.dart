@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
+import 'package:flutter/foundation.dart';
 
 import 'daos/account_dao.dart';
 import 'daos/asset_dao.dart';
@@ -301,6 +302,9 @@ class AppSettings extends Table {
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
+
+  @visibleForTesting
+  AppDatabase.forTesting(super.executor);
 
 
   @override

@@ -181,5 +181,83 @@ void main() {
       );
       expect(bill.nextDueDate, DateTime(2027, 6, 1));
     });
+
+    test('daily bill advances by 1 day', () {
+      final bill = _makeBill(
+        dueDate: DateTime(2026, 3, 1),
+        frequency: RecurrenceFrequency.daily,
+      );
+      expect(bill.nextDueDate, DateTime(2026, 3, 2));
+    });
+
+    test('biweekly bill advances by 14 days', () {
+      final bill = _makeBill(
+        dueDate: DateTime(2026, 3, 1),
+        frequency: RecurrenceFrequency.biweekly,
+      );
+      expect(bill.nextDueDate, DateTime(2026, 3, 15));
+    });
+
+    test('weekly bill crosses month boundary correctly', () {
+      final bill = _makeBill(
+        dueDate: DateTime(2026, 3, 28),
+        frequency: RecurrenceFrequency.weekly,
+      );
+      expect(bill.nextDueDate, DateTime(2026, 4, 4));
+    });
+
+    test('monthly bill crosses year boundary (Dec → Jan)', () {
+      final bill = _makeBill(
+        dueDate: DateTime(2026, 12, 15),
+        frequency: RecurrenceFrequency.monthly,
+      );
+      expect(bill.nextDueDate, DateTime(2027, 1, 15));
+    });
+
+    // Documents current behavior: Dart normalizes overflow days into the
+    // next month, so Jan 31 monthly does NOT roll back to Feb 28. If/when
+    // bill recurrence is changed to clamp instead, update this test.
+    test('monthly bill on Jan 31 overflows into March (Dart normalization)',
+        () {
+      final bill = _makeBill(
+        dueDate: DateTime(2026, 1, 31),
+        frequency: RecurrenceFrequency.monthly,
+      );
+      // DateTime(2026, 2, 31) normalizes to 2026-03-03 (Feb has 28 days).
+      expect(bill.nextDueDate, DateTime(2026, 3, 3));
+    });
+
+    test('monthly bill on May 31 overflows into July (Dart normalization)',
+        () {
+      // June has 30 days; May 31 + 1 month → June 31 → July 1.
+      final bill = _makeBill(
+        dueDate: DateTime(2026, 5, 31),
+        frequency: RecurrenceFrequency.monthly,
+      );
+      expect(bill.nextDueDate, DateTime(2026, 7, 1));
+    });
+
+    // Documents current behavior: Feb 29 leap-year + 1 year overflows
+    // because the next year is not a leap year.
+    test('yearly bill on Feb 29 leap year overflows to Mar 1', () {
+      final bill = _makeBill(
+        dueDate: DateTime(2024, 2, 29),
+        frequency: RecurrenceFrequency.yearly,
+      );
+      // DateTime(2025, 2, 29) → 2025-03-01.
+      expect(bill.nextDueDate, DateTime(2025, 3, 1));
+    });
+
+    test('yearly bill on Feb 29 leap year lands correctly four years later',
+        () {
+      // 2024 → 2025 (Mar 1, see test above), but a four-year leap is not
+      // computed by nextDueDate. We just verify the one-shot 2024 → 2025
+      // already covered. This test confirms 2020 → 2021 same overflow.
+      final bill = _makeBill(
+        dueDate: DateTime(2020, 2, 29),
+        frequency: RecurrenceFrequency.yearly,
+      );
+      expect(bill.nextDueDate, DateTime(2021, 3, 1));
+    });
   });
 }

@@ -39,7 +39,11 @@ class DatabaseExportService {
       final tempDir = await getTemporaryDirectory();
       final entries = tempDir.listSync();
       for (final entry in entries) {
-        final name = entry.uri.pathSegments.last;
+        // Directory uris end with '/', so pathSegments.last is empty — use
+        // the last non-empty segment instead so stale CSV directories match.
+        final segments =
+            entry.uri.pathSegments.where((s) => s.isNotEmpty).toList();
+        final name = segments.isEmpty ? '' : segments.last;
         if (name.startsWith('cachium_export_') || name.startsWith('cachium_csv_')) {
           try {
             if (entry is File) {

@@ -79,7 +79,8 @@ double _spentInMonth(List<Transaction> transactions, String categoryId, int year
 
 /// Calculate cascading rollover for a budget.
 /// Looks back up to 12 months. For each prior month, rollover = max(0, budget - spent) + prior rollover.
-double _calculateRollover({
+@visibleForTesting
+double calculateRollover({
   required List<Budget> allBudgets,
   required List<Transaction> allTransactions,
   required String categoryId,
@@ -154,7 +155,7 @@ final budgetProgressProvider = Provider.family<List<BudgetProgress>, ({int year,
 
     // Calculate rollover if enabled
     final rolloverAmount = budget.rolloverEnabled
-        ? _calculateRollover(
+        ? calculateRollover(
             allBudgets: budgets,
             allTransactions: transactions,
             categoryId: budget.categoryId,
